@@ -1,0 +1,71 @@
+# project
+roslaunch robot_object_manipulation robot_object_manipulation.launch
+roslaunch robot_object_manipulation simulation_world.launch
+roslaunch robot_localization slam.launch
+roslaunch robot_localization navigation.launch
+
+
+# start separate
+roslaunch gazebo_worlds empty_world.launch
+roslaunch pr2_gazebo pr2.launch
+
+# start together
+roslaunch pr2_gazebo pr2_empty_world.launch
+
+# keyboard control
+roslaunch pr2_teleop teleop_keyboard.launch
+
+# dashboard
+rosrun pr2_dashboard pr2_dashboard
+
+# object manipulation
+roslaunch manipulation_worlds pr2_table_object.launch
+rosrun pr2_tuckarm tuck_arms.py -l t -r u
+
+roslaunch pr2_tabletop_manipulation_launch pr2_tabletop_manipulation.launch
+roslaunch pr2_pick_and_place_demos pick_and_place_keyboard_interface.launch
+
+
+# interactive manipulation
+sudo apt-get remove ros-groovy-geometric-shapes
+
+roslaunch pr2_gazebo pr2_table_object.launch
+roslaunch pr2_interactive_manipulation pr2_interactive_manipulation_robot.launch sim:=true nav:=true
+roslaunch pr2_interactive_manipulation_frontend pr2_interactive_manipulation_desktop.launch sim:=true nav:=true
+
+# pick and place tutorial (http://wiki.ros.org/pr2_tabletop_manipulation_apps/Tutorials/Writing%20a%20Simple%20Pick%20and%20Place%20Application)
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/carloscosta/Projects
+roscreate-pkg pr2_pick_and_place_tutorial actionlib object_manipulation_msgs tabletop_object_detector tabletop_collision_map_processing
+
+# navigation
+roslaunch pr2_gazebo pr2_empty_world.launch
+rosrun pr2_tuckarm tuck_arms.py -r t -l t
+## global nav
+rosrun map_server map_server /home/carloscosta/Projects/Maps/WillowGarage/willow-full.yaml
+roslaunch pr2_2dnav pr2_2dnav.launch
+roslaunch pr2_navigation_global rviz_move_base.launch 
+## local nav
+roslaunch pr2_2dnav_local pr2_2dnav.launch
+roslaunch pr2_navigation_local rviz_move_base_local.launch
+
+
+# obstacle avoidance
+roslaunch laser_obstacle_avoidance_pr2 launch1_pr2.launch
+
+# slam
+roslaunch pr2_gazebo pr2_empty_world.launch
+rosrun pr2_tuckarm tuck_arms.py -r t -l t
+roslaunch pr2_2dnav_slam pr2_2dnav.launch
+roslaunch pr2_navigation_slam rviz_move_base_slam.launch
+rosrun map_server map_saver -f ~/Projects/robot_localization/maps/willow_garage
+
+
+
+# rviz 1.9.32
+git clone https://github.com/ros-visualization/rviz/tree/1.9.32
+cd rviz_1.9.32
+mkdir build
+cd build
+cmake ..
+make
+source ~/Projects/rviz/build/devel/setup.bash
