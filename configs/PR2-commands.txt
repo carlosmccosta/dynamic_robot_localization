@@ -1,8 +1,8 @@
 # project
 roslaunch robot_object_manipulation robot_object_manipulation.launch
 roslaunch robot_object_manipulation simulation_world.launch
-roslaunch robot_localization slam.launch
-roslaunch robot_localization navigation.launch
+roslaunch robot_localization pr2_slam.launch
+roslaunch robot_localization pr2_navigation.launch
 
 
 # start separate

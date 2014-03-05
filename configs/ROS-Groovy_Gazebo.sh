@@ -17,10 +17,17 @@ sudo apt-get install ros-groovy-desktop-full -y
 sudo rosdep init
 rosdep update
 
+echo "# <ROS groovy setup.bash>" >> ~/.bashrc
+echo "export ROBOT=sim" >> ~/.bashrc
+echo "export ROS_ENV_LOADER=/etc/ros/groovy/env.sh" >> ~/.bashrc
 echo "source /opt/ros/groovy/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+echo "export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:~/Projects" >> ~/.bashrc
+echo "# </ROS groovy setup.bash>" >> ~/.bashrc
+source /opt/ros/groovy/setup.bash
 
 sudo apt-get install python-rosinstall -y
+sudo apt-get install ros-groovy-pcl-* -y
+sudo apt-get install ros-groovy-openni-* -y
 
 
 echo "\n\n\n"
@@ -70,6 +77,7 @@ echo "##########################################################################
 
 # groovy
 cd ~/catkin_ws/src
+git clone https://github.com/ros/cmake_modules.git
 git clone https://github.com/ros-simulation/gazebo_ros_pkgs.git
 git clone https://github.com/ros-controls/ros_control.git
 git clone https://github.com/ros-controls/ros_controllers.git -b groovy-backported-hydro

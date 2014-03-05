@@ -1,0 +1,8 @@
+# start guardian simulator
+roslaunch guardian_gazebo guardian_office.launch
+
+# slam
+roslaunch robot_localization guardian_slam.launch
+
+# navigation
+roslaunch robot_localization guardian_navigation.launch

@@ -1,0 +1,66 @@
+<launch>
+	<!-- roslaunch arguments -->
+	<arg name="debug" default="false" />
+	<arg name="gui" default="true" />
+	<arg name="map_file" default="$(find robot_localization)/maps/willow_garage.yaml" />
+	<param name="/use_sim_time" value="true" />
+
+	<!-- start simulator -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find robot_localization)/worlds/guardian_navigation.world" />
+		<arg name="debug" value="$(arg debug)" />
+		<arg name="gui" value="$(arg gui)" />
+		<arg name="paused" value="false" />
+		<arg name="use_sim_time" value="true" />
+		<arg name="headless" value="false" />
+	</include>
+
+	<!-- Load the URDF into the ROS Parameter Server -->
+	<param name="robot_description" command="$(find xacro)/xacro.py '$(find guardian_description)/urdf/guardian.urdf.xacro'" />
+
+	<!-- Call a python script to the run a service call to gazebo_ros to spawn a URDF robot -->
+	<node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model guardian -param robot_description" />
+
+	<!-- ros_control guardian launch file -->
+	<include file="$(find guardian_control)/launch/guardian_control.launch" />
+
+
+	<!-- slam -->
+	<include file="$(find guardian_navigation)/navigation_slam/slam_gmapping.launch" />
+	<remap from="cmd_vel" to="guardian_node/command" />
+
+	<!-- rviz -->
+	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find robot_localization)/rviz/guardian_slam.rviz" />
+
+	<!--- Run EFK Filter -->
+	<!--node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf"> <param name="output_frame" value="odom"/> < Output topic, in this case, as we define "odom", the topic is published to "/robot_pose_ekf/odom", 
+		if we define "/odom" the topic will publish to "/odom" -->
+	<!--param name="freq" value="50.0"/> <param name="sensor_timeout" value="1.0"/> <param name="publish_tf" value="true"/> <param name="odom_used" value="true"/> <param name="imu_used" value="true"/> <param 
+		name="vo_used" value="false"/> <param name="debug" value="true"/> </node -->
+
+	<!-- Run move_base -->
+	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+		<rosparam file="$(find guardian_navigation)/navigation_config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find guardian_navigation)/navigation_config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+		<rosparam file="$(find guardian_navigation)/navigation_config/local_costmap_params.yaml" command="load" />
+		<rosparam file="$(find guardian_navigation)/navigation_config/global_costmap_params.yaml" command="load" />
+		<rosparam file="$(find guardian_navigation)/navigation_config/base_local_planner_params.yaml" command="load" />
+	</node>
+
+
+	<!-- run the map server -->
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+
+	<!-- dynamic map generation -->
+	<node name="gmapping_node" pkg="gmapping" type="slam_gmapping" respawn="false">
+		<remap to="base_scan" from="scan" />
+		<param name="odom_frame" value="odom_combined" />
+	</node>
+
+	<!-- parameters that give you reasonable physics as well as good speed -->
+	<!-- needed so that gripper joint stops on objects instead of oscillating forever -->
+	<node name="sor_pgs_iters" pkg="dynamic_reconfigure" type="dynparam" args="set gazebo sor_pgs_iters 50" />
+	<node name="sor_pgs_w" pkg="dynamic_reconfigure" type="dynparam" args="set gazebo sor_pgs_w 1.0" />
+	<node name="time_step" pkg="dynamic_reconfigure" type="dynparam" args="set gazebo time_step 0.001" />
+</launch>

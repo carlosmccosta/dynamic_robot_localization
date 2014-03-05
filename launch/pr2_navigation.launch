@@ -4,7 +4,7 @@
 	<param name="/use_sim_time" value="true" />
 
 	<!-- load world -->
-	<node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find robot_localization)/worlds/navigation.world" respawn="false" output="screen" />
+	<node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find robot_localization)/worlds/pr2_navigation.world" respawn="false" output="screen" />
 
 	<!-- start gui -->
 	<group if="$(arg gui)">
@@ -17,22 +17,17 @@
 	<!-- tuck arms -->
 	<node name="tuckarm" pkg="pr2_tuckarm" type="tuck_arms.py" args="-l t -r t" />
 
-	<!-- slam -->
-	<include file="$(find pr2_2dnav_slam)/pr2_2dnav.launch" />
-	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find robot_localization)/rviz/slam.rviz" />
+	<!-- navigation -->
+	<include file="$(find pr2_2dnav)/pr2_2dnav.launch" />
+	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find robot_localization)/rviz/pr2_localization.rviz" />
 	<node pkg="costmap_2d" type="costmap_2d_markers" name="voxel_visualizer">
 		<remap from="voxel_grid" to="move_base_node/local_costmap/voxel_grid_throttled" />
 	</node>
+	<!-- <node name="snap_map_icp" pkg="SnapMapICP" type="SnapMapICP" respawn="false" output="screen" /> -->
+
 
 	<!-- run the map server -->
-	<!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" /> -->
-
-
-	<!-- dynamic map generation -->
-	<node name="gmapping_node" pkg="gmapping" type="slam_gmapping" respawn="false">
-		<remap to="base_scan" from="scan" />
-		<param name="odom_frame" value="odom_combined" />
-	</node>
+	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
 	<!-- parameters that give you reasonable physics as well as good speed -->
 	<!-- needed so that gripper joint stops on objects instead of oscillating forever -->
