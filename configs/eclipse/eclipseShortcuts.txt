@@ -1,0 +1,117 @@
+========================================================================================================================
+# »»»»» Notes
+========================================================================================================================
+--> Shortcuts can be changed in Window -> Preferences -> General -> Keys
+
+
+
+########################################################################################################################
+# »»»»» C / C++
+########################################################################################################################
+
+-> Content assist
+	Ctrl + Space
+
+-> Context information
+	Shift + Ctrl + Space
+
+-> Find file in project
+	Ctrl + Shift + R
+
+-> Build all
+	Ctrl + B
+
+-> Build project (custom)
+	Alt + X
+
+-> Clean project (custom)
+	Alt + C
+
+-> Run last configuration
+	Ctrl + F11
+
+-> Debug last configuration
+	F11
+
+-> Close file
+	Ctrl + W
+
+-> Close all files
+	Shift + Ctrl + W
+
+-> Find and replace
+	Ctrl + F
+
+-> Find file
+	Ctrl + H
+
+-> Find text in workspace
+	Ctrl + Atl + G
+
+-> Comment / Uncomment
+	Ctrl + / (Ctrl + 7, not NumPad)
+
+-> Add block comment
+	Shift + Ctrl + /
+
+-> Remove block comment
+	Shift + Ctrl + \
+
+-> Format
+	Shift + Ctrl + F
+
+-> Indent line
+	Ctrl + I
+
+-> Open quick hierarchy
+	Ctrl + T
+
+-> Open call hierarchy
+	Ctrl + Alt + H
+
+-> Rename
+	Shift + Alt + R
+
+-> Show outline
+	Ctrl + O
+
+-> Toogle source / header
+	Ctrl + Tab
+
+-> Go to line
+	Ctrl + L
+
+-> Go to last edit location
+	Ctrl + Q
+
+-> Go to next file
+	Ctrl + PageUp
+
+-> Go to previous file
+	Ctrl + PageDown
+
+-> View properties
+	Ctrl + Enter
+
+
+########################################################################################################################
+# »»»»» Debugging
+########################################################################################################################
+
+-> Resume
+	F8
+
+-> Step into
+	F5
+
+-> Step over
+	F6
+
+-> Step return
+	F7
+
+-> Run to line
+	Ctrl + R
+
+-> Terminate
+	Ctrl + F2

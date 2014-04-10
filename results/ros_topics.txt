@@ -1,0 +1,10 @@
+########################################################################################################################
+# »»»»» PR2
+########################################################################################################################
+
+/amcl_pose/pose/pose/position/x
+/amcl_pose/pose/pose/position/y
+/gazebo/model_states/pose[1]/position/x
+/gazebo/model_states/pose[1]/position/y
+
+/amcl_pose/pose /gazebo/model_states/pose

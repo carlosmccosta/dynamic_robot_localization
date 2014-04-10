@@ -1,0 +1,130 @@
+========================================================================================================================
+# »»»»» Notes
+========================================================================================================================
+--> Plugins in eclipse can either be installed by:
+	- Searching in the marketplace
+		- Help -> Eclipse Marketplace
+	- Using external repositories
+		- Help -> Install New Software -> Select repository or add a new one
+
+--> For ROS development is recommended to use the package
+	Eclipse IDE for C/C++ Developers
+	from http://www.eclipse.org/downloads/
+
+
+
+########################################################################################################################
+# »»»»» GDB stl pretty printers
+########################################################################################################################
+
+»»»»» For pretty printing stl containers when debugging with gdb
+Info:
+	https://sourceware.org/gdb/wiki/STLSupport
+	http://wiki.eclipse.org/CDT/User/FAQ#How_can_I_inspect_the_contents_of_STL_containers.3F
+
+# Checkout python modules for gdb pretty printing
+cd ~/
+mkdir gdb_pretty_printers
+cd gdb_pretty_printers
+svn co svn://gcc.gnu.org/svn/gcc/trunk/libstdc++-v3/python
+
+# Create a file named .gdbinit in home folder with the following content and change the username from /home/username to your home folder
+python
+import sys
+sys.path.insert(0, '/home/username/gdb_pretty_printers/python')
+from libstdcxx.v6.printers import register_libstdcxx_printers
+register_libstdcxx_printers (None)
+end
+
+
+Then in eclipse go to Window -> Preferences -> C/C++ -> Debug -> GDB
+Change the GDB command file to /home/username/.gdbinit
+and make sure the pretty printing section is enabled (has a check in "Enable pretty printers in variable/expression tree")
+
+This will have effect in all new debug configurations. For the ones already created,
+it is necessary to go to the Debugger tab of the run / debug configuration and replace the GDB command  file to the new one
+(from .gdbinit to /home/username/.gdbinit)
+
+
+
+########################################################################################################################
+# »»»»» Plugins from eclipse repositories
+########################################################################################################################
+
+CDT Main Features
+CDT Optional Features
+Collaboration
+	Subversive SVN
+	EGit
+General Purpose Tools
+	Local Terminal
+	Memory Analyzer
+Linux Tools
+Mobile and Device Development
+Programming Languages
+	C/C++ Development Tools
+	C/C++ Development Tools SDK
+	C/C++ Unit Testing Support
+	Code Recommenders Developer Tools
+	Eclipse XML Editors and Tools
+
+
+
+########################################################################################################################
+# »»»»» Plugins from external repositories
+########################################################################################################################
+
+»»»»» For correctly print ansi colored text in the console (for example to see ros console messages with correct color - debug / info / warn / error ...)
+Info:
+	http://mihai-nita.net/java/#ePluginAEC
+Install url:
+	http://www.mihai-nita.net/eclipse
+
+
+»»»»» For editing cmake files
+Info:
+	http://cmakeed.sourceforge.net/
+Install url:
+	http://cmakeed.sourceforge.net/eclipse/
+
+
+»»»»» For editing yaml scripts
+Info:
+	https://code.google.com/p/yedit/
+Install url:
+	http://dadacoalition.org/yedit
+
+
+»»»»» For installing python support and parsing
+Info:
+	http://pydev.org/
+Install url:
+	http://pydev.org/updates
+
+
+»»»»» For editing shell scripts
+Info:
+	http://sourceforge.net/apps/trac/shelled/	
+Install url:
+	http://sourceforge.net/projects/shelled/files/shelled/update/
+
+
+»»»»» For changing source code editor color themes
+Info:
+	http://eclipsecolorthemes.org/
+Install url:
+	http://eclipse-color-theme.github.com/update
+
+
+»»»»» For customizing eclipse layout an windows theme
+Info:
+	https://github.com/jeeeyul/eclipse-themes
+Install url:
+	http://jeeeyul.github.io/update/
+
+
+»»»»» For dark eclipse theme
+Info:
+	https://github.com/guari/eclipse-ui-theme
+Install url:
+	https://raw.github.com/guari/eclipse-ui-theme/master/com.github.eclipseuitheme.themes.updatesite

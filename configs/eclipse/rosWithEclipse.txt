@@ -1,0 +1,299 @@
+########################################################################################################################
+# »»»»» Using eclipse with ROS
+########################################################################################################################
+
+# http://wiki.ros.org/IDEs
+# http://answers.ros.org/question/52013/catkin-and-eclipse/
+
+
+
+########################################################################################################################
+# »»»»» eclipse launcher
+########################################################################################################################
+
+# create ubuntu launcher for eclipse in folder /home/username/.local/share/applications
+gnome-desktop-item-edit --create-new ~/.local/share/applications/
+
+and change Exec in the eclipse.desktop file to
+Exec=bash -i -c "eclipse"
+
+
+# or start eclipse from console to import ~/.bashrc environment variables
+
+
+
+########################################################################################################################
+# »»»»» Create eclipse .project and .cproject files
+########################################################################################################################
+
+# ===========================================================
+# »»»»» Note
+# ===========================================================
+
+The instructions in this sections must be repeated every time a CMakeLists.txt is changed,
+in order to update the .project and .cproject files.
+After executing then again, it is necessary to either restart eclipse or refresh the eclipse project by doing
+Project Explorer -> Right click in project -> Refresh
+
+When using catkin, make sure you run catkin_make before proceeding.
+
+
+# -----------------------------------------------------------
+# >>>> Option 1 -> rosbuild
+# -----------------------------------------------------------
+# +++ create .project and .cproject in a folder with a CMakeLists.txt
+make eclipse-project
+
+
+
+# -----------------------------------------------------------
+# >>>>> Option 2 -> catkin out of source (recommended)
+# -----------------------------------------------------------
+
+# +++ create out of source .cproject (will be created in catkin build/ folder)
+cd ~/catkin_ws
+catkin_make --force-cmake -G"Eclipse CDT4 - Unix Makefiles"
+
+# or for debug builds
+catkin_make --force-cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j8
+
+
+# -----------------------------------------------------------
+# >>>>> Option 3 -> catkin within source (not recommended) 
+# -----------------------------------------------------------
+
+# +++ create .cproject and .cproject in a folder with a CMakeLists.txt
+cmake -G"Eclipse CDT4 - Unix Makefiles" .
+
+# or for debug builds
+cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j8
+
+
+
+########################################################################################################################
+# »»»»» Import eclipse project files from ~/catkin_ws/build
+########################################################################################################################
+
+File --> Import --> General --> Existing Projects into Workspace
+
+
+
+########################################################################################################################
+# »»»»» Debug
+########################################################################################################################
+
+Eclipse supports debugging using GDB.
+
+##########
+# Reverse debugging
+
+Besides normal forward debugging, it also supports reverse debugging (going back in code execution).
+To activate this option it is necessary to customize the Debug perspective.
+Debug perspective -> Window -> Customize perspective -> Command Groups Availability
+	-> Select "Reverse Debugging" in Available command groups
+You may consider activating "Enable Reverse Debugging at startup" in your debug configurations launch (tab Debugger)
+But be warned, it "dramatically reduces the performance of execution".
+As such it is recommended to only activate it at runtime, when it is necessary.
+Info:
+	http://wiki.eclipse.org/CDT/User/FAQ#How_do_I_do_Reverse_Debugging.3F
+
+
+##########
+# Multiprocess debugging
+
+Eclipse also supports debugging (and attach debugging) multiple processes.
+Info:
+	http://wiki.eclipse.org/CDT/User/FAQ#How_do_I_use_multi-process_debugging.3F
+
+
+##########
+# Tracepoints
+
+When debugging realtime applications, stopping the process to analyze its state may have adverse affects.
+As such, eclipse has tracepoints, that provide a way to collect program state without stopping the process.
+Info:
+	http://wiki.eclipse.org/CDT/User/FAQ#How_can_I_trace_my_application_using_C.2FC.2B.2B_Tracepoints.3F
+
+
+
+# ======================================================================================================================
+# To debug nodes with parameters / arguments / remaps it is necessary to either
+	A -> Pass then via command line inside eclipse (in arguments section of run / debug configurations)
+	B -> Attach eclipse gdb to running process
+
+
+##########
+# Option A (eclipse) - Start process in eclipse and pass parameters and remaps in the eclipse arguments section of run / debug configurations
+Ideal when the node has few or no parameters / remaps.
+Allows to start the node from inside eclipse.
+
+- Project -> Debug as -> Debug configurations
+- Create new "C/C++ Application" debug configuration
+- Select the location of node in ~/catkin_ws/devel/lib
+- Make sure the project path is correct and roscore is running
+- Debug process in eclipse
+	- Project -> Debug as -> Select the name of the configuration that you gave previously
+	-> Resume -> F8
+	-> Step into -> F5
+	-> Step over -> F6
+	-> Step return -> F7
+	-> Run to line -> Ctrl + R
+	-> Terminate -> Ctrl + F2
+
+Info:
+	http://wiki.ros.org/Remapping%20Arguments
+	http://wiki.ros.org/roslaunch/Commandline%20Tools
+
+-> Pass remaps using syntax:
+	originalTopicName:=newTopicName
+
+-> Pass parameters using syntax:
+	_param:=value
+
+-> Change node name using syntax:
+	__name:=newName
+
+
+
+##########
+# Option B (eclipse) - Attach to running process
+Recommended when the node has a lot of parameters / remaps, and as such,
+it is better to start the node within the launch file and attach the eclipse to the gdbserver that was started with the node.
+
+# Edit file 10-ptrace.conf in /etc/sysctl.d to allow eclipse to attach to other processes and then reboot (to this change take effect)
+(or start eclipse as root with "gksu eclipse" -> not recommended because it will change the owner of the files that eclipse touches)
+kernel.yama.ptrace_scope = 0
+Info:
+	http://wiki.eclipse.org/CDT/User/FAQ#I_cannot_attach_to_a_process_on_Ubuntu
+	https://wiki.ubuntu.com/SecurityTeam/Roadmap/KernelHardening#ptrace_Protection
+
+Then:
+- Create the breakpoints in eclipse C/C++ editor (they can also be added at runtime when debugging)
+- Add to the node xml tag the option to attach gdbserver to the node process
+	Example:
+		- Node output in same terminal
+			<node name="nodeName" pkg="nodePackage" type="nodeType" output="screen" launch-prefix="gdbserver hostNameOrIp:portNumber" />
+		- Node output in different terminal
+			<node name="nodeName" pkg="nodePackage" type="nodeType" output="screen" launch-prefix="xterm -e gdbserver localhost:1337" />
+- Project -> Debug as -> Debug configurations
+- Create new "C/C++ Remote Application" debug configuration
+- Select the location of node binary in ~/catkin_ws/devel/lib
+- In the Debugger tab and Connection sub-tab
+	- Enter the port number in which the gdbserver will be running (in the previous example was 1337)
+- In the lower part of the window where says "Using GSB (DSF) Automatic Remote Debugging Launcher"
+	- Click "Select another..."
+	- Check "Use configuration specific settings"
+	- Select "GDB (DSF) Manual Remote Debugging Launcher"
+- Click apply to save debug configuration
+- Make sure the project associated to the node (and that has the node source code) is correct
+- Run roslaunch file
+- Launch eclipse debugger and attach it to the node process
+	- Project -> Debug as -> Select the name of the configuration that you given previously
+- Debug process in eclipse
+	-> Resume -> F8
+	-> Step into -> F5
+	-> Step over -> F6
+	-> Step return -> F7
+	-> Run to line -> Ctrl + R
+	-> Terminate -> Ctrl + F2
+
+
+
+##########
+# Option C (use GDB directly)
+Only recommended for "advanced" programmers
+
+- Add to the node xml tag the option to attach gdb to the node process
+	(http://wiki.ros.org/roslaunch/Tutorials/Roslaunch%20Nodes%20in%20Valgrind%20or%20GDB)
+	A -> For having node output in a different terminal
+		launch-prefix="xterm -e gdb --args"
+	B -> For having node output in a different terminal and start without user interaction
+		launch-prefix="xterm -e gdb -ex run --args"
+	C -> For having node output in the same terminal
+		launch-prefix="gdb --args"
+	D -> For having node output in the same terminal and start without user interaction
+		launch-prefix="gdb -ex run --args"
+	Example:
+		<node name="nodeName" pkg="nodePackage" type="nodeType" output="screen" launch-prefix="xterm -e gdb --args"/>
+
+- Debug in GDB
+	Useful commands
+		break [file:]function
+			Set a breakpoint at function (in file)
+		run [arglist]
+			Start your program (with arglist, if specified)
+		bt
+			Backtrace: display the program stack
+		print expr
+			Display the value of an expression
+		c
+			Continue running your program (after stopping, e.g. at a breakpoint)
+		next
+			Execute next program line (after stopping); step over any function calls in the line
+		edit [file:]function
+			look at the program line where it is presently stopped
+		list [file:]function
+			type the text of the program in the vicinity of where it is presently stopped
+		step
+			Execute next program line (after stopping); step into any function calls in the line
+		info breakpoints
+			List breakpoints
+		info break
+			List breakpoint numbers.
+		info break breakpoint-number
+			List info about specific breakpoint.
+		info watchpoints
+			List watchpoints
+		info registers
+			List registers in use
+		info threads
+			List threads in use
+		help [name]
+			Show information about GDB command name, or general information about using GDB
+		kill
+			Stop debugging
+		quit
+			Exit from GDB
+
+
+
+
+########################################################################################################################
+# »»»»» Unit testing
+########################################################################################################################
+
+Eclipse provides integration with several unit testing frameworks, namely Boost.Test, QT Test and Google Testing Framework (gtest)
+Info:
+	http://wiki.eclipse.org/CDT/User/FAQ#C.2FC.2B.2B_Unit_Testing_Support
+
+
+
+
+########################################################################################################################
+# »»»»» Other useful tools
+########################################################################################################################
+
+Besides debugging, eclipse also as integration with:
+	-> Valgrind
+		- Useful to catch memory leaks, segmentation faults, analyze cache and heap usage, detect thread problems
+	-> GProf | Perf | OProfile | SystemTap
+		- Code profilers, useful to monitor and analyze program performance, see which functions are consuming more resources...
+	-> GCov
+		- Coverage tools, useful to see which parts of the code were executed during an execution session (also useful when doing unit testing)
+	-> GDB tracepoint analysis | LTTng tracing toolkit and kernel analysis
+		- Useful to analyze program execution flow
+
+
+
+
+########################################################################################################################
+# »»»»» Common problems
+########################################################################################################################
+
+# Fix std includes in eclipse
+- Project Properties --> C/C++ General --> Preprocessor Include Paths, Macros, etc. --> Providers tab
+- Check CDT GCC Built-in Compiler Settings
+
+# Fix other includes
+- Project -> Index -> Re-resolve Unresolved Includes
+- Project -> Index -> Rebuild
