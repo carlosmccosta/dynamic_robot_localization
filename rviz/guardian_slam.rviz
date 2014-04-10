@@ -4,10 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
-        - /LaserScan1
-        - /Odometry1
+        - /Odometry1/Status1
       Splitter Ratio: 0.534783
     Tree Height: 449
   - Class: rviz/Tool Properties
@@ -346,7 +343,7 @@ Visualization Manager:
       Color Transformer: Intensity
       Decay Time: 0
       Enabled: true
-      Max Color: 255; 255; 255
+      Max Color: 255; 241; 38
       Max Intensity: 1.61321e-19
       Min Color: 234; 227; 0
       Min Intensity: 0
@@ -435,7 +432,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
-    Fixed Frame: /base_link
+    Fixed Frame: /map
   Name: root
   Tools:
     - Class: rviz/MoveCamera
@@ -450,17 +447,17 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 35.1983
+      Distance: 28.6439
       Focal Point:
-        X: 3.75852
-        Y: -2.60893
-        Z: -0.0279168
+        X: 4.0794
+        Y: -4.01461
+        Z: 1.74495
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.2198
+      Pitch: 1.5498
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.75858
+      Yaw: 4.7186
     Saved: ~
 Window Geometry:
   Camera:
@@ -470,9 +467,9 @@ Window Geometry:
   Height: 1056
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000200000000000001ce000003dafc0200000002fb000000100044006900730070006c006100790073010000002800000250000000dd00fffffffb0000000c00430061006d006500720061010000027e000001840000001600ffffff000000010000010000000593fc0200000001fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000041000005930000006400ffffff000005ac000003da00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000200000000000001d3000003dafc0200000002fb000000100044006900730070006c006100790073010000002800000250000000dd00fffffffb0000000c00430061006d006500720061010000027e000001840000001600ffffff000000010000010000000593fc0200000001fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000041000005930000006400ffffff000005a7000003da00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Tool Properties:
     collapsed: false
   Width: 1920
-  X: 1920
+  X: 1913
   Y: 24

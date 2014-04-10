@@ -43,7 +43,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.build.arguments</key>
-					<value></value>
+					<value>-j8</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildLocation</key>
@@ -55,7 +55,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.environment</key>
-					<value>VERBOSE=1|ROS_ROOT=/opt/ros/groovy/share/ros|ROS_PACKAGE_PATH=/home/carloscosta/catkin_ws/src:/opt/ros/groovy/share:/opt/ros/groovy/stacks:/home/carloscosta/Projects|PYTHONPATH=/home/carloscosta/catkin_ws/devel/lib/python2.7/dist-packages:/opt/ros/groovy/lib/python2.7/dist-packages|PATH=/home/carloscosta/catkin_ws/devel/bin:/opt/ros/groovy/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games|LD_LIBRARY_PATH=/home/carloscosta/catkin_ws/devel/lib:/opt/ros/groovy/lib|PKG_CONFIG_PATH=/home/carloscosta/catkin_ws/devel/lib/pkgconfig:/opt/ros/groovy/lib/pkgconfig|CMAKE_PREFIX_PATH=/home/carloscosta/catkin_ws/devel:/opt/ros/groovy|</value>
+					<value>VERBOSE=1|ROS_ROOT=/opt/ros/groovy/share/ros|ROS_PACKAGE_PATH=/home/carloscosta/Projects/rviz:/opt/ros/groovy/share:/opt/ros/groovy/stacks:/home/carloscosta/Projects|PYTHONPATH=/home/carloscosta/Projects/rviz/build/devel/lib/python2.7/dist-packages:/opt/ros/groovy/lib/python2.7/dist-packages|PATH=/home/carloscosta/Projects/rviz/build/devel/bin:/opt/ros/groovy/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games|LD_LIBRARY_PATH=/home/carloscosta/Projects/rviz/build/devel/lib:/opt/ros/groovy/lib|PKG_CONFIG_PATH=/home/carloscosta/Projects/rviz/build/devel/lib/pkgconfig:/opt/ros/groovy/lib/pkgconfig|CMAKE_PREFIX_PATH=/home/carloscosta/Projects/rviz/build/devel:/opt/ros/groovy|</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.enableFullBuild</key>
@@ -159,6 +159,11 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>[Targets]/[lib] gtest/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
 			<name>[Targets]/[lib] gtest_main</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -190,6 +195,11 @@
 		</link>
 		<link>
 			<name>[Targets]/[lib] gtest_main/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] gtest_main/Object Files</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
 		</link>

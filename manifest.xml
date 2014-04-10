@@ -8,8 +8,8 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/robot_localization</url>
-  <depend package="roscpp"/>
   <depend package="std_msgs"/>
+  <depend package="roscpp"/>
 
 </package>
 

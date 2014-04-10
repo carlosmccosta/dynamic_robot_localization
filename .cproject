@@ -24,8 +24,8 @@
 <pathentry kind="mac" name="__STDC_HOSTED__" path="" value="1"/>
 <pathentry kind="mac" name="__GNUC__" path="" value="4"/>
 <pathentry kind="mac" name="__GNUC_MINOR__" path="" value="6"/>
-<pathentry kind="mac" name="__GNUC_PATCHLEVEL__" path="" value="3"/>
-<pathentry kind="mac" name="__VERSION__" path="" value="&quot;4.6.3&quot;"/>
+<pathentry kind="mac" name="__GNUC_PATCHLEVEL__" path="" value="4"/>
+<pathentry kind="mac" name="__VERSION__" path="" value="&quot;4.6.4&quot;"/>
 <pathentry kind="mac" name="__FINITE_MATH_ONLY__" path="" value=" "/>
 <pathentry kind="mac" name="_LP64" path="" value="1"/>
 <pathentry kind="mac" name="__LP64__" path="" value="1"/>
@@ -302,6 +302,13 @@
 <buildCommand>/usr/bin/make</buildCommand>
 <buildArguments>-j8</buildArguments>
 <buildTarget>doxygen</buildTarget>
+<stopOnError>true</stopOnError>
+<useDefaultCommand>false</useDefaultCommand>
+</target>
+<target name=": edit_cache" path="" targetID="org.eclipse.cdt.make.MakeTargetBuilder">
+<buildCommand>/usr/bin/make</buildCommand>
+<buildArguments>-j8</buildArguments>
+<buildTarget>edit_cache</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>false</useDefaultCommand>
 </target>

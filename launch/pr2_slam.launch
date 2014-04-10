@@ -17,6 +17,9 @@
 	<!-- tuck arms -->
 	<node name="tuckarm" pkg="pr2_tuckarm" type="tuck_arms.py" args="-l t -r t" />
 
+	<!-- keyboard teleop -->
+	<include file="$(find pr2_teleop)/teleop_keyboard.launch" />
+
 	<!-- slam -->
 	<include file="$(find pr2_2dnav_slam)/pr2_2dnav.launch" />
 	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find robot_localization)/rviz/pr2_slam.rviz" />

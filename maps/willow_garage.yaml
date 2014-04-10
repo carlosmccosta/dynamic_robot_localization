@@ -1,4 +1,4 @@
-image: /home/carloscosta/Projects/robot_localization/maps/willow_garage.pgm
+image: willow_garage.pgm
 resolution: 0.050000
 origin: [-50.000000, -50.000000, 0.000000]
 negate: 0
