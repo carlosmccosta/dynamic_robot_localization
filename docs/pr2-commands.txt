@@ -4,8 +4,8 @@
 
 roslaunch robot_object_manipulation robot_object_manipulation.launch
 roslaunch robot_object_manipulation simulation_world.launch
-roslaunch robot_localization pr2_slam.launch
-roslaunch robot_localization pr2_navigation.launch
+roslaunch dynamic_robot_localization pr2_slam.launch
+roslaunch dynamic_robot_localization pr2_navigation.launch
 
 
 
@@ -65,4 +65,3 @@ roslaunch pr2_gazebo pr2_empty_world.launch
 rosrun pr2_tuckarm tuck_arms.py -r t -l t
 roslaunch pr2_2dnav_slam pr2_2dnav.launch
 roslaunch pr2_navigation_slam rviz_move_base_slam.launch
-rosrun map_server map_saver -f ~/Projects/robot_localization/maps/willow_garage

@@ -1,10 +1,10 @@
 <launch>
 	<arg name="gui" default="true" />
-	<arg name="map_file" default="$(find robot_localization)/maps/willow_garage.yaml" />
+	<arg name="map_file" default="$(find dynamic_robot_localization)/maps/willow_garage.yaml" />
 	<param name="/use_sim_time" value="true" />
 
 	<!-- load world -->
-	<node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find robot_localization)/worlds/pr2_navigation.world" respawn="false" output="screen" />
+	<node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find dynamic_robot_localization)/worlds/pr2_navigation.world" respawn="false" output="screen" />
 
 	<!-- start gui -->
 	<group if="$(arg gui)">
@@ -22,7 +22,7 @@
 
 	<!-- slam -->
 	<include file="$(find pr2_2dnav_slam)/pr2_2dnav.launch" />
-	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find robot_localization)/rviz/pr2_slam.rviz" />
+	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find dynamic_robot_localization)/rviz/pr2_slam.rviz" />
 	<node pkg="costmap_2d" type="costmap_2d_markers" name="voxel_visualizer">
 		<remap from="voxel_grid" to="move_base_node/local_costmap/voxel_grid_throttled" />
 	</node>

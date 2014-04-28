@@ -1,0 +1,22 @@
+<launch>
+	<!-- gazebo simulator -->
+  <include file="$(find guardian_gazebo)/launch/guardian.launch">
+    <arg name="world_model" value="$(find guardian_gazebo)/worlds/guardian_ship_interior.world"/>
+    <arg name="rviz_config" value="-d $(find dynamic_robot_localization)/rviz/laser_assembler.rviz"/>
+  </include>
+
+	<!-- <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter"> -->
+	<!-- <remap from="scan" to="base_scan" /> -->
+	<!-- <rosparam command="load" file="$(find dynamic_robot_localization)/configs/filters/shadow_filter.yaml" /> -->
+	<!-- </node> -->
+
+	<node pkg="laser_assembler" type="laser_scan_assembler" name="laser_assembler" output="screen">
+		<remap from="scan" to="/tilt_scan" />
+		<param name="max_scans" type="int" value="1000" />
+		<param name="fixed_frame" type="string" value="odom" />
+	</node>
+
+	<node pkg="laser_assembler" type="periodic_snapshotter" name="periodic_snapshotter" output="screen" />
+
+<!-- 	<node pkg="rviz" type="rviz" name="$(anon rviz)" args="-d $(find dynamic_robot_localization)/rviz/ethzasl_datasets.rviz" /> -->
+</launch>

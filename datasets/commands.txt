@@ -1,0 +1,3 @@
+http://wiki.ros.org/rosbag/Commandline
+
+rosbag play --clock --loop <bagName1.bag> [bagName2.bag...]
