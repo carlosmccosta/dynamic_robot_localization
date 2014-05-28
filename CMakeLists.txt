@@ -32,12 +32,9 @@ find_package(PCL REQUIRED)
 ###################################
 catkin_package(
     INCLUDE_DIRS include
-#  LIBRARIES dynamic_robot_localization
+    LIBRARIES pose_to_tf_publisher planar_matcher planar_localization
     CATKIN_DEPENDS ${${PROJECT_NAME}_CATKIN_COMPONENTS}
-    DEPENDS
-        Eigen
-        Boost
-        PCL
+    DEPENDS Eigen Boost PCL
 )
 
 
@@ -54,21 +51,18 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
-# add_library(dynamic_robot_localization
-#   src/${PROJECT_NAME}/dynamic_robot_localization.cpp
-# )
+add_library(pose_to_tf_publisher src/pose_to_tf_publisher.cpp)
+add_library(planar_matcher src/planar/planar_matcher.cpp)
+add_library(planar_localization src/planar/planar_localization.cpp)
 
-add_executable(planar_localization_node
-    src/planar/planar_matcher.cpp
-    src/planar/planar_localization.cpp
-    src/planar/planar_localization_node.cpp
-)
+add_executable(pose_to_tf_publisher_node src/pose_to_tf_publisher_node.cpp)
+add_executable(planar_localization_node src/planar/planar_localization_node.cpp)
 
-target_link_libraries(planar_localization_node    
-    ${Boost_LIBRARIES}
-    ${PCL_LIBRARIES}    
-    ${catkin_LIBRARIES}
-)
+target_link_libraries(pose_to_tf_publisher ${catkin_LIBRARIES})
+target_link_libraries(planar_matcher ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(planar_localization planar_matcher ${catkin_LIBRARIES})
+target_link_libraries(pose_to_tf_publisher_node pose_to_tf_publisher ${catkin_LIBRARIES})
+target_link_libraries(planar_localization_node planar_localization ${catkin_LIBRARIES})
 
 
 

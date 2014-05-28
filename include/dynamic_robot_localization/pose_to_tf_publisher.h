@@ -1,6 +1,6 @@
 #pragma once
 
-/**\file tf_publisher.h
+/**\file pose_to_tf_publisher.h
  * \brief Description...
  *
  * @version 1.0
@@ -16,9 +16,14 @@
 
 // ROS includes
 #include <ros/ros.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/TransformStamped.h>
 
 // external libs includes
+
 // project includes
+#include "laserscan_to_pointcloud/tf_collector.h"
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -26,7 +31,7 @@ namespace dynamic_robot_localization {
 /**
  * \brief Description...
  */
-class TFPublisher {
+class PoseToTFPublisher {
 		// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -39,11 +44,18 @@ class TFPublisher {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		TFPublisher();
-		virtual ~TFPublisher();
+		PoseToTFPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual ~PoseToTFPublisher();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <TFPublisher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		void startPublishingTF();
+		void stopPublishingTF();
+
+		void publishTFMapToOdom();
+		void publishTFMapToOdomFromPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
+		void publishTFMapToOdomFromPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
+		void publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </TFPublisher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -59,6 +71,25 @@ class TFPublisher {
 
 		// ========================================================================   <private-section>   ==========================================================================
 	private:
+		// configuration fields
+		std::string initial_pose_topic_;
+		double publish_rate_;
+
+		// frame reference ids
+		std::string map_frame_id_;
+		std::string odom_frame_id_;
+		std::string base_link_frame_id_;
+
+		// state fields
+		laserscan_to_pointcloud::TFCollector tf_collector_;
+		size_t number_tfs_published_;
+		geometry_msgs::TransformStamped transform_stamped_map_to_base_link_;
+
+		// ros communication fields
+		ros::NodeHandlePtr node_handle_;
+		ros::NodeHandlePtr private_node_handle_;
+		ros::Subscriber initial_pose_subscriber_;
+		tf2_ros::TransformBroadcaster transform_broadcaster_;
 		// ========================================================================   </private-section>  ==========================================================================
 };
 

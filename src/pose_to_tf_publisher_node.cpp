@@ -7,7 +7,7 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #include <ros/ros.h>
-#include "dynamic_robot_localization/planar/planar_localization.h"
+#include "dynamic_robot_localization/pose_to_tf_publisher.h"
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <imports>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -16,14 +16,12 @@
 
 // ###################################################################################   <main>   ##############################################################################
 int main(int argc, char** argv) {
-	ros::init(argc, argv, "planar_localization");
+	ros::init(argc, argv, "pose_to_tf_publisher");
 
 	ros::NodeHandlePtr node_handle(new ros::NodeHandle());
 	ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
-	dynamic_robot_localization::PlanarLocalization planar_localization(node_handle, private_node_handle);
-	planar_localization.startLocalization();
-
-	ros::spin();
+	dynamic_robot_localization::PoseToTFPublisher pose_to_tf_publisher(node_handle, private_node_handle);
+	pose_to_tf_publisher.startPublishingTF();
 
 	return 0;
 }
