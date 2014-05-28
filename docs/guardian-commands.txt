@@ -3,7 +3,7 @@ roslaunch guardian_gazebo guardian_ship_interior.launch
 
 # slam
 roslaunch guardian_navigation guardian_slam.launch
-rosrun map_server map_saver -f ~/catkin_ws/src/guardian_ros_pkg/guardian_robot/guardian_navigation/maps/willow_garage
+rosrun map_server map_saver -f ~/catkin_ws/src/guardian_ros_pkg/guardian_robot/guardian_navigation/maps/ship_interior/ship_interior
 
 # navigation
 roslaunch guardian_navigation guardian_navigation.launch

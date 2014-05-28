@@ -1,0 +1,26 @@
+<launch>
+	<!-- planar localization -->
+	<!-- <node pkg="dynamic_robot_localization" type="planar_localization_node" name="planar_localization_node" output="screen">
+		<param name="laser_scan_topic" type="str" value="planar_pointcloud" />
+		<param name="costmap_topic" type="str" value="map" />
+		<param name="reference_map_pointcloud_publish_topic" type="str" value="reference_map_pointcloud" />
+		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
+		<param name="pose_publish_topic" type="str" value="pose_corrected" />
+		<param name="min_seconds_between_laserscan_registration" type="double" value="1.0" />
+		<param name="min_seconds_between_map_update" type="double" value="5.0" />
+		<param name="min_alignment_fitness" type="double" value="0.5" />
+	</node> -->
+
+	<!-- LaserScan assembler -->
+	<!-- <node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" /> -->
+	<node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler" output="screen">
+		<param name="laser_scan_topic" type="str" value="base_scan" />
+		<param name="pointcloud_publish_topic" type="str" value="planar_pointcloud" />
+		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="1" />
+		<param name="timeout_for_cloud_assembly" type="double" value="1.0" />
+		<param name="target_frame" type="str" value="map" />
+		<param name="min_range_cutoff_percentage_offset" type="double" value="5.00" />
+		<param name="max_range_cutoff_percentage_offset" type="double" value="0.95" />		
+		<param name="include_laser_intensity" type="bool" value="false" />
+	</node>
+</launch>
