@@ -17,8 +17,7 @@ namespace dynamic_robot_localization {
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 PoseToTFPublisher::PoseToTFPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) :
-		number_tfs_published_(0),
-		node_handle_(node_handle), private_node_handle_(private_node_handle) {
+		number_tfs_published_(0), node_handle_(node_handle), private_node_handle_(private_node_handle) {
 
 	private_node_handle_->param("publish_rate", publish_rate_, 100.0);
 
@@ -38,10 +37,11 @@ PoseToTFPublisher::PoseToTFPublisher(ros::NodeHandlePtr& node_handle, ros::NodeH
 	private_node_handle_->param("initial_roll", roll, 0.0);
 	private_node_handle_->param("initial_pitch", pitch, 0.0);
 	private_node_handle_->param("initial_yaw", yaw, 0.0);
-	publishTFMapToOdomFromPose(x, y, z, roll, pitch, yaw);
+	publishTFMapToOdomFromInitialPose(x, y, z, roll, pitch, yaw);
 }
 
-PoseToTFPublisher::~PoseToTFPublisher() {}
+PoseToTFPublisher::~PoseToTFPublisher() {
+}
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -67,6 +67,13 @@ void PoseToTFPublisher::publishTFMapToOdom() {
 	transform_broadcaster_.sendTransform(transform_stamped_map_to_base_link_);
 }
 
+void PoseToTFPublisher::publishTFMapToOdomFromInitialPose(double x, double y, double z, double roll, double pitch, double yaw) {
+	tf2::Quaternion orientation;
+	orientation.setRPY(roll, pitch, yaw);
+
+	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(tf2::Transform(orientation, tf2::Vector3(x, y, z)), transform_stamped_map_to_base_link_.transform);
+	publishTFMapToOdom();
+}
 
 void PoseToTFPublisher::publishTFMapToOdomFromPose(double x, double y, double z, double roll, double pitch, double yaw) {
 	tf2::Quaternion orientation;
@@ -74,25 +81,43 @@ void PoseToTFPublisher::publishTFMapToOdomFromPose(double x, double y, double z,
 	publishTFMapToOdom(tf2::Transform(orientation, tf2::Vector3(x, y, z)));
 }
 
-
 void PoseToTFPublisher::publishTFMapToOdomFromPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose) {
-	tf2::Transform transform_map_to_base_link(
-			tf2::Quaternion(pose->pose.pose.orientation.x, pose->pose.pose.orientation.y, pose->pose.pose.orientation.z, pose->pose.pose.orientation.w),
-			tf2::Vector3(pose->pose.pose.position.x, pose->pose.pose.position.y, pose->pose.pose.position.z));
-
-	publishTFMapToOdom(transform_map_to_base_link);
-}
-
-
-void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link) {
-	tf2::Transform transform_odom_to_base_link;
-	if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time::now())) {
+	if (pose->header.frame_id.empty()) {
 		return;
 	}
 
-	// map_base = map_odom * odom_base
-	// map_odom = map_base * inverse(odom_base)
-	tf2::Transform transform_map_to_odom = transform_map_to_base_link * transform_odom_to_base_link.inverse();
+	tf2::Transform transform_pose(
+			tf2::Quaternion(pose->pose.pose.orientation.x, pose->pose.pose.orientation.y, pose->pose.pose.orientation.z, pose->pose.pose.orientation.w),
+	        tf2::Vector3(pose->pose.pose.position.x, pose->pose.pose.position.y, pose->pose.pose.position.z));
+
+	tf2::Transform odometry_tf_from_pose_time_to_now;
+	if (tf_collector_.lookForTransform(odometry_tf_from_pose_time_to_now, base_link_frame_id_, ros::Time::now(), base_link_frame_id_, pose->header.stamp, map_frame_id_)) {
+		// include odometry displacement from pose publish time to current time
+		transform_pose *= odometry_tf_from_pose_time_to_now;
+	}
+
+	if (pose->header.frame_id != map_frame_id_) {
+		// transform to map (global frame reference)
+		tf2::Transform transform_pose_to_map;
+		if (!tf_collector_.lookForTransform(transform_pose_to_map, map_frame_id_, ros::Time::now(), pose->header.frame_id, pose->header.stamp, map_frame_id_)) {
+			return;
+		}
+
+		transform_pose *= transform_pose_to_map;
+	}
+
+	publishTFMapToOdom(transform_pose);
+}
+
+void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link) {
+	tf2::Transform transform_base_link_to_odom;
+	if (!tf_collector_.lookForTransform(transform_base_link_to_odom, base_link_frame_id_, odom_frame_id_, ros::Time::now())) {
+		return;
+	}
+
+	// map_to_base = map_to_odom * odom_to_base
+	// map_to_odom = map_to_base * base_to_odom)
+	tf2::Transform transform_map_to_odom = transform_map_to_base_link * transform_base_link_to_odom;
 	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(transform_map_to_odom, transform_stamped_map_to_base_link_.transform);
 
 	publishTFMapToOdom();

@@ -8,7 +8,7 @@
 		<param name="timeout_for_cloud_assembly" type="double" value="1.0" />
 		<param name="target_frame" type="str" value="map" />
 		<param name="min_range_cutoff_percentage_offset" type="double" value="5.00" />
-		<param name="max_range_cutoff_percentage_offset" type="double" value="0.95" />		
+		<param name="max_range_cutoff_percentage_offset" type="double" value="0.95" />
 		<param name="include_laser_intensity" type="bool" value="false" />
 	</node>
 	
@@ -18,7 +18,7 @@
 		<param name="initial_pose_topic" type="str" value="initialpose" />
 		<param name="map_frame_id" type="str" value="map" />
 		<param name="odom_frame_id" type="str" value="odom" />
-		<param name="base_link_frame_id" type="str" value="base_footprint" />		
+		<param name="base_link_frame_id" type="str" value="base_footprint" />
 		<param name="initial_x" type="double" value="-3.2" />
 		<param name="initial_y" type="double" value="-3.75" />
 		<param name="initial_z" type="double" value="0.0" />
