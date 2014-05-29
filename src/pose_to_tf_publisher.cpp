@@ -21,7 +21,8 @@ PoseToTFPublisher::PoseToTFPublisher(ros::NodeHandlePtr& node_handle, ros::NodeH
 
 	private_node_handle_->param("publish_rate", publish_rate_, 100.0);
 
-	private_node_handle_->param("initial_pose_topic", initial_pose_topic_, std::string("initialpose"));
+	private_node_handle_->param("initial_pose_topic", initial_pose_topic_, std::string(""));
+	private_node_handle_->param("initial_pose_with_covariance_stamped_topic", initial_pose_with_covariance_stamped_topic_, std::string("initialpose"));
 	private_node_handle_->param("map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("odom_frame_id", odom_frame_id_, std::string("odom"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_link"));
@@ -47,7 +48,14 @@ PoseToTFPublisher::~PoseToTFPublisher() {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <TFPublisher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void PoseToTFPublisher::startPublishingTF() {
-	initial_pose_subscriber_ = node_handle_->subscribe(initial_pose_topic_, 5, &dynamic_robot_localization::PoseToTFPublisher::publishTFMapToOdomFromPose, this);
+	if (!initial_pose_topic_.empty()) {
+		initial_pose_subscriber_ = node_handle_->subscribe(initial_pose_topic_, 5, &dynamic_robot_localization::PoseToTFPublisher::publishTFMapToOdomFromPose, this);
+	}
+
+	if (!initial_pose_with_covariance_stamped_topic_.empty()) {
+		initial_pose_with_covariance_stamped_subscriber_ = node_handle_->subscribe(initial_pose_with_covariance_stamped_topic_, 5,
+		        &dynamic_robot_localization::PoseToTFPublisher::publishTFMapToOdomFromPoseWithCovarianceStamped, this);
+	}
 
 	ros::Rate publish_rate(publish_rate_);
 	while (ros::ok()) {
@@ -58,7 +66,13 @@ void PoseToTFPublisher::startPublishingTF() {
 }
 
 void PoseToTFPublisher::stopPublishingTF() {
-	initial_pose_subscriber_.shutdown();
+	if (!initial_pose_topic_.empty()) {
+		initial_pose_subscriber_.shutdown();
+	}
+
+	if (!initial_pose_with_covariance_stamped_topic_.empty()) {
+		initial_pose_with_covariance_stamped_subscriber_.shutdown();
+	}
 }
 
 void PoseToTFPublisher::publishTFMapToOdom() {
@@ -75,19 +89,25 @@ void PoseToTFPublisher::publishTFMapToOdomFromInitialPose(double x, double y, do
 	publishTFMapToOdom();
 }
 
-void PoseToTFPublisher::publishTFMapToOdomFromPose(double x, double y, double z, double roll, double pitch, double yaw) {
+void PoseToTFPublisher::publishTFMapToOdomFromGlobalPose(double x, double y, double z, double roll, double pitch, double yaw) {
 	tf2::Quaternion orientation;
 	orientation.setRPY(roll, pitch, yaw);
 	publishTFMapToOdom(tf2::Transform(orientation, tf2::Vector3(x, y, z)));
 }
 
-void PoseToTFPublisher::publishTFMapToOdomFromPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose) {
+void PoseToTFPublisher::publishTFMapToOdomFromPose(const geometry_msgs::PoseConstPtr& pose) {
+	tf2::Transform transform_pose(tf2::Quaternion(pose->orientation.x, pose->orientation.y, pose->orientation.z, pose->orientation.w),
+	        tf2::Vector3(pose->position.x, pose->position.y, pose->position.z));
+
+	publishTFMapToOdom(transform_pose);
+}
+
+void PoseToTFPublisher::publishTFMapToOdomFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose) {
 	if (pose->header.frame_id.empty()) {
 		return;
 	}
 
-	tf2::Transform transform_pose(
-			tf2::Quaternion(pose->pose.pose.orientation.x, pose->pose.pose.orientation.y, pose->pose.pose.orientation.z, pose->pose.pose.orientation.w),
+	tf2::Transform transform_pose(tf2::Quaternion(pose->pose.pose.orientation.x, pose->pose.pose.orientation.y, pose->pose.pose.orientation.z, pose->pose.pose.orientation.w),
 	        tf2::Vector3(pose->pose.pose.position.x, pose->pose.pose.position.y, pose->pose.pose.position.z));
 
 	tf2::Transform odometry_tf_from_pose_time_to_now;
@@ -132,3 +152,4 @@ void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_t
 // =============================================================================   </private-section>  =========================================================================
 
 } /* namespace dynamic_robot_localization */
+

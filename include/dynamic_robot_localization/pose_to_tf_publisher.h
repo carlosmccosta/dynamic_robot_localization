@@ -17,6 +17,7 @@
 // ROS includes
 #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 
@@ -54,8 +55,9 @@ class PoseToTFPublisher {
 
 		void publishTFMapToOdom();
 		void publishTFMapToOdomFromInitialPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
-		void publishTFMapToOdomFromPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
-		void publishTFMapToOdomFromPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
+		void publishTFMapToOdomFromGlobalPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
+		void publishTFMapToOdomFromPose(const geometry_msgs::PoseConstPtr& pose);
+		void publishTFMapToOdomFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
 		void publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </TFPublisher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -74,6 +76,7 @@ class PoseToTFPublisher {
 	private:
 		// configuration fields
 		std::string initial_pose_topic_;
+		std::string initial_pose_with_covariance_stamped_topic_;
 		double publish_rate_;
 
 		// frame reference ids
@@ -90,6 +93,7 @@ class PoseToTFPublisher {
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
 		ros::Subscriber initial_pose_subscriber_;
+		ros::Subscriber initial_pose_with_covariance_stamped_subscriber_;
 		tf2_ros::TransformBroadcaster transform_broadcaster_;
 		// ========================================================================   </private-section>  ==========================================================================
 };

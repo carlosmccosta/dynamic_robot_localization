@@ -28,7 +28,7 @@
 // project includes
 #include "dynamic_robot_localization/planar/planar_matcher.h"
 #include "laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h"
-
+#include "laserscan_to_pointcloud/tf_collector.h"
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -59,8 +59,6 @@ class PlanarLocalization {
 		void processCostmap(const nav_msgs::OccupancyGridConstPtr& planar_map);
 		void processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud);
 		void resetPointCloudHeight(PlanarMatcher::PointCloudT::Ptr& pointcloud, float height = 0.0);
-
-		void publishPoseCorrectedFromCurrentCloudRegistration();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarLocalization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -76,7 +74,7 @@ class PlanarLocalization {
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-		// subscription topic names fields
+		// subscription topic names
 		std::string planar_pointcloud_topic_;
 		std::string costmap_topic_;
 
@@ -85,7 +83,8 @@ class PlanarLocalization {
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_publish_topic_;
 
-		// control fields
+		// configuration fields
+		std::string base_link_frame_id_;
 		ros::Duration min_seconds_between_laserscan_registration_;
 		ros::Duration min_seconds_between_map_update_;
 
@@ -97,10 +96,12 @@ class PlanarLocalization {
 		int max_number_of_iterations_;
 
 		// state fields
+		laserscan_to_pointcloud::TFCollector tf_collector_;
 		ros::Time last_matched_scan_time_;
 		ros::Time last_map_received_time_;
 		bool map_received_;
 		PlanarMatcher planar_matcher_;
+		size_t number_poses_published_;
 
 		// ros communication fields
 		ros::NodeHandlePtr node_handle_;
