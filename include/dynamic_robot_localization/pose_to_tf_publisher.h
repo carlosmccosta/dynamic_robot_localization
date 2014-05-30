@@ -87,7 +87,7 @@ class PoseToTFPublisher {
 		// state fields
 		laserscan_to_pointcloud::TFCollector tf_collector_;
 		size_t number_tfs_published_;
-		geometry_msgs::TransformStamped transform_stamped_map_to_base_link_;
+		geometry_msgs::TransformStamped transform_stamped_map_to_odom_;
 
 		// ros communication fields
 		ros::NodeHandlePtr node_handle_;

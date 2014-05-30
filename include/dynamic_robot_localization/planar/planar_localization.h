@@ -20,6 +20,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <dynamic_reconfigure/server.h>
 
 // PCL includes
 
@@ -29,6 +30,7 @@
 #include "dynamic_robot_localization/planar/planar_matcher.h"
 #include "laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h"
 #include "laserscan_to_pointcloud/tf_collector.h"
+#include "dynamic_robot_localization/PlanarLocalizationConfig.h"
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -59,6 +61,8 @@ class PlanarLocalization {
 		void processCostmap(const nav_msgs::OccupancyGridConstPtr& planar_map);
 		void processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud);
 		void resetPointCloudHeight(PlanarMatcher::PointCloudT::Ptr& pointcloud, float height = 0.0);
+
+		void dynamicReconfigureCallback(dynamic_robot_localization::PlanarLocalizationConfig& config, uint32_t level);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarLocalization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -111,6 +115,8 @@ class PlanarLocalization {
 		ros::Publisher map_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_publisher_;
+
+		dynamic_reconfigure::Server<dynamic_robot_localization::PlanarLocalizationConfig> dynamic_reconfigure_server_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

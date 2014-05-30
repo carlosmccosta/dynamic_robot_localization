@@ -30,6 +30,11 @@ find_package(PCL REQUIRED)
 ###################################
 ## catkin specific configuration ##
 ###################################
+
+generate_dynamic_reconfigure_options(
+    cfg/PlanarLocalization.cfg
+)
+
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES pose_to_tf_publisher planar_matcher planar_localization
@@ -57,6 +62,8 @@ add_library(planar_localization src/planar/planar_localization.cpp)
 
 add_executable(pose_to_tf_publisher_node src/pose_to_tf_publisher_node.cpp)
 add_executable(planar_localization_node src/planar/planar_localization_node.cpp)
+
+add_dependencies(planar_localization ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(pose_to_tf_publisher ${catkin_LIBRARIES})
 target_link_libraries(planar_matcher ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES})
