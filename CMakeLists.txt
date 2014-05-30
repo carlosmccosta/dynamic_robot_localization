@@ -67,7 +67,7 @@ add_dependencies(planar_localization ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(pose_to_tf_publisher ${catkin_LIBRARIES})
 target_link_libraries(planar_matcher ${Boost_LIBRARIES} ${PCL_LIBRARIES} ${catkin_LIBRARIES})
-target_link_libraries(planar_localization planar_matcher ${catkin_LIBRARIES})
+target_link_libraries(planar_localization planar_matcher pose_to_tf_publisher ${catkin_LIBRARIES})
 target_link_libraries(pose_to_tf_publisher_node pose_to_tf_publisher ${catkin_LIBRARIES})
 target_link_libraries(planar_localization_node planar_localization ${catkin_LIBRARIES})
 

@@ -23,8 +23,6 @@ int main(int argc, char** argv) {
 	dynamic_robot_localization::PlanarLocalization planar_localization(node_handle, private_node_handle);
 	planar_localization.startLocalization();
 
-	ros::spin();
-
 	return 0;
 }
 // ###################################################################################   </main>   #############################################################################

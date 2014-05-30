@@ -1,0 +1,16 @@
+<launch>
+	<!-- tf publisher for localization pose -->	
+	<node pkg="dynamic_robot_localization" type="pose_to_tf_publisher_node" name="pose_to_tf_publisher_node" output="screen">
+		<param name="publish_rate" type="double" value="100.0" />
+		<param name="initial_pose_with_covariance_stamped_topic" type="str" value="initialpose" />
+		<param name="map_frame_id" type="str" value="map" />
+		<param name="odom_frame_id" type="str" value="odom" />
+		<param name="base_link_frame_id" type="str" value="base_footprint" />
+		<param name="initial_x" type="double" value="-3.2" />
+		<param name="initial_y" type="double" value="-3.75" />
+		<param name="initial_z" type="double" value="0.0" />
+		<param name="initial_roll" type="double" value="0.0" />
+		<param name="initial_pitch" type="double" value="0.0" />
+		<param name="initial_yaw" type="double" value="1.57079632679" />
+	</node>
+</launch>

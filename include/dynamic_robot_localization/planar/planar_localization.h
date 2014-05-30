@@ -28,6 +28,7 @@
 
 // project includes
 #include "dynamic_robot_localization/planar/planar_matcher.h"
+#include "dynamic_robot_localization/pose_to_tf_publisher.h"
 #include "laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h"
 #include "laserscan_to_pointcloud/tf_collector.h"
 #include "dynamic_robot_localization/PlanarLocalizationConfig.h"
@@ -108,6 +109,7 @@ class PlanarLocalization {
 		size_t number_poses_published_;
 
 		// ros communication fields
+		PoseToTFPublisher pose_to_tf_publisher_;
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
 		ros::Subscriber laserscan_cloud_subscriber_;
