@@ -17,6 +17,7 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     tf2_ros
     rosconsole
     dynamic_reconfigure
+    cmake_modules
     laserscan_to_pointcloud
 )
 

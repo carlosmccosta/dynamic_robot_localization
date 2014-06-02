@@ -1,6 +1,6 @@
 <launch>
 	<!-- merge two LaserScan topics -->
-	<!-- <node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" /> -->
+	<node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" />
 
 
 	<!-- LaserScan assembler -->
@@ -27,11 +27,13 @@
 		<param name="base_link_frame_id" type="str" value="base_footprint" />
 		<param name="min_seconds_between_laserscan_registration" type="double" value="0.05" />
 		<param name="min_seconds_between_map_update" type="double" value="5.0" />
-		<param name="max_alignment_fitness_" type="double" value="0.5" />
-		<param name="max_correspondence_distance" type="double" value="0.1" />
+
+		<!-- ICP params -->
+		<param name="max_alignment_fitness" type="double" value="0.5" />
+		<param name="max_correspondence_distance" type="double" value="1.0" />
 		<param name="transformation_epsilon" type="double" value="1e-6" />
-		<param name="euclidean_fitness_epsilon" type="double" value="1.0" />
-		<param name="max_number_of_iterations_" type="double" value="250" />
+		<param name="euclidean_fitness_epsilon" type="double" value="0.001" />
+		<param name="max_number_of_iterations" type="double" value="1000" />
 
 		<!-- tf params -->
 		<param name="publish_rate" type="double" value="100.0" />
@@ -42,6 +44,6 @@
 		<param name="initial_z" type="double" value="0.0" />
 		<param name="initial_roll" type="double" value="0.0" />
 		<param name="initial_pitch" type="double" value="0.0" />
-<!-- 		<param name="initial_yaw" type="double" value="1.57079632679" /> -->
+		<!-- <param name="initial_yaw" type="double" value="1.57079632679" /> -->
 	</node>
 </launch>

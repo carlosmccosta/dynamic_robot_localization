@@ -39,10 +39,10 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 
 	// icp configuration fields
 	private_node_handle_->param("max_alignment_fitness", max_alignment_fitness_, 0.5);
-	private_node_handle_->param("max_correspondence_distance", max_correspondence_distance_, 0.1);
+	private_node_handle_->param("max_correspondence_distance", max_correspondence_distance_, 2.0);
 	private_node_handle_->param("transformation_epsilon", transformation_epsilon_, 1e-6);
-	private_node_handle_->param("euclidean_fitness_epsilon", euclidean_fitness_epsilon_, 1.0);
-	private_node_handle_->param("max_number_of_iterations", max_number_of_iterations_, 250);
+	private_node_handle_->param("euclidean_fitness_epsilon", euclidean_fitness_epsilon_, 0.001);
+	private_node_handle_->param("max_number_of_iterations", max_number_of_iterations_, 1000);
 	planar_matcher_ = PlanarMatcher(max_correspondence_distance_, transformation_epsilon_, euclidean_fitness_epsilon_, max_number_of_iterations_);
 
 

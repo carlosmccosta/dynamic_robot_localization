@@ -162,14 +162,14 @@ void PoseToTFPublisher::publishTFMapToOdomFromGlobalPose(double x, double y, dou
 
 
 void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link) {
-	tf2::Transform transform_base_link_to_odom;
-	if (!tf_collector_.lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ros::Time::now())) {
+	tf2::Transform transform_odom_to_base_link;
+	if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time::now())) {
 		return;
 	}
 
 	// map_to_base = map_to_odom * odom_to_base
 	// map_to_odom = map_to_base * base_to_odom)
-	transform_map_to_odom_ = transform_map_to_base_link * transform_base_link_to_odom;
+	transform_map_to_odom_ = transform_map_to_base_link * transform_odom_to_base_link;
 	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(transform_map_to_odom_, transform_stamped_map_to_odom_.transform);
 	publishTFMapToOdom();
 }

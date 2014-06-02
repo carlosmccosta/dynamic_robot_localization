@@ -8,6 +8,8 @@
 /gazebo/link_states/pose[2]/position/x
 /gazebo/link_states/pose[2]/position/y
 
+/gazebo/model_states/pose[2]/position/x
+/gazebo/model_states/pose[2]/position/y
 
 
 # ======================================
@@ -17,6 +19,12 @@
 /guardian/odom/pose/pose/position/y
 
 
+
+# ======================================
+# Localization
+# ======================================
+/initialpose/pose/pose/position/x
+/initialpose/pose/pose/position/y
 
 
 
