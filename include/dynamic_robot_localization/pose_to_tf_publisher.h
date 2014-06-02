@@ -77,6 +77,7 @@ class PoseToTFPublisher {
 		inline std::string& getMapFrameId() { return map_frame_id_; }
 		inline std::string& getOdomFrameId() { return odom_frame_id_; }
 		inline double getPublishRate() const { return publish_rate_; }
+		laserscan_to_pointcloud::TFCollector& getTfCollector() { return tf_collector_; }
 		inline tf2::Transform& getTransformMapToOdom() { return transform_map_to_odom_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

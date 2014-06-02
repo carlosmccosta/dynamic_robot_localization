@@ -16,6 +16,9 @@
 	</node>
 
 
+	<!-- map to odom publisher -->
+	<include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch" />
+
 	<!-- planar localization -->
 	<node pkg="dynamic_robot_localization" type="planar_localization_node" name="planar_localization_node" output="screen">
 		<!-- localization params -->
@@ -24,6 +27,7 @@
 		<param name="reference_map_pointcloud_publish_topic" type="str" value="reference_map_pointcloud" />
 		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
 		<param name="pose_publish_topic" type="str" value="initialpose" />
+		<param name="publish_tf_map_odom" type="bool" value="false" />
 		<param name="base_link_frame_id" type="str" value="base_footprint" />
 		<param name="min_seconds_between_laserscan_registration" type="double" value="0.05" />
 		<param name="min_seconds_between_map_update" type="double" value="5.0" />
@@ -44,6 +48,6 @@
 		<param name="initial_z" type="double" value="0.0" />
 		<param name="initial_roll" type="double" value="0.0" />
 		<param name="initial_pitch" type="double" value="0.0" />
-		<!-- <param name="initial_yaw" type="double" value="1.57079632679" /> -->
+		<param name="initial_yaw" type="double" value="1.57079632679" />
 	</node>
 </launch>

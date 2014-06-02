@@ -113,9 +113,9 @@ void PoseToTFPublisher::publishTFMapToOdomFromPoseWithCovarianceStamped(const ge
 		transform_pose *= transform_pose_to_map;
 	}
 
-	if (pose->header.stamp <= ros::Time::now()) { // some localization methods publish pose in the near future
-		addOdometryDisplacementToTransform(transform_pose, pose->header.stamp);
-	}
+//	if (pose->header.stamp <= ros::Time::now()) { // some localization methods publish pose in the near future
+//		addOdometryDisplacementToTransform(transform_pose, pose->header.stamp);
+//	}
 	publishTFMapToOdom(transform_pose);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </ros integration functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

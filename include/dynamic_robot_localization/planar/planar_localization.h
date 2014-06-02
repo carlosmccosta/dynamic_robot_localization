@@ -92,6 +92,7 @@ class PlanarLocalization {
 		std::string base_link_frame_id_;
 		ros::Duration min_seconds_between_laserscan_registration_;
 		ros::Duration min_seconds_between_map_update_;
+		bool publish_tf_map_odom_;
 
 		// icp configuration fields
 		double max_alignment_fitness_;
@@ -101,7 +102,6 @@ class PlanarLocalization {
 		int max_number_of_iterations_;
 
 		// state fields
-		laserscan_to_pointcloud::TFCollector tf_collector_;
 		ros::Time last_matched_scan_time_;
 		ros::Time last_map_received_time_;
 		bool map_received_;
