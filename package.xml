@@ -21,7 +21,8 @@
 	<build_depend>tf2_ros</build_depend>	
 	<build_depend>rosconsole</build_depend>
 	<build_depend>dynamic_reconfigure</build_depend>
-	<build_depend>laserscan_to_pointcloud</build_depend>	
+	<build_depend>laserscan_to_pointcloud</build_depend>
+	<build_depend>robot_localization_tools</build_depend>
 	<run_depend>eigen</run_depend>
 	<run_depend>cmake_modules</run_depend>
 	<run_depend>Boost</run_depend>
@@ -35,5 +36,6 @@
 	<run_depend>tf2_ros</run_depend>	
 	<run_depend>rosconsole</run_depend>
 	<run_depend>dynamic_reconfigure</run_depend>
-	<run_depend>laserscan_to_pointcloud</run_depend>	
+	<run_depend>laserscan_to_pointcloud</run_depend>
+	<run_depend>robot_localization_tools</run_depend>	
 </package>

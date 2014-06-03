@@ -5,6 +5,7 @@ echo "##### Creating eclipse project for package dynamic_robot_localization"
 echo "####################################################################################################"
 
 
+mkdir -p ~/catkin_ws/build/dynamic_robot_localization
 cd ~/catkin_ws/build/dynamic_robot_localization
 cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_ECLIPSE_GENERATE_SOURCE_PROJECT=TRUE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j8 ~/catkin_ws/src/dynamic_robot_localization
 

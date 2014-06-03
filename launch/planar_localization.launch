@@ -45,6 +45,6 @@
 	</node>
 	
 	
-	<!-- localization plots -->
-	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />
+	<!-- localization tests -->
+	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />	
 </launch>

@@ -31,8 +31,20 @@
 # Tests
 # ======================================
 
++ Input
+	+ geometry_msgs/PoseWithCovarianceStamped
+		+ /initialpose
+
+	+ geometry_msgs/Pose[]
+		+ /gazebo/model_states
+
++ Output
+	+ geometry_msgs/PoseStamped
+
+
 rqt_plot /gazebo/model_states/pose[2]/position/x /initialpose/pose/pose/position/x
 rqt_plot /gazebo/model_states/pose[2]/position/y /initialpose/pose/pose/position/y
+
 
 
 ########################################################################################################################

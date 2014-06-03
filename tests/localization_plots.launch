@@ -1,4 +1,16 @@
 <launch>
-	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" output="screen" args="/gazebo/model_states/pose[2]/position/x /initialpose/pose/pose/position/x" />
-	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" output="screen" args="/gazebo/model_states/pose[2]/position/y /initialpose/pose/pose/position/y" />
+	<node pkg="robot_localization_tools" type="robot_localization_error_node" name="robot_localization_error" output="screen">
+		<param name="gazebo_link_state_service" type="str" value="gazebo/get_link_state" />
+		<param name="gazebo_ground_truth_link" type="str" value="guardian::base_footprint" />
+		<param name="pose_topic" type="str" value="initialpose" />
+		<param name="pose_error_publish_topic" type="str" value="localization_error" />
+		<param name="use_roll_pitch_yaw_angles" type="bool" value="true" />
+		<param name="use_degrees_in_angles" type="bool" value="true" />
+	</node>
+
+	<!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" output="screen" args="/gazebo/model_states/pose[2]/position/x /initialpose/pose/pose/position/x" /> -->
+	<!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" output="screen" args="/gazebo/model_states/pose[2]/position/y /initialpose/pose/pose/position/y" /> -->
+
+	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_position" output="screen" args="/localization_error/pose/position/x /localization_error/pose/position/y" />
+	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_orientation" output="screen" args="/localization_error/pose/orientation/z" />
 </launch>
