@@ -90,12 +90,16 @@ class PlanarLocalization {
 
 		// configuration fields
 		std::string base_link_frame_id_;
-		ros::Duration min_seconds_between_laserscan_registration_;
+		ros::Duration max_seconds_scan_age_;
+		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_map_update_;
 		bool publish_tf_map_odom_;
+		bool add_odometry_displacement_;
 
 		// icp configuration fields
 		double max_alignment_fitness_;
+		double max_transformation_angle_;
+		double max_transformation_distance_;
 		double max_correspondence_distance_;
 		double transformation_epsilon_;
 		double euclidean_fitness_epsilon_;

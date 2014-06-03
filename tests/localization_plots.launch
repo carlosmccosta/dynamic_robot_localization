@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" output="screen" args="/gazebo/model_states/pose[2]/position/x /initialpose/pose/pose/position/x" />
+	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" output="screen" args="/gazebo/model_states/pose[2]/position/y /initialpose/pose/pose/position/y" />
+</launch>
