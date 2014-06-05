@@ -13,6 +13,7 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <vector>
 
 // ROS includes
 #include <ros/ros.h>
@@ -26,7 +27,10 @@
 #include <pcl/point_types.h>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/icp.h>
+#include <pcl/registration/icp_nl.h>
 #include <pcl/registration/gicp.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/filters/filter.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -43,8 +47,10 @@ class PlanarMatcher {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef pcl::PointXYZ PointT;
-		typedef pcl::PointCloud<PointT> PointCloudT;
+		typedef pcl::PointNormal PointTarget;
+		typedef pcl::PointNormal PointSource;
+		typedef pcl::PointCloud<PointTarget> PointCloudTarget;
+		typedef pcl::PointCloud<PointSource> PointCloudSource;
 //		typedef boost::shared_ptr<PlanarMatcher> Ptr;
 //		typedef boost::shared_ptr<const PlanarMatcher> ConstPtr;
 
@@ -63,13 +69,13 @@ class PlanarMatcher {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PlanarMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bool createReferencePointcloudFromMap(const nav_msgs::OccupancyGridConstPtr& planar_map);
-		double alignPlanarPointclouds(const PointCloudT::Ptr& environment_cloud, PointCloudT::Ptr& environment_cloud_aligned);
+		double alignPlanarPointclouds(const PointCloudSource::Ptr& environment_cloud, PointCloudSource::Ptr& environment_cloud_aligned);
 		Eigen::Vector3f correctPose(const Eigen::Vector3f& current_pose);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		inline PointCloudT::Ptr& getReferencePointcloud() { return reference_pointcloud_; }
-		inline pcl::Registration<PointT, PointT>::Ptr& getCloudMatcher() { return cloud_matcher_; }
+		inline PointCloudTarget::Ptr& getReferencePointcloud() { return reference_pointcloud_; }
+		inline pcl::Registration<PointSource, PointTarget>::Ptr& getCloudMatcher() { return cloud_matcher_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -86,8 +92,8 @@ class PlanarMatcher {
 		int threshold_for_map_cell_as_obstacle_; // [0-100]
 
 		// state fields
-		PointCloudT::Ptr reference_pointcloud_;
-		pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
+		PointCloudTarget::Ptr reference_pointcloud_;
+		pcl::Registration<PointSource, PointTarget>::Ptr cloud_matcher_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

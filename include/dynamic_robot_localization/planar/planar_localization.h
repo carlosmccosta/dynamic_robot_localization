@@ -23,6 +23,10 @@
 #include <dynamic_reconfigure/server.h>
 
 // PCL includes
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/filters/filter.h>
 
 // external libs includes
 
@@ -43,6 +47,7 @@ class PlanarLocalization {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -61,7 +66,7 @@ class PlanarLocalization {
 		void stopLocalization();
 		void processCostmap(const nav_msgs::OccupancyGridConstPtr& planar_map);
 		void processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud);
-		void resetPointCloudHeight(PlanarMatcher::PointCloudT::Ptr& pointcloud, float height = 0.0);
+		void resetPointCloudHeight(PointCloudXYZ::Ptr& pointcloud, float height = 0.0);
 
 		void dynamicReconfigureCallback(dynamic_robot_localization::PlanarLocalizationConfig& config, uint32_t level);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarLocalization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -100,13 +105,9 @@ class PlanarLocalization {
 		double max_alignment_fitness_;
 		double max_transformation_angle_;
 		double max_transformation_distance_;
-		double max_correspondence_distance_;
-		double transformation_epsilon_;
-		double euclidean_fitness_epsilon_;
-		int max_number_of_iterations_;
 
 		// state fields
-		ros::Time last_matched_scan_time_;
+		ros::Time last_scan_time_;
 		ros::Time last_map_received_time_;
 		bool map_received_;
 		PlanarMatcher planar_matcher_;

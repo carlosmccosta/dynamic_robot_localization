@@ -16,14 +16,25 @@ namespace dynamic_robot_localization {
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 PlanarMatcher::PlanarMatcher(double max_correspondence_distance, double transformation_epsilon, double euclidean_fitness_epsilon, int max_number_of_iterations) :
-		reference_pointcloud_(new PointCloudT()),
-		cloud_matcher_(new pcl::IterativeClosestPoint<PointT, PointT>()),
+		reference_pointcloud_(new PointCloudTarget()),
+//		cloud_matcher_(new pcl::IterativeClosestPoint<PointSource, PointTarget>()),
+//		cloud_matcher_(new pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>()),
+//		cloud_matcher_(new pcl::IterativeClosestPointNonLinear<PointSource, PointTarget>()),
+		cloud_matcher_(new pcl::IterativeClosestPointWithNormals<PointSource, PointTarget>()),
 		threshold_for_map_cell_as_obstacle_(95) {
 
 	cloud_matcher_->setMaxCorrespondenceDistance(max_correspondence_distance);
 	cloud_matcher_->setTransformationEpsilon(transformation_epsilon);
 	cloud_matcher_->setEuclideanFitnessEpsilon(euclidean_fitness_epsilon);
 	cloud_matcher_->setMaximumIterations(max_number_of_iterations);
+
+	// gicp
+//	pcl::GeneralizedIterativeClosestPoint<PointT, PointT>::Ptr ptr_matcher = boost::static_pointer_cast< pcl::GeneralizedIterativeClosestPoint<PointT, PointT> >(cloud_matcher_);
+//	ptr_matcher->setRotationEpsilon(1e-3);
+//	ptr_matcher->setCorrespondenceRandomness(100);
+//	ptr_matcher->setMaximumOptimizerIterations(250);
+//	ptr_matcher->setUseReciprocalCorrespondences(true);
+
 
 	reference_pointcloud_->height = 1;
 	reference_pointcloud_->is_dense = false;
@@ -46,7 +57,7 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 		float map_origin_y = planar_map->info.origin.position.y;
 
 
-		PointCloudT::Ptr reference_pointcloud_from_map(new PointCloudT());
+		pcl::PointCloud<pcl::PointXYZ>::Ptr reference_pointcloud_from_map(new pcl::PointCloud<pcl::PointXYZ>);
 		reference_pointcloud_from_map->height = 1;
 		reference_pointcloud_from_map->is_dense = false;
 		reference_pointcloud_from_map->header.frame_id = planar_map->header.frame_id;
@@ -59,7 +70,7 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 			for (int x = 0; x < map_width; ++x) {
 				if (planar_map->data[data_position] > threshold_for_map_cell_as_obstacle_) {
 					float cell_x_position = (float)x * map_resolution + map_origin_x;
-					reference_pointcloud_from_map->points.push_back(PointT(cell_x_position, cell_y_position, 0.0));
+					reference_pointcloud_from_map->points.push_back(pcl::PointXYZ(cell_x_position, cell_y_position, 0.0));
 				}
 
 				++data_position;
@@ -67,7 +78,26 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 		}
 
 		reference_pointcloud_from_map->width = reference_pointcloud_from_map->points.size();
-		reference_pointcloud_ = reference_pointcloud_from_map; // switch smart pointer
+
+
+		pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
+		ne.setInputCloud(reference_pointcloud_from_map);
+		ne.setViewPoint(-3.2, -3.75, 0.0);
+//		ne.setRadiusSearch(0.05);
+		ne.setKSearch(5);
+		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+		ne.setSearchMethod (tree);
+
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*reference_pointcloud_from_map, *reference_pointcloud_from_map, indexes);
+
+		pcl::PointCloud<pcl::Normal> normals;
+		ne.compute(normals);
+		pcl::concatenateFields(*reference_pointcloud_from_map, normals, *reference_pointcloud_);
+		pcl::removeNaNFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
+		pcl::removeNaNNormalsFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
+
+//		reference_pointcloud_ = reference_pointcloud_from_map; // switch smart pointer
 		cloud_matcher_->setInputTarget(reference_pointcloud_);
 
 		return true;
@@ -77,7 +107,7 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 }
 
 
-double PlanarMatcher::alignPlanarPointclouds(const PointCloudT::Ptr& environment_cloud, PointCloudT::Ptr& environment_cloud_aligned) {
+double PlanarMatcher::alignPlanarPointclouds(const PointCloudSource::Ptr& environment_cloud, PointCloudSource::Ptr& environment_cloud_aligned) {
 	if (reference_pointcloud_->points.empty() || environment_cloud->points.empty()) {
 		return -1;
 	}

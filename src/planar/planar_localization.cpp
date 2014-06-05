@@ -29,10 +29,10 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("initialpose"));
 
 	// configuration fields
-	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, true);
+	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_link"));
 	double max_seconds_scan_age;
-	private_node_handle_->param("max_seconds_scan_age", max_seconds_scan_age, 5.0);
+	private_node_handle_->param("max_seconds_scan_age", max_seconds_scan_age, 0.5);
 	max_seconds_scan_age_.fromSec(max_seconds_scan_age);
 	double min_seconds_between_scan_registration;
 	private_node_handle_->param("min_seconds_between_scan_registration", min_seconds_between_scan_registration, 0.05);
@@ -43,15 +43,26 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 
 
 	// icp configuration fields
-	private_node_handle_->param("max_alignment_fitness", max_alignment_fitness_, 0.5);
-	private_node_handle_->param("max_transformation_angle", max_transformation_angle_, 0.79);
-	private_node_handle_->param("max_transformation_distance", max_transformation_distance_, 0.5);
-	private_node_handle_->param("max_correspondence_distance", max_correspondence_distance_, 2.0);
-	private_node_handle_->param("transformation_epsilon", transformation_epsilon_, 1e-6);
-	private_node_handle_->param("euclidean_fitness_epsilon", euclidean_fitness_epsilon_, 0.001);
-	private_node_handle_->param("max_number_of_iterations", max_number_of_iterations_, 1000);
-	planar_matcher_ = PlanarMatcher(max_correspondence_distance_, transformation_epsilon_, euclidean_fitness_epsilon_, max_number_of_iterations_);
+	private_node_handle_->param("max_alignment_fitness", max_alignment_fitness_, 1e-2);
+	private_node_handle_->param("max_transformation_angle", max_transformation_angle_, 1.59);
+	private_node_handle_->param("max_transformation_distance", max_transformation_distance_, 2.5);
 
+	double max_correspondence_distance;
+	double transformation_epsilon;
+	double euclidean_fitness_epsilon;
+	int max_number_of_registration_iterations;
+	int max_number_of_ransac_iterations;
+	double ransac_outlier_rejection_threshold;
+
+	private_node_handle_->param("max_correspondence_distance", max_correspondence_distance, 2.5);
+	private_node_handle_->param("transformation_epsilon", transformation_epsilon, 1e-8);
+	private_node_handle_->param("euclidean_fitness_epsilon", euclidean_fitness_epsilon, 1e-6);
+	private_node_handle_->param("max_number_of_registration_iterations", max_number_of_registration_iterations, 500);
+	private_node_handle_->param("max_number_of_ransac_iterations", max_number_of_ransac_iterations, 500);
+	private_node_handle_->param("ransac_outlier_rejection_threshold", ransac_outlier_rejection_threshold, 0.05);
+	planar_matcher_ = PlanarMatcher(max_correspondence_distance, transformation_epsilon, euclidean_fitness_epsilon, max_number_of_registration_iterations);
+	planar_matcher_.getCloudMatcher()->setRANSACIterations(max_number_of_ransac_iterations);
+	planar_matcher_.getCloudMatcher()->setRANSACOutlierRejectionThreshold(ransac_outlier_rejection_threshold);
 
 	if (publish_tf_map_odom_) {
 		pose_to_tf_publisher_.readConfigurationFromParameterServer(node_handle, private_node_handle);
@@ -115,21 +126,40 @@ void PlanarLocalization::processCostmap(const nav_msgs::OccupancyGridConstPtr& p
 
 
 void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud) {
-	ros::Duration scan_age = ros::Time::now() - last_matched_scan_time_;
+	ros::Duration scan_age = ros::Time::now() - last_scan_time_;
+	last_scan_time_ = laserscan_cloud->header.stamp;
 
 	if (map_received_ && scan_age > min_seconds_between_scan_registration_ && scan_age < max_seconds_scan_age_) {
-		last_matched_scan_time_ = laserscan_cloud->header.stamp;
-
 		tf2::Transform pose_tf;
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf, laserscan_cloud->header.frame_id, base_link_frame_id_, laserscan_cloud->header.stamp)) {
 			ROS_DEBUG_STREAM("Dropping scan because tf between " << laserscan_cloud->header.frame_id << " and " << base_link_frame_id_ << " isn't available");
 			return;
 		}
 
-		PlanarMatcher::PointCloudT::Ptr pointcloud(new PlanarMatcher::PointCloudT());
-		PlanarMatcher::PointCloudT::Ptr aligned_pointcloud(new PlanarMatcher::PointCloudT());
-		pcl::fromROSMsg(*laserscan_cloud, *pointcloud);
-		resetPointCloudHeight(pointcloud);
+		PointCloudXYZ::Ptr pointcloud_xyz(new PointCloudXYZ());
+		PlanarMatcher::PointCloudSource::Ptr pointcloud(new PlanarMatcher::PointCloudSource());
+		PlanarMatcher::PointCloudSource::Ptr aligned_pointcloud(new PlanarMatcher::PointCloudSource());
+		pcl::fromROSMsg(*laserscan_cloud, *pointcloud_xyz);
+		resetPointCloudHeight(pointcloud_xyz);
+
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*pointcloud_xyz, *pointcloud_xyz, indexes);
+
+
+		pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
+		ne.setInputCloud(pointcloud_xyz);
+		ne.setViewPoint(-3.2, -3.75, 0.0);
+//		ne.setRadiusSearch(0.005);
+		ne.setKSearch(5);
+		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+		ne.setSearchMethod (tree);
+
+		pcl::PointCloud<pcl::Normal> normals;
+		ne.compute(normals);
+		pcl::concatenateFields(*pointcloud_xyz, normals, *pointcloud);
+		pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
+		pcl::removeNaNNormalsFromPointCloud(*pointcloud, *pointcloud, indexes);
+
 
 		double alignmentFitness = planar_matcher_.alignPlanarPointclouds(pointcloud, aligned_pointcloud); // alignmentFitness < 0 if there was no alignment
 		if (alignmentFitness >= 0 && alignmentFitness < max_alignment_fitness_) {
@@ -175,12 +205,16 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 				pcl::toROSMsg(*aligned_pointcloud, *aligned_pointcloud_msg);
 				aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
 			}
+		} else {
+			ROS_DEBUG_STREAM("Failed registration with fitness " << alignmentFitness);
 		}
+	} else {
+		ROS_DEBUG_STREAM("Discarded cloud with age " << scan_age.toSec());
 	}
 }
 
 
-void PlanarLocalization::resetPointCloudHeight(PlanarMatcher::PointCloudT::Ptr& pointcloud, float height) {
+void PlanarLocalization::resetPointCloudHeight(PointCloudXYZ::Ptr& pointcloud, float height) {
 	size_t number_of_points = pointcloud->points.size();
 	for (size_t i = 0; i < number_of_points; ++i) {
 		pointcloud->points[i].z = height;
@@ -191,23 +225,25 @@ void PlanarLocalization::resetPointCloudHeight(PlanarMatcher::PointCloudT::Ptr& 
 void PlanarLocalization::dynamicReconfigureCallback(dynamic_robot_localization::PlanarLocalizationConfig& config, uint32_t level) {
 	if (level == 1) {
 			ROS_INFO_STREAM("LaserScanToPointcloudAssembler dynamic reconfigure (level=" << level << ") -> " \
-					<< "\n\t[planar_pointcloud_topic]: " 					<< planar_pointcloud_topic_ 											<< " -> " << config.planar_pointcloud_topic \
-					<< "\n\t[costmap_topic]: " 								<< costmap_topic_														<< " -> " << config.costmap_topic \
-					<< "\n\t[reference_map_pointcloud_publish_topic]: "		<< reference_map_pointcloud_publish_topic_ 								<< " -> " << config.reference_map_pointcloud_publish_topic \
-					<< "\n\t[aligned_pointcloud_publish_topic]: "			<< aligned_pointcloud_publish_topic_ 									<< " -> " << config.aligned_pointcloud_publish_topic \
-					<< "\n\t[pose_publish_topic]: " 						<< pose_publish_topic_ 													<< " -> " << config.pose_publish_topic \
-					<< "\n\t[publish_tf_map_odom]: "					 	<< publish_tf_map_odom_				 									<< " -> " << config.publish_tf_map_odom \
-					<< "\n\t[base_link_frame_id]: "					 		<< base_link_frame_id_				 									<< " -> " << config.base_link_frame_id \
-					<< "\n\t[max_seconds_scan_age]: " 						<< max_seconds_scan_age_.toSec()										<< " -> " << config.max_seconds_scan_age \
-					<< "\n\t[min_seconds_between_laserscan_registration]: " << min_seconds_between_scan_registration_.toSec()						<< " -> " << config.min_seconds_between_laserscan_registration \
-					<< "\n\t[min_seconds_between_map_update]: " 			<< min_seconds_between_map_update_.toSec() 								<< " -> " << config.min_seconds_between_map_update \
-					<< "\n\t[max_alignment_fitness]: " 						<< max_alignment_fitness_					 							<< " -> " << config.max_alignment_fitness \
-					<< "\n\t[max_transformation_angle]: " 					<< max_transformation_angle_				 							<< " -> " << config.max_transformation_angle \
-					<< "\n\t[max_transformation_distance]: " 				<< max_transformation_distance_					 						<< " -> " << config.max_transformation_distance \
-					<< "\n\t[max_correspondence_distance]: " 				<< planar_matcher_.getCloudMatcher()->getMaxCorrespondenceDistance() 	<< " -> " << config.max_correspondence_distance \
-					<< "\n\t[transformation_epsilon]: " 					<< planar_matcher_.getCloudMatcher()->getTransformationEpsilon() 		<< " -> " << config.transformation_epsilon \
-					<< "\n\t[euclidean_fitness_epsilon]: " 					<< planar_matcher_.getCloudMatcher()->getEuclideanFitnessEpsilon() 		<< " -> " << config.euclidean_fitness_epsilon \
-					<< "\n\t[max_number_of_iterations]: " 					<< planar_matcher_.getCloudMatcher()->getMaximumIterations()			<< " -> " << config.max_number_of_iterations);
+					<< "\n\t[planar_pointcloud_topic]: " 					<< planar_pointcloud_topic_ 												<< " -> " << config.planar_pointcloud_topic \
+					<< "\n\t[costmap_topic]: " 								<< costmap_topic_															<< " -> " << config.costmap_topic \
+					<< "\n\t[reference_map_pointcloud_publish_topic]: "		<< reference_map_pointcloud_publish_topic_ 									<< " -> " << config.reference_map_pointcloud_publish_topic \
+					<< "\n\t[aligned_pointcloud_publish_topic]: "			<< aligned_pointcloud_publish_topic_ 										<< " -> " << config.aligned_pointcloud_publish_topic \
+					<< "\n\t[pose_publish_topic]: " 						<< pose_publish_topic_ 														<< " -> " << config.pose_publish_topic \
+					<< "\n\t[publish_tf_map_odom]: "					 	<< publish_tf_map_odom_				 										<< " -> " << config.publish_tf_map_odom \
+					<< "\n\t[base_link_frame_id]: "					 		<< base_link_frame_id_				 										<< " -> " << config.base_link_frame_id \
+					<< "\n\t[max_seconds_scan_age]: " 						<< max_seconds_scan_age_.toSec()											<< " -> " << config.max_seconds_scan_age \
+					<< "\n\t[min_seconds_between_laserscan_registration]: " << min_seconds_between_scan_registration_.toSec()							<< " -> " << config.min_seconds_between_laserscan_registration \
+					<< "\n\t[min_seconds_between_map_update]: " 			<< min_seconds_between_map_update_.toSec() 									<< " -> " << config.min_seconds_between_map_update \
+					<< "\n\t[max_alignment_fitness]: " 						<< max_alignment_fitness_					 								<< " -> " << config.max_alignment_fitness \
+					<< "\n\t[max_transformation_angle]: " 					<< max_transformation_angle_				 								<< " -> " << config.max_transformation_angle \
+					<< "\n\t[max_transformation_distance]: " 				<< max_transformation_distance_					 							<< " -> " << config.max_transformation_distance \
+					<< "\n\t[max_correspondence_distance]: " 				<< planar_matcher_.getCloudMatcher()->getMaxCorrespondenceDistance() 		<< " -> " << config.max_correspondence_distance \
+					<< "\n\t[transformation_epsilon]: " 					<< planar_matcher_.getCloudMatcher()->getTransformationEpsilon() 			<< " -> " << config.transformation_epsilon \
+					<< "\n\t[euclidean_fitness_epsilon]: " 					<< planar_matcher_.getCloudMatcher()->getEuclideanFitnessEpsilon() 			<< " -> " << config.euclidean_fitness_epsilon \
+					<< "\n\t[max_number_of_registration_iterations]: " 		<< planar_matcher_.getCloudMatcher()->getMaximumIterations()				<< " -> " << config.max_number_of_registration_iterations \
+					<< "\n\t[max_number_of_ransac_iterations]: " 			<< planar_matcher_.getCloudMatcher()->getRANSACIterations()					<< " -> " << config.max_number_of_ransac_iterations \
+					<< "\n\t[ransac_outlier_rejection_threshold]: " 		<< planar_matcher_.getCloudMatcher()->getRANSACOutlierRejectionThreshold()	<< " -> " << config.ransac_outlier_rejection_threshold);
 
 			// Subscribe topics
 			if (!config.planar_pointcloud_topic.empty() && planar_pointcloud_topic_ != config.planar_pointcloud_topic) {
@@ -255,7 +291,9 @@ void PlanarLocalization::dynamicReconfigureCallback(dynamic_robot_localization::
 			planar_matcher_.getCloudMatcher()->setMaxCorrespondenceDistance(config.max_correspondence_distance);
 			planar_matcher_.getCloudMatcher()->setTransformationEpsilon(config.transformation_epsilon);
 			planar_matcher_.getCloudMatcher()->setEuclideanFitnessEpsilon(config.euclidean_fitness_epsilon);
-			planar_matcher_.getCloudMatcher()->setMaximumIterations(config.max_number_of_iterations);
+			planar_matcher_.getCloudMatcher()->setMaximumIterations(config.max_number_of_registration_iterations);
+			planar_matcher_.getCloudMatcher()->setRANSACIterations(config.max_number_of_ransac_iterations);
+			planar_matcher_.getCloudMatcher()->setRANSACOutlierRejectionThreshold(config.ransac_outlier_rejection_threshold);
 		}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarLocalization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -6,6 +6,7 @@
 		<param name="pose_error_publish_topic" type="str" value="localization_error" />
 		<param name="use_roll_pitch_yaw_angles" type="bool" value="true" />
 		<param name="use_degrees_in_angles" type="bool" value="true" />
+		<param name="use_millimeters_in_distances" type="bool" value="true" />		
 	</node>
 
 	<!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" output="screen" args="/gazebo/model_states/pose[2]/position/x /initialpose/pose/pose/position/x" /> -->
