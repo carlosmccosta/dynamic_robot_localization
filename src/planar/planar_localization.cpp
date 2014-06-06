@@ -20,7 +20,7 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 		add_odometry_displacement_(false), map_received_(false), number_poses_published_(0), node_handle_(node_handle), private_node_handle_(private_node_handle) {
 
 	// subscription topic names fields
-	private_node_handle_->param("planar_pointcloud_topic", planar_pointcloud_topic_, std::string("planar_pointcloud"));
+	private_node_handle_->param("pointcloud_topic", pointcloud_topic_, std::string("planar_pointcloud"));
 	private_node_handle_->param("costmap_topic", costmap_topic_, std::string("map"));
 
 	// publish topic names
@@ -30,6 +30,8 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 
 	// configuration fields
 	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
+	private_node_handle_->param("reference_cloud_file_name", reference_cloud_file_name_, std::string(""));
+	private_node_handle_->param("map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_link"));
 	double max_seconds_scan_age;
 	private_node_handle_->param("max_seconds_scan_age", max_seconds_scan_age, 0.5);
@@ -81,11 +83,20 @@ PlanarLocalization::~PlanarLocalization() {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PlanarLocalization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void dynamic_robot_localization::PlanarLocalization::startLocalization() {
-	laserscan_cloud_subscriber_ = node_handle_->subscribe(planar_pointcloud_topic_, 100, &dynamic_robot_localization::PlanarLocalization::processLaserScanCloud, this);
-	costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processCostmap, this);
+	laserscan_cloud_subscriber_ = node_handle_->subscribe(pointcloud_topic_, 100, &dynamic_robot_localization::PlanarLocalization::processLaserScanCloud, this);
+
 	map_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_map_pointcloud_publish_topic_, 10);
 	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 10);
 	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10);
+
+	if (reference_cloud_file_name_.empty()) {
+		costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processCostmap, this);
+	} else {
+		if (planar_matcher_.loadReferencePointCloud(reference_cloud_file_name_)) {
+			map_received_ = true;
+			publishReferenceCloud();
+		}
+	}
 
 	if (publish_tf_map_odom_) {
 		ros::Rate publish_rate(pose_to_tf_publisher_.getPublishRate());
@@ -116,20 +127,17 @@ void PlanarLocalization::processCostmap(const nav_msgs::OccupancyGridConstPtr& p
 			map_received_ = true;
 		}
 
-		if (!reference_map_pointcloud_publish_topic_.empty() /*&& map_pointcloud_publisher_.getNumSubscribers() > 0*/) {
-			sensor_msgs::PointCloud2Ptr reference_pointcloud(new sensor_msgs::PointCloud2());
-			pcl::toROSMsg(*(planar_matcher_.getReferencePointcloud()), *reference_pointcloud);
-			map_pointcloud_publisher_.publish(reference_pointcloud);
-		}
+		publishReferenceCloud();
 	}
 }
 
 
 void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud) {
-	ros::Duration scan_age = ros::Time::now() - last_scan_time_;
-	last_scan_time_ = laserscan_cloud->header.stamp;
+	ros::Duration scan_age = ros::Time::now() - laserscan_cloud->header.stamp;
+	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
+	last_scan_time_ = ros::Time::now();
 
-	if (map_received_ && scan_age > min_seconds_between_scan_registration_ && scan_age < max_seconds_scan_age_) {
+	if (map_received_ && elapsed_time_since_last_scan > min_seconds_between_scan_registration_ && scan_age < max_seconds_scan_age_) {
 		tf2::Transform pose_tf;
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf, laserscan_cloud->header.frame_id, base_link_frame_id_, laserscan_cloud->header.stamp)) {
 			ROS_DEBUG_STREAM("Dropping scan because tf between " << laserscan_cloud->header.frame_id << " and " << base_link_frame_id_ << " isn't available");
@@ -140,7 +148,9 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 		PlanarMatcher::PointCloudSource::Ptr pointcloud(new PlanarMatcher::PointCloudSource());
 		PlanarMatcher::PointCloudSource::Ptr aligned_pointcloud(new PlanarMatcher::PointCloudSource());
 		pcl::fromROSMsg(*laserscan_cloud, *pointcloud);
-		resetPointCloudHeight(pointcloud);
+		if (reference_cloud_file_name_.empty()) {
+			resetPointCloudHeight(pointcloud);
+		}
 
 //		std::vector<int> indexes;
 //		pcl::removeNaNFromPointCloud(*pointcloud_xyz, *pointcloud_xyz, indexes);
@@ -165,17 +175,6 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 		if (alignmentFitness >= 0 && alignmentFitness < max_alignment_fitness_) {
 			ROS_DEBUG_STREAM("Registered cloud with " << alignmentFitness << " alignment fitness");
 
-			geometry_msgs::PoseWithCovarianceStampedPtr pose(new geometry_msgs::PoseWithCovarianceStamped());
-			pose->header.frame_id = laserscan_cloud->header.frame_id;
-			pose->header.seq = number_poses_published_++;
-
-			if (add_odometry_displacement_) {
-				pose->header.stamp = ros::Time::now();
-			} else {
-				pose->header.stamp = laserscan_cloud->header.stamp;
-			}
-
-
 			tf2::Transform pose_correction;
 			laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(planar_matcher_.getCloudMatcher()->getFinalTransformation(), pose_correction);
 
@@ -188,8 +187,18 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 
 			tf2::Transform pose_corrected = pose_correction * pose_tf;
 
+			geometry_msgs::PoseWithCovarianceStampedPtr pose(new geometry_msgs::PoseWithCovarianceStamped());
+			pose->header.frame_id = laserscan_cloud->header.frame_id;
+			pose->header.seq = number_poses_published_++;
+
+			if (add_odometry_displacement_) {
+				pose->header.stamp = ros::Time::now();
+			} else {
+				pose->header.stamp = laserscan_cloud->header.stamp;
+			}
+
 			if (add_odometry_displacement_)
-				pose_to_tf_publisher_.addOdometryDisplacementToTransform(pose_corrected, laserscan_cloud->header.stamp);
+				pose_to_tf_publisher_.addOdometryDisplacementToTransform(pose_corrected, laserscan_cloud->header.stamp, pose->header.stamp);
 
 			if (publish_tf_map_odom_)
 				pose_to_tf_publisher_.publishTFMapToOdom(pose_corrected);
@@ -222,10 +231,21 @@ void PlanarLocalization::resetPointCloudHeight(PointCloudXYZ::Ptr& pointcloud, f
 }
 
 
+void PlanarLocalization::publishReferenceCloud() {
+	if (!reference_map_pointcloud_publish_topic_.empty() /*&& map_pointcloud_publisher_.getNumSubscribers() > 0*/) {
+		sensor_msgs::PointCloud2Ptr reference_pointcloud(new sensor_msgs::PointCloud2());
+		pcl::toROSMsg(*(planar_matcher_.getReferencePointcloud()), *reference_pointcloud);
+		reference_pointcloud->header.frame_id = map_frame_id_;
+		reference_pointcloud->header.stamp = ros::Time::now();
+		map_pointcloud_publisher_.publish(reference_pointcloud);
+	}
+}
+
+
 void PlanarLocalization::dynamicReconfigureCallback(dynamic_robot_localization::PlanarLocalizationConfig& config, uint32_t level) {
 	if (level == 1) {
 			ROS_INFO_STREAM("LaserScanToPointcloudAssembler dynamic reconfigure (level=" << level << ") -> " \
-					<< "\n\t[planar_pointcloud_topic]: " 					<< planar_pointcloud_topic_ 												<< " -> " << config.planar_pointcloud_topic \
+					<< "\n\t[planar_pointcloud_topic]: " 					<< pointcloud_topic_ 														<< " -> " << config.pointcloud_topic \
 					<< "\n\t[costmap_topic]: " 								<< costmap_topic_															<< " -> " << config.costmap_topic \
 					<< "\n\t[reference_map_pointcloud_publish_topic]: "		<< reference_map_pointcloud_publish_topic_ 									<< " -> " << config.reference_map_pointcloud_publish_topic \
 					<< "\n\t[aligned_pointcloud_publish_topic]: "			<< aligned_pointcloud_publish_topic_ 										<< " -> " << config.aligned_pointcloud_publish_topic \
@@ -246,10 +266,10 @@ void PlanarLocalization::dynamicReconfigureCallback(dynamic_robot_localization::
 					<< "\n\t[ransac_outlier_rejection_threshold]: " 		<< planar_matcher_.getCloudMatcher()->getRANSACOutlierRejectionThreshold()	<< " -> " << config.ransac_outlier_rejection_threshold);
 
 			// Subscribe topics
-			if (!config.planar_pointcloud_topic.empty() && planar_pointcloud_topic_ != config.planar_pointcloud_topic) {
-				planar_pointcloud_topic_ = config.planar_pointcloud_topic;
+			if (!config.pointcloud_topic.empty() && pointcloud_topic_ != config.pointcloud_topic) {
+				pointcloud_topic_ = config.pointcloud_topic;
 				laserscan_cloud_subscriber_.shutdown();
-				laserscan_cloud_subscriber_ = node_handle_->subscribe(planar_pointcloud_topic_, 100, &dynamic_robot_localization::PlanarLocalization::processLaserScanCloud, this);
+				laserscan_cloud_subscriber_ = node_handle_->subscribe(pointcloud_topic_, 100, &dynamic_robot_localization::PlanarLocalization::processLaserScanCloud, this);
 			}
 
 			if (!config.costmap_topic.empty() && costmap_topic_ != config.costmap_topic) {

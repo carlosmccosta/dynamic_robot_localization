@@ -14,6 +14,7 @@
 // std includes
 #include <string>
 #include <vector>
+#include <cmath>
 
 // ROS includes
 #include <ros/ros.h>
@@ -34,6 +35,7 @@
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <Eigen/src/Geometry/Transform.h>
 
 // project includes
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -69,6 +71,7 @@ class PlanarMatcher {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PlanarMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bool createReferencePointcloudFromMap(const nav_msgs::OccupancyGridConstPtr& planar_map);
+		bool loadReferencePointCloud(const std::string& refrence_cloud_pcd_file_);
 		double alignPlanarPointclouds(const PointCloudSource::Ptr& environment_cloud, PointCloudSource::Ptr& environment_cloud_aligned);
 		Eigen::Vector3f correctPose(const Eigen::Vector3f& current_pose);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -107,6 +107,24 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 }
 
 
+bool PlanarMatcher::loadReferencePointCloud(const std::string& refrence_cloud_pcd_file_) {
+	if (pcl::io::loadPCDFile<pcl::PointXYZ>(refrence_cloud_pcd_file_, *reference_pointcloud_) == 0) {
+
+		Eigen::Transform<float, 3, Eigen::Affine> transform;
+		transform.setIdentity();
+		transform.scale(0.001);
+		transform.rotate(Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX()));
+		pcl::transformPointCloud(*reference_pointcloud_, *reference_pointcloud_, transform);
+
+		cloud_matcher_->setInputTarget(reference_pointcloud_);
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
 double PlanarMatcher::alignPlanarPointclouds(const PointCloudSource::Ptr& environment_cloud, PointCloudSource::Ptr& environment_cloud_aligned) {
 	if (reference_pointcloud_->points.empty() || environment_cloud->points.empty()) {
 		return -1;
