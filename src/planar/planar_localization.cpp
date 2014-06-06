@@ -136,29 +136,29 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 			return;
 		}
 
-		PointCloudXYZ::Ptr pointcloud_xyz(new PointCloudXYZ());
+//		PointCloudXYZ::Ptr pointcloud_xyz(new PointCloudXYZ());
 		PlanarMatcher::PointCloudSource::Ptr pointcloud(new PlanarMatcher::PointCloudSource());
 		PlanarMatcher::PointCloudSource::Ptr aligned_pointcloud(new PlanarMatcher::PointCloudSource());
-		pcl::fromROSMsg(*laserscan_cloud, *pointcloud_xyz);
-		resetPointCloudHeight(pointcloud_xyz);
+		pcl::fromROSMsg(*laserscan_cloud, *pointcloud);
+		resetPointCloudHeight(pointcloud);
 
-		std::vector<int> indexes;
-		pcl::removeNaNFromPointCloud(*pointcloud_xyz, *pointcloud_xyz, indexes);
-
-
-		pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
-		ne.setInputCloud(pointcloud_xyz);
-		ne.setViewPoint(-3.2, -3.75, 0.0);
-//		ne.setRadiusSearch(0.005);
-		ne.setKSearch(5);
-		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
-		ne.setSearchMethod (tree);
-
-		pcl::PointCloud<pcl::Normal> normals;
-		ne.compute(normals);
-		pcl::concatenateFields(*pointcloud_xyz, normals, *pointcloud);
-		pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
-		pcl::removeNaNNormalsFromPointCloud(*pointcloud, *pointcloud, indexes);
+//		std::vector<int> indexes;
+//		pcl::removeNaNFromPointCloud(*pointcloud_xyz, *pointcloud_xyz, indexes);
+//
+//
+//		pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
+//		ne.setInputCloud(pointcloud_xyz);
+//		ne.setViewPoint(-3.2, -3.75, 0.0);
+////		ne.setRadiusSearch(0.005);
+//		ne.setKSearch(5);
+//		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+//		ne.setSearchMethod (tree);
+//
+//		pcl::PointCloud<pcl::Normal> normals;
+//		ne.compute(normals);
+//		pcl::concatenateFields(*pointcloud_xyz, normals, *pointcloud);
+//		pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
+//		pcl::removeNaNNormalsFromPointCloud(*pointcloud, *pointcloud, indexes);
 
 
 		double alignmentFitness = planar_matcher_.alignPlanarPointclouds(pointcloud, aligned_pointcloud); // alignmentFitness < 0 if there was no alignment

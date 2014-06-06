@@ -21,8 +21,8 @@
 	<include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch" />
 
 	<!-- planar localization -->
-<!-- 	<node pkg="dynamic_robot_localization" type="planar_localization_node" name="planar_localization_node" output="screen">
-		localization params
+	<node pkg="dynamic_robot_localization" type="planar_localization_node" name="planar_localization_node" output="screen">
+		<!-- localization params -->
 		<param name="planar_pointcloud_topic" type="str" value="planar_pointcloud" />
 		<param name="costmap_topic" type="str" value="map" />
 		<param name="reference_map_pointcloud_publish_topic" type="str" value="reference_map_pointcloud" />
@@ -32,9 +32,9 @@
 		<param name="base_link_frame_id" type="str" value="base_footprint" />
 		<param name="min_seconds_between_scan_registration" type="double" value="0.05" />
 		<param name="min_seconds_between_map_update" type="double" value="5.0" />
-		<param name="max_seconds_scan_age" type="double" value="0.5" />
+		<param name="max_seconds_scan_age" type="double" value="0.2" />
 
-		ICP params
+		<!-- ICP params -->
 		<param name="max_alignment_fitness" type="double" value="1e-2" />
 		<param name="max_transformation_angle" type="double" value="1.59" />
 		<param name="max_transformation_distance" type="double" value="2.5" />
@@ -44,9 +44,9 @@
 		<param name="max_number_of_registration_iterations" type="int" value="250" />
 		<param name="max_number_of_ransac_iterations" type="int" value="100" />
 		<param name="ransac_outlier_rejection_threshold" type="double" value="0.05" />
-	</node> -->
-	
-	
+	</node>
+
+
 	<!-- localization tests -->
-	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />	
+	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />
 </launch>

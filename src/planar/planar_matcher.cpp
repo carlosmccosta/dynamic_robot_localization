@@ -17,10 +17,10 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 PlanarMatcher::PlanarMatcher(double max_correspondence_distance, double transformation_epsilon, double euclidean_fitness_epsilon, int max_number_of_iterations) :
 		reference_pointcloud_(new PointCloudTarget()),
-//		cloud_matcher_(new pcl::IterativeClosestPoint<PointSource, PointTarget>()),
+		cloud_matcher_(new pcl::IterativeClosestPoint<PointSource, PointTarget>()),
 //		cloud_matcher_(new pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>()),
 //		cloud_matcher_(new pcl::IterativeClosestPointNonLinear<PointSource, PointTarget>()),
-		cloud_matcher_(new pcl::IterativeClosestPointWithNormals<PointSource, PointTarget>()),
+//		cloud_matcher_(new pcl::IterativeClosestPointWithNormals<PointSource, PointTarget>()),
 		threshold_for_map_cell_as_obstacle_(95) {
 
 	cloud_matcher_->setMaxCorrespondenceDistance(max_correspondence_distance);
@@ -80,24 +80,24 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 		reference_pointcloud_from_map->width = reference_pointcloud_from_map->points.size();
 
 
-		pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
-		ne.setInputCloud(reference_pointcloud_from_map);
-		ne.setViewPoint(-3.2, -3.75, 0.0);
-//		ne.setRadiusSearch(0.05);
-		ne.setKSearch(5);
-		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
-		ne.setSearchMethod (tree);
+//		pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
+//		ne.setInputCloud(reference_pointcloud_from_map);
+//		ne.setViewPoint(-3.2, -3.75, 0.0);
+////		ne.setRadiusSearch(0.05);
+//		ne.setKSearch(5);
+//		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+//		ne.setSearchMethod (tree);
+//
+//		std::vector<int> indexes;
+//		pcl::removeNaNFromPointCloud(*reference_pointcloud_from_map, *reference_pointcloud_from_map, indexes);
+//
+//		pcl::PointCloud<pcl::Normal> normals;
+//		ne.compute(normals);
+//		pcl::concatenateFields(*reference_pointcloud_from_map, normals, *reference_pointcloud_);
+//		pcl::removeNaNFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
+//		pcl::removeNaNNormalsFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
 
-		std::vector<int> indexes;
-		pcl::removeNaNFromPointCloud(*reference_pointcloud_from_map, *reference_pointcloud_from_map, indexes);
-
-		pcl::PointCloud<pcl::Normal> normals;
-		ne.compute(normals);
-		pcl::concatenateFields(*reference_pointcloud_from_map, normals, *reference_pointcloud_);
-		pcl::removeNaNFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
-		pcl::removeNaNNormalsFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
-
-//		reference_pointcloud_ = reference_pointcloud_from_map; // switch smart pointer
+		reference_pointcloud_ = reference_pointcloud_from_map; // switch smart pointer
 		cloud_matcher_->setInputTarget(reference_pointcloud_);
 
 		return true;

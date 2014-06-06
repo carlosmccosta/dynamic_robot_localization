@@ -47,8 +47,8 @@ class PlanarMatcher {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef pcl::PointNormal PointTarget;
-		typedef pcl::PointNormal PointSource;
+		typedef pcl::PointXYZ PointTarget;
+		typedef pcl::PointXYZ PointSource;
 		typedef pcl::PointCloud<PointTarget> PointCloudTarget;
 		typedef pcl::PointCloud<PointSource> PointCloudSource;
 //		typedef boost::shared_ptr<PlanarMatcher> Ptr;
