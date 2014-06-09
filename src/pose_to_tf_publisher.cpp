@@ -127,7 +127,7 @@ bool PoseToTFPublisher::addOdometryDisplacementToTransform(tf2::Transform& trans
 	tf2::Transform odometry_tf_from_pose_time_to_now;
 	if (tf_collector_.lookForTransform(odometry_tf_from_pose_time_to_now, base_link_frame_id_, target_time, base_link_frame_id_, time_of_transform, map_frame_id_)) {
 		// include odometry displacement from pose publish time to current time
-		transform = odometry_tf_from_pose_time_to_now.inverse() * transform;
+		transform = transform * odometry_tf_from_pose_time_to_now.inverse();
 		return true;
 	}
 

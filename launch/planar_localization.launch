@@ -1,6 +1,6 @@
 <launch>
 	<!-- merge two LaserScan topics -->
-	<!-- <node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" /> -->
+<!-- 	<node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" /> -->
 
 
 	<!-- LaserScan assembler -->
@@ -32,7 +32,7 @@
 		<param name="base_link_frame_id" type="str" value="base_footprint" />
 		<param name="min_seconds_between_scan_registration" type="double" value="0.05" />
 		<param name="min_seconds_between_map_update" type="double" value="5.0" />
-		<param name="max_seconds_scan_age" type="double" value="0.2" />
+		<param name="max_seconds_scan_age" type="double" value="0.5" />
 
 		<!-- ICP params -->
 		<param name="max_alignment_fitness" type="double" value="1e-2" />

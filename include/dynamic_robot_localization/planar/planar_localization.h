@@ -66,7 +66,7 @@ class PlanarLocalization {
 		void stopLocalization();
 		void processCostmap(const nav_msgs::OccupancyGridConstPtr& planar_map);
 		void processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud);
-		void resetPointCloudHeight(PointCloudXYZ::Ptr& pointcloud, float height = 0.0);
+		void resetPointCloudHeight(PlanarMatcher::PointCloudSource::Ptr& pointcloud, float height = 0.0);
 		void publishReferenceCloud();
 
 		void dynamicReconfigureCallback(dynamic_robot_localization::PlanarLocalizationConfig& config, uint32_t level);

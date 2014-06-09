@@ -7,6 +7,9 @@ project(dynamic_robot_localization)
 ## Packages ##
 ##############
 
+# remove logging (ROSCONSOLE_SEVERITY_NONE=5)
+# set(ROS_COMPILE_FLAGS "-DROSCONSOLE_MIN_SEVERITY=5 ${ROS_COMPILE_FLAGS}")
+
 set(${PROJECT_NAME}_CATKIN_COMPONENTS 
     roscpp
     sensor_msgs

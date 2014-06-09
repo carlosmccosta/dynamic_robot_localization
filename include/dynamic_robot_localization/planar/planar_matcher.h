@@ -32,6 +32,7 @@
 #include <pcl/registration/gicp.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/filters/filter.h>
+#include <pcl/io/pcd_io.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -51,6 +52,8 @@ class PlanarMatcher {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		typedef pcl::PointXYZ PointTarget;
 		typedef pcl::PointXYZ PointSource;
+		/*typedef pcl::PointNormal PointTarget;
+		typedef pcl::PointNormal PointSource;*/
 		typedef pcl::PointCloud<PointTarget> PointCloudTarget;
 		typedef pcl::PointCloud<PointSource> PointCloudSource;
 //		typedef boost::shared_ptr<PlanarMatcher> Ptr;
@@ -71,9 +74,10 @@ class PlanarMatcher {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PlanarMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bool createReferencePointcloudFromMap(const nav_msgs::OccupancyGridConstPtr& planar_map);
-		bool loadReferencePointCloud(const std::string& refrence_cloud_pcd_file_);
+		bool loadReferencePointCloud(const std::string& reference_cloud_pcd_file_);
 		double alignPlanarPointclouds(const PointCloudSource::Ptr& environment_cloud, PointCloudSource::Ptr& environment_cloud_aligned);
 		Eigen::Vector3f correctPose(const Eigen::Vector3f& current_pose);
+		static void computeNormals(pcl::PointCloud<pcl::PointXYZ>::Ptr& reference_pointcloud, pcl::PointCloud<pcl::PointNormal>::Ptr& pointcloud_with_normals);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlanarMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
