@@ -64,7 +64,8 @@ class PlanarLocalization {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PlanarLocalization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		void startLocalization();
 		void stopLocalization();
-		void processCostmap(const nav_msgs::OccupancyGridConstPtr& planar_map);
+		void processReferenceOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& planar_map);
+		void processReferenceCloud(const sensor_msgs::PointCloud2ConstPtr& reference_cloud);
 		void processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud);
 		void resetPointCloudHeight(PlanarMatcher::PointCloudSource::Ptr& pointcloud, float height = 0.0);
 		void publishReferenceCloud();
@@ -88,6 +89,7 @@ class PlanarLocalization {
 		// subscription topic names
 		std::string pointcloud_topic_;
 		std::string costmap_topic_;
+		std::string reference_cloud_topic_;
 
 		// publish topic names
 		std::string reference_map_pointcloud_publish_topic_;
@@ -122,6 +124,7 @@ class PlanarLocalization {
 		ros::NodeHandlePtr private_node_handle_;
 		ros::Subscriber laserscan_cloud_subscriber_;
 		ros::Subscriber costmap_subscriber_;
+		ros::Subscriber reference_cloud_subscriber_;
 		ros::Publisher map_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_publisher_;

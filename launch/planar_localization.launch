@@ -1,6 +1,6 @@
 <launch>
 	<!-- merge two LaserScan topics -->
-<!-- 	<node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" /> -->
+	<!-- <node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="tilt_scan base_scan" output="screen" /> -->
 
 
 	<!-- LaserScan assembler -->
@@ -24,7 +24,8 @@
 	<node pkg="dynamic_robot_localization" type="planar_localization_node" name="localization_node_2d" output="screen">
 		<!-- localization params -->
 		<param name="pointcloud_topic" type="str" value="planar_pointcloud" />
-		<param name="costmap_topic" type="str" value="map" />
+		<!-- <param name="costmap_topic" type="str" value="map" /> -->
+		<param name="costmap_topic" type="str" value="projected_map" />
 		<param name="reference_map_pointcloud_publish_topic" type="str" value="planar_reference_map_pointcloud" />
 		<param name="aligned_pointcloud_publish_topic" type="str" value="planar_aligned_pointcloud" />
 		<param name="pose_publish_topic" type="str" value="initialpose" />

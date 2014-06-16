@@ -22,6 +22,7 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 	// subscription topic names fields
 	private_node_handle_->param("pointcloud_topic", pointcloud_topic_, std::string("planar_pointcloud"));
 	private_node_handle_->param("costmap_topic", costmap_topic_, std::string("map"));
+	private_node_handle_->param("reference_cloud_topic", reference_cloud_topic_, std::string(""));
 
 	// publish topic names
 	private_node_handle_->param("reference_map_pointcloud_publish_topic", reference_map_pointcloud_publish_topic_, std::string("reference_map_pointcloud"));
@@ -47,7 +48,7 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 	min_seconds_between_map_update_.fromSec(min_seconds_between_map_update);
 
 
-	// icp configuration fields
+	// registration fields
 	private_node_handle_->param("max_alignment_fitness", max_alignment_fitness_, 1e-2);
 	private_node_handle_->param("max_transformation_angle", max_transformation_angle_, 1.59);
 	private_node_handle_->param("max_transformation_distance", max_transformation_distance_, 2.5);
@@ -93,7 +94,12 @@ void dynamic_robot_localization::PlanarLocalization::startLocalization() {
 	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10);
 
 	if (reference_cloud_file_name_.empty()) {
-		costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processCostmap, this);
+		if (!reference_cloud_topic_.empty()) {
+			reference_cloud_subscriber_ = node_handle_->subscribe(reference_cloud_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processReferenceCloud, this);
+		} else {
+			if (!costmap_topic_.empty())
+				costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processReferenceOccupancyGrid, this);
+		}
 	} else {
 		if (planar_matcher_.loadReferencePointCloud(reference_cloud_file_name_)) {
 			map_received_ = true;
@@ -123,17 +129,26 @@ void PlanarLocalization::stopLocalization() {
 }
 
 
-void PlanarLocalization::processCostmap(const nav_msgs::OccupancyGridConstPtr& planar_map) {
+void PlanarLocalization::processReferenceOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& planar_map) {
 	if (!map_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_map_update_) {
 		last_map_received_time_ = ros::Time::now();
 		if (planar_matcher_.createReferencePointcloudFromMap(planar_map)) {
 			map_received_ = true;
+			publishReferenceCloud();
 		}
-
-		publishReferenceCloud();
 	}
 }
 
+
+void PlanarLocalization::processReferenceCloud(const sensor_msgs::PointCloud2ConstPtr& reference_cloud) {
+	PlanarMatcher::PointCloudTarget::Ptr pointcloud(new PlanarMatcher::PointCloudTarget());
+	pcl::fromROSMsg(*reference_cloud, *pointcloud); // without normals
+	planar_matcher_.setReferencePointcloud(pointcloud);
+	/*pcl::fromROSMsg(*laserscan_cloud, *pointcloud_xyz); // with normals
+	planar_matcher_.computeNormals(pointcloud_xyz, pointcloud); // with normals*/
+	map_received_ = true;
+	publishReferenceCloud();
+}
 
 void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud) {
 	ros::Duration scan_age = ros::Time::now() - laserscan_cloud->header.stamp;
@@ -156,7 +171,7 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 		pcl::fromROSMsg(*laserscan_cloud, *pointcloud); // without normals
 		/*pcl::fromROSMsg(*laserscan_cloud, *pointcloud_xyz); // with normals
 		planar_matcher_.computeNormals(pointcloud_xyz, pointcloud); // with normals*/
-		if (reference_cloud_file_name_.empty()) {
+		if (reference_cloud_file_name_.empty() && reference_cloud_topic_.empty()) {
 			resetPointCloudHeight(pointcloud);
 		}
 
@@ -209,7 +224,11 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 			ROS_DEBUG_STREAM("Failed registration with fitness " << alignmentFitness);
 		}
 	} else {
-		ROS_DEBUG_STREAM("Discarded cloud with age " << scan_age.toSec());
+		if (!map_received_) {
+			ROS_DEBUG_STREAM("Discarded cloud because there is no reference cloud to compare to!");
+		} else {
+			ROS_DEBUG_STREAM("Discarded cloud with age " << scan_age.toSec());
+		}
 	}
 }
 
@@ -267,7 +286,7 @@ void PlanarLocalization::dynamicReconfigureCallback(dynamic_robot_localization::
 			if (!config.costmap_topic.empty() && costmap_topic_ != config.costmap_topic) {
 				costmap_topic_ = config.costmap_topic;
 				costmap_subscriber_.shutdown();
-				costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processCostmap, this);
+				costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 5, &dynamic_robot_localization::PlanarLocalization::processReferenceOccupancyGrid, this);
 			}
 
 			// Publish topics

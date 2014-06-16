@@ -97,15 +97,13 @@ bool PlanarMatcher::createReferencePointcloudFromMap(const nav_msgs::OccupancyGr
 bool PlanarMatcher::loadReferencePointCloud(const std::string& reference_cloud_pcd_file_) {
 	pcl::PointCloud<pcl::PointXYZ>::Ptr reference_pointcloud(new pcl::PointCloud<pcl::PointXYZ>);
 	if (pcl::io::loadPCDFile<pcl::PointXYZ>(reference_cloud_pcd_file_, *reference_pointcloud) == 0) {
-
-
-/*		Eigen::Transform<float, 3, Eigen::Affine> transform;
+		/*Eigen::Transform<float, 3, Eigen::Affine> transform;
 		transform.setIdentity();
-		transform.scale(0.001);
-		transform.rotate(Eigen::AngleAxisf(M_PI_2, Eigen::Vector3f::UnitX()));
-		pcl::transformPointCloud(*reference_pointcloud_, *reference_pointcloud_, transform);
-
-		pcl::io::savePCDFile(std::string(reference_cloud_pcd_file_ + "_corrected.pcd"), *reference_pointcloud_, false);*/
+//		transform.scale(0.001);
+		transform.rotate(Eigen::AngleAxisf(-M_PI_2, Eigen::Vector3f::UnitZ()));
+		transform.translate(Eigen::Vector3f(3.887, 3.007, 0.0));
+		pcl::transformPointCloud(*reference_pointcloud, *reference_pointcloud, transform);
+		pcl::io::savePCDFile(std::string(reference_cloud_pcd_file_ + "_corrected.pcd"), *reference_pointcloud, false);*/
 
 
 		/*pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_with_normals(new pcl::PointCloud<pcl::PointNormal>); // with normals
