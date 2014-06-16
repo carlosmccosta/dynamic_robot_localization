@@ -10,7 +10,7 @@
 	<node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler_3d" output="screen">
 		<param name="laser_scan_topic" type="str" value="tilt_scan" />
 		<param name="pointcloud_publish_topic" type="str" value="pointcloud_3d" />
-		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="100" />
+		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="1000" />
 		<param name="timeout_for_cloud_assembly" type="double" value="10.0" />
 		<param name="target_frame" type="str" value="map" />
 		<param name="min_range_cutoff_percentage_offset" type="double" value="5.00" />
@@ -41,10 +41,11 @@
 		<param name="max_seconds_scan_age" type="double" value="1.0" />
 
 		<!-- ICP params -->
-		<param name="max_alignment_fitness" type="double" value="1e-2" />
+		<param name="max_alignment_fitness" type="double" value="1.0" />
 		<param name="max_transformation_angle" type="double" value="1.59" />
-		<param name="max_transformation_distance" type="double" value="5.0" />
-		<param name="max_correspondence_distance" type="double" value="5.0" />
+		<param name="max_transformation_distance" type="double" value="1.0" />
+		<param name="max_inliers_distance" type="double" value="0.01" />
+		<param name="max_correspondence_distance" type="double" value="0.1" />
 		<param name="transformation_epsilon" type="double" value="1e-8" />
 		<param name="euclidean_fitness_epsilon" type="double" value="1e-6" />
 		<param name="max_number_of_registration_iterations" type="int" value="250" />

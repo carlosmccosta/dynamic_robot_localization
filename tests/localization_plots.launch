@@ -12,6 +12,6 @@
 	<!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" output="screen" args="/gazebo/model_states/pose[2]/position/x /initialpose/pose/pose/position/x" /> -->
 	<!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" output="screen" args="/gazebo/model_states/pose[2]/position/y /initialpose/pose/pose/position/y" /> -->
 
-	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_position" output="screen" args="/localization_error/pose/position/x:y" />
+	<node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_position" output="screen" args="/localization_error/pose/position/x:y:z" />
 	<!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_orientation" output="screen" args="/localization_error/pose/orientation/z" /> -->
 </launch>

@@ -13,6 +13,7 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <vector>
 
 // ROS includes
 #include <ros/ros.h>
@@ -68,6 +69,7 @@ class PlanarLocalization {
 		void processReferenceCloud(const sensor_msgs::PointCloud2ConstPtr& reference_cloud);
 		void processLaserScanCloud(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud);
 		void resetPointCloudHeight(PlanarMatcher::PointCloudSource::Ptr& pointcloud, float height = 0.0);
+		void publishOutliers(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud, PlanarMatcher::PointCloudSource::Ptr& pointcloud);
 		void publishReferenceCloud();
 
 		void dynamicReconfigureCallback(dynamic_robot_localization::PlanarLocalizationConfig& config, uint32_t level);
@@ -94,6 +96,7 @@ class PlanarLocalization {
 		// publish topic names
 		std::string reference_map_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
+		std::string aligned_pointcloud_outliers_publish_topic_;
 		std::string pose_publish_topic_;
 
 		// configuration fields
@@ -110,6 +113,7 @@ class PlanarLocalization {
 		double max_alignment_fitness_;
 		double max_transformation_angle_;
 		double max_transformation_distance_;
+		double max_inliers_distance_;
 
 		// state fields
 		ros::Time last_scan_time_;
@@ -127,6 +131,7 @@ class PlanarLocalization {
 		ros::Subscriber reference_cloud_subscriber_;
 		ros::Publisher map_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
+		ros::Publisher aligned_pointcloud_outliers_publisher_;
 		ros::Publisher pose_publisher_;
 
 		dynamic_reconfigure::Server<dynamic_robot_localization::PlanarLocalizationConfig> dynamic_reconfigure_server_;

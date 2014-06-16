@@ -36,6 +36,6 @@
 		<param name="occupancy_grid_2d_min_z" type="double" value="0.41" />
 		<param name="occupancy_grid_2d_max_z" type="double" value="0.42" />
 		<param name="occupancy_grid_2d_initialized_as_free" type="bool" value="true" />		
-		<remap from="cloud_in" to="aligned_pointcloud" />
+		<remap from="cloud_in" to="aligned_pointcloud_outliers" />
 	</node>
 </launch>

@@ -27,6 +27,7 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 	// publish topic names
 	private_node_handle_->param("reference_map_pointcloud_publish_topic", reference_map_pointcloud_publish_topic_, std::string("reference_map_pointcloud"));
 	private_node_handle_->param("aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
+	private_node_handle_->param("aligned_pointcloud_outliers_publish_topic", aligned_pointcloud_outliers_publish_topic_, std::string("aligned_pointcloud_outliers"));
 	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("initialpose"));
 
 	// configuration fields
@@ -52,6 +53,7 @@ PlanarLocalization::PlanarLocalization(ros::NodeHandlePtr& node_handle, ros::Nod
 	private_node_handle_->param("max_alignment_fitness", max_alignment_fitness_, 1e-2);
 	private_node_handle_->param("max_transformation_angle", max_transformation_angle_, 1.59);
 	private_node_handle_->param("max_transformation_distance", max_transformation_distance_, 2.5);
+	private_node_handle_->param("max_inliers_distance", max_inliers_distance_, 0.01);
 
 	double max_correspondence_distance;
 	double transformation_epsilon;
@@ -91,6 +93,7 @@ void dynamic_robot_localization::PlanarLocalization::startLocalization() {
 
 	map_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_map_pointcloud_publish_topic_, 10);
 	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 10);
+	aligned_pointcloud_outliers_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_outliers_publish_topic_, 10);
 	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10);
 
 	if (reference_cloud_file_name_.empty()) {
@@ -123,8 +126,10 @@ void dynamic_robot_localization::PlanarLocalization::startLocalization() {
 void PlanarLocalization::stopLocalization() {
 	laserscan_cloud_subscriber_.shutdown();
 	costmap_subscriber_.shutdown();
+	reference_cloud_subscriber_.shutdown();
 	map_pointcloud_publisher_.shutdown();
 	aligned_pointcloud_publisher_.shutdown();
+	aligned_pointcloud_outliers_publisher_.shutdown();
 	pose_publisher_.shutdown();
 }
 
@@ -220,6 +225,8 @@ void PlanarLocalization::processLaserScanCloud(const sensor_msgs::PointCloud2Con
 				pcl::toROSMsg(*aligned_pointcloud, *aligned_pointcloud_msg);
 				aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
 			}
+
+			publishOutliers(laserscan_cloud, aligned_pointcloud);
 		} else {
 			ROS_DEBUG_STREAM("Failed registration with fitness " << alignmentFitness);
 		}
@@ -237,6 +244,65 @@ void PlanarLocalization::resetPointCloudHeight(PlanarMatcher::PointCloudSource::
 	size_t number_of_points = pointcloud->points.size();
 	for (size_t i = 0; i < number_of_points; ++i) {
 		pointcloud->points[i].z = height;
+	}
+}
+
+
+void PlanarLocalization::publishOutliers(const sensor_msgs::PointCloud2ConstPtr& laserscan_cloud, PlanarMatcher::PointCloudSource::Ptr& pointcloud) {
+	if (!aligned_pointcloud_outliers_publish_topic_.empty() && aligned_pointcloud_outliers_publisher_.getNumSubscribers() > 0) {
+		std::vector<int> nn_indices(1);
+		std::vector<float> nn_distances(1);
+
+		// init pointcloud:
+		sensor_msgs::PointCloud2Ptr outliers_cloud = sensor_msgs::PointCloud2Ptr(new sensor_msgs::PointCloud2());
+		size_t number_points_in_cloud = 0;
+		size_t number_reserved_points = pointcloud->points.size();
+		float* pointcloud_data_position = NULL;
+
+		outliers_cloud->header.seq = laserscan_cloud->header.seq;
+		outliers_cloud->header.stamp = laserscan_cloud->header.stamp;
+		outliers_cloud->header.frame_id = laserscan_cloud->header.frame_id;
+		outliers_cloud->height = 1;
+		outliers_cloud->width = 0;
+		outliers_cloud->fields.clear();
+		outliers_cloud->fields.resize(3);
+		outliers_cloud->fields[0].name = "x";
+		outliers_cloud->fields[0].offset = 0;
+		outliers_cloud->fields[0].datatype = sensor_msgs::PointField::FLOAT32;
+		outliers_cloud->fields[0].count = 1;
+		outliers_cloud->fields[1].name = "y";
+		outliers_cloud->fields[1].offset = 4;
+		outliers_cloud->fields[1].datatype = sensor_msgs::PointField::FLOAT32;
+		outliers_cloud->fields[1].count = 1;
+		outliers_cloud->fields[2].name = "z";
+		outliers_cloud->fields[2].offset = 8;
+		outliers_cloud->fields[2].datatype = sensor_msgs::PointField::FLOAT32;
+		outliers_cloud->fields[2].count = 1;
+		outliers_cloud->point_step = 12;
+
+		outliers_cloud->data.resize(number_reserved_points * outliers_cloud->point_step); // resize to fit all points and avoid memory moves
+		pointcloud_data_position = (float*) (&outliers_cloud->data[0]);
+
+		// find outliers
+		for (size_t i = 0; i < pointcloud->points.size(); ++i) {
+			PlanarMatcher::PointSource& point = pointcloud->points[i];
+			planar_matcher_.getCloudMatcher()->getSearchMethodTarget()->nearestKSearch(point, 1, nn_indices, nn_distances);
+			if (nn_distances[0] > max_inliers_distance_) {
+				*pointcloud_data_position++ = point.x;
+				*pointcloud_data_position++ = point.y;
+				*pointcloud_data_position++ = point.z;
+				++number_points_in_cloud;
+			}
+		}
+
+		// publish cloud
+		outliers_cloud->width = number_points_in_cloud;
+		outliers_cloud->row_step = outliers_cloud->width * outliers_cloud->point_step;
+		outliers_cloud->data.resize(outliers_cloud->height * outliers_cloud->row_step); // resize to shrink the vector size to the real number of points inserted
+
+		if (number_points_in_cloud > 1) {
+			aligned_pointcloud_outliers_publisher_.publish(outliers_cloud);
+		}
 	}
 }
 
