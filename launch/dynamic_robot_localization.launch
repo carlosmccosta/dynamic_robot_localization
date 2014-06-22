@@ -38,8 +38,9 @@
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" />
 
 		<!-- normal estimator params -->
-		<param name="display_normals" type="bool" value="true" />
-		<param name="search_radius" type="double" value="0.12" />
+		<param name="display_normals" type="bool" value="false" />
+		<param name="search_k" type="int" value="17" />
+		<param name="search_radius" type="double" value="0.07" />
 
 		<!-- transformation validator params -->
 		<param name="max_transformation_angle" type="double" value="1.59" />
@@ -62,5 +63,5 @@
 
 
 	<!-- localization tests -->
-	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />
+	<!-- <include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" /> -->
 </launch>

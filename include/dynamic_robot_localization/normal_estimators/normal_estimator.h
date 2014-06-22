@@ -15,6 +15,7 @@
 #include <string>
 
 // ROS includes
+#include <ros/ros.h>
 #include <tf2/LinearMath/Transform.h>
 
 // PCL includes

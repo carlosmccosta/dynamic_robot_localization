@@ -113,7 +113,7 @@ void Localization<PointT>::setupFiltersConfigurations() {
 
 template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorConfigurations() {
-	normal_estimator_ = typename MovingLeastSquares<PointT>::Ptr(new MovingLeastSquares<PointT>());
+	normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
 	normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 }
 
@@ -363,8 +363,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
 	normal_estimator_->estimateNormals(ambient_pointcloud, ambient_pointcloud_with_normals, ambient_pointcloud, surface_search_method, sensor_pose_tf_guess);
-	if (ambient_pointcloud->points.empty()) { return false; }
 	ambient_pointcloud = ambient_pointcloud_with_normals; // switch pointers
+	if (ambient_pointcloud->points.empty()) { return false; }
 
 
 

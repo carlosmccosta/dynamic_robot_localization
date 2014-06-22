@@ -1,4 +1,4 @@
-/**\file normal_estimator.cpp
+/**\file normal_estimation_omp.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,9 +6,8 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/normal_estimators/normal_estimator.h>
+#include <dynamic_robot_localization/normal_estimators/normal_estimation_omp.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 namespace dynamic_robot_localization {
 
@@ -17,38 +16,51 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT>
-NormalEstimator<PointT>::NormalEstimator() :
-	display_normals_(false) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimationOMP-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	private_node_handle->param("display_normals", display_normals_, false);
-}
+void NormalEstimationOMP<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	int search_k;
+	private_node_handle->param("search_k", search_k, 0);
+	normal_estimator_.setKSearch(search_k);
 
-
-template<typename PointT>
-void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals) {
-	pcl::visualization::PCLVisualizer normals_visualizer("Normals");
-	normals_visualizer.setBackgroundColor (0, 0, 0);
-	normals_visualizer.initCameraParameters ();
-	normals_visualizer.setCameraPosition(-6, 0, 0, 0, 0, 1);
-	normals_visualizer.addCoordinateSystem (0.5, 0);
-	normals_visualizer.addPointCloudNormals<PointT, PointT>(pointcloud_with_normals, pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
-	normals_visualizer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, VISUALIZER_NORMALS_ID);
-
-//	normals_visualizer_->spinOnce(5, true);
-//	normals_visualizer_->spin();
-
-	while (!normals_visualizer.wasStopped()) {
-		normals_visualizer.spinOnce(100);
-		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+	if (search_k <= 0) {
+		double search_radius;
+		private_node_handle->param("search_radius", search_radius, 0.12);
+		normal_estimator_.setRadiusSearch(search_radius);
 	}
-	normals_visualizer.close();
+
+	NormalEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+template<typename PointT>
+void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out,
+		typename pcl::PointCloud<PointT>::Ptr& surface,
+		typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+		tf2::Transform& viewpoint_guess) {
+
+	/*std::vector<int> indexes;
+	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);*/
+
+	normal_estimator_.setSearchMethod(surface_search_method);
+	normal_estimator_.setSearchSurface(surface);
+	normal_estimator_.setInputCloud(pointcloud);
+	normal_estimator_.setViewPoint(viewpoint_guess.getOrigin().getX(), viewpoint_guess.getOrigin().getY(), viewpoint_guess.getOrigin().getZ());
+	normal_estimator_.compute(*pointcloud); // adds normals to existing points
+
+	pointcloud_with_normals_out = pointcloud;  // switch pointers
+
+	/*pcl::removeNaNFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	pcl::removeNaNNormalsFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);*/
+
+	if (NormalEstimator<PointT>::getDisplayNormals()) {
+		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
+	}
+
+	ROS_DEBUG_STREAM("NormalEstimationOMP computed " << pointcloud_with_normals_out->points.size() << " normals from a cloud with " << pointcloud->points.size() << " points");
+}
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimationOMP-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -61,4 +73,5 @@ void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::P
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */
+
 

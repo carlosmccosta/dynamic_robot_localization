@@ -34,7 +34,7 @@ void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::Node
 	normal_estimator_.setPolynomialFit(polynomial_fit);
 
 	double search_radius;
-	private_node_handle->param("search_radius", search_radius, 0.05);
+	private_node_handle->param("search_radius", search_radius, 0.12);
 	normal_estimator_.setSearchRadius(search_radius);
 
 	double sqr_gauss_param;
@@ -88,6 +88,8 @@ void MovingLeastSquares<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 	if (NormalEstimator<PointT>::getDisplayNormals()) {
 		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
 	}
+
+	ROS_DEBUG_STREAM("MovingLeastSquares computed " << pointcloud_with_normals_out->points.size() << " normals from a cloud with " << pointcloud->points.size() << " points");
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </MovingLeastSquares-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
