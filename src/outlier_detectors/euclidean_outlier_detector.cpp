@@ -6,6 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#include <dynamic_robot_localization/common/common.h>
 #include <dynamic_robot_localization/outlier_detectors/impl/euclidean_outlier_detector.hpp>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -14,7 +15,7 @@
 #ifndef DRL_NO_PRECOMPILE
 #include <pcl/impl/instantiate.hpp>
 #include <pcl/point_types.h>
-#define PCL_INSTANTIATE_EuclideanOutlierDetector(T) template class PCL_EXPORTS dynamic_robot_localization::EuclideanOutlierDetector<T>;
-PCL_INSTANTIATE(EuclideanOutlierDetector, PCL_XYZ_POINT_TYPES)
+#define PCL_INSTANTIATE_DRLEuclideanOutlierDetector(T) template class PCL_EXPORTS dynamic_robot_localization::EuclideanOutlierDetector<T>;
+PCL_INSTANTIATE(DRLEuclideanOutlierDetector, DRL_POINT_TYPES)
 #endif
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

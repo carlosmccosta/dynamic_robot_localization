@@ -46,6 +46,7 @@ catkin_package(
         drl_common
         drl_pose_to_tf_publisher
         drl_cloud_filters
+        drl_normal_estimators
         drl_cloud_matchers
         drl_transformation_validators
         drl_outliers_detectors
@@ -91,6 +92,11 @@ add_library(drl_pose_to_tf_publisher
 add_library(drl_cloud_filters
     src/cloud_filters/cloud_filter.cpp
     src/cloud_filters/voxel_grid.cpp
+)
+
+add_library(drl_normal_estimators
+    src/normal_estimators/normal_estimator.cpp
+    src/normal_estimators/moving_least_squares.cpp
 )
 
 add_library(drl_cloud_matchers
@@ -153,6 +159,11 @@ target_link_libraries(drl_cloud_filters
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_normal_estimators
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_cloud_matchers
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -172,6 +183,7 @@ target_link_libraries(drl_localization
     drl_common
     drl_pose_to_tf_publisher
     drl_cloud_filters
+    drl_normal_estimators
     drl_cloud_matchers
     drl_transformation_validators
     drl_outliers_detectors

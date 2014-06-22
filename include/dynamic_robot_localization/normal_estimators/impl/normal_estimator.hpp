@@ -1,4 +1,4 @@
-/**\file cloud_filter.hpp
+/**\file normal_estimator.cpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
+#include <dynamic_robot_localization/normal_estimators/normal_estimator.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -17,27 +17,38 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+template<typename PointT>
+NormalEstimator<PointT>::NormalEstimator() :
+	display_normals_(false) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudFilter<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	if (!filtered_cloud_publish_topic_.empty()) {
-		filtered_cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(filtered_cloud_publish_topic_, 1);
-	}
+void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	private_node_handle->param("display_normals", display_normals_, false);
 }
 
 
 template<typename PointT>
-void CloudFilter<PointT>::publishFilteredCloud(typename pcl::PointCloud<PointT>::Ptr& filtered_cloud) {
-	if (!filtered_cloud_publish_topic_.empty() && filtered_cloud_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr filtered_cloud_msg(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*filtered_cloud, *filtered_cloud_msg);
-		filtered_cloud_publisher_.publish(filtered_cloud_msg);
-	}
-}
+void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals) {
+	pcl::visualization::PCLVisualizer normals_visualizer("Normals");
+	normals_visualizer.setBackgroundColor (0, 0, 0);
+	normals_visualizer.initCameraParameters ();
+	normals_visualizer.setCameraPosition(-7, 0, 0, 0, 0, 1);
+	normals_visualizer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, VISUALIZER_NORMALS_ID);
+	normals_visualizer.addCoordinateSystem (0.5, 0);
+	normals_visualizer.addPointCloudNormals<PointT, PointT>(pointcloud_with_normals, pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//	normals_visualizer_->spinOnce(5, true);
+//	normals_visualizer_->spin();
+
+	while (!normals_visualizer.wasStopped()) {
+		normals_visualizer.spinOnce(100);
+		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+	}
+	normals_visualizer.close();
+}
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -46,4 +57,8 @@ void CloudFilter<PointT>::publishFilteredCloud(typename pcl::PointCloud<PointT>:
 // =============================================================================   <private-section>   =========================================================================
 // =============================================================================   </private-section>  =========================================================================
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <template instantiations>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 } /* namespace dynamic_robot_localization */
+

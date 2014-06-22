@@ -45,6 +45,9 @@
 #include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
 #include <dynamic_robot_localization/cloud_filters/voxel_grid.h>
 
+#include <dynamic_robot_localization/normal_estimators/normal_estimator.h>
+#include <dynamic_robot_localization/normal_estimators/moving_least_squares.h>
+
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
 
@@ -88,6 +91,7 @@ class Localization : public ConfigurableObject {
 		virtual void setupGeneralConfigurations();
 
 		virtual void setupFiltersConfigurations();
+		virtual void setupNormalEstimatorConfigurations();
 		virtual void setupMatchersConfigurations();
 		virtual void setupTransformationValidatorsConfigurations();
 		virtual void setupOutlierDetectorsConfigurations();
@@ -133,6 +137,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_file_name_;
 		std::string map_frame_id_;
 		std::string base_link_frame_id_;
+		std::string sensor_frame_id_;
 		ros::Duration max_seconds_scan_age_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
@@ -161,6 +166,7 @@ class Localization : public ConfigurableObject {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > cloud_filters_;
+		typename NormalEstimator<PointT>::Ptr normal_estimator_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > cloud_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
@@ -168,6 +174,7 @@ class Localization : public ConfigurableObject {
 };
 
 } /* namespace dynamic_robot_localization */
+
 
 
 #ifdef DRL_NO_PRECOMPILE

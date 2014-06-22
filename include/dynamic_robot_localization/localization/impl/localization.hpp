@@ -51,6 +51,7 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 	// localization pipeline configurations
 	setupFiltersConfigurations();
+	setupNormalEstimatorConfigurations();
 	setupMatchersConfigurations();
 	setupTransformationValidatorsConfigurations();
 	setupOutlierDetectorsConfigurations();
@@ -85,6 +86,7 @@ void Localization<PointT>::setupGeneralConfigurations() {
 	private_node_handle_->param("reference_cloud_file_name", reference_pointcloud_file_name_, std::string(""));
 	private_node_handle_->param("map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
+	private_node_handle_->param("sensor_frame_id_", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
 
 	double max_seconds_scan_age;
 	private_node_handle_->param("max_seconds_scan_age", max_seconds_scan_age, 0.5);
@@ -106,6 +108,13 @@ void Localization<PointT>::setupFiltersConfigurations() {
 	typename dynamic_robot_localization::VoxelGrid<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
 	default_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_filters_.push_back(default_filter);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupNormalEstimatorConfigurations() {
+	normal_estimator_ = typename MovingLeastSquares<PointT>::Ptr(new MovingLeastSquares<PointT>());
+	normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 }
 
 
@@ -325,26 +334,46 @@ void Localization<PointT>::resetPointCloudHeight(pcl::PointCloud<PointT>& pointc
 
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out) {
+	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
 	if (ambient_pointcloud->points.empty()) {
 		return false;
 	}
 
-	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
 
-
-	// filters
+	// ==============================================================  filters
 	for (size_t i = 0; i < cloud_filters_.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
 		cloud_filters_[i]->filter(ambient_pointcloud, filtered_ambient_pointcloud);
 		ambient_pointcloud = filtered_ambient_pointcloud; // switch pointers
 	}
-
-
-	// normal estimation
+	if (ambient_pointcloud->points.empty()) { return false; }
 
 
 
-	// cloud registration
+	// ==============================================================  normal estimation
+	typename pcl::search::KdTree<PointT>::Ptr surface_search_method(new pcl::search::KdTree<PointT>());
+	surface_search_method->setInputCloud(ambient_pointcloud);
+	tf2::Transform sensor_pose_tf_guess;
+	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, ambient_pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(ambient_pointcloud->header).stamp)) {
+		sensor_pose_tf_guess.setIdentity();
+	} else {
+		ambient_pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
+		ambient_pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
+		ambient_pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
+	}
+	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
+	normal_estimator_->estimateNormals(ambient_pointcloud, ambient_pointcloud_with_normals, ambient_pointcloud, surface_search_method, sensor_pose_tf_guess);
+	if (ambient_pointcloud->points.empty()) { return false; }
+	ambient_pointcloud = ambient_pointcloud_with_normals; // switch pointers
+
+
+
+	// ==============================================================  keypoint selection
+
+
+
+
+	// ==============================================================  cloud registration
 	for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
 		cloud_matchers_[i]->getCloudMatcher()->setInputSource(ambient_pointcloud);
 		cloud_matchers_[i]->getCloudMatcher()->align(*ambient_pointcloud);
@@ -356,7 +385,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 
 
-	// outlier detection
+	// ==============================================================  outlier detection
 	double max_outlier_percentage = 0.0;
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
 		sensor_msgs::PointCloud2Ptr outliers = outlier_detectors_[i]->processOutliers(reference_pointcloud_search_method_, *ambient_pointcloud);
@@ -369,7 +398,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 
-	// localization post processors
+
+	// ==============================================================  localization post processors
 	for (size_t i = 0; i < transformation_validators_.size(); ++i) {
 		if (!transformation_validators_[i]->validateNewLocalizationPose(
 				pointcloud_pose_initial_guess, pointcloud_pose_corrected_out,
@@ -379,7 +409,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 
-	// publish localization statistics
+
+	// ==============================================================  publish localization statistics
 
 
 	return true;

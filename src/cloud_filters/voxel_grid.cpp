@@ -6,6 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#include <dynamic_robot_localization/common/common.h>
 #include <dynamic_robot_localization/cloud_filters/impl/voxel_grid.hpp>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -14,7 +15,7 @@
 #ifndef DRL_NO_PRECOMPILE
 #include <pcl/impl/instantiate.hpp>
 #include <pcl/point_types.h>
-#define PCL_INSTANTIATE_VoxelGrid(T) template class PCL_EXPORTS dynamic_robot_localization::VoxelGrid<T>;
-PCL_INSTANTIATE(VoxelGrid, PCL_XYZ_POINT_TYPES)
+#define PCL_INSTANTIATE_DRLVoxelGrid(T) template class PCL_EXPORTS dynamic_robot_localization::VoxelGrid<T>;
+PCL_INSTANTIATE(DRLVoxelGrid, DRL_POINT_TYPES)
 #endif
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
