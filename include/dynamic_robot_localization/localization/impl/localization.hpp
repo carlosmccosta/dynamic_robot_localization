@@ -44,12 +44,16 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	node_handle_ = node_handle;
 	private_node_handle_ = private_node_handle;
 
+	// general configurations
 	setupSubcriptionTopicNamesFromParameterServer();
 	setupPublishTopicNamesFromParameterServer();
-	setupGeneralConfiguration();
-	setupMatchersConfiguration();
-	setupTransformationValidatorsConfiguration();
-	setupOutlierDetectorsConfiguration();
+	setupGeneralConfigurations();
+
+	// localization pipeline configurations
+	setupFiltersConfigurations();
+	setupMatchersConfigurations();
+	setupTransformationValidatorsConfigurations();
+	setupOutlierDetectorsConfigurations();
 
 	pose_to_tf_publisher_.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 	if (publish_tf_map_odom_) {
@@ -75,7 +79,7 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupGeneralConfiguration() {
+void Localization<PointT>::setupGeneralConfigurations() {
 	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
 	private_node_handle_->param("reference_cloud_file_name", reference_pointcloud_file_name_, std::string(""));
@@ -97,7 +101,16 @@ void Localization<PointT>::setupGeneralConfiguration() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupMatchersConfiguration() {
+void Localization<PointT>::setupFiltersConfigurations() {
+	cloud_filters_.clear();
+	typename dynamic_robot_localization::VoxelGrid<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
+	default_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+	cloud_filters_.push_back(default_filter);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupMatchersConfigurations() {
 	cloud_matchers_.clear();
 	typename dynamic_robot_localization::IterativeClosestPoint<PointT>::Ptr default_matcher(new IterativeClosestPoint<PointT>());
 	default_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
@@ -106,7 +119,7 @@ void Localization<PointT>::setupMatchersConfiguration() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupTransformationValidatorsConfiguration() {
+void Localization<PointT>::setupTransformationValidatorsConfigurations() {
 	transformation_validators_.clear();
 	EuclideanTransformationValidator::Ptr default_validator(new EuclideanTransformationValidator());
 	default_validator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
@@ -115,7 +128,7 @@ void Localization<PointT>::setupTransformationValidatorsConfiguration() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupOutlierDetectorsConfiguration() {
+void Localization<PointT>::setupOutlierDetectorsConfigurations() {
 	outlier_detectors_.clear();
 	typename EuclideanOutlierDetector<PointT>::Ptr default_outlier_detector(new EuclideanOutlierDetector<PointT>());
 	default_outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
@@ -320,7 +333,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 
 	// filters
-
+	for (size_t i = 0; i < cloud_filters_.size(); ++i) {
+		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
+		cloud_filters_[i]->filter(ambient_pointcloud, filtered_ambient_pointcloud);
+		ambient_pointcloud = filtered_ambient_pointcloud; // switch pointers
+	}
 
 
 	// normal estimation

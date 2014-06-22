@@ -30,6 +30,13 @@
 		<param name="min_seconds_between_scan_registration" type="double" value="0.05" />
 		<param name="min_seconds_between_reference_pointcloud_update" type="double" value="5.0" />
 
+		<!-- VoxelGrid params -->
+		<param name="leaf_size_x" type="double" value="0.5" />
+		<param name="leaf_size_y" type="double" value="0.5" />
+		<param name="leaf_size_z" type="double" value="0.5" />
+		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" />
+
+
 		<!-- transformation validator params -->
 		<param name="max_transformation_angle" type="double" value="1.59" />
 		<param name="max_transformation_distance" type="double" value="2.0" />

@@ -42,6 +42,9 @@
 #include <laserscan_to_pointcloud/tf_collector.h>
 #include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
 
+#include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
+#include <dynamic_robot_localization/cloud_filters/voxel_grid.h>
+
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
 
@@ -50,8 +53,6 @@
 
 #include <dynamic_robot_localization/outlier_detectors/outlier_detector.h>
 #include <dynamic_robot_localization/outlier_detectors/euclidean_outlier_detector.h>
-
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -84,10 +85,12 @@ class Localization : public ConfigurableObject {
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
 		virtual void setupSubcriptionTopicNamesFromParameterServer();
 		virtual void setupPublishTopicNamesFromParameterServer();
-		virtual void setupGeneralConfiguration();
-		virtual void setupMatchersConfiguration();
-		virtual void setupTransformationValidatorsConfiguration();
-		virtual void setupOutlierDetectorsConfiguration();
+		virtual void setupGeneralConfigurations();
+
+		virtual void setupFiltersConfigurations();
+		virtual void setupMatchersConfigurations();
+		virtual void setupTransformationValidatorsConfigurations();
+		virtual void setupOutlierDetectorsConfigurations();
 
 		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename);
 		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
@@ -157,6 +160,7 @@ class Localization : public ConfigurableObject {
 		// localization fields
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
+		std::vector< typename CloudFilter<PointT>::Ptr > cloud_filters_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > cloud_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;

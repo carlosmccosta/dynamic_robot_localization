@@ -41,7 +41,7 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 	        && transform_distance < max_transformation_distance_
 	        && transform_angle < max_transformation_angle_) {
 
-		ROS_DEBUG_STREAM("EuclideanTransformationValidator accepted new pose-> " \
+		ROS_DEBUG_STREAM("EuclideanTransformationValidator accepted new pose at time " << ros::Time::now() << " -> " \
 					<< "\n\t translation: " 		<< transform_distance \
 					<< "\n\t rotation: " 			<< transform_angle \
 					<< "\n\t alignment_fitness: " 	<< alignment_fitness \
@@ -49,7 +49,7 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 		return true;
 	}
 
-	ROS_DEBUG_STREAM("EuclideanTransformationValidator rejected new pose -> " \
+	ROS_DEBUG_STREAM("EuclideanTransformationValidator rejected new pose at time " << ros::Time::now() << " -> " \
 			<< "\n\t translation: " 		<< transform_distance \
 			<< "\n\t rotation: " 			<< transform_angle \
 			<< "\n\t alignment_fitness: " 	<< alignment_fitness \
