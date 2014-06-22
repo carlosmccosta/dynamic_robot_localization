@@ -54,6 +54,7 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	// localization pipeline configurations
 	setupFiltersConfigurations();
 	setupNormalEstimatorConfigurations();
+	setupKeypointDetectors();
 	setupMatchersConfigurations();
 	setupTransformationValidatorsConfigurations();
 	setupOutlierDetectorsConfigurations();
@@ -119,6 +120,15 @@ template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorConfigurations() {
 	normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
 	normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupKeypointDetectors() {
+	keypoint_detectors_.clear();
+	typename dynamic_robot_localization::KeypointDetector<PointT>::Ptr default_keypoint_detector(new IntrinsicShapeSignature3D<PointT>());
+	default_keypoint_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+	keypoint_detectors_.push_back(default_keypoint_detector);
 }
 
 
@@ -213,11 +223,10 @@ void Localization<PointT>::publishReferencePointCloud() {
 
 template<typename PointT>
 void Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
-	if (compute_normals_reference_cloud_) {
-		applyNormalEstimation(reference_pointcloud_);
-	}
-
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
+	if (compute_normals_reference_cloud_) {
+		applyNormalEstimation(reference_pointcloud_, reference_pointcloud_search_method_);
+	}
 
 	for (size_t i = 0; i < cloud_matchers_.size(); i++) {
 		cloud_matchers_[i]->getCloudMatcher()->setSearchMethodTarget(reference_pointcloud_search_method_, true);
@@ -350,20 +359,32 @@ void Localization<PointT>::applyFilters(typename pcl::PointCloud<PointT>::Ptr& p
 
 
 template<typename PointT>
-void Localization<PointT>::applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
-	typename pcl::search::KdTree<PointT>::Ptr surface_search_method(new pcl::search::KdTree<PointT>());
-		surface_search_method->setInputCloud(pointcloud);
-		tf2::Transform sensor_pose_tf_guess;
-		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
-			sensor_pose_tf_guess.setIdentity();
+void Localization<PointT>::applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
+	tf2::Transform sensor_pose_tf_guess;
+	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
+		sensor_pose_tf_guess.setIdentity();
+	} else {
+		pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
+		pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
+		pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
+	}
+	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
+	normal_estimator_->estimateNormals(pointcloud, ambient_pointcloud_with_normals, pointcloud, surface_search_method, sensor_pose_tf_guess);
+	pointcloud = ambient_pointcloud_with_normals; // switch pointers
+}
+
+
+template<typename PointT>
+void Localization<PointT>::applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, typename pcl::PointCloud<PointT>::Ptr& keypoints) {
+	for (size_t i = 0; i < keypoint_detectors_.size(); ++i) {
+		if (i == 0) {
+			keypoint_detectors_[i]->findKeypoints(pointcloud, keypoints, pointcloud, surface_search_method);
 		} else {
-			pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
-			pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
-			pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
+			typename pcl::PointCloud<PointT>::Ptr keypoints_temp(new pcl::PointCloud<PointT>());
+			keypoint_detectors_[i]->findKeypoints(pointcloud, keypoints_temp, pointcloud, surface_search_method);
+			*keypoints += *keypoints_temp;
 		}
-		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
-		normal_estimator_->estimateNormals(pointcloud, ambient_pointcloud_with_normals, pointcloud, surface_search_method, sensor_pose_tf_guess);
-		pointcloud = ambient_pointcloud_with_normals; // switch pointers
+	}
 }
 
 
@@ -422,13 +443,16 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if (ambient_pointcloud->points.empty()) { return false; }
 
 	// ==============================================================  normal estimation
+	typename pcl::search::KdTree<PointT>::Ptr surface_search_method(new pcl::search::KdTree<PointT>());
+	surface_search_method->setInputCloud(ambient_pointcloud);
 	if (compute_normals_ambient_cloud_) {
-		applyNormalEstimation(ambient_pointcloud);
+		applyNormalEstimation(ambient_pointcloud, surface_search_method);
 		if (ambient_pointcloud->points.empty()) { return false; }
 	}
 
 	// ==============================================================  keypoint selection
-
+	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
+	applyKeypointDetection(ambient_pointcloud, surface_search_method, ambient_pointcloud_keypoints);
 
 	// ==============================================================  cloud registration
 	applyCloudRegistration(ambient_pointcloud, pointcloud_pose_corrected_out);

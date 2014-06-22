@@ -47,6 +47,7 @@ catkin_package(
         drl_pose_to_tf_publisher
         drl_cloud_filters
         drl_normal_estimators
+        drl_keypoint_detectors
         drl_cloud_matchers
         drl_transformation_validators
         drl_outliers_detectors
@@ -98,6 +99,11 @@ add_library(drl_normal_estimators
     src/normal_estimators/normal_estimator.cpp
     src/normal_estimators/normal_estimation_omp.cpp
     src/normal_estimators/moving_least_squares.cpp
+)
+
+add_library(drl_keypoint_detectors
+    src/cloud_matchers/feature_matchers/keypoint_detectors/keypoint_detector.cpp
+    src/cloud_matchers/feature_matchers/keypoint_detectors/intrinsic_shape_signature_3d.cpp
 )
 
 add_library(drl_cloud_matchers
@@ -166,6 +172,11 @@ target_link_libraries(drl_normal_estimators
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_keypoint_detectors
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_cloud_matchers
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -186,6 +197,7 @@ target_link_libraries(drl_localization
     drl_pose_to_tf_publisher
     drl_cloud_filters
     drl_normal_estimators
+    drl_keypoint_detectors
     drl_cloud_matchers
     drl_transformation_validators
     drl_outliers_detectors

@@ -1,4 +1,4 @@
-/**\file cloud_filter.hpp
+/**\file keypoint_detector.pp
  * \brief Description...
  *
  * @version 1.0
@@ -6,9 +6,8 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_detectors/keypoint_detector.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 namespace dynamic_robot_localization {
 
@@ -19,25 +18,23 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <KeypointDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudFilter<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	if (!filtered_cloud_publish_topic_.empty()) {
-		filtered_cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(filtered_cloud_publish_topic_, 1);
+void KeypointDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	if (!keypoints_publish_topic_.empty()) {
+		keypoints_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(keypoints_publish_topic_, 1);
 	}
 }
 
-
 template<typename PointT>
-void CloudFilter<PointT>::publishFilteredCloud(typename pcl::PointCloud<PointT>::Ptr& filtered_cloud) {
-	if (!filtered_cloud_publish_topic_.empty() && filtered_cloud->points.size() > 0 && filtered_cloud_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr filtered_cloud_msg(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*filtered_cloud, *filtered_cloud_msg);
-		filtered_cloud_publisher_.publish(filtered_cloud_msg);
+void KeypointDetector<PointT>::publishKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints) {
+	if (!keypoints_publish_topic_.empty() && pointcloud_keypoints->points.size() > 0 && keypoints_publisher_.getNumSubscribers() > 0) {
+		sensor_msgs::PointCloud2Ptr pointcloud_keypoints_msg(new sensor_msgs::PointCloud2());
+		pcl::toROSMsg(*pointcloud_keypoints, *pointcloud_keypoints_msg);
+		keypoints_publisher_.publish(pointcloud_keypoints_msg);
 	}
 }
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </KeypointDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -45,5 +42,8 @@ void CloudFilter<PointT>::publishFilteredCloud(typename pcl::PointCloud<PointT>:
 
 // =============================================================================   <private-section>   =========================================================================
 // =============================================================================   </private-section>  =========================================================================
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <template instantiations>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */

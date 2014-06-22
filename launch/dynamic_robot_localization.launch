@@ -34,15 +34,23 @@
 		<param name="min_seconds_between_reference_pointcloud_update" type="double" value="5.0" />
 
 		<!-- VoxelGrid params -->
-		<param name="leaf_size_x" type="double" value="0.1" />
-		<param name="leaf_size_y" type="double" value="0.1" />
-		<param name="leaf_size_z" type="double" value="0.1" />
+		<param name="leaf_size_x" type="double" value="0.03" />
+		<param name="leaf_size_y" type="double" value="0.03" />
+		<param name="leaf_size_z" type="double" value="0.03" />
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" />
 
 		<!-- normal estimator params -->
 		<param name="display_normals" type="bool" value="false" />
 		<param name="search_k" type="int" value="19" />
 		<param name="search_radius" type="double" value="0.09" />
+
+
+		<!-- keypoint detection parameters -->
+		<param name="iss3_keypoints_cloud_publish_topic" type="str" value="ambient_keypoints" />
+		<param name="salient_radius" type="double" value="0.18" />
+		<param name="non_max_radius" type="double" value="0.12" />
+		<param name="normal_radius" type="double" value="0.09" />
+		<param name="border_radius" type="double" value="0.0" />
 
 		<!-- transformation validator params -->
 		<param name="max_transformation_angle" type="double" value="1.59" />

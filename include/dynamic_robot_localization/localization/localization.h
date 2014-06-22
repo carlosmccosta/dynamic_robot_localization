@@ -49,6 +49,9 @@
 #include <dynamic_robot_localization/normal_estimators/normal_estimation_omp.h>
 #include <dynamic_robot_localization/normal_estimators/moving_least_squares.h>
 
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_detectors/keypoint_detector.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_detectors/intrinsic_shape_signature_3d.h>
+
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_with_normals.h>
@@ -88,12 +91,13 @@ class Localization : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <Localization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
-		virtual void setupSubcriptionTopicNamesFromParameterServer();
-		virtual void setupPublishTopicNamesFromParameterServer();
-		virtual void setupGeneralConfigurations();
+		void setupSubcriptionTopicNamesFromParameterServer();
+		void setupPublishTopicNamesFromParameterServer();
+		void setupGeneralConfigurations();
 
 		virtual void setupFiltersConfigurations();
 		virtual void setupNormalEstimatorConfigurations();
+		virtual void setupKeypointDetectors();
 		virtual void setupMatchersConfigurations();
 		virtual void setupTransformationValidatorsConfigurations();
 		virtual void setupOutlierDetectorsConfigurations();
@@ -109,11 +113,12 @@ class Localization : public ConfigurableObject {
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
-		void applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
-		void applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
-		void applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, tf2::Transform& pointcloud_pose_in_out);
-		double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
-		bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
+		virtual void applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
+		virtual void applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
+		virtual void applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, typename pcl::PointCloud<PointT>::Ptr& keypoints);
+		virtual void applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, tf2::Transform& pointcloud_pose_in_out);
+		virtual double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
+		virtual bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
 		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out);
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </Localization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -177,6 +182,7 @@ class Localization : public ConfigurableObject {
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > cloud_filters_;
 		typename NormalEstimator<PointT>::Ptr normal_estimator_;
+		std::vector< typename KeypointDetector<PointT>::Ptr > keypoint_detectors_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > cloud_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
@@ -184,6 +190,7 @@ class Localization : public ConfigurableObject {
 };
 
 } /* namespace dynamic_robot_localization */
+
 
 
 #ifdef DRL_NO_PRECOMPILE
