@@ -51,6 +51,7 @@
 
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_with_normals.h>
 
 #include <dynamic_robot_localization/transformation_validators/transformation_validator.h>
 #include <dynamic_robot_localization/transformation_validators/euclidean_transformation_validator.h>
@@ -108,7 +109,13 @@ class Localization : public ConfigurableObject {
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
+		void applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
+		void applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
+		void applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, tf2::Transform& pointcloud_pose_in_out);
+		double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
+		bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
 		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out);
+
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </Localization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -142,6 +149,8 @@ class Localization : public ConfigurableObject {
 		ros::Duration max_seconds_scan_age_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
+		bool compute_normals_reference_cloud_;
+		bool compute_normals_ambient_cloud_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
 
@@ -175,7 +184,6 @@ class Localization : public ConfigurableObject {
 };
 
 } /* namespace dynamic_robot_localization */
-
 
 
 #ifdef DRL_NO_PRECOMPILE

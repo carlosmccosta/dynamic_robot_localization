@@ -103,6 +103,7 @@ add_library(drl_normal_estimators
 add_library(drl_cloud_matchers
     src/cloud_matchers/cloud_matcher.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point.cpp
+    src/cloud_matchers/point_matchers/iterative_closest_point_with_normals.cpp
 )
 
 add_library(drl_transformation_validators

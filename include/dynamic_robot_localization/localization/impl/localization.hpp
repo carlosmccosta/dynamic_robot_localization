@@ -23,6 +23,8 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 Localization<PointT>::Localization() :
+	compute_normals_reference_cloud_(true),
+	compute_normals_ambient_cloud_(true),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
 	last_scan_time_(0),
@@ -81,6 +83,8 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 
 template<typename PointT>
 void Localization<PointT>::setupGeneralConfigurations() {
+	private_node_handle_->param("compute_normals_reference_cloud_", compute_normals_reference_cloud_, true);
+	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, true);
 	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
 	private_node_handle_->param("reference_cloud_file_name", reference_pointcloud_file_name_, std::string(""));
@@ -105,7 +109,7 @@ void Localization<PointT>::setupGeneralConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupFiltersConfigurations() {
 	cloud_filters_.clear();
-	typename dynamic_robot_localization::VoxelGrid<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
+	typename dynamic_robot_localization::CloudFilter<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
 	default_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_filters_.push_back(default_filter);
 }
@@ -121,7 +125,7 @@ void Localization<PointT>::setupNormalEstimatorConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupMatchersConfigurations() {
 	cloud_matchers_.clear();
-	typename dynamic_robot_localization::IterativeClosestPoint<PointT>::Ptr default_matcher(new IterativeClosestPoint<PointT>());
+	typename dynamic_robot_localization::CloudMatcher<PointT>::Ptr default_matcher(new IterativeClosestPointWithNormals<PointT>());
 	default_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_matchers_.push_back(default_matcher);
 }
@@ -130,7 +134,7 @@ void Localization<PointT>::setupMatchersConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupTransformationValidatorsConfigurations() {
 	transformation_validators_.clear();
-	EuclideanTransformationValidator::Ptr default_validator(new EuclideanTransformationValidator());
+	TransformationValidator::Ptr default_validator(new EuclideanTransformationValidator());
 	default_validator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	transformation_validators_.push_back(default_validator);
 }
@@ -139,7 +143,7 @@ void Localization<PointT>::setupTransformationValidatorsConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupOutlierDetectorsConfigurations() {
 	outlier_detectors_.clear();
-	typename EuclideanOutlierDetector<PointT>::Ptr default_outlier_detector(new EuclideanOutlierDetector<PointT>());
+	typename OutlierDetector<PointT>::Ptr default_outlier_detector(new EuclideanOutlierDetector<PointT>());
 	default_outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	outlier_detectors_.push_back(default_outlier_detector);
 }
@@ -149,11 +153,10 @@ template<typename PointT>
 bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
 	if (pcl::io::loadPCDFile<PointT>(reference_pointcloud_filename, *reference_pointcloud_) == 0) {
 		if (!reference_pointcloud_->points.empty()) {
+			reference_pointcloud_->header.frame_id = map_frame_id_;
 			last_map_received_time_ = ros::Time::now();
-			reference_pointcloud_received_ = true;
 			reference_pointcloud_2d_ = false;
 			updateLocalizationPipelineWithNewReferenceCloud();
-			publishReferencePointCloud();
 			ROS_DEBUG_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
 			return true;
 		}
@@ -171,10 +174,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 		if (reference_pointcloud_msg->width > 0 && reference_pointcloud_msg->data.size() > 0 && reference_pointcloud_msg->fields.size() >= 3) {
 			pcl::fromROSMsg(*reference_pointcloud_msg, *reference_pointcloud_);
 			if (!reference_pointcloud_->points.empty()) {
-				reference_pointcloud_received_ = true;
 				reference_pointcloud_2d_ = false;
 				updateLocalizationPipelineWithNewReferenceCloud();
-				publishReferencePointCloud();
 				ROS_DEBUG_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 			}
 		}
@@ -189,10 +190,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_)) {
 			if (!reference_pointcloud_->points.empty()) {
-				reference_pointcloud_received_ = true;
 				reference_pointcloud_2d_ = true;
 				updateLocalizationPipelineWithNewReferenceCloud();
-				publishReferencePointCloud();
 				ROS_DEBUG_STREAM("Loaded reference point cloud from costmap topic " << costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 			}
 		}
@@ -212,14 +211,22 @@ void Localization<PointT>::publishReferencePointCloud() {
 }
 
 
-
 template<typename PointT>
 void Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
+	if (compute_normals_reference_cloud_) {
+		applyNormalEstimation(reference_pointcloud_);
+	}
+
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 
 	for (size_t i = 0; i < cloud_matchers_.size(); i++) {
 		cloud_matchers_[i]->getCloudMatcher()->setSearchMethodTarget(reference_pointcloud_search_method_, true);
 		cloud_matchers_[i]->getCloudMatcher()->setInputTarget(reference_pointcloud_);
+	}
+
+	if (!reference_pointcloud_->points.empty()) {
+		reference_pointcloud_received_ = true;
+		publishReferencePointCloud();
 	}
 }
 
@@ -333,82 +340,105 @@ void Localization<PointT>::resetPointCloudHeight(pcl::PointCloud<PointT>& pointc
 
 
 template<typename PointT>
-bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out) {
-	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
-	if (ambient_pointcloud->points.empty()) {
-		return false;
-	}
-
-
-	// ==============================================================  filters
+void Localization<PointT>::applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
 	for (size_t i = 0; i < cloud_filters_.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
-		cloud_filters_[i]->filter(ambient_pointcloud, filtered_ambient_pointcloud);
-		ambient_pointcloud = filtered_ambient_pointcloud; // switch pointers
+		cloud_filters_[i]->filter(pointcloud, filtered_ambient_pointcloud);
+		pointcloud = filtered_ambient_pointcloud; // switch pointers
 	}
-	if (ambient_pointcloud->points.empty()) { return false; }
+}
 
 
-
-	// ==============================================================  normal estimation
+template<typename PointT>
+void Localization<PointT>::applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
 	typename pcl::search::KdTree<PointT>::Ptr surface_search_method(new pcl::search::KdTree<PointT>());
-	surface_search_method->setInputCloud(ambient_pointcloud);
-	tf2::Transform sensor_pose_tf_guess;
-	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, ambient_pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(ambient_pointcloud->header).stamp)) {
-		sensor_pose_tf_guess.setIdentity();
-	} else {
-		ambient_pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
-		ambient_pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
-		ambient_pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
-	}
-	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
-	normal_estimator_->estimateNormals(ambient_pointcloud, ambient_pointcloud_with_normals, ambient_pointcloud, surface_search_method, sensor_pose_tf_guess);
-	ambient_pointcloud = ambient_pointcloud_with_normals; // switch pointers
-	if (ambient_pointcloud->points.empty()) { return false; }
+		surface_search_method->setInputCloud(pointcloud);
+		tf2::Transform sensor_pose_tf_guess;
+		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
+			sensor_pose_tf_guess.setIdentity();
+		} else {
+			pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
+			pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
+			pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
+		}
+		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
+		normal_estimator_->estimateNormals(pointcloud, ambient_pointcloud_with_normals, pointcloud, surface_search_method, sensor_pose_tf_guess);
+		pointcloud = ambient_pointcloud_with_normals; // switch pointers
+}
 
 
-
-	// ==============================================================  keypoint selection
-
-
-
-
-	// ==============================================================  cloud registration
+template<typename PointT>
+void Localization<PointT>::applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, tf2::Transform& pointcloud_pose_in_out) {
 	for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
 		cloud_matchers_[i]->getCloudMatcher()->setInputSource(ambient_pointcloud);
 		cloud_matchers_[i]->getCloudMatcher()->align(*ambient_pointcloud);
 
 		tf2::Transform pose_correction;
 		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matchers_[i]->getCloudMatcher()->getFinalTransformation(), pose_correction);
-		pointcloud_pose_corrected_out = pose_correction * pointcloud_pose_corrected_out;
+		pointcloud_pose_in_out = pose_correction * pointcloud_pose_in_out;
 	}
+}
 
 
-
-	// ==============================================================  outlier detection
+template<typename PointT>
+double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
 	double max_outlier_percentage = 0.0;
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
 		sensor_msgs::PointCloud2Ptr outliers = outlier_detectors_[i]->processOutliers(reference_pointcloud_search_method_, *ambient_pointcloud);
 		outlier_detectors_[i]->publishOutliers(outliers);
 		double outlier_percentage = 0.0;
-		double number_ambient_pointcloud_points = (double)ambient_pointcloud->points.size();
+		double number_ambient_pointcloud_points = (double) (ambient_pointcloud->points.size());
 		if (number_ambient_pointcloud_points > 0) {
-			max_outlier_percentage = std::max(max_outlier_percentage, ((double)(outliers->width * outliers->height)) / number_ambient_pointcloud_points);
+			max_outlier_percentage = std::max(max_outlier_percentage, ((double) ((outliers->width * outliers->height))) / number_ambient_pointcloud_points);
 		}
 	}
 
+	return max_outlier_percentage;
+}
 
 
-	// ==============================================================  localization post processors
+template<typename PointT>
+bool Localization<PointT>::applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators_.size(); ++i) {
-		if (!transformation_validators_[i]->validateNewLocalizationPose(
-				pointcloud_pose_initial_guess, pointcloud_pose_corrected_out,
+		if (!transformation_validators_[i]->validateNewLocalizationPose(pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out,
 				cloud_matchers_.back()->getCloudMatcher()->getFitnessScore(), max_outlier_percentage)) {
 			return false;
 		}
 	}
 
+	return true;
+}
 
+
+template<typename PointT>
+bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out) {
+	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
+	if (ambient_pointcloud->points.empty()) {
+		return false;
+	}
+
+	// ==============================================================  filters
+	applyFilters(ambient_pointcloud);
+	if (ambient_pointcloud->points.empty()) { return false; }
+
+	// ==============================================================  normal estimation
+	if (compute_normals_ambient_cloud_) {
+		applyNormalEstimation(ambient_pointcloud);
+		if (ambient_pointcloud->points.empty()) { return false; }
+	}
+
+	// ==============================================================  keypoint selection
+
+
+	// ==============================================================  cloud registration
+	applyCloudRegistration(ambient_pointcloud, pointcloud_pose_corrected_out);
+
+	// ==============================================================  outlier detection
+	double max_outlier_percentage = applyOutlierDetection(ambient_pointcloud);
+
+	// ==============================================================  localization post processors
+	bool localization_correction_accepted = applyTransformationValidators(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, max_outlier_percentage);
+	if (!localization_correction_accepted) { return false; }
 
 	// ==============================================================  publish localization statistics
 

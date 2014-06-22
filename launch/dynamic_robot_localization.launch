@@ -23,6 +23,8 @@
 		<param name="reference_pointcloud_publish_topic" type="str" value="reference_pointcloud" />
 		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
 		<param name="pose_publish_topic" type="str" value="initialpose" />
+		<param name="compute_normals_reference_cloud_" type="bool" value="true" />
+		<param name="compute_normals_ambient_cloud" type="bool" value="true" />
 		<param name="publish_tf_map_odom" type="bool" value="false" />
 		<param name="map_frame_id" type="str" value="map" />
 		<param name="base_link_frame_id" type="str" value="base_footprint" />
@@ -32,15 +34,15 @@
 		<param name="min_seconds_between_reference_pointcloud_update" type="double" value="5.0" />
 
 		<!-- VoxelGrid params -->
-		<param name="leaf_size_x" type="double" value="0.01" />
-		<param name="leaf_size_y" type="double" value="0.01" />
-		<param name="leaf_size_z" type="double" value="0.01" />
+		<param name="leaf_size_x" type="double" value="0.1" />
+		<param name="leaf_size_y" type="double" value="0.1" />
+		<param name="leaf_size_z" type="double" value="0.1" />
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" />
 
 		<!-- normal estimator params -->
 		<param name="display_normals" type="bool" value="false" />
-		<param name="search_k" type="int" value="17" />
-		<param name="search_radius" type="double" value="0.07" />
+		<param name="search_k" type="int" value="19" />
+		<param name="search_radius" type="double" value="0.09" />
 
 		<!-- transformation validator params -->
 		<param name="max_transformation_angle" type="double" value="1.59" />
@@ -63,5 +65,5 @@
 
 
 	<!-- localization tests -->
-	<!-- <include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" /> -->
+	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />
 </launch>
