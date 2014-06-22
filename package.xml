@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package>
 	<name>dynamic_robot_localization</name>
-	<version>0.0.0</version>
-	<description>The dynamic_robot_localization package</description>
-	<maintainer email="carloscosta.cmcc@gmail.com">Carlos Costa</maintainer>
+	<version>0.1.0</version>
+	<description>The dynamic_robot_localization package offers 6DOF localization using PCL</description>
+	<maintainer email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</maintainer>
 	<license>BSD</license>
 	<author email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</author>
 

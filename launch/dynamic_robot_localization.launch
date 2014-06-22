@@ -1,0 +1,55 @@
+<launch>
+	<arg name="reference_pointcloud_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_50mm.pcd" />
+
+
+	<!-- laser assembler -->
+	<!-- <include file="$(find dynamic_robot_localization)/launch/laserscan_to_pointcloud_assembler.launch" /> -->
+
+	<!-- OctoMap for dynamic map update -->
+	<!-- <include file="$(find dynamic_robot_localization)/launch/octo_map.launch" /> -->
+
+	<!-- map to odom publisher -->
+	<!-- <include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch" /> -->
+
+	<!-- localization -->
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen">
+		<param name="localization_point_type" type="str" value="PointXYZ" />
+
+		<!-- localization params -->
+		<param name="pointcloud_topic" type="str" value="assembled_pointcloud" />
+		<param name="costmap_topic" type="str" value="map" />
+		<!-- <param name="reference_cloud_topic" type="str" value="octomap_point_cloud_centers" /> -->
+		<param name="reference_cloud_file_name" type="str" value="$(arg reference_pointcloud_filename)" />
+		<param name="reference_pointcloud_publish_topic" type="str" value="reference_pointcloud" />
+		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
+		<param name="pose_publish_topic" type="str" value="initialpose" />
+		<param name="publish_tf_map_odom" type="bool" value="false" />
+		<param name="map_frame_id" type="str" value="map" />
+		<param name="base_link_frame_id" type="str" value="base_footprint" />
+		<param name="max_seconds_scan_age" type="double" value="0.5" />
+		<param name="min_seconds_between_scan_registration" type="double" value="0.05" />
+		<param name="min_seconds_between_reference_pointcloud_update" type="double" value="5.0" />
+
+		<!-- transformation validator params -->
+		<param name="max_transformation_angle" type="double" value="1.59" />
+		<param name="max_transformation_distance" type="double" value="2.0" />
+		<param name="max_alignment_fitness" type="double" value="0.1" />
+		<param name="max_outliers_percentage" type="double" value="0.6" />
+
+		<!-- outlier detection params -->
+		<param name="aligned_pointcloud_outliers_publish_topic" type="str" value="aligned_pointcloud_outliers" />
+		<param name="max_inliers_distance" type="double" value="0.01" />
+
+		<!-- ICP params -->
+		<param name="max_correspondence_distance" type="double" value="1.0" />
+		<param name="transformation_epsilon" type="double" value="1e-8" />
+		<param name="euclidean_fitness_epsilon" type="double" value="1e-6" />
+		<param name="max_number_of_registration_iterations" type="int" value="500" />
+		<param name="max_number_of_ransac_iterations" type="int" value="500" />
+		<param name="ransac_outlier_rejection_threshold" type="double" value="0.05" />
+	</node>
+
+
+	<!-- localization tests -->
+	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />
+</launch>

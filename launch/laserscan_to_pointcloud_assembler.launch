@@ -1,21 +1,18 @@
 <launch>
-	<!-- gazebo simulator -->
-	<include file="$(find guardian_gazebo)/launch/guardian.launch">
-		<arg name="world_model" value="$(find guardian_gazebo)/worlds/guardian_ship_interior.world" />
-		<arg name="rviz_config" value="-d $(find dynamic_robot_localization)/rviz/laserscan_to_pointcloud_assembler.rviz" />
-	</include>	
-		
-	<node pkg="topic_tools" type="relay" name="relay_base_scan_to_tilt_scan" args="base_scan tilt_scan" output="screen" />
+	<!-- merge two LaserScan topics -->
+	<node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="base_scan tilt_scan" output="screen" />
+
 
 	<!-- LaserScan assembler -->
 	<node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler" output="screen">
 		<param name="laser_scan_topic" type="str" value="tilt_scan" />
-		<param name="pointcloud_publish_topic" type="str" value="assembled_pointcloud" />		
-		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="10" />
-		<param name="timeout_for_cloud_assembly" type="double" value="5.0" />
-		<param name="target_frame" type="str" value="odom" />
+		<param name="pointcloud_publish_topic" type="str" value="assembled_pointcloud" />
+		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="1000" />
+		<param name="timeout_for_cloud_assembly" type="double" value="10.0" />
+		<param name="target_frame" type="str" value="map" />
 		<param name="min_range_cutoff_percentage_offset" type="double" value="5.00" />
-		<param name="max_range_cutoff_percentage_offset" type="double" value="0.95" />		
-		<param name="include_laser_intensity" type="bool" value="true" />
+		<param name="max_range_cutoff_percentage_offset" type="double" value="0.95" />
+		<param name="include_laser_intensity" type="bool" value="false" />
+		<param name="interpolate_scans" type="bool" value="false" />
 	</node>
 </launch>
