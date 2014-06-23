@@ -14,4 +14,10 @@
   (pcl::PointNormal)		\
   (pcl::PointXYZRGBNormal)	\
   (pcl::PointXYZINormal)
+
+
+// Define all point types that include PointXYZ and Normal data
+// Define all point types that represent features
+#define DRL_DESCRIPTOR_TYPES \
+  (pcl::FPFHSignature33)
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

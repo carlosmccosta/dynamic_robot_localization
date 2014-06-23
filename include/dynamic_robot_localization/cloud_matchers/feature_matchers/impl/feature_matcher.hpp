@@ -1,4 +1,4 @@
-/**\file outlier_detector.hpp
+/**\file feature_matcher.cpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/outlier_detectors/outlier_detector.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/feature_matcher.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -16,32 +16,45 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+template<typename PointT, typename FeatureT>
+FeatureMatcher<PointT, FeatureT>::FeatureMatcher() {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <OutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT>
-void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	std::string aligned_pointcloud_outliers_publish_topic;
-	private_node_handle->param("aligned_pointcloud_outliers_publish_topic", aligned_pointcloud_outliers_publish_topic, std::string("aligned_pointcloud_outliers"));
-	outliers_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_outliers_publish_topic, 5);
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <FeatureMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+template<typename PointT, typename FeatureT>
+void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	keypoint_descriptor_ = typename KeypointDescriptor<PointT, FeatureT>::Ptr(new FPFH<PointT, FeatureT>());
+	keypoint_descriptor_->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+
+	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
 }
 
 
-template<typename PointT>
-void dynamic_robot_localization::OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
-	if (outliers->data.size() > 0 && outliers_publisher_.getNumSubscribers() > 0) {
-		outliers_publisher_.publish(outliers);
-	}
+template<typename PointT, typename FeatureT>
+void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud,
+        typename pcl::search::KdTree<PointT>::Ptr& search_method) {
+	CloudMatcher<PointT>::setupReferenceCloud(reference_cloud, search_method);
+
+	typename pcl::PointCloud<FeatureT>::Ptr reference_descriptors = keypoint_descriptor_->computeKeypointsDescriptors(reference_cloud, reference_cloud, search_method);
+	setMatcherReferenceDescriptors(reference_descriptors);
 }
 
-template<typename PointT>
-void OutlierDetector<PointT>::processAndPublishOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud) {
-	if (outliers_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr pointcloud_msg = processOutliers(reference_pointcloud_search_method, ambient_pointcloud);
-		publishOutliers(pointcloud_msg);
-	}
+
+template<typename PointT, typename FeatureT>
+void FeatureMatcher<PointT, FeatureT>::initializeKeypointProcessing() {
+	CloudMatcher<PointT>::setMatchOnlyKeypoints(true);
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+template<typename PointT, typename FeatureT>
+void FeatureMatcher<PointT, FeatureT>::processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+		typename pcl::PointCloud<PointT>::Ptr& surface,
+		typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
+
+	typename pcl::PointCloud<FeatureT>::Ptr ambient_descriptors = keypoint_descriptor_->computeKeypointsDescriptors(pointcloud_keypoints, surface, surface_search_method);
+	setMatcherAmbientDescriptors(ambient_descriptors);
+}
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </FeatureMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -54,5 +67,4 @@ void OutlierDetector<PointT>::processAndPublishOutliers(typename pcl::search::Kd
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */
-
 

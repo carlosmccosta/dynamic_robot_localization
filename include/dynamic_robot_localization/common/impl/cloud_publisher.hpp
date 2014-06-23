@@ -1,4 +1,4 @@
-/**\file outlier_detector.hpp
+/**\file cloud_publisher.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/outlier_detectors/outlier_detector.h>
+#include <dynamic_robot_localization/common/cloud_publisher.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -18,30 +18,28 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <OutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudPublisher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	std::string aligned_pointcloud_outliers_publish_topic;
-	private_node_handle->param("aligned_pointcloud_outliers_publish_topic", aligned_pointcloud_outliers_publish_topic, std::string("aligned_pointcloud_outliers"));
-	outliers_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_outliers_publish_topic, 5);
-}
+void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	if (!parameter_server_argument_to_load_topic_name_.empty()) {
+		private_node_handle->param(parameter_server_argument_to_load_topic_name_, cloud_publish_topic_, cloud_publish_topic_);
+	}
 
-
-template<typename PointT>
-void dynamic_robot_localization::OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
-	if (outliers->data.size() > 0 && outliers_publisher_.getNumSubscribers() > 0) {
-		outliers_publisher_.publish(outliers);
+	if (!cloud_publish_topic_.empty()) {
+		cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(cloud_publish_topic_, 1);
 	}
 }
 
+
 template<typename PointT>
-void OutlierDetector<PointT>::processAndPublishOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud) {
-	if (outliers_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr pointcloud_msg = processOutliers(reference_pointcloud_search_method, ambient_pointcloud);
-		publishOutliers(pointcloud_msg);
+void CloudPublisher<PointT>::publishFilteredCloud(typename pcl::PointCloud<PointT>::Ptr& cloud) {
+	if (!cloud_publish_topic_.empty() && cloud->points.size() > 0 && cloud_publisher_.getNumSubscribers() > 0) {
+		sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
+		pcl::toROSMsg(*cloud, *cloud_msg);
+		cloud_publisher_.publish(cloud_msg);
 	}
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudPublisher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================

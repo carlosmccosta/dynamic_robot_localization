@@ -57,6 +57,7 @@
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_with_normals.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.h>
 
 #include <dynamic_robot_localization/transformation_validators/transformation_validator.h>
 #include <dynamic_robot_localization/transformation_validators/euclidean_transformation_validator.h>
@@ -100,7 +101,7 @@ class Localization : public ConfigurableObject {
 		virtual void setupFiltersConfigurations();
 		virtual void setupNormalEstimatorConfigurations();
 		virtual void setupKeypointDetectors();
-		virtual void setupMatchersConfigurations();
+		virtual void setupCloudMatchersConfigurations();
 		virtual void setupTransformationValidatorsConfigurations();
 		virtual void setupOutlierDetectorsConfigurations();
 
@@ -116,16 +117,16 @@ class Localization : public ConfigurableObject {
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
 
-		virtual void applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
+		virtual bool applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
 
-		virtual void applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
 
-		virtual void applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& keypoints);
 
-		virtual void applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+		virtual bool applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				tf2::Transform& pointcloud_pose_in_out);

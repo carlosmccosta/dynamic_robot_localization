@@ -1,6 +1,6 @@
 #pragma once
 
-/**\file cloud_matcher.h
+/**\file fpfh.h
  * \brief Description...
  *
  * @version 1.0
@@ -17,33 +17,32 @@
 #include <ros/ros.h>
 
 // PCL includes
-#include <pcl/common/transforms.h>
-#include <pcl/registration/registration.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
+#include <pcl/features/fpfh_omp.h>
+//#include <pcl/features/impl/fpfh.hpp>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
-#include <dynamic_robot_localization/common/configurable_object.h>
-#include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
-// #############################################################################   cloud_matcher   #############################################################################
+// #################################################################################   fpfh   ##################################################################################
 /**
  * \brief Description...
  */
-template <typename PointT>
-class CloudMatcher : public ConfigurableObject {
+template <typename PointT, typename FeatureT>
+class FPFH : public KeypointDescriptor <PointT, FeatureT> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< CloudMatcher<PointT> > Ptr;
-		typedef boost::shared_ptr< const CloudMatcher<PointT> > ConstPtr;
+		typedef boost::shared_ptr< FPFH<PointT, FeatureT> > Ptr;
+		typedef boost::shared_ptr< const FPFH<PointT, FeatureT> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -53,33 +52,21 @@ class CloudMatcher : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		CloudMatcher();
-		virtual ~CloudMatcher() {}
+		FPFH() {}
+		virtual ~FPFH() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <FPFH-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
-		virtual void setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::search::KdTree<PointT>::Ptr& search_method);
-
-		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
-		        typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
-		        typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-		        tf2::Transform& pointcloud_pose_in_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
-
-		virtual void initializeKeypointProcessing() {}
-		virtual void processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-				typename pcl::PointCloud<PointT>::Ptr& surface,
-				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {}
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		virtual typename pcl::PointCloud<FeatureT>::Ptr computeKeypointsDescriptors(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+						typename pcl::PointCloud<PointT>::Ptr& surface,
+						typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </FPFH-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		inline const typename pcl::Registration<PointT, PointT>::Ptr& getCloudMatcher() const { return cloud_matcher_; }
-		inline bool getMatchOnlyKeypoints() const { return match_only_keypoints_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		inline void setCloudMatcher(const typename pcl::Registration<PointT, PointT>::Ptr& cloud_matcher) { cloud_matcher_ = cloud_matcher; }
-		inline void setMatchOnlyKeypoints(bool match_only_keypoints) { match_only_keypoints_ = match_only_keypoints; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -89,9 +76,8 @@ class CloudMatcher : public ConfigurableObject {
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-		typename pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
-//		typename pcl::Registration<pcl::PointNormal, pcl::PointNormal>::Ptr cloud_matcher_;
-		bool match_only_keypoints_;
+		pcl::FPFHEstimationOMP<PointT, PointT, FeatureT> descriptor_;
+//		pcl::FPFHEstimationOMP<pcl::PointNormal, pcl::PointNormal, pcl::FPFHSignature33> descriptor_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
@@ -99,6 +85,6 @@ class CloudMatcher : public ConfigurableObject {
 
 
 #ifdef DRL_NO_PRECOMPILE
-#include <dynamic_robot_localization/cloud_matchers/impl/cloud_matcher.hpp>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/impl/fpfh.hpp>
 #endif
 

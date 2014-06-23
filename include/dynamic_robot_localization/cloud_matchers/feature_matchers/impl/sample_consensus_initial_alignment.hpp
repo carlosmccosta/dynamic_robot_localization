@@ -1,4 +1,4 @@
-/**\file outlier_detector.hpp
+/**\file sample_consensus_initial_alignment.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/outlier_detectors/outlier_detector.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -16,32 +16,41 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+template<typename PointT, typename FeatureT>
+SampleConsensusInitialAlignment<PointT, FeatureT>::SampleConsensusInitialAlignment() :
+	matcher_scia_(new pcl::SampleConsensusInitialAlignment<PointT, PointT, FeatureT>()) {
+	CloudMatcher<PointT>::setCloudMatcher(matcher_scia_);
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <OutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT>
-void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	std::string aligned_pointcloud_outliers_publish_topic;
-	private_node_handle->param("aligned_pointcloud_outliers_publish_topic", aligned_pointcloud_outliers_publish_topic, std::string("aligned_pointcloud_outliers"));
-	outliers_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_outliers_publish_topic, 5);
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignment-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+template<typename PointT, typename FeatureT>
+void SampleConsensusInitialAlignment<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	double min_sample_distance;
+	private_node_handle->param("min_sample_distance", min_sample_distance, 0.0);
+	matcher_scia_->setMinSampleDistance(min_sample_distance);
+
+	int number_of_samples;
+	private_node_handle->param("number_of_samples", number_of_samples, 3);
+	matcher_scia_->setNumberOfSamples(number_of_samples);
+
+	int correspondence_randomness;
+	private_node_handle->param("correspondence_randomness", correspondence_randomness, 10);
+	matcher_scia_->setCorrespondenceRandomness(correspondence_randomness);
+
+	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
 }
 
-
-template<typename PointT>
-void dynamic_robot_localization::OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
-	if (outliers->data.size() > 0 && outliers_publisher_.getNumSubscribers() > 0) {
-		outliers_publisher_.publish(outliers);
-	}
+template<typename PointT, typename FeatureT>
+void SampleConsensusInitialAlignment<PointT, FeatureT>::setMatcherReferenceDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& reference_descriptors) {
+	matcher_scia_->setTargetFeatures(reference_descriptors);
 }
 
-template<typename PointT>
-void OutlierDetector<PointT>::processAndPublishOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud) {
-	if (outliers_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr pointcloud_msg = processOutliers(reference_pointcloud_search_method, ambient_pointcloud);
-		publishOutliers(pointcloud_msg);
-	}
+template<typename PointT, typename FeatureT>
+void SampleConsensusInitialAlignment<PointT, FeatureT>::setMatcherAmbientDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& ambient_descriptors) {
+	matcher_scia_->setSourceFeatures(ambient_descriptors);
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SampleConsensusInitialAlignment-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -54,5 +63,4 @@ void OutlierDetector<PointT>::processAndPublishOutliers(typename pcl::search::Kd
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */
-
 

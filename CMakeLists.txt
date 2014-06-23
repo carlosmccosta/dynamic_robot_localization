@@ -82,6 +82,7 @@ include_directories(
 
 add_library(drl_common
     src/common/configurable_object.cpp
+    src/common/cloud_publisher.cpp
     src/common/pointcloud_conversions.cpp
     src/common/pointcloud2_builder.cpp
 )
@@ -106,10 +107,17 @@ add_library(drl_keypoint_detectors
     src/cloud_matchers/feature_matchers/keypoint_detectors/intrinsic_shape_signature_3d.cpp
 )
 
+add_library(drl_keypoint_descriptors
+    src/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor.cpp
+    src/cloud_matchers/feature_matchers/keypoint_descriptors/fpfh.cpp
+)
+
 add_library(drl_cloud_matchers
     src/cloud_matchers/cloud_matcher.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point_with_normals.cpp
+    src/cloud_matchers/feature_matchers/feature_matcher.cpp
+    src/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.cpp
 )
 
 add_library(drl_transformation_validators
@@ -163,26 +171,38 @@ target_link_libraries(drl_pose_to_tf_publisher_node
 )
 
 target_link_libraries(drl_cloud_filters
+    drl_common
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
 target_link_libraries(drl_normal_estimators
+    drl_common
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
 target_link_libraries(drl_keypoint_detectors
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(drl_keypoint_descriptors
+    drl_common
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
 target_link_libraries(drl_cloud_matchers
+    drl_common
+    drl_keypoint_descriptors
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
 target_link_libraries(drl_transformation_validators
+    drl_common
     ${catkin_LIBRARIES}
 )
 
@@ -198,6 +218,7 @@ target_link_libraries(drl_localization
     drl_cloud_filters
     drl_normal_estimators
     drl_keypoint_detectors
+    drl_keypoint_descriptors
     drl_cloud_matchers
     drl_transformation_validators
     drl_outliers_detectors

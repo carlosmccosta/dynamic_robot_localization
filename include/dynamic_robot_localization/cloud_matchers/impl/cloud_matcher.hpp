@@ -22,14 +22,6 @@ CloudMatcher<PointT>::CloudMatcher() :
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-template<typename PointT>
-void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::search::KdTree<PointT>::Ptr& search_method) {
-	cloud_matcher_->setInputTarget(reference_cloud);
-	cloud_matcher_->setSearchMethodTarget(search_method);
-}
-
-
 template<typename PointT>
 void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
 	private_node_handle->param("match_only_keypoints", match_only_keypoints_, false);
@@ -61,22 +53,37 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 
 template<typename PointT>
+void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::search::KdTree<PointT>::Ptr& search_method) {
+	// subclass must set cloud_matcher_ ptr
+	if (cloud_matcher_) {
+		cloud_matcher_->setInputTarget(reference_cloud);
+		cloud_matcher_->setSearchMethodTarget(search_method);
+	}
+}
+
+
+template<typename PointT>
 bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
 		typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 		tf2::Transform& pointcloud_pose_in_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
 
-	processKeypoints(pointcloud_keypoints);
+	// subclass must set cloud_matcher_ ptr
+	if (!cloud_matcher_) {
+		return false;
+	}
 
+	typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
+	pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
 	if (match_only_keypoints_) {
-		typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
-		pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
 		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
 		cloud_matcher_->setInputSource(pointcloud_keypoints);
 	} else {
 		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
 		cloud_matcher_->setInputSource(ambient_pointcloud);
 	}
+
+	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
 
 	cloud_matcher_->align(*pointcloud_registered_out);
 	if (cloud_matcher_->hasConverged()) {

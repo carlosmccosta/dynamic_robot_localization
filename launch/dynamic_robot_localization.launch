@@ -60,12 +60,11 @@
 		<param name="max_number_of_ransac_iterations" type="int" value="500" />
 		<param name="ransac_outlier_rejection_threshold" type="double" value="0.05" />
 
-
 		<!-- transformation validator params -->
 		<param name="max_transformation_angle" type="double" value="1.59" />
-		<param name="max_transformation_distance" type="double" value="2.0" />
-		<param name="max_alignment_fitness" type="double" value="0.1" />
-		<param name="max_outliers_percentage" type="double" value="0.6" />
+		<param name="max_transformation_distance" type="double" value="20.0" />
+		<param name="max_alignment_fitness" type="double" value="10" />
+		<param name="max_outliers_percentage" type="double" value="0.8" />
 
 		<!-- outlier detection params -->
 		<param name="aligned_pointcloud_outliers_publish_topic" type="str" value="aligned_pointcloud_outliers" />
