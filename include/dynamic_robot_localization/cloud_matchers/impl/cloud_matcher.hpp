@@ -25,6 +25,7 @@ CloudMatcher<PointT>::CloudMatcher() :
 template<typename PointT>
 void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
 	private_node_handle->param("match_only_keypoints", match_only_keypoints_, false);
+	private_node_handle->param("display_cloud_aligment", display_cloud_aligment_, false);
 
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
@@ -97,10 +98,25 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
 		}
 
+		// if publisher available, send aligned cloud
+		if (cloud_publisher_) {
+			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
+		}
+
+		if (display_cloud_aligment_) {
+			displayAlignedPointCloud();
+		}
+
 		return true;
 	}
 
 	return false;
+}
+
+
+template<typename PointT>
+void CloudMatcher<PointT>::displayAlignedPointCloud() {
+	//todo
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

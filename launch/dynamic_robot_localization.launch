@@ -34,13 +34,12 @@
 		<param name="min_seconds_between_reference_pointcloud_update" type="double" value="5.0" />
 
 		<!-- VoxelGrid params -->
-		<param name="leaf_size_x" type="double" value="0.03" />
-		<param name="leaf_size_y" type="double" value="0.03" />
-		<param name="leaf_size_z" type="double" value="0.03" />
+		<param name="leaf_size_x" type="double" value="0.01" />
+		<param name="leaf_size_y" type="double" value="0.01" />
+		<param name="leaf_size_z" type="double" value="0.01" />
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" />
 
 		<!-- normal estimator params -->
-		<param name="display_normals" type="bool" value="false" />
 		<param name="search_k" type="int" value="19" />
 		<param name="search_radius" type="double" value="0.09" />
 
@@ -50,6 +49,19 @@
 		<param name="non_max_radius" type="double" value="0.12" />
 		<param name="normal_radius" type="double" value="0.09" />
 		<param name="border_radius" type="double" value="0.0" />
+
+
+		<!-- initial alignment -->
+		<param name="min_sample_distance" type="double" value="1.0" />
+		<param name="number_of_samples" type="int" value="20" />
+		<param name="correspondence_randomness" type="int" value="50" />
+
+		<!-- feature description -->
+		<param name="fpfh_k_search" type="int" value="0" />
+		<param name="fpfh_radius_search" type="double" value="0.1" />
+		<param name="number_subdivisions_f1" type="int" value="11" />
+		<param name="number_subdivisions_f2" type="int" value="11" />
+		<param name="number_subdivisions_f3" type="int" value="11" />
 
 		<!-- registration params -->
 		<param name="match_only_keypoints" type="bool" value="true" />
@@ -68,7 +80,13 @@
 
 		<!-- outlier detection params -->
 		<param name="aligned_pointcloud_outliers_publish_topic" type="str" value="aligned_pointcloud_outliers" />
-		<param name="max_inliers_distance" type="double" value="0.01" />		
+		<param name="max_inliers_distance" type="double" value="0.01" />
+
+
+		<!-- debugging -->
+		<param name="display_normals" type="bool" value="false" />
+		<param name="display_feature_matching" type="bool" value="true" />
+		<param name="display_cloud_aligment" type="bool" value="false" />
 	</node>
 
 

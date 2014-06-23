@@ -49,10 +49,10 @@ void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 	private_node_handle->param("filter_limit_max", filter_limit_max, 3.0);
 	filter_.setFilterLimits(filter_limit_min, filter_limit_max);
 
-	std::string filtered_cloud_publish_topic;
-	private_node_handle->param("voxel_grid_filtered_cloud_publish_topic", filtered_cloud_publish_topic, std::string(""));
-	CloudFilter<PointT>::setFilteredCloudPublishTopic(filtered_cloud_publish_topic);
-	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
+	cloud_publisher->setParameterServerArgumentToLoadTopicName("voxel_grid_filtered_cloud_publish_topic");
+	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	CloudFilter<PointT>::setCloudPublisher(cloud_publisher);
 }
 
 template<typename PointT>
@@ -61,7 +61,7 @@ void VoxelGrid<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& inpu
 	filter_.setInputCloud(input_cloud);
 	filter_.filter(*output_cloud);
 
-	CloudFilter<PointT>::publishFilteredCloud(output_cloud);
+	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
 	ROS_DEBUG_STREAM("VoxelGrid reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->points.size() << " points");
 }
 

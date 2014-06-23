@@ -112,7 +112,7 @@ void Localization<PointT>::setupGeneralConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupFiltersConfigurations() {
 	cloud_filters_.clear();
-	typename dynamic_robot_localization::CloudFilter<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
+	typename CloudFilter<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
 	default_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_filters_.push_back(default_filter);
 }
@@ -128,7 +128,7 @@ void Localization<PointT>::setupNormalEstimatorConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupKeypointDetectors() {
 	keypoint_detectors_.clear();
-	typename dynamic_robot_localization::KeypointDetector<PointT>::Ptr default_keypoint_detector(new IntrinsicShapeSignature3D<PointT>());
+	typename KeypointDetector<PointT>::Ptr default_keypoint_detector(new IntrinsicShapeSignature3D<PointT>());
 	default_keypoint_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	keypoint_detectors_.push_back(default_keypoint_detector);
 }
@@ -138,13 +138,13 @@ template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
 	cloud_matchers_.clear();
 
-	typename dynamic_robot_localization::CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
+	typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
 	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_matchers_.push_back(initial_aligment_matcher);
 
-	typename dynamic_robot_localization::CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
+	/*typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
 	final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(final_aligment_matcher);
+	cloud_matchers_.push_back(final_aligment_matcher);*/
 }
 
 

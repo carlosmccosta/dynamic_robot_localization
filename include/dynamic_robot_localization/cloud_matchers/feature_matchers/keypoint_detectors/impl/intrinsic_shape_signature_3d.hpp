@@ -53,10 +53,10 @@ void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ro
 	private_node_handle->param("angle_threshold", angle_threshold, 1.57);
 	keypoint_detector_.setAngleThreshold(angle_threshold);
 
-	std::string keypoints_cloud_publish_topic;
-	private_node_handle->param("iss3_keypoints_cloud_publish_topic", keypoints_cloud_publish_topic, std::string(""));
-	KeypointDetector<PointT>::setKeypointsPublishTopic(keypoints_cloud_publish_topic);
-	KeypointDetector<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
+	cloud_publisher->setParameterServerArgumentToLoadTopicName("iss3_keypoints_cloud_publish_topic");
+	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	KeypointDetector<PointT>::setCloudPublisher(cloud_publisher);
 }
 
 
@@ -69,7 +69,7 @@ void IntrinsicShapeSignature3D<PointT>::findKeypoints(typename pcl::PointCloud<P
 	keypoint_detector_.setNormals(pointcloud);
 	keypoint_detector_.compute(*pointcloud_keypoints_out);
 
-	KeypointDetector<PointT>::publishKeypoints(pointcloud_keypoints_out);
+	KeypointDetector<PointT>::getCloudPublisher()->publishPointCloud(*pointcloud_keypoints_out);
 	ROS_DEBUG_STREAM("IntrinsicShapeSignature3D found " << pointcloud_keypoints_out->points.size() << " keypoints in pointcloud with " << pointcloud->points.size() << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IntrinsicShapeSignature3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -20,23 +20,6 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT>
-void CloudFilter<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	if (!filtered_cloud_publish_topic_.empty()) {
-		filtered_cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(filtered_cloud_publish_topic_, 1);
-	}
-}
-
-
-template<typename PointT>
-void CloudFilter<PointT>::publishFilteredCloud(typename pcl::PointCloud<PointT>::Ptr& filtered_cloud) {
-	if (!filtered_cloud_publish_topic_.empty() && filtered_cloud->points.size() > 0 && filtered_cloud_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr filtered_cloud_msg(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*filtered_cloud, *filtered_cloud_msg);
-		filtered_cloud_publisher_.publish(filtered_cloud_msg);
-	}
-}
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

@@ -28,7 +28,7 @@ void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 
 
 template<typename PointT>
-void dynamic_robot_localization::OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
+void OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
 	if (outliers->data.size() > 0 && outliers_publisher_.getNumSubscribers() > 0) {
 		outliers_publisher_.publish(outliers);
 	}

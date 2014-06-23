@@ -75,7 +75,6 @@ class IntrinsicShapeSignature3D : public KeypointDetector<PointT> {
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-//		pcl::ISSKeypoint3D<pcl::PointNormal, pcl::PointNormal, pcl::PointNormal> keypoint_detector_;
 		pcl::ISSKeypoint3D<PointT, PointT, PointT> keypoint_detector_;
 	// ========================================================================   </private-section>  ==========================================================================
 };

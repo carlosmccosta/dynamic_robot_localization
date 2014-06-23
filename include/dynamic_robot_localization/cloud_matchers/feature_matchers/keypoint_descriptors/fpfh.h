@@ -77,7 +77,6 @@ class FPFH : public KeypointDescriptor <PointT, FeatureT> {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		pcl::FPFHEstimationOMP<PointT, PointT, FeatureT> descriptor_;
-//		pcl::FPFHEstimationOMP<pcl::PointNormal, pcl::PointNormal, pcl::FPFHSignature33> descriptor_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

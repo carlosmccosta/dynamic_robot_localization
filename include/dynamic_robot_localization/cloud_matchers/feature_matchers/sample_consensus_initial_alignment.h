@@ -12,6 +12,7 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <algorithm>
 
 // ROS includes
 #include <ros/ros.h>
@@ -74,6 +75,7 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		typename pcl::SampleConsensusInitialAlignment<PointT, PointT, FeatureT>::Ptr matcher_scia_;
+		int number_of_samples_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

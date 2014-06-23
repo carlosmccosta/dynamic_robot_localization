@@ -18,7 +18,8 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 SampleConsensusInitialAlignment<PointT, FeatureT>::SampleConsensusInitialAlignment() :
-	matcher_scia_(new pcl::SampleConsensusInitialAlignment<PointT, PointT, FeatureT>()) {
+	matcher_scia_(new pcl::SampleConsensusInitialAlignment<PointT, PointT, FeatureT>()),
+	number_of_samples_(3) {
 	CloudMatcher<PointT>::setCloudMatcher(matcher_scia_);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -27,12 +28,11 @@ SampleConsensusInitialAlignment<PointT, FeatureT>::SampleConsensusInitialAlignme
 template<typename PointT, typename FeatureT>
 void SampleConsensusInitialAlignment<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
 	double min_sample_distance;
-	private_node_handle->param("min_sample_distance", min_sample_distance, 0.0);
+	private_node_handle->param("min_sample_distance", min_sample_distance, 1.0);
 	matcher_scia_->setMinSampleDistance(min_sample_distance);
 
-	int number_of_samples;
-	private_node_handle->param("number_of_samples", number_of_samples, 3);
-	matcher_scia_->setNumberOfSamples(number_of_samples);
+	private_node_handle->param("number_of_samples", number_of_samples_, 3);
+	matcher_scia_->setNumberOfSamples(number_of_samples_);
 
 	int correspondence_randomness;
 	private_node_handle->param("correspondence_randomness", correspondence_randomness, 10);
@@ -49,6 +49,7 @@ void SampleConsensusInitialAlignment<PointT, FeatureT>::setMatcherReferenceDescr
 template<typename PointT, typename FeatureT>
 void SampleConsensusInitialAlignment<PointT, FeatureT>::setMatcherAmbientDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& ambient_descriptors) {
 	matcher_scia_->setSourceFeatures(ambient_descriptors);
+	matcher_scia_->setNumberOfSamples(std::min(number_of_samples_, (int)ambient_descriptors->points.size()));
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SampleConsensusInitialAlignment-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

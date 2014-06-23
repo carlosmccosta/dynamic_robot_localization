@@ -19,21 +19,6 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <KeypointDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT>
-void KeypointDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	if (!keypoints_publish_topic_.empty()) {
-		keypoints_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(keypoints_publish_topic_, 1);
-	}
-}
-
-template<typename PointT>
-void KeypointDetector<PointT>::publishKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints) {
-	if (!keypoints_publish_topic_.empty() && pointcloud_keypoints->points.size() > 0 && keypoints_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr pointcloud_keypoints_msg(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*pointcloud_keypoints, *pointcloud_keypoints_msg);
-		keypoints_publisher_.publish(pointcloud_keypoints_msg);
-	}
-}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </KeypointDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

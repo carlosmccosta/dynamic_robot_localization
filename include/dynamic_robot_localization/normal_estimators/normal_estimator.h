@@ -84,7 +84,6 @@ class NormalEstimator : public ConfigurableObject {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		bool display_normals_;
-		boost::shared_ptr<pcl::visualization::PCLVisualizer> normals_visualizer_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

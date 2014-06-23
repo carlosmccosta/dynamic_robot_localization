@@ -28,8 +28,8 @@
 
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
+#include <dynamic_robot_localization/common/cloud_publisher.h>
 #include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -70,16 +70,21 @@ class CloudMatcher : public ConfigurableObject {
 		virtual void processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				typename pcl::PointCloud<PointT>::Ptr& surface,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {}
+		virtual void displayAlignedPointCloud();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline const typename pcl::Registration<PointT, PointT>::Ptr& getCloudMatcher() const { return cloud_matcher_; }
 		inline bool getMatchOnlyKeypoints() const { return match_only_keypoints_; }
+		typename CloudPublisher<PointT>::Ptr& getCloudPublisher() { return cloud_publisher_; }
+		bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline void setCloudMatcher(const typename pcl::Registration<PointT, PointT>::Ptr& cloud_matcher) { cloud_matcher_ = cloud_matcher; }
 		inline void setMatchOnlyKeypoints(bool match_only_keypoints) { match_only_keypoints_ = match_only_keypoints; }
+		void setCloudPublisher(typename CloudPublisher<PointT>::Ptr& cloud_publisher) { cloud_publisher_ = cloud_publisher; }
+		void setDisplayCloudAligment(bool display_cloud_aligment) { display_cloud_aligment_ = display_cloud_aligment; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -90,12 +95,14 @@ class CloudMatcher : public ConfigurableObject {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		typename pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
-//		typename pcl::Registration<pcl::PointNormal, pcl::PointNormal>::Ptr cloud_matcher_;
+		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
 		bool match_only_keypoints_;
+		bool display_cloud_aligment_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
 } /* namespace dynamic_robot_localization */
+
 
 
 #ifdef DRL_NO_PRECOMPILE

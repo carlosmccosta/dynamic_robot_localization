@@ -50,7 +50,7 @@ class FeatureMatcher : public CloudMatcher<PointT> {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		FeatureMatcher();
+		FeatureMatcher() {}
 		virtual ~FeatureMatcher() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -80,7 +80,6 @@ class FeatureMatcher : public CloudMatcher<PointT> {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		typename KeypointDescriptor<PointT, FeatureT>::Ptr keypoint_descriptor_;
-//		typename KeypointDescriptor<pcl::PointNormal, pcl::FPFHSignature33>::Ptr keypoint_descriptor_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
