@@ -16,11 +16,24 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+template<typename PointT>
+CloudMatcher<PointT>::CloudMatcher() :
+		match_only_keypoints_(false) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 template<typename PointT>
-void dynamic_robot_localization::CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::search::KdTree<PointT>::Ptr& search_method) {
+	cloud_matcher_->setInputTarget(reference_cloud);
+	cloud_matcher_->setSearchMethodTarget(search_method);
+}
+
+
+template<typename PointT>
+void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	private_node_handle->param("match_only_keypoints", match_only_keypoints_, false);
+
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		double max_correspondence_distance;
@@ -44,6 +57,43 @@ void dynamic_robot_localization::CloudMatcher<PointT>::setupConfigurationFromPar
 		cloud_matcher_->setRANSACIterations(max_number_of_ransac_iterations);
 		cloud_matcher_->setRANSACOutlierRejectionThreshold(ransac_outlier_rejection_threshold);
 	}
+}
+
+
+template<typename PointT>
+bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+		typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
+		typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+		tf2::Transform& pointcloud_pose_in_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
+
+	processKeypoints(pointcloud_keypoints);
+
+	if (match_only_keypoints_) {
+		typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
+		pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
+		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
+		cloud_matcher_->setInputSource(pointcloud_keypoints);
+	} else {
+		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
+		cloud_matcher_->setInputSource(ambient_pointcloud);
+	}
+
+	cloud_matcher_->align(*pointcloud_registered_out);
+	if (cloud_matcher_->hasConverged()) {
+		tf2::Transform pose_correction;
+		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), pose_correction);
+		pointcloud_pose_in_out = pose_correction * pointcloud_pose_in_out;
+
+		if (return_aligned_keypoints && !match_only_keypoints_) {
+			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
+		} else if (!return_aligned_keypoints && match_only_keypoints_) {
+			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
+		}
+
+		return true;
+	}
+
+	return false;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

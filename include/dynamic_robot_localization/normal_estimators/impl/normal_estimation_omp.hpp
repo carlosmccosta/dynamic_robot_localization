@@ -35,10 +35,11 @@ void NormalEstimationOMP<PointT>::setupConfigurationFromParameterServer(ros::Nod
 }
 
 template<typename PointT>
-void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out,
+void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 		typename pcl::PointCloud<PointT>::Ptr& surface,
 		typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
-		tf2::Transform& viewpoint_guess) {
+		tf2::Transform& viewpoint_guess,
+		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
 
 	/*std::vector<int> indexes;
 	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);*/

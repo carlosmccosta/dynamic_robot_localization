@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <utility>
+
 
 // ROS includes
 #include <ros/ros.h>
@@ -113,13 +115,31 @@ class Localization : public ConfigurableObject {
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
+
 		virtual void applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud);
-		virtual void applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
-		virtual void applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, typename pcl::PointCloud<PointT>::Ptr& keypoints);
-		virtual void applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, tf2::Transform& pointcloud_pose_in_out);
+
+		virtual void applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
+
+		virtual void applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+				typename pcl::PointCloud<PointT>::Ptr& keypoints);
+
+		virtual void applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+				tf2::Transform& pointcloud_pose_in_out);
+
 		virtual double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
-		virtual bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
-		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out);
+		virtual void publishDetectedOutliers();
+
+		virtual bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess,
+				tf2::Transform& pointcloud_pose_corrected_in_out,
+				double max_outlier_percentage);
+
+		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+				const tf2::Transform& pointcloud_pose_initial_guess,
+				tf2::Transform& pointcloud_pose_corrected_out);
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </Localization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -156,6 +176,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		bool compute_normals_reference_cloud_;
 		bool compute_normals_ambient_cloud_;
+		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
 
@@ -186,11 +207,11 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudMatcher<PointT>::Ptr > cloud_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
+		std::vector< std::pair<sensor_msgs::PointCloud2Ptr, double> > outliers_detected_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
 } /* namespace dynamic_robot_localization */
-
 
 
 #ifdef DRL_NO_PRECOMPILE
