@@ -23,6 +23,7 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 Localization<PointT>::Localization() :
+	filter_reference_cloud_(true),
 	compute_normals_reference_cloud_(true),
 	compute_normals_ambient_cloud_(true),
 	max_outliers_percentage_(0.6),
@@ -85,12 +86,14 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 
 template<typename PointT>
 void Localization<PointT>::setupGeneralConfigurations() {
-	private_node_handle_->param("compute_normals_reference_cloud_", compute_normals_reference_cloud_, true);
+	private_node_handle_->param("filter_reference_cloud", filter_reference_cloud_, true);
+	private_node_handle_->param("compute_normals_reference_cloud", compute_normals_reference_cloud_, true);
 	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, true);
+	private_node_handle_->param("detect_keypoints", detect_keypoints_, true);
 	private_node_handle_->param("max_outliers_percentage", max_outliers_percentage_, 0.6);
 	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
-	private_node_handle_->param("reference_cloud_file_name", reference_pointcloud_file_name_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
 	private_node_handle_->param("map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
 	private_node_handle_->param("sensor_frame_id_", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
@@ -138,13 +141,13 @@ template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
 	cloud_matchers_.clear();
 
-	typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
+	/*typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
 	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(initial_aligment_matcher);
+	cloud_matchers_.push_back(initial_aligment_matcher);*/
 
-	/*typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
+	typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
 	final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(final_aligment_matcher);*/
+	cloud_matchers_.push_back(final_aligment_matcher);
 }
 
 
@@ -170,12 +173,14 @@ template<typename PointT>
 bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
 	if (pcl::io::loadPCDFile<PointT>(reference_pointcloud_filename, *reference_pointcloud_) == 0) {
 		if (!reference_pointcloud_->points.empty()) {
+			ROS_DEBUG_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
 			reference_pointcloud_->header.frame_id = map_frame_id_;
 			last_map_received_time_ = ros::Time::now();
-			reference_pointcloud_2d_ = false;
-			updateLocalizationPipelineWithNewReferenceCloud();
-			ROS_DEBUG_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
-			return true;
+			if (updateLocalizationPipelineWithNewReferenceCloud()) {
+				reference_pointcloud_2d_ = false;
+				return true;
+			}
+
 		}
 	}
 
@@ -191,9 +196,10 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 		if (reference_pointcloud_msg->width > 0 && reference_pointcloud_msg->data.size() > 0 && reference_pointcloud_msg->fields.size() >= 3) {
 			pcl::fromROSMsg(*reference_pointcloud_msg, *reference_pointcloud_);
 			if (!reference_pointcloud_->points.empty()) {
-				reference_pointcloud_2d_ = false;
-				updateLocalizationPipelineWithNewReferenceCloud();
-				ROS_DEBUG_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+				if (updateLocalizationPipelineWithNewReferenceCloud()) {
+					reference_pointcloud_2d_ = false;
+					ROS_DEBUG_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+				}
 			}
 		}
 	}
@@ -207,9 +213,10 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_)) {
 			if (!reference_pointcloud_->points.empty()) {
-				reference_pointcloud_2d_ = true;
-				updateLocalizationPipelineWithNewReferenceCloud();
-				ROS_DEBUG_STREAM("Loaded reference point cloud from costmap topic " << costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+				if (updateLocalizationPipelineWithNewReferenceCloud()) {
+					reference_pointcloud_2d_ = true;
+					ROS_DEBUG_STREAM("Loaded reference point cloud from costmap topic " << costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+				}
 			}
 		}
 	}
@@ -229,20 +236,28 @@ void Localization<PointT>::publishReferencePointCloud() {
 
 
 template<typename PointT>
-void Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
-	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
-	if (compute_normals_reference_cloud_) {
-		applyNormalEstimation(reference_pointcloud_, reference_pointcloud_search_method_);
+bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
+	if (filter_reference_cloud_) {
+		if (!applyFilters(reference_pointcloud_)) { return false; }
 	}
 
-	for (size_t i = 0; i < cloud_matchers_.size(); i++) {
-		cloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_search_method_);
+	if (compute_normals_reference_cloud_) {
+		if (!applyNormalEstimation(reference_pointcloud_, reference_pointcloud_search_method_)) { return false; }
 	}
 
 	if (!reference_pointcloud_->points.empty()) {
 		reference_pointcloud_received_ = true;
+		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
+
+		for (size_t i = 0; i < cloud_matchers_.size(); i++) {
+			cloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_search_method_);
+		}
+
 		publishReferencePointCloud();
+		return true;
 	}
+
+	return false;
 }
 
 
@@ -257,7 +272,7 @@ void Localization<PointT>::startLocalization() {
 	// subscribers
 	ambient_pointcloud_subscriber_ = node_handle_->subscribe(ambient_pointcloud_topic_, 2, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this);
 
-	if (reference_pointcloud_file_name_.empty()) {
+	if (reference_pointcloud_filename_.empty()) {
 		if (!reference_pointcloud_topic_.empty()) {
 			reference_pointcloud_subscriber_ = node_handle_->subscribe(reference_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSPointCloud, this);
 		} else {
@@ -265,7 +280,7 @@ void Localization<PointT>::startLocalization() {
 				costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
 		}
 	} else {
-		loadReferencePointCloudFromFile(reference_pointcloud_file_name_);
+		loadReferencePointCloudFromFile(reference_pointcloud_filename_);
 	}
 
 
@@ -488,10 +503,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  keypoint selection
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
-	if (!applyKeypointDetection(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
+	if (detect_keypoints_) {
+		if (!applyKeypointDetection(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
+	}
 
 	// ==============================================================  cloud registration
-	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
+	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, detect_keypoints_ ? ambient_pointcloud_keypoints : ambient_pointcloud, pointcloud_pose_corrected_out)) { return false; }
 
 	// ==============================================================  outlier detection
 	double max_outlier_percentage = applyOutlierDetection(ambient_pointcloud);

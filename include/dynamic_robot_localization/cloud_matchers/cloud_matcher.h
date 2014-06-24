@@ -18,10 +18,11 @@
 
 // PCL includes
 #include <pcl/common/transforms.h>
-#include <pcl/registration/registration.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
+#include <pcl/registration/registration.h>
+//#include <pcl/visualization/registration_visualizer.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -29,6 +30,7 @@
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_publisher.h>
+#include <dynamic_robot_localization/common/registration_visualizer.h>
 #include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -70,7 +72,8 @@ class CloudMatcher : public ConfigurableObject {
 		virtual void processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				typename pcl::PointCloud<PointT>::Ptr& surface,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {}
-		virtual void displayAlignedPointCloud();
+
+		void updateRegistrationVisualizer();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -84,7 +87,7 @@ class CloudMatcher : public ConfigurableObject {
 		inline void setCloudMatcher(const typename pcl::Registration<PointT, PointT>::Ptr& cloud_matcher) { cloud_matcher_ = cloud_matcher; }
 		inline void setMatchOnlyKeypoints(bool match_only_keypoints) { match_only_keypoints_ = match_only_keypoints; }
 		void setCloudPublisher(typename CloudPublisher<PointT>::Ptr& cloud_publisher) { cloud_publisher_ = cloud_publisher; }
-		void setDisplayCloudAligment(bool display_cloud_aligment) { display_cloud_aligment_ = display_cloud_aligment; }
+		void setDisplayCloudAligment(bool display_cloud_aligment);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -97,7 +100,10 @@ class CloudMatcher : public ConfigurableObject {
 		typename pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
 		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
 		bool match_only_keypoints_;
+
+		boost::shared_ptr< RegistrationVisualizer<PointT, PointT> > registration_visualizer_;
 		bool display_cloud_aligment_;
+		int number_maximum_displayed_correspondences_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

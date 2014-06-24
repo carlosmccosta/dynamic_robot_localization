@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	ros::NodeHandlePtr node_handle(new ros::NodeHandle());
 	ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
 
-	std::string localization_point_type;
+/*	std::string localization_point_type;
 	private_node_handle->param("localization_point_type", localization_point_type, std::string("PointNormal"));
 
 	if (localization_point_type == "PointXYZRGBNormal") {
@@ -41,11 +41,11 @@ int main(int argc, char** argv) {
 		dynamic_robot_localization::Localization<pcl::PointXYZINormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 		localization.startLocalization();
-	} else {
+	} else {*/
 		dynamic_robot_localization::Localization<pcl::PointNormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 		localization.startLocalization();
-	}
+//	}
 
 	return 0;
 }

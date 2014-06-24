@@ -18,7 +18,9 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 CloudMatcher<PointT>::CloudMatcher() :
-		match_only_keypoints_(false) {}
+		match_only_keypoints_(false),
+		display_cloud_aligment_(false),
+		number_maximum_displayed_correspondences_(30) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -26,6 +28,7 @@ template<typename PointT>
 void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
 	private_node_handle->param("match_only_keypoints", match_only_keypoints_, false);
 	private_node_handle->param("display_cloud_aligment", display_cloud_aligment_, false);
+	private_node_handle->param("number_maximum_displayed_correspondences", number_maximum_displayed_correspondences_, 30);
 
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
@@ -85,8 +88,9 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	}
 
 	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
-
+	updateRegistrationVisualizer();
 	cloud_matcher_->align(*pointcloud_registered_out);
+
 	if (cloud_matcher_->hasConverged()) {
 		tf2::Transform pose_correction;
 		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), pose_correction);
@@ -103,10 +107,6 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
 		}
 
-		if (display_cloud_aligment_) {
-			displayAlignedPointCloud();
-		}
-
 		return true;
 	}
 
@@ -115,8 +115,21 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 
 template<typename PointT>
-void CloudMatcher<PointT>::displayAlignedPointCloud() {
-	//todo
+void CloudMatcher<PointT>::setDisplayCloudAligment(bool display_cloud_aligment) {
+	display_cloud_aligment_ = display_cloud_aligment;
+}
+
+
+template<typename PointT>
+void CloudMatcher<PointT>::updateRegistrationVisualizer() {
+	if (cloud_matcher_ && !registration_visualizer_ && display_cloud_aligment_) {
+		registration_visualizer_ = boost::shared_ptr< RegistrationVisualizer<PointT, PointT> >(new RegistrationVisualizer<PointT, PointT>());
+		registration_visualizer_->setMaximumDisplayedCorrespondences(number_maximum_displayed_correspondences_);
+		registration_visualizer_->setRegistration(*cloud_matcher_);
+
+		registration_visualizer_->startDisplay();
+		ROS_DEBUG_STREAM("RegistrationVisualizer activated with " << number_maximum_displayed_correspondences_ << " number_maximum_displayed_correspondences");
+	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

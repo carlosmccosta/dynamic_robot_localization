@@ -109,7 +109,7 @@ class Localization : public ConfigurableObject {
 		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
 		void loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg);
 		void publishReferencePointCloud();
-		void updateLocalizationPipelineWithNewReferenceCloud();
+		bool updateLocalizationPipelineWithNewReferenceCloud();
 
 		void startLocalization();
 
@@ -168,15 +168,17 @@ class Localization : public ConfigurableObject {
 		std::string pose_publish_topic_;
 
 		// configuration fields
-		std::string reference_pointcloud_file_name_;
+		std::string reference_pointcloud_filename_;
 		std::string map_frame_id_;
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;
 		ros::Duration max_seconds_scan_age_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
+		bool filter_reference_cloud_;
 		bool compute_normals_reference_cloud_;
 		bool compute_normals_ambient_cloud_;
+		bool detect_keypoints_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;

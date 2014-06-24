@@ -18,7 +18,7 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 SampleConsensusInitialAlignment<PointT, FeatureT>::SampleConsensusInitialAlignment() :
-	matcher_scia_(new pcl::SampleConsensusInitialAlignment<PointT, PointT, FeatureT>()),
+	matcher_scia_(new SampleConsensusInitialAlignmentRegistration<PointT, FeatureT>()),
 	number_of_samples_(3) {
 	CloudMatcher<PointT>::setCloudMatcher(matcher_scia_);
 }

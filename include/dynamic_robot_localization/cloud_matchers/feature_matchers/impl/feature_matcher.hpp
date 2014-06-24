@@ -23,6 +23,7 @@ template<typename PointT, typename FeatureT>
 void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
 	bool display_feature_matching;
 	private_node_handle->param("display_feature_matching", display_feature_matching, false);
+	CloudMatcher<PointT>::setDisplayCloudAligment(display_feature_matching);
 
 	keypoint_descriptor_ = typename KeypointDescriptor<PointT, FeatureT>::Ptr(new FPFH<PointT, FeatureT>());
 	keypoint_descriptor_->setupConfigurationFromParameterServer(node_handle, private_node_handle);

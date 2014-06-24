@@ -20,13 +20,14 @@
 // PCL includes
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/registration/ia_ransac.h>
+//#include <pcl/registration/ia_ransac.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/feature_matcher.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/ia_ransac.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -74,7 +75,7 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-		typename pcl::SampleConsensusInitialAlignment<PointT, PointT, FeatureT>::Ptr matcher_scia_;
+		typename SampleConsensusInitialAlignmentRegistration<PointT, FeatureT>::Ptr matcher_scia_;
 		int number_of_samples_;
 	// ========================================================================   </private-section>  ==========================================================================
 };

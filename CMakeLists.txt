@@ -85,6 +85,7 @@ add_library(drl_common
     src/common/cloud_publisher.cpp
     src/common/pointcloud_conversions.cpp
     src/common/pointcloud2_builder.cpp
+    src/common/registration_visualizer.cpp
 )
 
 add_library(drl_pose_to_tf_publisher
@@ -117,6 +118,7 @@ add_library(drl_cloud_matchers
     src/cloud_matchers/point_matchers/iterative_closest_point.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point_with_normals.cpp
     src/cloud_matchers/feature_matchers/feature_matcher.cpp
+    src/cloud_matchers/feature_matchers/ia_ransac.cpp
     src/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.cpp
 )
 
