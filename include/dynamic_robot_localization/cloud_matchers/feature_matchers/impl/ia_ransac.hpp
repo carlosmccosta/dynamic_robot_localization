@@ -246,11 +246,11 @@ dynamic_robot_localization::SampleConsensusInitialAlignmentRegistration<PointT, 
       lowest_error = error;
       final_transformation_ = transformation_;
       converged_=true;
+
+      if (update_visualizer_ != 0)
+        update_visualizer_ (*input_, sample_indices, *target_, corresponding_indices);
     }
   }
-
-  if (update_visualizer_ != 0)
-    update_visualizer_ (*input_, sample_indices, *target_, corresponding_indices);
 
   // Apply the final transformation
   pcl::transformPointCloud (*input_, output, final_transformation_);

@@ -52,6 +52,8 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 		cloud_matcher_->setMaximumIterations(max_number_of_registration_iterations);
 		cloud_matcher_->setRANSACIterations(max_number_of_ransac_iterations);
 		cloud_matcher_->setRANSACOutlierRejectionThreshold(ransac_outlier_rejection_threshold);
+
+		setupRegistrationVisualizer();
 	}
 }
 
@@ -62,6 +64,10 @@ void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>:
 	if (cloud_matcher_) {
 		cloud_matcher_->setInputTarget(reference_cloud);
 		cloud_matcher_->setSearchMethodTarget(search_method);
+	}
+
+	if (registration_visualizer_) {
+		registration_visualizer_->setTargetCloud(*reference_cloud);
 	}
 }
 
@@ -82,13 +88,15 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	if (match_only_keypoints_) {
 		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
 		cloud_matcher_->setInputSource(pointcloud_keypoints);
+		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*pointcloud_keypoints); }
 	} else {
 		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
 		cloud_matcher_->setInputSource(ambient_pointcloud);
+		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*ambient_pointcloud); }
 	}
 
 	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
-	updateRegistrationVisualizer();
+
 	cloud_matcher_->align(*pointcloud_registered_out);
 
 	if (cloud_matcher_->hasConverged()) {
@@ -121,7 +129,7 @@ void CloudMatcher<PointT>::setDisplayCloudAligment(bool display_cloud_aligment) 
 
 
 template<typename PointT>
-void CloudMatcher<PointT>::updateRegistrationVisualizer() {
+void CloudMatcher<PointT>::setupRegistrationVisualizer() {
 	if (cloud_matcher_ && !registration_visualizer_ && display_cloud_aligment_) {
 		registration_visualizer_ = boost::shared_ptr< RegistrationVisualizer<PointT, PointT> >(new RegistrationVisualizer<PointT, PointT>());
 		registration_visualizer_->setMaximumDisplayedCorrespondences(number_maximum_displayed_correspondences_);

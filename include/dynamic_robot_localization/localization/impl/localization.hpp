@@ -26,6 +26,7 @@ Localization<PointT>::Localization() :
 	filter_reference_cloud_(true),
 	compute_normals_reference_cloud_(true),
 	compute_normals_ambient_cloud_(true),
+	detect_keypoints_(true),
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
@@ -180,7 +181,6 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 				reference_pointcloud_2d_ = false;
 				return true;
 			}
-
 		}
 	}
 
