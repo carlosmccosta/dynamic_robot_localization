@@ -33,6 +33,7 @@
 #include <pcl/search/kdtree.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -58,6 +59,7 @@
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_with_normals.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment_prerejective.h>
 
 #include <dynamic_robot_localization/transformation_validators/transformation_validator.h>
 #include <dynamic_robot_localization/transformation_validators/euclidean_transformation_validator.h>

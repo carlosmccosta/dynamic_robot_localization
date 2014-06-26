@@ -50,7 +50,8 @@ RegistrationVisualizer<PointSource, PointTarget>::RegistrationVisualizer() :
 	maximum_displayed_correspondences_(0),
 	intermediate_cloud_changed_(false),
 	viewport0(0), viewport1(1),
-	number_previous_correspondences_(0) {}
+	number_previous_correspondences_(0),
+	show_original_source_(false) {}
 
 
 template<typename PointSource, typename PointTarget>
@@ -110,7 +111,8 @@ void RegistrationVisualizer<PointSource, PointTarget>::setTargetCloud(const pcl:
 	visualizer_updating_mutex_.lock();
 
 	*cloud_target_ = cloud_tgt;
-	pcl::visualization::PointCloudColorHandlerCustom<PointTarget> cloud_target_handler(cloud_target_, 0, 0, 255);
+
+	pcl::visualization::PointCloudColorHandlerCustom<PointTarget> cloud_target_handler(cloud_target_, 0, 255, 0);
 	if (!viewer_->updatePointCloud<PointSource>(cloud_target_, "cloud target v1")) {
 		viewer_->addPointCloud<PointTarget>(cloud_target_, cloud_target_handler, "cloud target v1", viewport0);
 	}
@@ -195,16 +197,18 @@ void RegistrationVisualizer<PointSource, PointTarget>::runDisplay() {
 	viewer_->initCameraParameters();
 	viewer_->setCameraPosition(-6, 0, 0, 0, 0, 1);
 
-	// Create the view port for displaying initial source and target point clouds
-	viewer_->createViewPort(0.0, 0.0, 0.5, 1.0, viewport0);
-	viewer_->setBackgroundColor(0, 0, 0, viewport0);
-	viewer_->addText("Initial position of source and target point clouds", 10, 50, "title v1", viewport0);
-	viewer_->addText("Blue -> target", 10, 30, 0.0, 0.0, 1.0, "legend target v1", viewport0);
-	viewer_->addText("Red  -> source", 10, 10, 1.0, 0.0, 0.0, "legend source v1", viewport0);
+	if (show_original_source_) {
+		// Create the view port for displaying initial source and target point clouds
+		viewer_->createViewPort(0.0, 0.0, 0.5, 1.0, viewport0);
+		viewer_->setBackgroundColor(0, 0, 0, viewport0);
+		viewer_->addText("Initial position of source and target point clouds", 10, 50, "title v1", viewport0);
+		viewer_->addText("Blue -> target", 10, 30, 0.0, 0.0, 1.0, "legend target v1", viewport0);
+		viewer_->addText("Red  -> source", 10, 10, 1.0, 0.0, 0.0, "legend source v1", viewport0);
+	}
 
 	// Create the view port for displaying the registration process of source to target point cloud
-	viewer_->createViewPort(0.5, 0.0, 1.0, 1.0, viewport1);
-	viewer_->setBackgroundColor(0.1, 0.1, 0.1, viewport1);
+	viewer_->createViewPort(show_original_source_ ? 0.5 : 0.0, 0.0, 1.0, 1.0, viewport1);
+	viewer_->setBackgroundColor(0.0, 0.0, 0.0, viewport1);
 	std::string registration_port_title_ = "Registration using " + registration_method_name_;
 	viewer_->addText(registration_port_title_, 10, 90, "title v2", viewport1);
 	viewer_->addText("Yellow -> intermediate", 10, 50, 1.0, 1.0, 0.0, "legend intermediate v2", viewport1);

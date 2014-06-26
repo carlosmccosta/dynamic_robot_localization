@@ -146,9 +146,13 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_matchers_.push_back(initial_aligment_matcher);*/
 
-	typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
+	typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
+	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+	cloud_matchers_.push_back(initial_aligment_matcher);
+
+	/*typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
 	final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(final_aligment_matcher);
+	cloud_matchers_.push_back(final_aligment_matcher);*/
 }
 
 
@@ -176,6 +180,7 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 		if (!reference_pointcloud_->points.empty()) {
 			ROS_DEBUG_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
 			reference_pointcloud_->header.frame_id = map_frame_id_;
+
 			last_map_received_time_ = ros::Time::now();
 			if (updateLocalizationPipelineWithNewReferenceCloud()) {
 				reference_pointcloud_2d_ = false;
@@ -241,15 +246,15 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		if (!applyFilters(reference_pointcloud_)) { return false; }
 	}
 
+	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 	if (compute_normals_reference_cloud_) {
 		if (!applyNormalEstimation(reference_pointcloud_, reference_pointcloud_search_method_)) { return false; }
 	}
 
 	if (!reference_pointcloud_->points.empty()) {
 		reference_pointcloud_received_ = true;
-		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 
-		for (size_t i = 0; i < cloud_matchers_.size(); i++) {
+		for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
 			cloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_search_method_);
 		}
 
@@ -390,11 +395,11 @@ bool Localization<PointT>::applyNormalEstimation(typename pcl::PointCloud<PointT
 	tf2::Transform sensor_pose_tf_guess;
 	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
 		sensor_pose_tf_guess.setIdentity();
-	} else {
+	}/* else {
 		pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
 		pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
 		pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
-	}
+	}*/
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
 	normal_estimator_->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, ambient_pointcloud_with_normals);
 	pointcloud = ambient_pointcloud_with_normals; // switch pointers

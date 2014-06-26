@@ -144,6 +144,7 @@ class RegistrationVisualizer {
 		bool intermediate_cloud_changed_;
 		int viewport0, viewport1;
 		size_t number_previous_correspondences_;
+		bool show_original_source_;
 };
 }
 

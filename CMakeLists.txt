@@ -120,6 +120,8 @@ add_library(drl_cloud_matchers
     src/cloud_matchers/feature_matchers/feature_matcher.cpp
     src/cloud_matchers/feature_matchers/ia_ransac.cpp
     src/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.cpp
+    src/cloud_matchers/feature_matchers/sample_consensus_prerejective.cpp
+    src/cloud_matchers/feature_matchers/sample_consensus_initial_alignment_prerejective.cpp
 )
 
 add_library(drl_transformation_validators

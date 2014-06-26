@@ -96,7 +96,7 @@ namespace dynamic_robot_localization
       class HuberPenalty : public ErrorFunctor
       {
         private:
-          HuberPenalty () {}
+          HuberPenalty () : threshold_(1.0f) {}
         public:
           HuberPenalty (float threshold)  : threshold_ (threshold) {}
           virtual float operator () (float e) const
@@ -113,7 +113,7 @@ namespace dynamic_robot_localization
       class TruncatedError : public ErrorFunctor
       {
         private:
-          TruncatedError () {}
+          TruncatedError () : threshold_(1.0f) {}
         public:
           virtual ~TruncatedError () {}
 
@@ -144,6 +144,8 @@ namespace dynamic_robot_localization
         corr_dist_threshold_ = 100.0f;
         transformation_estimation_.reset (new pcl::registration::TransformationEstimationSVD<PointT, PointT>);
       };
+
+      virtual ~SampleConsensusInitialAlignmentRegistration () {}
 
       /** \brief Provide a boost shared pointer to the source point cloud's feature descriptors
         * \param features the source point cloud's features
