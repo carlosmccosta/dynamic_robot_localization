@@ -202,7 +202,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::runDisplay() {
 		viewer_->createViewPort(0.0, 0.0, 0.5, 1.0, viewport0);
 		viewer_->setBackgroundColor(0, 0, 0, viewport0);
 		viewer_->addText("Initial position of source and target point clouds", 10, 50, "title v1", viewport0);
-		viewer_->addText("Blue -> target", 10, 30, 0.0, 0.0, 1.0, "legend target v1", viewport0);
+		viewer_->addText("Green -> target", 10, 30, 0.0, 1.0, 0.0, "legend target v1", viewport0);
 		viewer_->addText("Red  -> source", 10, 10, 1.0, 0.0, 0.0, "legend source v1", viewport0);
 	}
 
@@ -212,7 +212,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::runDisplay() {
 	std::string registration_port_title_ = "Registration using " + registration_method_name_;
 	viewer_->addText(registration_port_title_, 10, 90, "title v2", viewport1);
 	viewer_->addText("Yellow -> intermediate", 10, 50, 1.0, 1.0, 0.0, "legend intermediate v2", viewport1);
-	viewer_->addText("Blue   -> target", 10, 30, 0.0, 0.0, 1.0, "legend target v2", viewport1);
+	viewer_->addText("Green  -> target", 10, 30, 0.0, 1.0, 0.0, "legend target v2", viewport1);
 	viewer_->addText("Red    -> source", 10, 10, 1.0, 0.0, 0.0, "legend source v2", viewport1);
 
 	// Add coordinate system to both ports

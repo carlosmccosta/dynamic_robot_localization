@@ -45,6 +45,9 @@
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/transformation_validation.h>
 #include <pcl/registration/correspondence_rejection_poly.h>
+#include <pcl/registration/correspondence_rejection.h>
+#include <pcl/registration/correspondence_rejection_sample_consensus.h>
+#include <pcl/common/distances.h>
 
 namespace dynamic_robot_localization
 {
@@ -92,6 +95,7 @@ namespace dynamic_robot_localization
       using pcl::Registration<PointSource, PointTarget>::getFitnessScore;
       using pcl::Registration<PointSource, PointTarget>::converged_;
       using pcl::Registration<PointSource, PointTarget>::update_visualizer_;
+      using pcl::Registration<PointSource, PointTarget>::correspondence_rejectors_;
 
       typedef typename pcl::Registration<PointSource, PointTarget>::PointCloudSource PointCloudSource;
       typedef typename PointCloudSource::Ptr PointCloudSourcePtr;
@@ -241,6 +245,8 @@ namespace dynamic_robot_localization
         return inliers_;
       }
 
+      void setupCorrespondanceRejectors();
+
     protected:
       /** \brief Choose a random index between 0 and n-1
         * \param n the number of possible indices to choose from
@@ -288,7 +294,7 @@ namespace dynamic_robot_localization
         * \param fitness_score output fitness score as RMSE 
         */
       void 
-      getFitness (std::vector<int>& inliers, float& fitness_score);
+      getFitness (PointCloudSource& input_transformed, std::vector<int>& inliers, float& fitness_score);
 
       /** \brief The source point cloud's feature descriptors. */
       FeatureCloudConstPtr input_features_;
@@ -315,7 +321,9 @@ namespace dynamic_robot_localization
       std::vector<int> inliers_;
   };
 
-}  /* namespace dynamic_robot_localization */
+} /* namespace dynamic_robot_localization */
+
+
 
 #ifdef DRL_NO_PRECOMPILE
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/impl/sample_consensus_prerejective.hpp>

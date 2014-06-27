@@ -1,5 +1,10 @@
 <launch>
-	<arg name="reference_pointcloud_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_50mm.pcd" />
+	<arg name="reference_pointcloud_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_preprocessed_50mm.pcd" />
+	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
+	<arg name="reference_pointcloud_keypoints_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_iss3d_keypoints_50mm.pcd" />
+	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
+	<arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_fpfh_descriptors_50mm.pcd" />
+	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 
 
 	<!-- laser assembler -->
@@ -19,14 +24,20 @@
 		<param name="pointcloud_topic" type="str" value="assembled_pointcloud" />
 		<param name="costmap_topic" type="str" value="map" />
 		<!-- <param name="reference_cloud_topic" type="str" value="octomap_point_cloud_centers" /> -->
-		<param name="reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" /> 						<!-- default: empty -->
+		<param name="reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" /> 											<!-- default: empty -->
+		<param name="reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" /> 		<!-- default: empty -->
+		<param name="reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" /> 						<!-- default: empty -->
+		<param name="reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" /> 			<!-- default: empty -->
+		<param name="reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" /> 					<!-- default: empty -->
+		<param name="reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" /> 		<!-- default: empty -->
 		<param name="reference_pointcloud_publish_topic" type="str" value="reference_pointcloud" />
 		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
 		<param name="pose_publish_topic" type="str" value="initialpose" />
-		<param name="filter_reference_cloud" type="bool" value="true" />
-		<param name="compute_normals_reference_cloud" type="bool" value="true" />
-		<param name="compute_normals_ambient_cloud" type="bool" value="false" />
-		<param name="detect_keypoints" type="bool" value="true" />																	<!-- default: true -->
+		<param name="filter_reference_cloud" type="bool" value="false" />															<!-- default: true -->
+		<param name="compute_normals_reference_cloud" type="bool" value="false" />													<!-- default: true -->
+		<param name="compute_normals_ambient_cloud" type="bool" value="true" />														<!-- default: true -->
+		<param name="detect_keypoints_reference_cloud" type="bool" value="false" />													<!-- default: true -->
+		<param name="detect_keypoints_ambient_cloud" type="bool" value="true" />													<!-- default: true -->
 		<param name="publish_tf_map_odom" type="bool" value="false" />
 		<param name="map_frame_id" type="str" value="map" />
 		<param name="base_link_frame_id" type="str" value="base_footprint" />

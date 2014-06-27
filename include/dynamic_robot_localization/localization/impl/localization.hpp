@@ -23,10 +23,12 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 Localization<PointT>::Localization() :
+	save_clouds_in_binary_format_(true),
 	filter_reference_cloud_(true),
 	compute_normals_reference_cloud_(true),
 	compute_normals_ambient_cloud_(true),
-	detect_keypoints_(true),
+	detect_keypoints_reference_cloud_(true),
+	detect_keypoints_ambient_cloud_(true),
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
@@ -87,14 +89,19 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 
 template<typename PointT>
 void Localization<PointT>::setupGeneralConfigurations() {
+	private_node_handle_->param("save_clouds_in_binary_format", save_clouds_in_binary_format_, true);
 	private_node_handle_->param("filter_reference_cloud", filter_reference_cloud_, true);
 	private_node_handle_->param("compute_normals_reference_cloud", compute_normals_reference_cloud_, true);
 	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, true);
-	private_node_handle_->param("detect_keypoints", detect_keypoints_, true);
+	private_node_handle_->param("detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, true);
+	private_node_handle_->param("detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, true);
 	private_node_handle_->param("max_outliers_percentage", max_outliers_percentage_, 0.6);
 	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
 	private_node_handle_->param("reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
 	private_node_handle_->param("map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
 	private_node_handle_->param("sensor_frame_id_", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
@@ -254,8 +261,27 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 	if (!reference_pointcloud_->points.empty()) {
 		reference_pointcloud_received_ = true;
 
+		if (!reference_pointcloud_preprocessed_save_filename_.empty()) {
+			ROS_DEBUG_STREAM("Saving reference pointcloud preprocessed with " << reference_pointcloud_->points.size() << " points to file " << reference_pointcloud_preprocessed_save_filename_);
+			pcl::io::savePCDFile<PointT>(reference_pointcloud_preprocessed_save_filename_, *reference_pointcloud_, save_clouds_in_binary_format_);
+		}
+
+		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints(new pcl::PointCloud<PointT>());
+
+		if (detect_keypoints_reference_cloud_ || reference_pointcloud_keypoints_filename_.empty() || pcl::io::loadPCDFile<PointT>(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints) != 0) {
+			if (!applyKeypointDetection(reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
+
+			if (!reference_pointcloud_keypoints_save_filename_.empty()) {
+				ROS_DEBUG_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->points.size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
+				pcl::io::savePCDFile<PointT>(reference_pointcloud_keypoints_save_filename_, *reference_pointcloud_keypoints, save_clouds_in_binary_format_);
+			}
+		} else {
+			ROS_DEBUG_STREAM("Loaded " << reference_pointcloud_keypoints->points.size() << " keypoints from file " << reference_pointcloud_keypoints_filename_);
+		}
+
+
 		for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
-			cloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_search_method_);
+			cloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
 		}
 
 		publishReferencePointCloud();
@@ -508,12 +534,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  keypoint selection
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
-	if (detect_keypoints_) {
+	if (detect_keypoints_ambient_cloud_) {
 		if (!applyKeypointDetection(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
 	}
 
 	// ==============================================================  cloud registration
-	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, detect_keypoints_ ? ambient_pointcloud_keypoints : ambient_pointcloud, pointcloud_pose_corrected_out)) { return false; }
+	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, detect_keypoints_ambient_cloud_ ? ambient_pointcloud_keypoints : ambient_pointcloud, pointcloud_pose_corrected_out)) { return false; }
 
 	// ==============================================================  outlier detection
 	double max_outlier_percentage = applyOutlierDetection(ambient_pointcloud);

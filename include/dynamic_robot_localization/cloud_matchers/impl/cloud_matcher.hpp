@@ -59,7 +59,8 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 
 template<typename PointT>
-void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::search::KdTree<PointT>::Ptr& search_method) {
+void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::PointCloud<PointT>::Ptr& reference_cloud_keypoints,
+		typename pcl::search::KdTree<PointT>::Ptr& search_method) {
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		cloud_matcher_->setInputTarget(reference_cloud);

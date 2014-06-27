@@ -171,16 +171,21 @@ class Localization : public ConfigurableObject {
 
 		// configuration fields
 		std::string reference_pointcloud_filename_;
+		std::string reference_pointcloud_preprocessed_save_filename_;
+		std::string reference_pointcloud_keypoints_filename_;
+		std::string reference_pointcloud_keypoints_save_filename_;
 		std::string map_frame_id_;
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;
 		ros::Duration max_seconds_scan_age_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
+		bool save_clouds_in_binary_format_;
 		bool filter_reference_cloud_;
 		bool compute_normals_reference_cloud_;
 		bool compute_normals_ambient_cloud_;
-		bool detect_keypoints_;
+		bool detect_keypoints_reference_cloud_;
+		bool detect_keypoints_ambient_cloud_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
