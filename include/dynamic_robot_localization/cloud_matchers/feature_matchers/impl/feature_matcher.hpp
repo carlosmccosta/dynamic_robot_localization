@@ -28,9 +28,6 @@ void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros
 	private_node_handle->param("save_descriptors_in_binary_format", save_descriptors_in_binary_format_, true);
 	CloudMatcher<PointT>::setDisplayCloudAligment(display_feature_matching);
 
-	keypoint_descriptor_ = typename KeypointDescriptor<PointT, FeatureT>::Ptr(new FPFH<PointT, FeatureT>());
-	keypoint_descriptor_->setupConfigurationFromParameterServer(node_handle, private_node_handle);
-
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
 	CloudMatcher<PointT>::setDisplayCloudAligment(display_feature_matching);
 	CloudMatcher<PointT>::setupRegistrationVisualizer();
@@ -56,7 +53,8 @@ void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCl
 
 	typename pcl::PointCloud<FeatureT>::Ptr reference_descriptors(new pcl::PointCloud<FeatureT>());
 	if (reference_pointcloud_descriptors_filename_.empty() || pcl::io::loadPCDFile<FeatureT>(reference_pointcloud_descriptors_filename_, *reference_descriptors) != 0) {
-		reference_descriptors = keypoint_descriptor_->computeKeypointsDescriptors(reference_cloud_final, reference_cloud, search_method);
+		if (keypoint_descriptor_) // must be set previously
+			reference_descriptors = keypoint_descriptor_->computeKeypointsDescriptors(reference_cloud_final, reference_cloud, search_method);
 	} else {
 		ROS_DEBUG_STREAM("Loaded " << reference_descriptors->points.size() << " keypoint descriptors from file " << reference_pointcloud_descriptors_filename_);
 	}

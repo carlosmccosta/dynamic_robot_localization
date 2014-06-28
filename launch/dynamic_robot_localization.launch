@@ -3,7 +3,8 @@
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_iss3d_keypoints_50mm.pcd" />
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
-	<arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_fpfh_descriptors_50mm.pcd" />
+	<!-- <arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_fpfh_descriptors_50mm.pcd" /> -->
+	<arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_shot_descriptors_50mm.pcd" />
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 
 
@@ -53,8 +54,8 @@
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" /> 							<!-- default: empty -->
 
 		<!-- normal estimator params -->
-		<param name="search_k" type="int" value="10" /> 																			<!-- default: 0 -->
-		<param name="search_radius" type="double" value="0.09" /> 																	<!-- default: 0.12 -->
+		<param name="search_k" type="int" value="0" />	 																			<!-- default: 0 -->
+		<param name="search_radius" type="double" value="0.25" /> 																	<!-- default: 0.12 -->
 
 		<!-- keypoint detection parameters -->
 		<param name="iss3_keypoints_cloud_publish_topic" type="str" value="ambient_keypoints" />
@@ -67,21 +68,24 @@
 		<!-- initial alignment -->
 		<param name="min_sample_distance" type="double" value="1.0" />
 		<param name="similarity_threshold" type="double" value="0.5" />
-		<param name="inlier_fraction" type="double" value="0.25" />
-		<param name="number_of_samples" type="int" value="100" /> 																	<!-- default: 3 -->
-		<param name="correspondence_randomness" type="int" value="200" /> 															<!-- default: 10 -->
+		<param name="inlier_fraction" type="double" value="0.15" />
+		<param name="number_of_samples" type="int" value="20" /> 																	<!-- default: 3 -->
+		<param name="correspondence_randomness" type="int" value="40" /> 															<!-- default: 10 -->
 
 		<!-- feature description -->
-		<param name="fpfh_k_search" type="int" value="0" /> 																		<!-- default: 10 -->
-		<param name="fpfh_radius_search" type="double" value="0.5" />
+		<param name="feature_descriptor_k_search" type="int" value="0" /> 															<!-- default: 10 -->
+		<param name="feature_descriptor_radius_search" type="double" value="0.25" />
+		<!-- fpfh -->
 		<param name="number_subdivisions_f1" type="int" value="11" />
 		<param name="number_subdivisions_f2" type="int" value="11" />
 		<param name="number_subdivisions_f3" type="int" value="11" />
+		<!-- shot -->
+		<param name="lrf_radius" type="double" value="0.25" />
 
 		<!-- registration params -->
 		<param name="match_only_keypoints" type="bool" value="true" /> 																<!-- default: false -->
 		<param name="use_reciprocal_correspondences" type="bool" value="true" />
-		<param name="max_correspondence_distance" type="double" value="1.0" />
+		<param name="max_correspondence_distance" type="double" value="0.5" />
 		<param name="transformation_epsilon" type="double" value="1e-8" />
 		<param name="euclidean_fitness_epsilon" type="double" value="1e-6" />
 		<param name="max_number_of_registration_iterations" type="int" value="500" />

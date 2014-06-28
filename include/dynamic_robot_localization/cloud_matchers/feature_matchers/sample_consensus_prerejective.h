@@ -46,7 +46,13 @@
 #include <pcl/registration/transformation_validation.h>
 #include <pcl/registration/correspondence_rejection_poly.h>
 #include <pcl/registration/correspondence_rejection.h>
+#include <pcl/registration/correspondence_rejection_one_to_one.h>
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
+#include <pcl/registration/correspondence_rejection_distance.h>
+#include <pcl/registration/correspondence_rejection_median_distance.h>
+#include <pcl/registration/correspondence_rejection_surface_normal.h>
+#include <pcl/registration/correspondence_rejection_trimmed.h>
+#include <pcl/registration/correspondence_rejection_var_trimmed.h>
 #include <pcl/common/distances.h>
 
 namespace dynamic_robot_localization

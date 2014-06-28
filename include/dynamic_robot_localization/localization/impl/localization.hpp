@@ -132,6 +132,7 @@ void Localization<PointT>::setupFiltersConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorConfigurations() {
 	normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
+//	normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new MovingLeastSquares<PointT>());
 	normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 }
 
@@ -149,13 +150,17 @@ template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
 	cloud_matchers_.clear();
 
-	/*typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
-	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(initial_aligment_matcher);*/
+	typename KeypointDescriptor<PointT, pcl::SHOT352>::Ptr keypoint_descriptor(new SHOT<PointT, pcl::SHOT352>());
+//	typename KeypointDescriptor<PointT, pcl::FPFHSignature33>::Ptr keypoint_descriptor(new FPFH<PointT, pcl::FPFHSignature33>());
+	keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 
-	typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
+//	typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
+	typename FeatureMatcher<PointT, pcl::SHOT352>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::SHOT352>());
+//	typename FeatureMatcher<PointT, pcl::FPFHSignature33>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
+	initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 	cloud_matchers_.push_back(initial_aligment_matcher);
+
 
 	/*typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
 	final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);

@@ -99,7 +99,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::setSourceCloud(const pcl:
 
 	*cloud_source_ = cloud_src;
 	pcl::visualization::PointCloudColorHandlerCustom<PointSource> cloud_source_handler(cloud_source_, 255, 0, 0);
-	if (!viewer_->updatePointCloud<PointSource>(cloud_source_, "cloud source v1")) {
+	if (!viewer_->updatePointCloud<PointSource>(cloud_source_, cloud_source_handler, "cloud source v1")) {
 		viewer_->addPointCloud<PointSource>(cloud_source_, cloud_source_handler, "cloud source v1", viewport0);
 	}
 
@@ -113,11 +113,11 @@ void RegistrationVisualizer<PointSource, PointTarget>::setTargetCloud(const pcl:
 	*cloud_target_ = cloud_tgt;
 
 	pcl::visualization::PointCloudColorHandlerCustom<PointTarget> cloud_target_handler(cloud_target_, 0, 255, 0);
-	if (!viewer_->updatePointCloud<PointSource>(cloud_target_, "cloud target v1")) {
+	if (!viewer_->updatePointCloud<PointSource>(cloud_target_, cloud_target_handler, "cloud target v1")) {
 		viewer_->addPointCloud<PointTarget>(cloud_target_, cloud_target_handler, "cloud target v1", viewport0);
 	}
 
-	if (!viewer_->updatePointCloud<PointSource>(cloud_target_, "cloud target v2")) {
+	if (!viewer_->updatePointCloud<PointSource>(cloud_target_, cloud_target_handler, "cloud target v2")) {
 		viewer_->addPointCloud<PointTarget>(cloud_target_, cloud_target_handler, "cloud target v2", viewport1);
 	}
 
@@ -137,7 +137,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::setSourceIntermediateClou
 template<typename PointSource, typename PointTarget>
 void RegistrationVisualizer<PointSource, PointTarget>::updateViewerIntermediateCloud() {
 	pcl::visualization::PointCloudColorHandlerCustom<PointSource> cloud_intermediate_handler_(cloud_intermediate_, 255, 255, 0);
-	if (!viewer_->updatePointCloud<PointSource>(cloud_intermediate_, "cloud intermediate v2")) {
+	if (!viewer_->updatePointCloud<PointSource>(cloud_intermediate_, cloud_intermediate_handler_, "cloud intermediate v2")) {
 		viewer_->addPointCloud<PointSource>(cloud_intermediate_, cloud_intermediate_handler_, "cloud intermediate v2", viewport1);
 	}
 

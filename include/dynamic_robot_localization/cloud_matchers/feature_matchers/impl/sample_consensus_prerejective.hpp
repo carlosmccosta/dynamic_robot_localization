@@ -220,6 +220,12 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 		// Find corresponding features in the target cloud
 		findSimilarFeatures(sample_indices, similar_features, corresponding_indices);
 
+		// Apply prerejection
+		/*if (!correspondence_rejector_poly_->thresholdPolygon (sample_indices, corresponding_indices)) {
+			++num_rejections;
+			continue;
+		}*/
+
 		pcl::CorrespondencesPtr temp_corrs(new pcl::Correspondences());
 		pcl::CorrespondencesPtr filtered_corrs(new pcl::Correspondences());
 		for (size_t i = 0; i < sample_indices.size(); ++i) {
@@ -227,20 +233,16 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 			temp_corrs->push_back(pcl::Correspondence(sample_indices[i], corresponding_indices[i], distance));
 		}
 
+		if (temp_corrs->empty()) continue;
+
 		for (size_t i = 0; i < correspondence_rejectors_.size(); ++i) {
 			filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
 			correspondence_rejectors_[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
+			if (filtered_corrs->size() < 3) break;
 			temp_corrs = filtered_corrs;
 		}
 
 		if (filtered_corrs->size() > 2) {
-			// Apply prerejection
-			/*if (!correspondence_rejector_poly_->thresholdPolygon (sample_indices, corresponding_indices))
-		 {
-		 ++num_rejections;
-		 continue;
-		 }*/
-
 			// Estimate the transform from the correspondences, write to transformation_
 			//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
 			transformation_estimation_->estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation_);
@@ -266,22 +268,22 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 			// If the new fit is better, update results
 			inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
 
+			if (update_visualizer_ != 0) {
+				std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
+				for (size_t i = 0; i < filtered_corrs->size(); ++i) {
+					sample_indices_filtered.push_back((*filtered_corrs)[i].index_query);
+					corresponding_indices_filtered.push_back((*filtered_corrs)[i].index_match);
+				}
+
+				update_visualizer_(input_transformed, sample_indices_filtered, *target_, corresponding_indices_filtered);
+			}
+
 			// Update result if pose hypothesis is better
 			if (inlier_fraction >= inlier_fraction_ && error < lowest_error) {
 				inliers_ = inliers;
 				lowest_error = error;
 				converged_ = true;
 				final_transformation_ = transformation_;
-
-				if (update_visualizer_ != 0) {
-					std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
-					for (size_t i = 0; i < filtered_corrs->size(); ++i) {
-						sample_indices_filtered.push_back((*filtered_corrs)[i].index_query);
-						corresponding_indices_filtered.push_back((*filtered_corrs)[i].index_match);
-					}
-
-					update_visualizer_(input_transformed, sample_indices_filtered, *target_, corresponding_indices_filtered);
-				}
 			}
 		}
 	}
@@ -332,12 +334,34 @@ template<typename PointSource, typename PointTarget, typename FeatureT>
 void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setupCorrespondanceRejectors() {
 	pcl::Registration<PointSource, PointTarget>::clearCorrespondenceRejectors();
 
-	typename pcl::registration::CorrespondenceRejectorSampleConsensus<PointSource>::Ptr sac(new pcl::registration::CorrespondenceRejectorSampleConsensus<PointSource>());
-	sac->setMaximumIterations(500);
-	sac->setInlierThreshold(0.25);
-	sac->setInputSource(input_);
-	sac->setInputTarget(target_);
-	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(sac);
+
+	/*typename pcl::registration::CorrespondenceRejectorOneToOne::Ptr corr_rej_o2o(new pcl::registration::CorrespondenceRejectorOneToOne());
+	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_o2o);*/
+
+
+	/*typename pcl::registration::CorrespondenceRejectorMedianDistance::Ptr corr_rej_median (new pcl::registration::CorrespondenceRejectorMedianDistance);
+	corr_rej_median->setInputSource<PointSource>(input_);
+	corr_rej_median->setInputTarget<PointTarget>(target_);
+	corr_rej_median->setMedianFactor(4.0);
+	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_median);*/
+
+
+	/*typename pcl::registration::CorrespondenceRejectorVarTrimmed::Ptr corr_rej_var (new typename pcl::registration::CorrespondenceRejectorVarTrimmed());
+	corr_rej_var->setInputSource<PointSource>(input_);
+	corr_rej_var->setInputTarget<PointTarget>(target_);
+	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_var);*/
+
+
+	/*typename pcl::registration::CorrespondenceRejectorTrimmed::Ptr corr_rej_tri(new typename pcl::registration::CorrespondenceRejectorTrimmed());
+	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_tri);*/
+
+
+	typename pcl::registration::CorrespondenceRejectorSampleConsensus<PointSource>::Ptr corr_rej_sac(new pcl::registration::CorrespondenceRejectorSampleConsensus<PointSource>());
+	corr_rej_sac->setInputSource(input_);
+	corr_rej_sac->setInputTarget(target_);
+	corr_rej_sac->setInlierThreshold(0.25);
+	corr_rej_sac->setMaximumIterations(500);
+	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_sac);
 }
 
 } /* namespace dynamic_robot_localization */
