@@ -66,7 +66,7 @@ void IntrinsicShapeSignature3D<PointT>::findKeypoints(typename pcl::PointCloud<P
 	keypoint_detector_.setSearchMethod(surface_search_method);
 	keypoint_detector_.setSearchSurface(surface);
 	keypoint_detector_.setInputCloud(pointcloud);
-	keypoint_detector_.setNormals(pointcloud);
+	keypoint_detector_.setNormals(surface);
 	keypoint_detector_.compute(*pointcloud_keypoints_out);
 
 	KeypointDetector<PointT>::getCloudPublisher()->publishPointCloud(*pointcloud_keypoints_out);

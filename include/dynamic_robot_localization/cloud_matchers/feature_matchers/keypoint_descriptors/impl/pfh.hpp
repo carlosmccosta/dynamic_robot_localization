@@ -1,4 +1,4 @@
-/**\file fpfh.hpp
+/**\file pfh.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/fpfh.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/pfh.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -18,21 +18,24 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <FPFH-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PFH-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
-void FPFH<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	typename pcl::FPFHEstimationOMP<PointT, PointT, FeatureT>::Ptr feature_descriptor(new pcl::FPFHEstimationOMP<PointT, PointT, FeatureT>());
+void PFH<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	typename pcl::PFHEstimation<PointT, PointT, FeatureT>::Ptr feature_descriptor(new pcl::PFHEstimation<PointT, PointT, FeatureT>());
+//	typename pcl::PFHEstimation<pcl::PointNormal, pcl::PointNormal, pcl::PFHSignature125>::Ptr feature_descriptor(new pcl::PFHEstimation<pcl::PointNormal, pcl::PointNormal, pcl::PFHSignature125>());
 
-	int number_subdivisions_f1, number_subdivisions_f2, number_subdivisions_f3;
-	private_node_handle->param("number_subdivisions_f1", number_subdivisions_f1, 11);
-	private_node_handle->param("number_subdivisions_f2", number_subdivisions_f2, 11);
-	private_node_handle->param("number_subdivisions_f3", number_subdivisions_f3, 11);
-	feature_descriptor->setNrSubdivisions(number_subdivisions_f1, number_subdivisions_f2, number_subdivisions_f3);
+	bool use_internal_cache;
+	private_node_handle->param("use_internal_cache", use_internal_cache, true);
+	feature_descriptor->setUseInternalCache(use_internal_cache);
+
+	int maximum_cache_size = (1ul*1024ul*1024ul*1024ul) / sizeof (std::pair<std::pair<int, int>, Eigen::Vector4f>);
+	private_node_handle->param("maximum_cache_size", maximum_cache_size, maximum_cache_size);
+	feature_descriptor->setMaximumCacheSize(maximum_cache_size);
 
 	KeypointDescriptor<PointT, FeatureT>::setFeatureDescriptor(feature_descriptor);
 	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </FPFH-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PFH-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -45,4 +48,3 @@ void FPFH<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHand
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */
-

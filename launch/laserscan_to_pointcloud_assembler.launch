@@ -1,6 +1,6 @@
 <launch>
 	<!-- merge two LaserScan topics -->
-	<node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="base_scan tilt_scan" output="screen" />
+	<!-- <node pkg="topic_tools" type="relay" name="relay_tilt_scan_to_base_scan" args="base_scan tilt_scan" output="screen" /> -->
 
 
 	<!-- LaserScan assembler -->

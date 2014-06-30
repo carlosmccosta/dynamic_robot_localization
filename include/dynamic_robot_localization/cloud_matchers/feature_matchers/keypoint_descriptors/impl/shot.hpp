@@ -22,14 +22,13 @@ namespace dynamic_robot_localization {
 template<typename PointT, typename FeatureT>
 void SHOT<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle,
         ros::NodeHandlePtr& private_node_handle) {
-	typename pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>::Ptr feature_descriptor_(new pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>());
-//	typename pcl::SHOTEstimationOMP<pcl::PointNormal, pcl::PointNormal, pcl::SHOT352>::Ptr feature_descriptor_(new pcl::SHOTEstimationOMP<pcl::PointNormal, pcl::PointNormal, pcl::SHOT352>());
+	typename pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>::Ptr feature_descriptor(new pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>());
 
 	double lrf_radius;
 	private_node_handle->param("lrf_radius", lrf_radius, 0.05);
-	feature_descriptor_->setLRFRadius(lrf_radius);
+	feature_descriptor->setLRFRadius(lrf_radius);
 
-	KeypointDescriptor<PointT, FeatureT>::setFeatureDescriptor(feature_descriptor_);
+	KeypointDescriptor<PointT, FeatureT>::setFeatureDescriptor(feature_descriptor);
 	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SHOT-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

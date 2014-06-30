@@ -150,16 +150,45 @@ template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
 	cloud_matchers_.clear();
 
-	typename KeypointDescriptor<PointT, pcl::SHOT352>::Ptr keypoint_descriptor(new SHOT<PointT, pcl::SHOT352>());
-//	typename KeypointDescriptor<PointT, pcl::FPFHSignature33>::Ptr keypoint_descriptor(new FPFH<PointT, pcl::FPFHSignature33>());
-	keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+	std::string keypoint_descriptor;
+	private_node_handle_->param("keypoint_descriptor", keypoint_descriptor, std::string("PFH"));
 
-//	typename CloudMatcher<PointT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, pcl::FPFHSignature33>());
-	typename FeatureMatcher<PointT, pcl::SHOT352>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::SHOT352>());
-//	typename FeatureMatcher<PointT, pcl::FPFHSignature33>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
-	initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-	initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(initial_aligment_matcher);
+	if (keypoint_descriptor == "PFH") {
+		typename KeypointDescriptor<PointT, pcl::PFHSignature125>::Ptr keypoint_descriptor(new PFH<PointT, pcl::PFHSignature125>());
+		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		typename FeatureMatcher<PointT, pcl::PFHSignature125>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::PFHSignature125>());
+		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(initial_aligment_matcher);
+	} else if (keypoint_descriptor == "FPFH") {
+		typename KeypointDescriptor<PointT, pcl::FPFHSignature33>::Ptr keypoint_descriptor(new FPFH<PointT, pcl::FPFHSignature33>());
+		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		typename FeatureMatcher<PointT, pcl::FPFHSignature33>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
+		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(initial_aligment_matcher);
+	} else if (keypoint_descriptor == "SHOT") {
+		typename KeypointDescriptor<PointT, pcl::SHOT352>::Ptr keypoint_descriptor(new SHOT<PointT, pcl::SHOT352>());
+		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		typename FeatureMatcher<PointT, pcl::SHOT352>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::SHOT352>());
+		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(initial_aligment_matcher);
+	} else if (keypoint_descriptor == "3DSC") {
+		typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new ShapeContext3D<PointT, pcl::ShapeContext1980>());
+		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		typename FeatureMatcher<PointT, pcl::ShapeContext1980>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ShapeContext1980>());
+		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(initial_aligment_matcher);
+	} else if (keypoint_descriptor == "USC") {
+		typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new UniqueShapeContext<PointT, pcl::ShapeContext1980>());
+		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		typename FeatureMatcher<PointT, pcl::ShapeContext1980>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ShapeContext1980>());
+		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(initial_aligment_matcher);
+	}
 
 
 	/*typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
@@ -261,6 +290,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 	if (compute_normals_reference_cloud_) {
 		if (!applyNormalEstimation(reference_pointcloud_, reference_pointcloud_search_method_)) { return false; }
+		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_); // update kdtree
 	}
 
 	if (!reference_pointcloud_->points.empty()) {
@@ -273,15 +303,17 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 
-		if (detect_keypoints_reference_cloud_ || reference_pointcloud_keypoints_filename_.empty() || pcl::io::loadPCDFile<PointT>(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints) != 0) {
-			if (!applyKeypointDetection(reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
+		if (detect_keypoints_reference_cloud_) {
+			if (reference_pointcloud_keypoints_filename_.empty() || pcl::io::loadPCDFile<PointT>(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints) != 0) {
+				if (!applyKeypointDetection(reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
 
-			if (!reference_pointcloud_keypoints_save_filename_.empty()) {
-				ROS_DEBUG_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->points.size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
-				pcl::io::savePCDFile<PointT>(reference_pointcloud_keypoints_save_filename_, *reference_pointcloud_keypoints, save_clouds_in_binary_format_);
+				if (!reference_pointcloud_keypoints_save_filename_.empty()) {
+					ROS_DEBUG_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->points.size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
+					pcl::io::savePCDFile<PointT>(reference_pointcloud_keypoints_save_filename_, *reference_pointcloud_keypoints, save_clouds_in_binary_format_);
+				}
+			} else {
+				ROS_DEBUG_STREAM("Loaded " << reference_pointcloud_keypoints->points.size() << " keypoints from file " << reference_pointcloud_keypoints_filename_);
 			}
-		} else {
-			ROS_DEBUG_STREAM("Loaded " << reference_pointcloud_keypoints->points.size() << " keypoints from file " << reference_pointcloud_keypoints_filename_);
 		}
 
 
@@ -535,6 +567,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	if (compute_normals_ambient_cloud_) {
 		if (!applyNormalEstimation(ambient_pointcloud, ambient_search_method)) { return false; }
+		ambient_search_method->setInputCloud(ambient_pointcloud);
 	}
 
 	// ==============================================================  keypoint selection

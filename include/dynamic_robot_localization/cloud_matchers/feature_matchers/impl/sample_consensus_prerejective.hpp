@@ -209,6 +209,146 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	// Feature correspondence cache
 	std::vector<std::vector<int> > similar_features(input_->size());
 
+
+#ifdef USE_GROUPING
+	//
+	//  Find Model-Scene Correspondences with KdTree
+	//
+	pcl::CorrespondencesPtr model_scene_corrs (new pcl::Correspondences ());
+
+	//  For each scene keypoint descriptor, find nearest neighbor into the model keypoints descriptor cloud and add it to the correspondences vector.
+	for (size_t i = 0; i < input_features_->size (); ++i)
+	{
+		std::vector<int> neigh_indices (1);
+		std::vector<float> neigh_sqr_dists (1);
+		if (!pcl::isFinite(input_features_->at(i))) { continue; }
+		if (!pcl::isFinite(input_->at(i)) || !pcl::isFinite(target_->at(i))) { continue; }
+
+		int found_neighs = feature_tree_->nearestKSearch (input_features_->at(i), 1, neigh_indices, neigh_sqr_dists);
+		if(found_neighs == 1 && neigh_sqr_dists[0] < 0.25f) { //  add match only if the squared descriptor distance is less than 0.25 (SHOT descriptor distances are between 0 and 1 by design)
+			pcl::Correspondence corr(neigh_indices[0], static_cast<int> (i), neigh_sqr_dists[0]);
+			model_scene_corrs->push_back (corr);
+		}
+	}
+	std::cout << "Correspondences found: " << model_scene_corrs->size () << std::endl;
+
+
+	//
+	// filter outliers
+	//
+/*	pcl::CorrespondencesPtr filtered_corrs(new pcl::Correspondences());
+	for (size_t i = 0; i < correspondence_rejectors_.size(); ++i) {
+		filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
+		correspondence_rejectors_[i]->getRemainingCorrespondences(*model_scene_corrs, *filtered_corrs);
+		if (filtered_corrs->size() < 3) break;
+		model_scene_corrs = filtered_corrs;
+	}
+	model_scene_corrs = filtered_corrs;*/
+
+	//
+	//  Actual Clustering
+	//
+	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
+	std::vector<pcl::Correspondences> clustered_corrs;
+
+	bool use_hough_ = true;
+	if (use_hough_) {
+		//
+		//  Compute (Keypoints) Reference Frames only for Hough
+		//
+		pcl::PointCloud<pcl::ReferenceFrame>::Ptr model_rf (new pcl::PointCloud<pcl::ReferenceFrame> ());
+		pcl::PointCloud<pcl::ReferenceFrame>::Ptr scene_rf (new pcl::PointCloud<pcl::ReferenceFrame> ());
+
+		pcl::BOARDLocalReferenceFrameEstimation<pcl::PointNormal, pcl::PointNormal, pcl::ReferenceFrame> rf_est;
+		rf_est.setFindHoles (true);
+		rf_est.setRadiusSearch (0.25);
+
+		rf_est.setInputCloud (target_);
+		rf_est.setInputNormals (target_);
+//		rf_est.setSearchSurface (model);
+		rf_est.compute (*model_rf);
+
+		rf_est.setInputCloud (input_);
+		rf_est.setInputNormals (input_);
+//		rf_est.setSearchSurface (scene);
+		rf_est.compute (*scene_rf);
+
+		//  Clustering
+		pcl::Hough3DGrouping<pcl::PointNormal, pcl::PointNormal, pcl::ReferenceFrame, pcl::ReferenceFrame> clusterer;
+		clusterer.setHoughBinSize(0.01);
+		clusterer.setHoughThreshold(5);
+		clusterer.setUseInterpolation(true);
+		clusterer.setUseDistanceWeight(false);
+
+		clusterer.setInputCloud(target_);
+		clusterer.setInputRf(model_rf);
+		clusterer.setSceneCloud(input_);
+		clusterer.setSceneRf(scene_rf);
+		clusterer.setModelSceneCorrespondences(model_scene_corrs);
+
+		//clusterer.cluster (clustered_corrs);
+		clusterer.recognize (rototranslations, clustered_corrs);
+	} else {
+		pcl::GeometricConsistencyGrouping<PointSource, PointTarget> gc_clusterer;
+		gc_clusterer.setGCSize(0.01);
+		gc_clusterer.setGCThreshold(5);
+
+		gc_clusterer.setInputCloud(target_);
+		gc_clusterer.setSceneCloud(input_);
+		gc_clusterer.setModelSceneCorrespondences(model_scene_corrs);
+		gc_clusterer.recognize(rototranslations, clustered_corrs);
+	}
+
+
+	if (update_visualizer_ != 0) {
+		std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
+		for (size_t i = 0; i < model_scene_corrs->size(); ++i) {
+			sample_indices_filtered.push_back((*model_scene_corrs)[i].index_query);
+			corresponding_indices_filtered.push_back((*model_scene_corrs)[i].index_match);
+		}
+
+		update_visualizer_(*input_, sample_indices_filtered, *target_, corresponding_indices_filtered);
+	}
+
+	for (int i = 0; i < rototranslations.size(); ++i) {
+		if (clustered_corrs[i].size() > 2) {
+			// Estimate the transform from the correspondences, write to transformation_
+			//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
+//			transformation_estimation_->estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation_);
+
+			// Transform the input dataset using the final transformation
+			PointCloudSource input_transformed;
+			input_transformed.resize(input_->size());
+			transformPointCloud(*input_, input_transformed, rototranslations[i]);
+
+			// Transform the input and compute the error (uses input_ and final_transformation_)
+			getFitness(input_transformed, inliers, error);
+
+			// If the new fit is better, update results
+			inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+
+			if (update_visualizer_ != 0) {
+				std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
+				for (size_t j = 0; j < clustered_corrs[i].size(); ++j) {
+					sample_indices_filtered.push_back(clustered_corrs[i][j].index_query);
+					corresponding_indices_filtered.push_back(clustered_corrs[i][j].index_match);
+				}
+
+				update_visualizer_(input_transformed, sample_indices_filtered, *target_, corresponding_indices_filtered);
+			}
+
+			// Update result if pose hypothesis is better
+			if (inlier_fraction >= inlier_fraction_ && error < lowest_error) {
+				inliers_ = inliers;
+				lowest_error = error;
+				converged_ = true;
+				final_transformation_ = transformation_;
+			}
+		}
+	}
+
+#else //-----------------------------------------------------------------------------------------------------------------------------------
+
 	// Start
 	for (int i = 0; i < max_iterations_; ++i) {
 		// Temporary containers
@@ -235,6 +375,11 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 		if (temp_corrs->empty()) continue;
 
+
+		// correspondence grouping
+		// TODO: aa
+
+
 		for (size_t i = 0; i < correspondence_rejectors_.size(); ++i) {
 			filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
 			correspondence_rejectors_[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
@@ -247,17 +392,16 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 			//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
 			transformation_estimation_->estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation_);
 
-
-			// Transform the input dataset using the final transformation
-			PointCloudSource input_transformed;
-			input_transformed.resize(input_->size());
-			transformPointCloud(*input_, input_transformed, final_transformation_);
-
 			// Take a backup of previous result
 			const Matrix4 final_transformation_prev = final_transformation_;
 
 			// Set final result to current transformation
 			final_transformation_ = transformation_;
+
+			// Transform the input dataset using the final transformation
+			PointCloudSource input_transformed;
+			input_transformed.resize(input_->size());
+			transformPointCloud(*input_, input_transformed, final_transformation_);
 
 			// Transform the input and compute the error (uses input_ and final_transformation_)
 			getFitness(input_transformed, inliers, error);
@@ -287,6 +431,9 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 			}
 		}
 	}
+#endif //--------------------------------------------------------------------------------------------------------------------------------
+
+
 
 	// Apply the final transformation
 	if (converged_) transformPointCloud(*input_, output, final_transformation_);

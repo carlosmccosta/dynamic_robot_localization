@@ -110,8 +110,12 @@ add_library(drl_keypoint_detectors
 
 add_library(drl_keypoint_descriptors
     src/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor.cpp
+    src/cloud_matchers/feature_matchers/keypoint_descriptors/pfh.cpp
     src/cloud_matchers/feature_matchers/keypoint_descriptors/fpfh.cpp
     src/cloud_matchers/feature_matchers/keypoint_descriptors/shot.cpp
+    src/cloud_matchers/feature_matchers/keypoint_descriptors/shape_context_3d.cpp
+    src/cloud_matchers/feature_matchers/keypoint_descriptors/unique_shape_context.cpp
+#   src/cloud_matchers/feature_matchers/keypoint_descriptors/spin_image.cpp
 )
 
 add_library(drl_cloud_matchers

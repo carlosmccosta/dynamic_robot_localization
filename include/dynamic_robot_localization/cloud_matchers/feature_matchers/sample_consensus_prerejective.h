@@ -44,6 +44,11 @@
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/transformation_validation.h>
+#include <pcl/features/board.h>
+//#include <pcl/recognition/cg/hough_3d.h>
+#include <pcl/recognition/impl/cg/hough_3d.hpp>
+#include <pcl/recognition/cg/geometric_consistency.h>
+//#include <pcl/recognition/impl/cg/geometric_consistency.hpp>
 #include <pcl/registration/correspondence_rejection_poly.h>
 #include <pcl/registration/correspondence_rejection.h>
 #include <pcl/registration/correspondence_rejection_one_to_one.h>
@@ -54,6 +59,7 @@
 #include <pcl/registration/correspondence_rejection_trimmed.h>
 #include <pcl/registration/correspondence_rejection_var_trimmed.h>
 #include <pcl/common/distances.h>
+#include <pcl/common/point_tests.h>
 
 namespace dynamic_robot_localization
 {

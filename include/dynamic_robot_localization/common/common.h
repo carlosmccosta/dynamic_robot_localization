@@ -22,10 +22,11 @@
 */
 
 
-
-// Define all point types that include PointXYZ and Normal data
 // Define all point types that represent features
 #define DRL_DESCRIPTOR_TYPES \
+  (pcl::PFHSignature125) \
   (pcl::FPFHSignature33) \
-  (pcl::SHOT352)
+  (pcl::SHOT352) \
+  (pcl::ShapeContext1980)
+//  (typename pcl::Histogram<153>)
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
