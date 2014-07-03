@@ -27,6 +27,7 @@
   (pcl::PFHSignature125) \
   (pcl::FPFHSignature33) \
   (pcl::SHOT352) \
-  (pcl::ShapeContext1980)
+  (pcl::ShapeContext1980) \
+  (pcl::ESFSignature640)
 //  (typename pcl::Histogram<153>)
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

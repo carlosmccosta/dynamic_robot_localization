@@ -4,8 +4,8 @@
 	<arg name="reference_pointcloud_keypoints_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_iss3d_keypoints_50mm.pcd" />
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<!-- <arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_fpfh_descriptors_50mm.pcd" /> -->
-	<!-- <arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_shot_descriptors_50mm.pcd" /> -->
-	<arg name="reference_pointcloud_descriptors_filename" default="" />
+	<arg name="reference_pointcloud_descriptors_filename" default="$(find dynamic_robot_localization)/maps/ship_interior/ship_interior_shot_descriptors_50mm.pcd" />
+<!-- 	<arg name="reference_pointcloud_descriptors_filename" default="" /> -->
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 
 
@@ -73,7 +73,7 @@
 		<param name="correspondence_randomness" type="int" value="40" /> 															<!-- default: 10 -->
 
 		<!-- feature description -->
-		<param name="keypoint_descriptor" type="str" value="PFH" />
+		<param name="keypoint_descriptor" type="str" value="FPFH" />
 		<param name="feature_descriptor_k_search" type="int" value="0" /> 															<!-- default: 10 -->
 		<param name="feature_descriptor_radius_search" type="double" value="0.2" />
 		<!-- FPFH -->
@@ -89,6 +89,8 @@
 		<param name="local_radius" type="double" value="0.2" />
 
 		<!-- registration params -->
+<!-- 		<param name="final_registration" type="str" value="IterativeClosestPointWithNormals" /> -->
+		<param name="final_registration" type="str" value="" />
 		<param name="match_only_keypoints" type="bool" value="true" /> 																<!-- default: false -->
 		<param name="use_reciprocal_correspondences" type="bool" value="true" />
 		<param name="max_correspondence_distance" type="double" value="0.5" />
@@ -118,5 +120,5 @@
 
 
 	<!-- localization tests -->
-	<!-- <include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" /> -->
+	<include file="$(find dynamic_robot_localization)/tests/localization_plots.launch" />
 </launch>

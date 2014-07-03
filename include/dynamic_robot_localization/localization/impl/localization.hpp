@@ -188,12 +188,27 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
 		cloud_matchers_.push_back(initial_aligment_matcher);
+	} else if (keypoint_descriptor == "ESF") {
+		typename KeypointDescriptor<PointT, pcl::ESFSignature640>::Ptr keypoint_descriptor(new ESF<PointT, pcl::ESFSignature640>());
+		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		typename FeatureMatcher<PointT, pcl::ESFSignature640>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ESFSignature640>());
+		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(initial_aligment_matcher);
 	}
 
 
-	/*typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
-	final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_matchers_.push_back(final_aligment_matcher);*/
+	std::string final_registration;
+	private_node_handle_->param("final_registration", final_registration, std::string("IterativeClosestPointWithNormals"));
+	if (final_registration == "IterativeClosestPoint") {
+		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPoint<PointT>());
+		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(final_aligment_matcher);
+	} else if (final_registration == "IterativeClosestPointWithNormals") {
+		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
+		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		cloud_matchers_.push_back(final_aligment_matcher);
+	}
 }
 
 

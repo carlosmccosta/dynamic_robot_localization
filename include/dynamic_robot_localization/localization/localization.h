@@ -61,6 +61,7 @@
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/shot.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/shape_context_3d.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/unique_shape_context.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/esf.h>
 
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
