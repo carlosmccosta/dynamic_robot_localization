@@ -153,7 +153,7 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 	cloud_matchers_.clear();
 
 	std::string keypoint_descriptor;
-	private_node_handle_->param("keypoint_descriptor", keypoint_descriptor, std::string("PFH"));
+	private_node_handle_->param("keypoint_descriptor", keypoint_descriptor, std::string(""));
 
 	if (keypoint_descriptor == "PFH") {
 		typename KeypointDescriptor<PointT, pcl::PFHSignature125>::Ptr keypoint_descriptor(new PFH<PointT, pcl::PFHSignature125>());
@@ -201,7 +201,7 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 
 
 	std::string final_registration;
-	private_node_handle_->param("final_registration", final_registration, std::string("IterativeClosestPointWithNormals"));
+	private_node_handle_->param("final_registration", final_registration, std::string("IterativeClosestPoint"));
 	if (final_registration == "IterativeClosestPoint") {
 		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPoint<PointT>());
 		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);

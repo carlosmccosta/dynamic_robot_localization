@@ -3,18 +3,6 @@
 	<arg name="base_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 
-	<!-- <node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler_octomap" output="screen">
-		<param name="laser_scan_topic" type="str" value="tilt_scan" />
-		<param name="pointcloud_publish_topic" type="str" value="pointcloud_laser_frame" />
-		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="1" />
-		<param name="timeout_for_cloud_assembly" type="double" value="1.0" />
-		<param name="target_frame" type="str" value="hokuyo_tilt_laser_link" />
-		<param name="min_range_cutoff_percentage_offset" type="double" value="5.00" />
-		<param name="max_range_cutoff_percentage_offset" type="double" value="0.95" />
-		<param name="include_laser_intensity" type="bool" value="false" />
-		<param name="interpolate_scans" type="bool" value="false" />
-	</node> -->
-
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg map_file)" output="screen">
 		<param name="frame_id" type="string" value="map" />
 		<param name="resolution" value="0.01" />
