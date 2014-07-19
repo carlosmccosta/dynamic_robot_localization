@@ -203,6 +203,7 @@ class Localization : public ConfigurableObject {
 		ros::Time last_map_received_time_;
 		bool reference_pointcloud_received_;
 		bool reference_pointcloud_2d_;
+		bool ignore_height_corrections_;
 
 
 		// ros communication fields

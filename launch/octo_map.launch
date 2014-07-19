@@ -1,5 +1,7 @@
 <launch>
-	<arg name="map_file" value="$(find dynamic_robot_localization)/maps/ship_interior_10mm.bt" />	
+	<arg name="map_file" default="$(find dynamic_robot_localization_tests)/maps/ship_interior/tridimensional/ship_interior_10mm.bt" />
+	<arg name="base_frame_id" default="base_footprint" />
+	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 
 	<!-- <node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler_octomap" output="screen">
 		<param name="laser_scan_topic" type="str" value="tilt_scan" />
@@ -13,11 +15,11 @@
 		<param name="interpolate_scans" type="bool" value="false" />
 	</node> -->
 
-	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg map_file)" output="screen">	
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg map_file)" output="screen">
 		<param name="frame_id" type="string" value="map" />
 		<param name="resolution" value="0.01" />
-		<param name="base_frame_id" type="string" value="base_footprint" />
-		<param name="sensor_frame_id" type="string" value="hokuyo_tilt_laser_link" />				
+		<param name="base_frame_id" type="string" value="$(arg base_frame_id" />
+		<param name="sensor_frame_id" type="string" value="$(arg sensor_frame_id)" />
 		<param name="height_map" type="bool" value="true" />
 		<param name="sensor_model/max_range" type="double" value="12.5" />
 		<param name="sensor_model/hit" type="double" value="0.7" />
@@ -35,7 +37,7 @@
 		<param name="occupancy_max_z" type="double" value="2.60" />
 		<param name="occupancy_grid_2d_min_z" type="double" value="0.41" />
 		<param name="occupancy_grid_2d_max_z" type="double" value="0.42" />
-		<param name="occupancy_grid_2d_initialized_as_free" type="bool" value="true" />		
+		<param name="occupancy_grid_2d_initialized_as_free" type="bool" value="true" />
 		<remap from="cloud_in" to="aligned_pointcloud_outliers" />
 	</node>
 </launch>

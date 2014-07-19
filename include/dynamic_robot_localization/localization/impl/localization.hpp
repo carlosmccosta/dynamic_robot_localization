@@ -36,6 +36,7 @@ Localization<PointT>::Localization() :
 	last_map_received_time_(0),
 	reference_pointcloud_received_(false),
 	reference_pointcloud_2d_(false),
+	ignore_height_corrections_(false),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()) {}
 
@@ -95,6 +96,7 @@ void Localization<PointT>::setupGeneralConfigurations() {
 	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, true);
 	private_node_handle_->param("detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, true);
 	private_node_handle_->param("detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, true);
+	private_node_handle_->param("ignore_height_corrections", ignore_height_corrections_, false);
 	private_node_handle_->param("max_outliers_percentage", max_outliers_percentage_, 0.6);
 	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
@@ -411,6 +413,10 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, pose_tf_initial_guess, pose_tf_corrected)) {
 			geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
 			pose_corrected_msg->header.frame_id = ambient_cloud_msg->header.frame_id;
+
+			if (ignore_height_corrections_) {
+				pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
+			}
 
 			if (add_odometry_displacement_) {
 				pose_corrected_msg->header.stamp = ros::Time::now();
