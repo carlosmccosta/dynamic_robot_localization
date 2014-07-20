@@ -116,7 +116,7 @@ void PoseToTFPublisher::publishTFMapToOdomFromPoseWithCovarianceStamped(const ge
 //	if (pose->header.stamp <= ros::Time::now()) { // some localization methods publish pose in the near future
 //		addOdometryDisplacementToTransform(transform_pose, pose->header.stamp);
 //	}
-	publishTFMapToOdom(transform_pose);
+	publishTFMapToOdom(transform_pose, pose->header.stamp);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </ros integration functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -161,9 +161,9 @@ void PoseToTFPublisher::publishTFMapToOdomFromGlobalPose(double x, double y, dou
 }
 
 
-void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link) {
+void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link, ros::Time tf_time) {
 	tf2::Transform transform_odom_to_base_link;
-	if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time::now())) {
+	if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, tf_time)) {
 		return;
 	}
 

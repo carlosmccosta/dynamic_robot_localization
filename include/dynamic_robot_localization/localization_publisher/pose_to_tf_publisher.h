@@ -67,7 +67,7 @@ class PoseToTFPublisher : ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <pose to tf functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		void publishTFMapToBaseLinkFromInitialPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
 		void publishTFMapToOdomFromGlobalPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
-		void publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link);
+		void publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link, ros::Time tf_time = ros::Time::now());
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </pose to tf functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 

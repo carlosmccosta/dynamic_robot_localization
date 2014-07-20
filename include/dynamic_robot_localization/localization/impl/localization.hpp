@@ -430,7 +430,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			}
 
 			if (publish_tf_map_odom_)
-				pose_to_tf_publisher_.publishTFMapToOdom(pose_tf_corrected);
+				pose_to_tf_publisher_.publishTFMapToOdom(pose_tf_corrected, ambient_cloud_msg->header.stamp);
 
 			laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, pose_corrected_msg->pose.pose);
 			// todo: fill covariance
