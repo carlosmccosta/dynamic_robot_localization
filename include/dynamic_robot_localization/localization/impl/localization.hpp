@@ -292,7 +292,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 
 template<typename PointT>
 void Localization<PointT>::publishReferencePointCloud() {
-	if (!reference_pointcloud_publish_topic_.empty() && reference_pointcloud_publisher_.getNumSubscribers() > 0) {
+	if (!reference_pointcloud_publisher_.getTopic().empty()) {
 		sensor_msgs::PointCloud2Ptr reference_pointcloud(new sensor_msgs::PointCloud2());
 		pcl::toROSMsg(*reference_pointcloud_, *reference_pointcloud);
 		reference_pointcloud->header.frame_id = map_frame_id_;
@@ -353,9 +353,9 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 template<typename PointT>
 void Localization<PointT>::startLocalization() {
 	// publishers
-	reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 2);
-	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5);
-	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10);
+	reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 2, true);
+	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5, true);
+	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10, true);
 
 
 	// subscribers
@@ -436,11 +436,11 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			// todo: fill covariance
 			// pose->pose.covariance
 
-			if (pose_publisher_.getNumSubscribers() > 0) {
+			if (!pose_publisher_.getTopic().empty()) {
 				pose_publisher_.publish(pose_corrected_msg);
 			}
 
-			if (!aligned_pointcloud_publish_topic_.empty() && aligned_pointcloud_publisher_.getNumSubscribers() > 0) {
+			if (!aligned_pointcloud_publisher_.getTopic().empty()) {
 				sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
 				pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
 				aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
