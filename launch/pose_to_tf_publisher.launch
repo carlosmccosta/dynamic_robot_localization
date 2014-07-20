@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<arg name="initial_x" default="0.0" />
 	<arg name="initial_y" default="0.0" />

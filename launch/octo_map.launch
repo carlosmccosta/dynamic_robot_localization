@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<arg name="map_file" default="$(find dynamic_robot_localization_tests)/maps/ship_interior/tridimensional/ship_interior_10mm.bt" />
 	<arg name="base_frame_id" default="base_footprint" />

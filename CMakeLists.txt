@@ -22,7 +22,6 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     dynamic_reconfigure
     cmake_modules
     laserscan_to_pointcloud
-    robot_localization_tools
 )
 
 find_package(catkin REQUIRED COMPONENTS ${${PROJECT_NAME}_CATKIN_COMPONENTS})

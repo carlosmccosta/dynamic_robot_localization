@@ -225,10 +225,14 @@ void Localization<PointT>::setupTransformationValidatorsConfigurations() {
 
 template<typename PointT>
 void Localization<PointT>::setupOutlierDetectorsConfigurations() {
-	outlier_detectors_.clear();
-	typename OutlierDetector<PointT>::Ptr default_outlier_detector(new EuclideanOutlierDetector<PointT>());
-	default_outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	outlier_detectors_.push_back(default_outlier_detector);
+	std::string outlier_detector;
+	private_node_handle_->param("outlier_detector", outlier_detector, std::string(""));
+	if (outlier_detector == "EuclideanOutlierDetector") {
+		outlier_detectors_.clear();
+		typename OutlierDetector<PointT>::Ptr default_outlier_detector(new EuclideanOutlierDetector<PointT>());
+		default_outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+		outlier_detectors_.push_back(default_outlier_detector);
+	}
 }
 
 
