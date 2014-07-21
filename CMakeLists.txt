@@ -42,6 +42,7 @@ find_package(PCL REQUIRED)
 add_message_files(
   FILES
   LocalizationDetailed.msg
+  LocalizationDiagnostics.msg
   LocalizationTimes.msg
 )
 

@@ -80,6 +80,7 @@
 
 // project msgs
 #include <dynamic_robot_localization/LocalizationDetailed.h>
+#include <dynamic_robot_localization/LocalizationDiagnostics.h>
 #include <dynamic_robot_localization/LocalizationTimes.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -184,7 +185,9 @@ class Localization : public ConfigurableObject {
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_publish_topic_;
 		std::string localization_detailed_topic_;
+		std::string localization_diagnostics_topic_;
 		std::string localization_times_topic_;
+
 
 		// configuration fields
 		std::string reference_pointcloud_filename_;
@@ -226,6 +229,7 @@ class Localization : public ConfigurableObject {
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_publisher_;
 		ros::Publisher localization_detailed_publisher_;
+		ros::Publisher localization_diagnostics_publisher_;
 		ros::Publisher localization_times_publisher_;
 
 		// localization fields
@@ -239,6 +243,7 @@ class Localization : public ConfigurableObject {
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		std::vector< std::pair<sensor_msgs::PointCloud2Ptr, double> > outliers_detected_;
 		double max_outlier_percentage_;
+		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
 	// ========================================================================   </private-section>  ==========================================================================
 };

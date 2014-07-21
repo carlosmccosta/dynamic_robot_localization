@@ -49,8 +49,8 @@
 
 
 		<!-- =============== VoxelGrid -->
-		<param name="leaf_size_x" type="double" value="0.01" />																		<!-- default: 0.01 -->
-		<param name="leaf_size_y" type="double" value="0.01" />																		<!-- default: 0.01 -->
+		<param name="leaf_size_x" type="double" value="0.05" />																		<!-- default: 0.01 -->
+		<param name="leaf_size_y" type="double" value="0.05" />																		<!-- default: 0.01 -->
 		<param name="leaf_size_z" type="double" value="0.01" />																		<!-- default: 0.01 -->
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" /> 							<!-- default: empty -->
 

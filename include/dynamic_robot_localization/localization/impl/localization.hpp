@@ -87,6 +87,7 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 	private_node_handle_->param("aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("initialpose"));
 	private_node_handle_->param("localization_detailed_topic", localization_detailed_topic_, std::string("localization/detailed"));
+	private_node_handle_->param("localization_diagnostics_topic", localization_diagnostics_topic_, std::string("localization/diagnostics"));
 	private_node_handle_->param("localization_times_topic", localization_times_topic_, std::string("localization/times"));
 }
 
@@ -307,9 +308,12 @@ void Localization<PointT>::publishReferencePointCloud() {
 
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
+	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->points.size();
+
 	if (filter_reference_cloud_) {
 		if (!applyFilters(reference_pointcloud_)) { return false; }
 	}
+	localization_diagnostics_msg_.number_points_reference_pointcloud_after_filtering = reference_pointcloud_->points.size();
 
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 	if (compute_normals_reference_cloud_) {
@@ -339,6 +343,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 				ROS_DEBUG_STREAM("Loaded " << reference_pointcloud_keypoints->points.size() << " keypoints from file " << reference_pointcloud_keypoints_filename_);
 			}
 		}
+		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints->points.size();
 
 
 		for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
@@ -360,6 +365,7 @@ void Localization<PointT>::startLocalization() {
 	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5, true);
 	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10, true);
 	localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_topic_, 10, true);
+	localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_topic_, 10, true);
 	localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_topic_, 10, true);
 
 
@@ -421,6 +427,8 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			resetPointCloudHeight(*ambient_pointcloud);
 		}
 
+		localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->points.size();
+
 		// >>>>> localization pipeline <<<<<
 		tf2::Transform pose_tf_corrected;
 		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, pose_tf_initial_guess, pose_tf_corrected)) {
@@ -470,6 +478,12 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
 				localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
 				localization_times_publisher_.publish(localization_times_msg_);
+			}
+
+			if (!localization_diagnostics_publisher_.getTopic().empty()) {
+				localization_diagnostics_msg_.header.frame_id = ambient_cloud_msg->header.frame_id;
+				localization_diagnostics_msg_.header.stamp = ambient_cloud_msg->header.stamp;
+				localization_diagnostics_publisher_.publish(localization_diagnostics_msg_);
 			}
 
 			if (!aligned_pointcloud_publisher_.getTopic().empty()) {
@@ -620,6 +634,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	performance_timer.start();
 	// ==============================================================  filters
 	if (!applyFilters(ambient_pointcloud)) { return false; }
+	localization_diagnostics_msg_.number_points_ambient_pointcloud_after_filtering = ambient_pointcloud->points.size();
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
 
@@ -640,6 +655,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if (detect_keypoints_ambient_cloud_) {
 		if (!applyKeypointDetection(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
 	}
+	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = ambient_pointcloud_keypoints->points.size();
 	localization_times_msg_.keypoint_selection_time = performance_timer.getElapsedTimeInMilliSec();
 
 

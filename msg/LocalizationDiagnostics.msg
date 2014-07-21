@@ -1,0 +1,7 @@
+Header header
+uint64 number_points_reference_pointcloud
+uint64 number_points_reference_pointcloud_after_filtering
+uint64 number_keypoints_reference_pointcloud
+uint64 number_points_ambient_pointcloud
+uint64 number_points_ambient_pointcloud_after_filtering
+uint64 number_keypoints_ambient_pointcloud
