@@ -38,7 +38,8 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_2d_(false),
 	ignore_height_corrections_(false),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
-	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()) {}
+	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
+	max_outlier_percentage_(0.0) {}
 
 template<typename PointT>
 Localization<PointT>::~Localization() {}
@@ -85,6 +86,8 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 	private_node_handle_->param("reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
 	private_node_handle_->param("aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("initialpose"));
+	private_node_handle_->param("localization_detailed_topic", localization_detailed_topic_, std::string("localization/detailed"));
+	private_node_handle_->param("localization_times_topic", localization_times_topic_, std::string("localization/times"));
 }
 
 
@@ -356,6 +359,8 @@ void Localization<PointT>::startLocalization() {
 	reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 2, true);
 	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5, true);
 	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10, true);
+	localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_topic_, 10, true);
+	localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_topic_, 10, true);
 
 
 	// subscribers
@@ -388,6 +393,10 @@ void Localization<PointT>::startLocalization() {
 
 template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+	localization_times_msg_ = LocalizationTimes();
+
 	ros::Duration scan_age = ros::Time::now() - ambient_cloud_msg->header.stamp;
 	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
 
@@ -438,6 +447,29 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 			if (!pose_publisher_.getTopic().empty()) {
 				pose_publisher_.publish(pose_corrected_msg);
+			}
+
+
+			if (!localization_detailed_publisher_.getTopic().empty()) {
+				double transform_distance = pose_tf_initial_guess.getOrigin().length() - pose_tf_corrected.getOrigin().length();
+				double transform_angle = pose_tf_initial_guess.getRotation().getAngle() - pose_tf_corrected.getRotation().getAngle();
+
+				LocalizationDetailed localization_detailed_msg;
+				localization_detailed_msg.header.frame_id = ambient_cloud_msg->header.frame_id;
+				localization_detailed_msg.header.stamp = ambient_cloud_msg->header.stamp;
+				localization_detailed_msg.pose = pose_corrected_msg->pose;
+				localization_detailed_msg.pose_correction_translation = transform_distance * 1000.0; // mm
+				localization_detailed_msg.pose_correction_rotation = angles::to_degrees(transform_angle); // degrees
+				localization_detailed_msg.outlier_percentage = max_outlier_percentage_;
+				localization_detailed_msg.aligment_fitness = cloud_matchers_.back()->getCloudMatcher()->getFitnessScore();
+				localization_detailed_publisher_.publish(localization_detailed_msg);
+			}
+
+			if (!localization_times_publisher_.getTopic().empty()) {
+				localization_times_msg_.header.frame_id = ambient_cloud_msg->header.frame_id;
+				localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
+				localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
+				localization_times_publisher_.publish(localization_times_msg_);
 			}
 
 			if (!aligned_pointcloud_publisher_.getTopic().empty()) {
@@ -584,34 +616,51 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false;
 	}
 
+	PerformanceTimer performance_timer;
+	performance_timer.start();
 	// ==============================================================  filters
 	if (!applyFilters(ambient_pointcloud)) { return false; }
+	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
+
 
 	// ==============================================================  normal estimation
+	performance_timer.restart();
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	if (compute_normals_ambient_cloud_) {
 		if (!applyNormalEstimation(ambient_pointcloud, ambient_search_method)) { return false; }
 		ambient_search_method->setInputCloud(ambient_pointcloud);
 	}
+	localization_times_msg_.surface_normal_estimation_time = performance_timer.getElapsedTimeInMilliSec();
+
 
 	// ==============================================================  keypoint selection
+	performance_timer.restart();
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 	if (detect_keypoints_ambient_cloud_) {
 		if (!applyKeypointDetection(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
 	}
+	localization_times_msg_.keypoint_selection_time = performance_timer.getElapsedTimeInMilliSec();
+
 
 	// ==============================================================  cloud registration
+	performance_timer.restart();
 	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, detect_keypoints_ambient_cloud_ ? ambient_pointcloud_keypoints : ambient_pointcloud, pointcloud_pose_corrected_out)) { return false; }
+	localization_times_msg_.pointcloud_registration_time = performance_timer.getElapsedTimeInMilliSec();
+
 
 	// ==============================================================  outlier detection
-	double max_outlier_percentage = applyOutlierDetection(ambient_pointcloud);
+	performance_timer.restart();
+	max_outlier_percentage_ = applyOutlierDetection(ambient_pointcloud);
+	localization_times_msg_.outlier_detection_time = performance_timer.getElapsedTimeInMilliSec();
+
 
 	// ==============================================================  localization post processors
-	if (!applyTransformationValidators(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, max_outlier_percentage)) { return false; }
+	performance_timer.restart();
+	if (!applyTransformationValidators(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, max_outlier_percentage_)) { return false; }
+	localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 	publishDetectedOutliers();
 
-	// ==============================================================  publish localization statistics
 
 	return true;
 }

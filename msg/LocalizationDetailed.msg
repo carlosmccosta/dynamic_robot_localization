@@ -1,0 +1,6 @@
+Header header
+geometry_msgs/PoseWithCovariance pose
+float64 pose_correction_translation
+float64 pose_correction_rotation
+float64 outlier_percentage
+float64 aligment_fitness

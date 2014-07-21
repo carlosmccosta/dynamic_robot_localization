@@ -12,6 +12,7 @@ project(dynamic_robot_localization)
 
 set(${PROJECT_NAME}_CATKIN_COMPONENTS 
     roscpp
+    std_msgs
     sensor_msgs
     geometry_msgs
     pcl_conversions
@@ -19,9 +20,11 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     tf2
     tf2_ros
     rosconsole
+    angles
     dynamic_reconfigure
     cmake_modules
     laserscan_to_pointcloud
+    message_generation
 )
 
 find_package(catkin REQUIRED COMPONENTS ${${PROJECT_NAME}_CATKIN_COMPONENTS})
@@ -34,6 +37,20 @@ find_package(PCL REQUIRED)
 #######################################################################################################################
 ## catkin specific configuration
 #######################################################################################################################
+
+
+add_message_files(
+  FILES
+  LocalizationDetailed.msg
+  LocalizationTimes.msg
+)
+
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+   geometry_msgs
+)
+
 
 # generate_dynamic_reconfigure_options(
 #    cfg/PlanarLocalization.cfg
@@ -51,8 +68,13 @@ catkin_package(
         drl_transformation_validators
         drl_outliers_detectors
         drl_localization
-    CATKIN_DEPENDS ${${PROJECT_NAME}_CATKIN_COMPONENTS}
-    DEPENDS Eigen Boost PCL
+    CATKIN_DEPENDS
+        ${${PROJECT_NAME}_CATKIN_COMPONENTS}
+        message_runtime
+    DEPENDS
+        Eigen
+        Boost
+        PCL
 )
 
 
@@ -85,6 +107,8 @@ add_library(drl_common
     src/common/pointcloud_conversions.cpp
     src/common/pointcloud2_builder.cpp
     src/common/registration_visualizer.cpp
+    src/common/time_utils.cpp
+    src/common/performance_timer.cpp
 )
 
 add_library(drl_pose_to_tf_publisher
@@ -159,6 +183,7 @@ add_executable(drl_localization_node src/localization/localization_node.cpp)
 #==================
 
 # add_dependencies(drl_localization ${PROJECT_NAME}_gencfg)
+add_dependencies(drl_localization ${PROJECT_NAME}_generate_messages_cpp)
 
 
 #==================

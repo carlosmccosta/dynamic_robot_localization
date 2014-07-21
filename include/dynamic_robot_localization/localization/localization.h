@@ -26,6 +26,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <dynamic_reconfigure/server.h>
+#include <angles/angles.h>
 
 // PCL includes
 #include <pcl/point_cloud.h>
@@ -74,6 +75,12 @@
 
 #include <dynamic_robot_localization/outlier_detectors/outlier_detector.h>
 #include <dynamic_robot_localization/outlier_detectors/euclidean_outlier_detector.h>
+
+#include <dynamic_robot_localization/common/performance_timer.h>
+
+// project msgs
+#include <dynamic_robot_localization/LocalizationDetailed.h>
+#include <dynamic_robot_localization/LocalizationTimes.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -176,6 +183,8 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_publish_topic_;
+		std::string localization_detailed_topic_;
+		std::string localization_times_topic_;
 
 		// configuration fields
 		std::string reference_pointcloud_filename_;
@@ -216,6 +225,8 @@ class Localization : public ConfigurableObject {
 		ros::Publisher reference_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_publisher_;
+		ros::Publisher localization_detailed_publisher_;
+		ros::Publisher localization_times_publisher_;
 
 		// localization fields
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
@@ -227,6 +238,8 @@ class Localization : public ConfigurableObject {
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		std::vector< std::pair<sensor_msgs::PointCloud2Ptr, double> > outliers_detected_;
+		double max_outlier_percentage_;
+		LocalizationTimes localization_times_msg_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
