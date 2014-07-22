@@ -1,6 +1,5 @@
 Header header
 geometry_msgs/PoseWithCovariance pose
-float64 pose_correction_translation
-float64 pose_correction_rotation
+geometry_msgs/Pose pose_corrections
 float64 outlier_percentage
 float64 aligment_fitness

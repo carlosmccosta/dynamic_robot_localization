@@ -459,15 +459,25 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 
 			if (!localization_detailed_publisher_.getTopic().empty()) {
-				double transform_distance = pose_tf_initial_guess.getOrigin().length() - pose_tf_corrected.getOrigin().length();
-				double transform_angle = pose_tf_initial_guess.getRotation().getAngle() - pose_tf_corrected.getRotation().getAngle();
+				tf2::Matrix3x3 pose_initial_guess_matrix(tf2::Quaternion(pose_tf_initial_guess.getRotation().getX(), pose_tf_initial_guess.getRotation().getY(), pose_tf_initial_guess.getRotation().getZ(), pose_tf_initial_guess.getRotation().getW()));
+				tf2Scalar roll_initial_guess, pitch_initial_guess, yaw_initial_guess;
+				pose_initial_guess_matrix.getRPY(roll_initial_guess, pitch_initial_guess, yaw_initial_guess);
+
+				tf2::Matrix3x3 pose_corrected_matrix(tf2::Quaternion(pose_tf_corrected.getRotation().getX(), pose_tf_corrected.getRotation().getY(), pose_tf_corrected.getRotation().getZ(), pose_tf_corrected.getRotation().getW()));
+				tf2Scalar roll_corrected, pitch_corrected, yaw_corrected;
+				pose_corrected_matrix.getRPY(roll_corrected, pitch_corrected, yaw_corrected);
 
 				LocalizationDetailed localization_detailed_msg;
 				localization_detailed_msg.header.frame_id = ambient_cloud_msg->header.frame_id;
 				localization_detailed_msg.header.stamp = ambient_cloud_msg->header.stamp;
 				localization_detailed_msg.pose = pose_corrected_msg->pose;
-				localization_detailed_msg.pose_correction_translation = transform_distance * 1000.0; // mm
-				localization_detailed_msg.pose_correction_rotation = angles::to_degrees(transform_angle); // degrees
+				localization_detailed_msg.pose_corrections.position.x = (pose_tf_corrected.getOrigin().getX() - pose_tf_initial_guess.getOrigin().getX()) * 1000.0; // mm
+				localization_detailed_msg.pose_corrections.position.y = (pose_tf_corrected.getOrigin().getY() - pose_tf_initial_guess.getOrigin().getY()) * 1000.0; // mm
+				localization_detailed_msg.pose_corrections.position.z = (pose_tf_corrected.getOrigin().getZ() - pose_tf_initial_guess.getOrigin().getZ()) * 1000.0; // mm
+				localization_detailed_msg.pose_corrections.orientation.x = angles::to_degrees(roll_corrected - roll_initial_guess);
+				localization_detailed_msg.pose_corrections.orientation.y = angles::to_degrees(pitch_corrected - pitch_initial_guess);
+				localization_detailed_msg.pose_corrections.orientation.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
+				localization_detailed_msg.pose_corrections.orientation.w = localization_detailed_msg.pose_corrections.orientation.x + localization_detailed_msg.pose_corrections.orientation.y + localization_detailed_msg.pose_corrections.orientation.z;
 				localization_detailed_msg.outlier_percentage = max_outlier_percentage_;
 				localization_detailed_msg.aligment_fitness = cloud_matchers_.back()->getCloudMatcher()->getFitnessScore();
 				localization_detailed_publisher_.publish(localization_detailed_msg);
