@@ -108,7 +108,7 @@
 		<param name="final_registration" type="str" value="IterativeClosestPoint" />
 		<param name="ignore_height_corrections" type="bool" value="true" />															<!-- default: false -->
 		<param name="use_reciprocal_correspondences" type="bool" value="true" />
-		<param name="max_correspondence_distance" type="double" value="0.5" />
+		<param name="max_correspondence_distance" type="double" value="0.025" />
 		<param name="transformation_epsilon" type="double" value="1e-8" />
 		<param name="euclidean_fitness_epsilon" type="double" value="1e-6" />
 		<param name="max_number_of_registration_iterations" type="int" value="500" />
@@ -117,13 +117,14 @@
 
 
 		<!-- =============== transformation validator =============== -->
-		<param name="max_transformation_angle" type="double" value="1.59" />
-		<param name="max_transformation_distance" type="double" value="20.0" />
-		<param name="max_alignment_fitness" type="double" value="10" />
-		<param name="max_outliers_percentage" type="double" value="0.7" /> 																<!-- default: 0.6 -->
+		<param name="max_transformation_angle" type="double" value="0.523598776" />
+		<param name="max_transformation_distance" type="double" value="0.025" />
+		<param name="max_alignment_fitness" type="double" value="5" />
+		<param name="max_outliers_percentage" type="double" value="0.8" /> 																<!-- default: 0.6 -->
 
 
 		<!-- =============== outlier detection =============== -->
+		<param name="outlier_detector" type="str" value="EuclideanOutlierDetector" />
 		<param name="aligned_pointcloud_outliers_publish_topic" type="str" value="aligned_pointcloud_outliers" />
 		<param name="max_inliers_distance" type="double" value="0.01" />
 
