@@ -1,4 +1,4 @@
-/**\file cloud_publisher.hpp
+/**\file pass_through.cpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/common/cloud_publisher.h>
+#include <dynamic_robot_localization/cloud_filters/pass_through.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -18,28 +18,36 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudPublisher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PassThrough-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	if (!parameter_server_argument_to_load_topic_name_.empty()) {
-		private_node_handle->param(parameter_server_argument_to_load_topic_name_, cloud_publish_topic_, cloud_publish_topic_);
-	}
+void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+	double pass_through_min_value, pass_through_max_value;
+	private_node_handle->param("pass_through_min_value", pass_through_min_value, 0.0);
+	private_node_handle->param("pass_through_max_value", pass_through_max_value, 0.0);
 
-	if (!cloud_publish_topic_.empty()) {
-		cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(cloud_publish_topic_, 1, true);
-	}
+	std::string field_name;
+	private_node_handle->param("pass_through_field_name", field_name, std::string("z"));
+
+	filter_.setFilterFieldName(field_name);
+	filter_.setFilterLimits(pass_through_min_value, pass_through_max_value);
+
+	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
+	cloud_publisher->setParameterServerArgumentToLoadTopicName("pass_through_filtered_cloud_publish_topic");
+	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	CloudFilter<PointT>::setCloudPublisher(cloud_publisher);
 }
 
 
 template<typename PointT>
-void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
-	if (!cloud_publish_topic_.empty() && cloud.points.size() > 0 && cloud_publisher_.getNumSubscribers() > 0) {
-		sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(cloud, *cloud_msg);
-		cloud_publisher_.publish(cloud_msg);
-	}
+void PassThrough<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
+	size_t number_of_points_in_input_cloud = input_cloud->points.size();
+	filter_.setInputCloud(input_cloud);
+	filter_.filter(*output_cloud);
+
+	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
+	ROS_DEBUG_STREAM("PassThrough reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->points.size() << " points");
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudPublisher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PassThrough-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================
@@ -52,5 +60,4 @@ void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */
-
 

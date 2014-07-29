@@ -50,6 +50,7 @@
 
 #include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
 #include <dynamic_robot_localization/cloud_filters/voxel_grid.h>
+#include <dynamic_robot_localization/cloud_filters/pass_through.h>
 
 #include <dynamic_robot_localization/normal_estimators/normal_estimator.h>
 #include <dynamic_robot_localization/normal_estimators/normal_estimation_omp.h>
@@ -217,6 +218,8 @@ class Localization : public ConfigurableObject {
 		bool reference_pointcloud_received_;
 		bool reference_pointcloud_2d_;
 		bool ignore_height_corrections_;
+		bool last_accepted_pose_valid_;
+		tf2::Transform last_accepted_pose_;
 
 
 		// ros communication fields

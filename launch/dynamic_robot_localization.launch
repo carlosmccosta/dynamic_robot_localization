@@ -9,7 +9,7 @@
 
 
 
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
+<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen">
 
 		<!-- =============== subscribe topics =============== -->
@@ -40,18 +40,21 @@
 
 
 		<!-- =============== pipeline =============== -->
-		<param name="filter_reference_cloud" type="bool" value="false" />															<!-- default: true -->
+		<param name="filter_reference_cloud" type="bool" value="true" />															<!-- default: true -->
 		<param name="compute_normals_reference_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="compute_normals_ambient_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="detect_keypoints_reference_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="detect_keypoints_ambient_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="match_only_keypoints" type="bool" value="false" /> 															<!-- default: false -->
-
+		
 
 		<!-- =============== VoxelGrid -->
-		<param name="leaf_size_x" type="double" value="0.05" />																		<!-- default: 0.01 -->
-		<param name="leaf_size_y" type="double" value="0.05" />																		<!-- default: 0.01 -->
-		<param name="leaf_size_z" type="double" value="0.05" />																		<!-- default: 0.01 -->
+		<param name="leaf_size_x" type="double" value="0.01" />																		<!-- default: 0.01 -->
+		<param name="leaf_size_y" type="double" value="0.01" />																		<!-- default: 0.01 -->
+		<param name="leaf_size_z" type="double" value="0.01" />																		<!-- default: 0.01 -->
+		<param name="filter_limit_field_name" type="str" value="z" />
+		<param name="filter_limit_min" type="double" value="-0.47" />
+		<param name="filter_limit_max" type="double" value="1.8" />
 		<param name="voxel_grid_filtered_cloud_publish_topic" type="str" value="filtered_pointcloud" /> 							<!-- default: empty -->
 
 
@@ -106,9 +109,9 @@
 
 		<!-- =============== registration =============== -->
 		<param name="final_registration" type="str" value="IterativeClosestPoint" />
-		<param name="ignore_height_corrections" type="bool" value="true" />															<!-- default: false -->
+		<param name="ignore_height_corrections" type="bool" value="false" />															<!-- default: false -->
 		<param name="use_reciprocal_correspondences" type="bool" value="true" />
-		<param name="max_correspondence_distance" type="double" value="0.025" />
+		<param name="max_correspondence_distance" type="double" value="0.05" />
 		<param name="transformation_epsilon" type="double" value="1e-8" />
 		<param name="euclidean_fitness_epsilon" type="double" value="1e-6" />
 		<param name="max_number_of_registration_iterations" type="int" value="500" />
@@ -117,10 +120,12 @@
 
 
 		<!-- =============== transformation validator =============== -->
-		<param name="max_transformation_angle" type="double" value="0.523598776" />
+		<param name="max_transformation_angle" type="double" value="0.4" />
 		<param name="max_transformation_distance" type="double" value="0.025" />
-		<param name="max_alignment_fitness" type="double" value="5" />
-		<param name="max_outliers_percentage" type="double" value="0.8" /> 																<!-- default: 0.6 -->
+		<param name="max_new_pose_diff_angle" type="double" value="0.6" />
+		<param name="max_new_pose_diff_distance" type="double" value="0.2" />
+		<param name="max_alignment_fitness" type="double" value="1.0" />
+		<param name="max_outliers_percentage" type="double" value="0.6" /> 																<!-- default: 0.6 -->
 
 
 		<!-- =============== outlier detection =============== -->

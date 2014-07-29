@@ -52,7 +52,7 @@ class EuclideanTransformationValidator : public TransformationValidator {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanTransformationValidator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
-		virtual bool validateNewLocalizationPose(const tf2::Transform& initial_guess, tf2::Transform& new_pose, double alignment_fitness = 0.0, double outliers_percentage = 0.0);
+		virtual bool validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose, double alignment_fitness = 0.0, double outliers_percentage = 0.0);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanTransformationValidator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -70,6 +70,8 @@ class EuclideanTransformationValidator : public TransformationValidator {
 	private:
 		double max_transformation_angle_;
 		double max_transformation_distance_;
+		double max_new_pose_diff_angle_;
+		double max_new_pose_diff_distance_;
 		double max_alignment_fitness_;
 		double max_outliers_percentage_;
 	// ========================================================================   </private-section>  ==========================================================================

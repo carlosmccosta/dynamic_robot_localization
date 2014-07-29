@@ -37,6 +37,7 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_received_(false),
 	reference_pointcloud_2d_(false),
 	ignore_height_corrections_(false),
+	last_accepted_pose_valid_(false),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
 	max_outlier_percentage_(0.0) {}
@@ -129,9 +130,14 @@ void Localization<PointT>::setupGeneralConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupFiltersConfigurations() {
 	cloud_filters_.clear();
-	typename CloudFilter<PointT>::Ptr default_filter(new VoxelGrid<PointT>());
-	default_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_filters_.push_back(default_filter);
+
+	/*typename CloudFilter<PointT>::Ptr pass_through(new PassThrough<PointT>());
+	pass_through->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+	cloud_filters_.push_back(pass_through);*/
+
+	typename CloudFilter<PointT>::Ptr voxel_grid(new VoxelGrid<PointT>());
+	voxel_grid->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
+	cloud_filters_.push_back(voxel_grid);
 }
 
 
@@ -592,15 +598,15 @@ bool Localization<PointT>::applyCloudRegistration(typename pcl::PointCloud<Point
 template<typename PointT>
 double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
 	double max_outlier_percentage = 0.0;
+	if (ambient_pointcloud->points.empty()) { return 0.0; }
+
+	double number_ambient_pointcloud_points = (double) (ambient_pointcloud->points.size());
+
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
 		sensor_msgs::PointCloud2Ptr outliers = outlier_detectors_[i]->processOutliers(reference_pointcloud_search_method_, *ambient_pointcloud);
-
-		double number_ambient_pointcloud_points = (double) (ambient_pointcloud->points.size());
-		double outlier_percentage = 1.0;
-		if (number_ambient_pointcloud_points > 0) {
-			outlier_percentage = ((double) ((outliers->width * outliers->height))) / number_ambient_pointcloud_points;
-			max_outlier_percentage = std::max(max_outlier_percentage, outlier_percentage);
-		}
+		double outlier_percentage = 0.0;
+		outlier_percentage = ((double) ((outliers->width * outliers->height))) / number_ambient_pointcloud_points;
+		max_outlier_percentage = std::max(max_outlier_percentage, outlier_percentage);
 		outliers_detected_.push_back(std::pair<sensor_msgs::PointCloud2Ptr, double>(outliers, outlier_percentage));
 	}
 
@@ -610,12 +616,11 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 
 template<typename PointT>
 void Localization<PointT>::publishDetectedOutliers() {
-	for (size_t i = 0; i < outliers_detected_.size(); ++i) {
-		if (outliers_detected_[i].second < max_outliers_percentage_) {
+	if (outliers_detected_.size() == outlier_detectors_.size()) {
+		for (size_t i = 0; i < outliers_detected_.size(); ++i) {
 			outlier_detectors_[i]->publishOutliers(outliers_detected_[i].first);
 		}
 	}
-
 	outliers_detected_.clear();
 }
 
@@ -623,7 +628,7 @@ void Localization<PointT>::publishDetectedOutliers() {
 template<typename PointT>
 bool Localization<PointT>::applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators_.size(); ++i) {
-		if (!transformation_validators_[i]->validateNewLocalizationPose(pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out,
+		if (!transformation_validators_[i]->validateNewLocalizationPose(last_accepted_pose_valid_ ? last_accepted_pose_ : pointcloud_pose_initial_guess, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out,
 				cloud_matchers_.back()->getCloudMatcher()->getFitnessScore(), max_outlier_percentage)) {
 			return false;
 		}
@@ -685,6 +690,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	performance_timer.restart();
 	if (!applyTransformationValidators(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, max_outlier_percentage_)) { return false; }
 	localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
+	last_accepted_pose_ = pointcloud_pose_corrected_out;
+	last_accepted_pose_valid_ = true;
 	publishDetectedOutliers();
 
 

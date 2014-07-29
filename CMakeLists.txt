@@ -119,6 +119,7 @@ add_library(drl_pose_to_tf_publisher
 add_library(drl_cloud_filters
     src/cloud_filters/cloud_filter.cpp
     src/cloud_filters/voxel_grid.cpp
+    src/cloud_filters/pass_through.cpp
 )
 
 add_library(drl_normal_estimators

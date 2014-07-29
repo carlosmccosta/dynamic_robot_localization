@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-	<arg name="map_file" default="$(find dynamic_robot_localization_tests)/maps/ship_interior/tridimensional/ship_interior_10mm.bt" />
+<!-- 	<arg name="map_file" default="$(find dynamic_robot_localization_tests)/maps/ship_interior/tridimensional/ship_interior_10mm.bt" /> -->
+	<arg name="map_file" default="$(find dynamic_robot_localization_tests)/maps/ship_interior/tridimensional/ship_interior_10mm_dynamic.ot" />	
 	<arg name="base_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 
@@ -15,7 +16,7 @@
 		<param name="sensor_model/miss" type="double" value="0.3" />
 		<param name="sensor_model/min" type="double" value="0.12" />
 		<param name="sensor_model/max" type="double" value="0.97" />
-		<param name="latch" type="bool" value="false" />
+		<param name="latch" type="bool" value="true" />
 		<param name="filter_ground" type="bool" value="false" />
 		<param name="ground_filter/distance" type="double" value="0.02" />
 		<param name="ground_filter/angle" type="double" value="0.15" />
@@ -24,8 +25,8 @@
 		<param name="pointcloud_max_z" type="double" value="2.6" />
 		<param name="occupancy_min_z" type="double" value="-0.01" />
 		<param name="occupancy_max_z" type="double" value="2.60" />
-		<param name="occupancy_grid_2d_min_z" type="double" value="0.41" />
-		<param name="occupancy_grid_2d_max_z" type="double" value="0.42" />
+		<param name="occupancy_grid_2d_min_z" type="double" value="0.43" />
+		<param name="occupancy_grid_2d_max_z" type="double" value="0.435" />
 		<param name="occupancy_grid_2d_initialized_as_free" type="bool" value="true" />
 		<remap from="cloud_in" to="aligned_pointcloud_outliers" />
 	</node>
