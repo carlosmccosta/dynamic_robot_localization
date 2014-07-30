@@ -202,6 +202,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration max_seconds_scan_age_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
+		ros::Duration pose_tracking_timeout_;
 		bool save_clouds_in_binary_format_;
 		bool filter_reference_cloud_;
 		bool compute_normals_reference_cloud_;
@@ -215,6 +216,7 @@ class Localization : public ConfigurableObject {
 		// state fields
 		ros::Time last_scan_time_;
 		ros::Time last_map_received_time_;
+		ros::Time last_accepted_pose_time_;
 		bool reference_pointcloud_received_;
 		bool reference_pointcloud_2d_;
 		bool ignore_height_corrections_;

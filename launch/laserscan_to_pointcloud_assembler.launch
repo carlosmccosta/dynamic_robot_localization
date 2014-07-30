@@ -2,11 +2,11 @@
 <launch>
 	<arg name="number_of_scans_to_assemble_per_cloud" default="10" />
 	<arg name="timeout_for_cloud_assembly" default="1.0" />
-	<arg name="laser_scan" default="tilt_scan" />
+	<arg name="laser_scan" default="/tilt_scan" />
 
 
 	<!-- LaserScan assembler -->
-	<node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler" output="screen">
+	<node pkg="laserscan_to_pointcloud" type="laserscan_to_pointcloud_assembler" name="laserscan_to_pointcloud_assembler" ns="dynamic_robot_localization" output="screen">
 		<param name="laser_scan_topic" type="str" value="$(arg laser_scan)" />
 		<param name="pointcloud_publish_topic" type="str" value="assembled_pointcloud" />
 		<param name="number_of_scans_to_assemble_per_cloud" type="int" value="$(arg number_of_scans_to_assemble_per_cloud)" />

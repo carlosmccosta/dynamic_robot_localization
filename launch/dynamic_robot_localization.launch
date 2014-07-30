@@ -10,18 +10,18 @@
 
 
 <!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
-	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen">
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
 
 		<!-- =============== subscribe topics =============== -->
 		<param name="pointcloud_topic" type="str" value="assembled_pointcloud" />
-		<param name="costmap_topic" type="str" value="map" />
+		<param name="costmap_topic" type="str" value="/map" />
 		<!-- <param name="reference_cloud_topic" type="str" value="octomap_point_cloud_centers" /> -->
 
 
 		<!-- =============== publish topics =============== -->
 		<param name="reference_pointcloud_publish_topic" type="str" value="reference_pointcloud" />
 		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
-		<param name="pose_publish_topic" type="str" value="initialpose" />
+		<param name="pose_publish_topic" type="str" value="/initialpose" />
 
 
 		<!-- =============== frame ids =============== -->
@@ -111,7 +111,7 @@
 		<param name="final_registration" type="str" value="IterativeClosestPoint" />
 		<param name="ignore_height_corrections" type="bool" value="false" />															<!-- default: false -->
 		<param name="use_reciprocal_correspondences" type="bool" value="true" />
-		<param name="max_correspondence_distance" type="double" value="0.05" />
+		<param name="max_correspondence_distance" type="double" value="0.2" />
 		<param name="transformation_epsilon" type="double" value="1e-8" />
 		<param name="euclidean_fitness_epsilon" type="double" value="1e-6" />
 		<param name="max_number_of_registration_iterations" type="int" value="500" />
@@ -121,11 +121,11 @@
 
 		<!-- =============== transformation validator =============== -->
 		<param name="max_transformation_angle" type="double" value="0.4" />
-		<param name="max_transformation_distance" type="double" value="0.025" />
+		<param name="max_transformation_distance" type="double" value="0.035" />
 		<param name="max_new_pose_diff_angle" type="double" value="0.6" />
 		<param name="max_new_pose_diff_distance" type="double" value="0.2" />
-		<param name="max_alignment_fitness" type="double" value="1.0" />
-		<param name="max_outliers_percentage" type="double" value="0.6" /> 																<!-- default: 0.6 -->
+		<param name="max_alignment_fitness" type="double" value="0.05" />
+		<param name="max_outliers_percentage" type="double" value="0.2" /> 																<!-- default: 0.6 -->
 
 
 		<!-- =============== outlier detection =============== -->

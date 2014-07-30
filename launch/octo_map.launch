@@ -5,7 +5,7 @@
 	<arg name="base_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 
-	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg map_file)" output="screen">
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg map_file)" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_id" type="string" value="map" />
 		<param name="resolution" value="0.01" />
 		<param name="base_frame_id" type="string" value="$(arg base_frame_id" />

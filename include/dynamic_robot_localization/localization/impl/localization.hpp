@@ -87,9 +87,9 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 	private_node_handle_->param("reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
 	private_node_handle_->param("aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("initialpose"));
-	private_node_handle_->param("localization_detailed_topic", localization_detailed_topic_, std::string("localization/detailed"));
-	private_node_handle_->param("localization_diagnostics_topic", localization_diagnostics_topic_, std::string("localization/diagnostics"));
-	private_node_handle_->param("localization_times_topic", localization_times_topic_, std::string("localization/times"));
+	private_node_handle_->param("localization_detailed_topic", localization_detailed_topic_, std::string("localization_detailed"));
+	private_node_handle_->param("localization_diagnostics_topic", localization_diagnostics_topic_, std::string("diagnostics"));
+	private_node_handle_->param("localization_times_topic", localization_times_topic_, std::string("localization_times"));
 }
 
 
@@ -124,6 +124,10 @@ void Localization<PointT>::setupGeneralConfigurations() {
 	double min_seconds_between_reference_pointcloud_update;
 	private_node_handle_->param("min_seconds_between_reference_pointcloud_update", min_seconds_between_reference_pointcloud_update, 5.0);
 	min_seconds_between_reference_pointcloud_update_.fromSec(min_seconds_between_reference_pointcloud_update);
+
+	double pose_tracking_timeout;
+	private_node_handle_->param("pose_tracking_timeout", pose_tracking_timeout, 2.0);
+	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
 }
 
 
@@ -628,7 +632,7 @@ void Localization<PointT>::publishDetectedOutliers() {
 template<typename PointT>
 bool Localization<PointT>::applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators_.size(); ++i) {
-		if (!transformation_validators_[i]->validateNewLocalizationPose(last_accepted_pose_valid_ ? last_accepted_pose_ : pointcloud_pose_initial_guess, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out,
+		if (!transformation_validators_[i]->validateNewLocalizationPose((last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_ < pose_tracking_timeout_)) ? last_accepted_pose_ : pointcloud_pose_initial_guess, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out,
 				cloud_matchers_.back()->getCloudMatcher()->getFitnessScore(), max_outlier_percentage)) {
 			return false;
 		}
@@ -691,6 +695,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if (!applyTransformationValidators(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, max_outlier_percentage_)) { return false; }
 	localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 	last_accepted_pose_ = pointcloud_pose_corrected_out;
+	last_accepted_pose_time_ = ros::Time::now();
 	last_accepted_pose_valid_ = true;
 	publishDetectedOutliers();
 
