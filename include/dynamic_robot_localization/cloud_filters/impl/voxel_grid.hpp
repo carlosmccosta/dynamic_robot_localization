@@ -35,7 +35,7 @@ void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 	private_node_handle->param("save_leaf_layout", save_leaf_layout, false);
 	filter_.setSaveLeafLayout(save_leaf_layout);
 
-	// only in latest devel branch
+	// only in latest pcl devel branch
 	/*int min_points_per_voxel;
 	private_node_handle->param("min_points_per_voxel", min_points_per_voxel, 3);
 	filter_.setMinimumPointsNumberPerVoxel((unsigned int)min_points_per_voxel);*/

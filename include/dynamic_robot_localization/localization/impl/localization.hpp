@@ -55,11 +55,15 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	private_node_handle_ = private_node_handle;
 
 	// general configurations
-	setupSubcriptionTopicNamesFromParameterServer();
-	setupPublishTopicNamesFromParameterServer();
 	setupGeneralConfigurations();
+	setupSubcriptionTopicNames();
+	setupPublishTopicNames();
+	setupFrameIds();
+	setupMessageManagement();
 
 	// localization pipeline configurations
+	setupReferencePointCloud();
+	setupLocalizationPipeline();
 	setupFiltersConfigurations();
 	setupNormalEstimatorConfigurations();
 	setupKeypointDetectors();
@@ -75,18 +79,24 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 
 template<typename PointT>
-void Localization<PointT>::setupSubcriptionTopicNamesFromParameterServer() {
-	private_node_handle_->param("pointcloud_topic", ambient_pointcloud_topic_, std::string("assembled_pointcloud"));
-	private_node_handle_->param("costmap_topic", costmap_topic_, std::string("map"));
-	private_node_handle_->param("reference_cloud_topic", reference_pointcloud_topic_, std::string(""));
+void Localization<PointT>::setupGeneralConfigurations() {
+	private_node_handle_->param("save_clouds_in_binary_format", save_clouds_in_binary_format_, true);
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
+void Localization<PointT>::setupSubcriptionTopicNames() {
+	private_node_handle_->param("ambient_pointcloud_topic", ambient_pointcloud_topic_, std::string("assembled_pointcloud"));
+	private_node_handle_->param("reference_costmap_topic", reference_costmap_topic_, std::string("map"));
+	private_node_handle_->param("reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupPublishTopicNames() {
 	private_node_handle_->param("reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
 	private_node_handle_->param("aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
-	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("initialpose"));
+	private_node_handle_->param("pose_publish_topic", pose_publish_topic_, std::string("/initialpose"));
 	private_node_handle_->param("localization_detailed_topic", localization_detailed_topic_, std::string("localization_detailed"));
 	private_node_handle_->param("localization_diagnostics_topic", localization_diagnostics_topic_, std::string("diagnostics"));
 	private_node_handle_->param("localization_times_topic", localization_times_topic_, std::string("localization_times"));
@@ -94,25 +104,15 @@ void Localization<PointT>::setupPublishTopicNamesFromParameterServer() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupGeneralConfigurations() {
-	private_node_handle_->param("save_clouds_in_binary_format", save_clouds_in_binary_format_, true);
-	private_node_handle_->param("filter_reference_cloud", filter_reference_cloud_, true);
-	private_node_handle_->param("compute_normals_reference_cloud", compute_normals_reference_cloud_, true);
-	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, true);
-	private_node_handle_->param("detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, true);
-	private_node_handle_->param("detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, true);
-	private_node_handle_->param("ignore_height_corrections", ignore_height_corrections_, false);
-	private_node_handle_->param("max_outliers_percentage", max_outliers_percentage_, 0.6);
-	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
-	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
-	private_node_handle_->param("reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
-	private_node_handle_->param("reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
-	private_node_handle_->param("reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
-	private_node_handle_->param("reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
+void Localization<PointT>::setupFrameIds() {
 	private_node_handle_->param("map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
-	private_node_handle_->param("sensor_frame_id_", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
+	private_node_handle_->param("sensor_frame_id", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
+}
 
+
+template<typename PointT>
+void Localization<PointT>::setupMessageManagement() {
 	double max_seconds_scan_age;
 	private_node_handle_->param("max_seconds_scan_age", max_seconds_scan_age, 0.5);
 	max_seconds_scan_age_.fromSec(max_seconds_scan_age);
@@ -124,10 +124,27 @@ void Localization<PointT>::setupGeneralConfigurations() {
 	double min_seconds_between_reference_pointcloud_update;
 	private_node_handle_->param("min_seconds_between_reference_pointcloud_update", min_seconds_between_reference_pointcloud_update, 5.0);
 	min_seconds_between_reference_pointcloud_update_.fromSec(min_seconds_between_reference_pointcloud_update);
+}
 
-	double pose_tracking_timeout;
-	private_node_handle_->param("pose_tracking_timeout", pose_tracking_timeout, 2.0);
-	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
+
+template<typename PointT>
+void Localization<PointT>::setupReferencePointCloud() {
+	private_node_handle_->param("reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
+	private_node_handle_->param("reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupLocalizationPipeline() {
+	private_node_handle_->param("filter_reference_cloud", filter_reference_cloud_, false);
+	private_node_handle_->param("compute_normals_reference_cloud", compute_normals_reference_cloud_, false);
+	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, false);
+	private_node_handle_->param("detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, false);
+	private_node_handle_->param("detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, false);
+	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
+	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
 }
 
 
@@ -164,6 +181,11 @@ void Localization<PointT>::setupKeypointDetectors() {
 
 template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
+	private_node_handle_->param("ignore_height_corrections", ignore_height_corrections_, false);
+	double pose_tracking_timeout;
+	private_node_handle_->param("pose_tracking_timeout", pose_tracking_timeout, 2.0);
+	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
+
 	cloud_matchers_.clear();
 
 	std::string keypoint_descriptor;
@@ -296,7 +318,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 			if (!reference_pointcloud_->points.empty()) {
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
 					reference_pointcloud_2d_ = true;
-					ROS_DEBUG_STREAM("Loaded reference point cloud from costmap topic " << costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+					ROS_DEBUG_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 				}
 			}
 		}
@@ -386,8 +408,8 @@ void Localization<PointT>::startLocalization() {
 		if (!reference_pointcloud_topic_.empty()) {
 			reference_pointcloud_subscriber_ = node_handle_->subscribe(reference_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSPointCloud, this);
 		} else {
-			if (!costmap_topic_.empty())
-				costmap_subscriber_ = node_handle_->subscribe(costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
+			if (!reference_costmap_topic_.empty())
+				costmap_subscriber_ = node_handle_->subscribe(reference_costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
 		}
 	} else {
 		loadReferencePointCloudFromFile(reference_pointcloud_filename_);

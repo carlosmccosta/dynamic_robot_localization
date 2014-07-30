@@ -28,7 +28,7 @@ EuclideanTransformationValidator::EuclideanTransformationValidator() :
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanTransformationValidator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void EuclideanTransformationValidator::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
-	private_node_handle->param("max_transformation_angle", max_transformation_angle_, 1.59);
+	private_node_handle->param("max_transformation_angle", max_transformation_angle_, 0.7);
 	private_node_handle->param("max_transformation_distance", max_transformation_distance_, 0.1);
 	private_node_handle->param("max_new_pose_diff_angle", max_new_pose_diff_angle_, 1.59);
 	private_node_handle->param("max_new_pose_diff_distance", max_new_pose_diff_distance_, 0.2);

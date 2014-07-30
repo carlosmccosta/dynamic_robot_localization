@@ -1,0 +1,9 @@
+salient_radius: 0.06
+non_max_radius: 0.04
+normal_radius: 0.04
+border_radius: 0.0
+threshold21: 0.975
+threshold32: 0.975
+min_neighbors: 5
+angle_threshold: 1.57
+iss3_keypoints_cloud_publish_topic: ''

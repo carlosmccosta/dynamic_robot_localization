@@ -1,0 +1,2 @@
+use_internal_cache: true
+maximum_cache_size: 33554432

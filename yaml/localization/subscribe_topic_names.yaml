@@ -1,0 +1,4 @@
+ambient_pointcloud_topic: "assembled_pointcloud"
+reference_costmap_topic: '/map'
+reference_pointcloud_topic: ''
+#reference_pointcloud_topic: 'octomap_point_cloud_centers'

@@ -106,7 +106,7 @@ class CloudMatcher : public ConfigurableObject {
 
 		boost::shared_ptr< RegistrationVisualizer<PointT, PointT> > registration_visualizer_;
 		bool display_cloud_aligment_;
-		int number_maximum_displayed_correspondences_;
+		int maximum_number_of_displayed_correspondences_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

@@ -1,0 +1,5 @@
+image_width: 8
+support_angle_cos: 0.0
+min_point_count_in_neighbourhood: 0
+use_angular_domain: false
+use_radial_structure: false

@@ -115,9 +115,13 @@ class Localization : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <Localization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
-		void setupSubcriptionTopicNamesFromParameterServer();
-		void setupPublishTopicNamesFromParameterServer();
 		void setupGeneralConfigurations();
+		void setupSubcriptionTopicNames();
+		void setupPublishTopicNames();
+		void setupFrameIds();
+		void setupMessageManagement();
+		void setupReferencePointCloud();
+		void setupLocalizationPipeline();
 
 		virtual void setupFiltersConfigurations();
 		virtual void setupNormalEstimatorConfigurations();
@@ -180,7 +184,7 @@ class Localization : public ConfigurableObject {
 		// subscription topic names
 		std::string ambient_pointcloud_topic_;
 		std::string reference_pointcloud_topic_;
-		std::string costmap_topic_;
+		std::string reference_costmap_topic_;
 
 		// publish topic names
 		std::string reference_pointcloud_publish_topic_;

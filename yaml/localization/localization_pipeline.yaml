@@ -1,0 +1,5 @@
+filter_reference_cloud: true
+compute_normals_reference_cloud: false
+compute_normals_ambient_cloud: false
+detect_keypoints_reference_cloud: false
+detect_keypoints_ambient_cloud: false

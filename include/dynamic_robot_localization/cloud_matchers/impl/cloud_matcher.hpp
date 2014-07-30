@@ -20,7 +20,7 @@ template<typename PointT>
 CloudMatcher<PointT>::CloudMatcher() :
 		match_only_keypoints_(false),
 		display_cloud_aligment_(false),
-		number_maximum_displayed_correspondences_(0) {}
+		maximum_number_of_displayed_correspondences_(0) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -28,7 +28,7 @@ template<typename PointT>
 void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
 	private_node_handle->param("match_only_keypoints", match_only_keypoints_, false);
 	private_node_handle->param("display_cloud_aligment", display_cloud_aligment_, false);
-	private_node_handle->param("number_maximum_displayed_correspondences", number_maximum_displayed_correspondences_, 0); // show all
+	private_node_handle->param("maximum_number_of_displayed_correspondences", maximum_number_of_displayed_correspondences_, 0); // show all
 
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
@@ -135,11 +135,11 @@ template<typename PointT>
 void CloudMatcher<PointT>::setupRegistrationVisualizer() {
 	if (cloud_matcher_ && !registration_visualizer_ && display_cloud_aligment_) {
 		registration_visualizer_ = boost::shared_ptr< RegistrationVisualizer<PointT, PointT> >(new RegistrationVisualizer<PointT, PointT>());
-		registration_visualizer_->setMaximumDisplayedCorrespondences(number_maximum_displayed_correspondences_);
+		registration_visualizer_->setMaximumDisplayedCorrespondences(maximum_number_of_displayed_correspondences_);
 		registration_visualizer_->setRegistration(*cloud_matcher_);
 
 		registration_visualizer_->startDisplay();
-		ROS_DEBUG_STREAM("RegistrationVisualizer activated with " << number_maximum_displayed_correspondences_ << " number_maximum_displayed_correspondences");
+		ROS_DEBUG_STREAM("RegistrationVisualizer activated with " << maximum_number_of_displayed_correspondences_ << " number_maximum_displayed_correspondences");
 	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

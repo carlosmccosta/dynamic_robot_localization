@@ -1,0 +1,11 @@
+compute_normals: true
+polynomial_order: 2
+polynomial_fit: true
+search_radius: 0.12
+sqr_gauss_param: 0.0144
+upsample_method: NONE
+upsampling_radius: 0.05
+upsampling_step: 0.01
+desired_num_points_in_radius: 5
+dilation_voxel_size: 0.01
+dilation_iterations: 1

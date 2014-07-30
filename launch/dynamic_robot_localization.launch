@@ -11,23 +11,13 @@
 
 <!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
-
-		<!-- =============== subscribe topics =============== -->
-		<param name="pointcloud_topic" type="str" value="assembled_pointcloud" />
-		<param name="costmap_topic" type="str" value="/map" />
-		<!-- <param name="reference_cloud_topic" type="str" value="octomap_point_cloud_centers" /> -->
-
-
-		<!-- =============== publish topics =============== -->
-		<param name="reference_pointcloud_publish_topic" type="str" value="reference_pointcloud" />
-		<param name="aligned_pointcloud_publish_topic" type="str" value="aligned_pointcloud" />
-		<param name="pose_publish_topic" type="str" value="/initialpose" />
-
-
-		<!-- =============== frame ids =============== -->
-		<param name="map_frame_id" type="str" value="map" />
-		<param name="base_link_frame_id" type="str" value="base_footprint" />
-		<param name="sensor_frame_id_" type="str" value="hokuyo_tilt_laser_link" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/common/subscribe_topic_names.yaml" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/common/publish_topic_names.yaml" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/common/frame_ids.yaml" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/localization/message_management.yaml" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/localization/localization_pipeline.yaml" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/cloud_matchers/cloud_matcher.yaml" />
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/cloud_filters/voxel_grid.yaml" />
 
 
 		<!-- =============== reference point cloud =============== -->
@@ -97,14 +87,7 @@
 		<param name="point_density_radius" type="double" value="0.4" />
 		
 		<!-- USC -->
-		<param name="local_radius" type="double" value="0.2" />
-
-
-		<!-- =============== registration management =============== -->
-		<param name="publish_tf_map_odom" type="bool" value="false" />
-		<param name="max_seconds_scan_age" type="double" value="0.5" />
-		<param name="min_seconds_between_scan_registration" type="double" value="0.05" />
-		<param name="min_seconds_between_reference_pointcloud_update" type="double" value="5.0" />
+		<param name="local_radius" type="double" value="0.2" />		
 
 
 		<!-- =============== registration =============== -->
