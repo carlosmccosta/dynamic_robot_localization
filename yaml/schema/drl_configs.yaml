@@ -1,0 +1,187 @@
+general_configs:
+    reference_pointcloud_filename: ''
+    reference_pointcloud_preprocessed_save_filename: ''
+    save_clouds_in_binary_format: true
+
+
+subscribe_topic_names:
+    ambient_pointcloud_topic: "assembled_pointcloud"
+    reference_costmap_topic: '/map'
+    reference_pointcloud_topic: ''
+    #reference_pointcloud_topic: 'octomap_point_cloud_centers'
+
+
+publish_topic_names:
+    reference_pointcloud_publish_topic: 'reference_pointcloud'
+    aligned_pointcloud_publish_topic: 'aligned_pointcloud'
+    pose_publish_topic: '/initialpose'
+    localization_detailed_topic: 'localization_detailed'
+    localization_diagnostics_topic: 'diagnostics'
+    localization_times_topic: 'localization_times'
+    
+    
+frame_ids:
+    map_frame_id: 'map'
+    base_link_frame_id: 'base_footprint'
+    sensor_frame_id: 'hokuyo_tilt_laser_link'
+
+
+message_management:
+    max_seconds_scan_age: 0.5
+    min_seconds_between_scan_registration: 0.05
+    min_seconds_between_reference_pointcloud_update: 5.0
+
+
+filters:
+    reference_point_cloud:
+        - voxel_grid:
+            leaf_size_x: 0.01
+            leaf_size_y: 0.01
+            leaf_size_z: 0.01
+            filter_limit_field_name: 'z'
+            filter_limit_min: -1.0
+            filter_limit_max: 3.0
+            voxel_grid_filtered_cloud_publish_topic: ''
+            downsample_all_data: false
+            save_leaf_layout: false
+        - pass_through:
+            pass_through_field_name: 'z'
+            pass_through_min_value: 0.0
+            pass_through_max_value: 0.0
+            pass_through_filtered_cloud_publish_topic: ''
+    ambient_point_cloud:
+        - voxel_grid:
+            leaf_size_x: 0.01
+            leaf_size_y: 0.01
+            leaf_size_z: 0.01
+            filter_limit_field_name: 'z'
+            filter_limit_min: -1.0
+            filter_limit_max: 3.0
+            voxel_grid_filtered_cloud_publish_topic: ''
+            downsample_all_data: false
+            save_leaf_layout: false
+        - pass_through:
+            pass_through_field_name: 'z'
+            pass_through_min_value: 0.0
+            pass_through_max_value: 0.0
+            pass_through_filtered_cloud_publish_topic: ''
+
+
+normal_estimation:
+    common:
+        compute_normals_reference_cloud: false
+        compute_normals_ambient_cloud: false
+        display_normals: false
+    estimators:
+        - normal_estimation_omp:
+            search_k: 0
+            search_radius: 0.12
+        - moving_least_squares:
+            compute_normals: true
+            polynomial_order: 2
+            polynomial_fit: true
+            search_radius: 0.12
+            sqr_gauss_param: 0.0144
+            upsample_method: NONE
+            upsampling_radius: 0.05
+            upsampling_step: 0.01
+            desired_num_points_in_radius: 5
+            dilation_voxel_size: 0.01
+            dilation_iterations: 1
+
+
+cloud_matcher:
+    common:
+        max_correspondence_distance: 1.0
+        transformation_epsilon: 1e-8
+        euclidean_fitness_epsilon: 1e-6
+        max_number_of_registration_iterations: 500
+        max_number_of_ransac_iterations: 500
+        ransac_outlier_rejection_threshold: 0.05
+        match_only_keypoints: false
+        display_cloud_aligment: false
+        maximum_number_of_displayed_correspondences: 0
+        ignore_height_corrections: false
+        pose_tracking_timeout: 2.0
+    feature_matcher:
+        common:
+            display_feature_matching: false
+        keypoint_detection:
+            common:
+                detect_keypoints_reference_cloud: false
+                detect_keypoints_ambient_cloud: false
+                reference_pointcloud_keypoints_filename: ''
+                reference_pointcloud_keypoints_save_filename: ''
+            detectors:
+                - intrinsic_shape_signature_3d:
+                    salient_radius: 0.06
+                    non_max_radius: 0.04
+                    normal_radius: 0.04
+                    border_radius: 0.0
+                    threshold21: 0.975
+                    threshold32: 0.975
+                    min_neighbors: 5
+                    angle_threshold: 1.57
+                    iss3_keypoints_cloud_publish_topic: ''
+        keypoint_description:
+            - common:
+                feature_descriptor_k_search: 10
+                feature_descriptor_radius_search: 0.1
+                reference_pointcloud_descriptors_filename: ''
+                reference_pointcloud_descriptors_save_filename: ''
+                save_descriptors_in_binary_format : true
+            - pfh:
+                use_internal_cache: true
+                maximum_cache_size: 33554432
+            - fpfh:
+                number_subdivisions_f1: 11
+                number_subdivisions_f2: 11
+                number_subdivisions_f3: 11
+            - shot:
+                lrf_radius: 0.05
+            - shape_context_3d:
+                minimal_radius: 0.1
+                point_density_radius: 0.2
+            - unique_shape_context:
+                minimal_radius: 0.1
+                point_density_radius: 0.2
+                local_radius: 2.5
+            - spin_image:
+                image_width: 8
+                support_angle_cos: 0.0
+                min_point_count_in_neighbourhood: 0
+                use_angular_domain: false
+                use_radial_structure: false
+        matcher:
+            - sample_consensus_initial_alignment:
+                min_sample_distance: 1.0
+                number_of_samples: 3
+                correspondence_randomness: 10
+            - sample_consensus_initial_alignment_prerejective:
+                similarity_threshold: 0.8
+                inlier_fraction: 0.25
+                number_of_samples: 3
+                correspondence_randomness: 10
+    point_matcher:
+        - iterative_closest_point:
+            use_reciprocal_correspondences: true
+        - iterative_closest_point_with_normals:
+            use_reciprocal_correspondences: true
+
+
+outlier_detection:
+    common:
+        aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
+    detectors:
+        - euclidean_outlier_detector:
+            max_inliers_distance: 0.01
+
+
+transformation_validators:
+    - euclidean_transformation_validator:
+        max_transformation_angle: 0.7
+        max_transformation_distance: 0.1
+        max_new_pose_diff_angle: 1.59
+        max_new_pose_diff_distance: 0.2
+        max_alignment_fitness: 0.1
+        max_outliers_percentage: 0.6
