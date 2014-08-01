@@ -1,11 +1,5 @@
-general_configs:
-    reference_pointcloud_filename: ''
-    reference_pointcloud_preprocessed_save_filename: ''
-    save_clouds_in_binary_format: true
-
-
 subscribe_topic_names:
-    ambient_pointcloud_topic: "assembled_pointcloud"
+    ambient_pointcloud_topic: 'assembled_pointcloud'
     reference_costmap_topic: '/map'
     reference_pointcloud_topic: ''
     #reference_pointcloud_topic: 'octomap_point_cloud_centers'
@@ -30,6 +24,12 @@ message_management:
     max_seconds_scan_age: 0.5
     min_seconds_between_scan_registration: 0.05
     min_seconds_between_reference_pointcloud_update: 5.0
+
+
+pointclouds:
+    reference_pointcloud_filename: ''
+    reference_pointcloud_preprocessed_save_filename: ''
+    save_clouds_in_binary_format: true
 
 
 filters:

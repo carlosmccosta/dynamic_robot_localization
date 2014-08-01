@@ -87,7 +87,7 @@ void Localization<PointT>::setupGeneralConfigurations() {
 template<typename PointT>
 void Localization<PointT>::setupSubcriptionTopicNames() {
 	private_node_handle_->param("ambient_pointcloud_topic", ambient_pointcloud_topic_, std::string("assembled_pointcloud"));
-	private_node_handle_->param("reference_costmap_topic", reference_costmap_topic_, std::string("map"));
+	private_node_handle_->param("reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
 	private_node_handle_->param("reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
 }
 
