@@ -28,7 +28,7 @@ SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::SampleConsensusIn
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignmentPrerejective-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle,
-        ros::NodeHandlePtr& private_node_handle) {
+        ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 
 	double similarity_threshold;
 	private_node_handle->param("similarity_threshold", similarity_threshold, 0.8);
@@ -45,7 +45,7 @@ void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigu
 	private_node_handle->param("correspondence_randomness", correspondence_randomness, 10);
 	matcher_scia_->setCorrespondenceRandomness(correspondence_randomness);
 
-	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 

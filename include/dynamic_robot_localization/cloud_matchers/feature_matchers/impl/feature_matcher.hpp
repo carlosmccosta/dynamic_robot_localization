@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <FeatureMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
-void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	bool display_feature_matching;
 	private_node_handle->param("display_feature_matching", display_feature_matching, false);
 	private_node_handle->param("reference_pointcloud_descriptors_filename", reference_pointcloud_descriptors_filename_, std::string(""));
@@ -28,7 +28,7 @@ void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros
 	private_node_handle->param("save_descriptors_in_binary_format", save_descriptors_in_binary_format_, true);
 	CloudMatcher<PointT>::setDisplayCloudAligment(display_feature_matching);
 
-	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 	CloudMatcher<PointT>::setDisplayCloudAligment(display_feature_matching);
 	CloudMatcher<PointT>::setupRegistrationVisualizer();
 }

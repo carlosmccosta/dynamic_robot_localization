@@ -25,7 +25,7 @@ CloudMatcher<PointT>::CloudMatcher() :
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	private_node_handle->param("match_only_keypoints", match_only_keypoints_, false);
 	private_node_handle->param("display_cloud_aligment", display_cloud_aligment_, false);
 	private_node_handle->param("maximum_number_of_displayed_correspondences", maximum_number_of_displayed_correspondences_, 0); // show all

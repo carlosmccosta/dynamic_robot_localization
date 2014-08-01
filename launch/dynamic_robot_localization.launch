@@ -9,8 +9,11 @@
 
 
 
-<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
-	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337">
+<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen"> -->
+		<rosparam command="load" file="$(find dynamic_robot_localization)/yaml/schema/drl_configs.yaml" />
+
+
 		<!-- =============== reference point cloud =============== -->
 		<param name="reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" /> 											<!-- default: empty -->
 		<param name="reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" /> 		<!-- default: empty -->
@@ -87,7 +90,7 @@
 		<param name="use_reciprocal_correspondences" type="bool" value="true" />
 		<param name="max_correspondence_distance" type="double" value="0.05" />
 		<param name="transformation_epsilon" type="double" value="1e-6" />
-		<param name="euclidean_fitness_epsilon" type="double" value="1e-4" />
+		<param name="euclidean_fitness_epsilon" type="double" value="1e-5" />
 		<param name="max_number_of_registration_iterations" type="int" value="200" />
 		<param name="max_number_of_ransac_iterations" type="int" value="200" />
 		<param name="ransac_outlier_rejection_threshold" type="double" value="0.05" />
@@ -98,8 +101,8 @@
 		<param name="max_transformation_distance" type="double" value="0.035" />
 		<param name="max_new_pose_diff_angle" type="double" value="0.6" />
 		<param name="max_new_pose_diff_distance" type="double" value="0.2" />
-		<param name="max_alignment_fitness" type="double" value="5.0" />
-		<param name="max_outliers_percentage" type="double" value="0.8" /> 																<!-- default: 0.6 -->
+		<param name="max_alignment_fitness" type="double" value="3.0" />
+		<param name="max_outliers_percentage" type="double" value="0.7" /> 																<!-- default: 0.6 -->
 
 
 		<!-- =============== outlier detection =============== -->

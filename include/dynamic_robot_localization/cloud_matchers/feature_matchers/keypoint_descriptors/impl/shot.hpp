@@ -21,7 +21,7 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SHOT-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 void SHOT<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle,
-        ros::NodeHandlePtr& private_node_handle) {
+        ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>::Ptr feature_descriptor(new pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>());
 
 	double lrf_radius;
@@ -29,7 +29,7 @@ void SHOT<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHand
 	feature_descriptor->setLRFRadius(lrf_radius);
 
 	KeypointDescriptor<PointT, FeatureT>::setFeatureDescriptor(feature_descriptor);
-	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SHOT-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

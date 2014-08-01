@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PassThrough-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double pass_through_min_value, pass_through_max_value;
 	private_node_handle->param("pass_through_min_value", pass_through_min_value, 0.0);
 	private_node_handle->param("pass_through_max_value", pass_through_max_value, 0.0);
@@ -33,7 +33,7 @@ void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandleP
 
 	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
 	cloud_publisher->setParameterServerArgumentToLoadTopicName("pass_through_filtered_cloud_publish_topic");
-	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 	CloudFilter<PointT>::setCloudPublisher(cloud_publisher);
 }
 

@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IntrinsicShapeSignature3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double salient_radius;
 	private_node_handle->param("salient_radius", salient_radius, 0.06);
 	keypoint_detector_.setSalientRadius(salient_radius);
@@ -55,7 +55,7 @@ void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ro
 
 	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
 	cloud_publisher->setParameterServerArgumentToLoadTopicName("iss3_keypoints_cloud_publish_topic");
-	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 	KeypointDetector<PointT>::setCloudPublisher(cloud_publisher);
 }
 

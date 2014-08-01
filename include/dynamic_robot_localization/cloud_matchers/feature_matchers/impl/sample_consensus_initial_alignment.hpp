@@ -26,7 +26,7 @@ SampleConsensusInitialAlignment<PointT, FeatureT>::SampleConsensusInitialAlignme
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignment-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
-void SampleConsensusInitialAlignment<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void SampleConsensusInitialAlignment<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double min_sample_distance;
 	private_node_handle->param("min_sample_distance", min_sample_distance, 1.0);
 	matcher_scia_->setMinSampleDistance(min_sample_distance);
@@ -38,7 +38,7 @@ void SampleConsensusInitialAlignment<PointT, FeatureT>::setupConfigurationFromPa
 	private_node_handle->param("correspondence_randomness", correspondence_randomness, 10);
 	matcher_scia_->setCorrespondenceRandomness(correspondence_randomness);
 
-	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 template<typename PointT, typename FeatureT>

@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 		localization.startLocalization();
 	} else {*/
 		dynamic_robot_localization::Localization<pcl::PointNormal> localization;
-		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
+		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle, "");
 		localization.startLocalization();
 //	}
 

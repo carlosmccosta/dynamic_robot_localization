@@ -23,7 +23,7 @@ UniqueShapeContext<PointT, FeatureT>::UniqueShapeContext() :
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <UniqueShapeContext-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
-void UniqueShapeContext<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void UniqueShapeContext<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double minimal_radius, point_density_radius, local_radius;
 	private_node_handle->param("minimal_radius", minimal_radius, 0.1);
 	private_node_handle->param("point_density_radius", point_density_radius, 0.2);
@@ -32,7 +32,7 @@ void UniqueShapeContext<PointT, FeatureT>::setupConfigurationFromParameterServer
 	feature_descriptor_usc_->setPointDensityRadius(point_density_radius);
 	feature_descriptor_usc_->setLocalRadius(local_radius);
 
-	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 

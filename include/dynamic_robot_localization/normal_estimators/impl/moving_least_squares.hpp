@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <MovingLeastSquares-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	bool compute_normals;
 	private_node_handle->param("compute_normals", compute_normals, true);
 	normal_estimator_.setComputeNormals(compute_normals);
@@ -73,7 +73,7 @@ void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::Node
 	private_node_handle->param("dilation_iterations", dilation_iterations, 1);
 	normal_estimator_.setDilationIterations(dilation_iterations);
 
-	NormalEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	NormalEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 template<typename PointT>

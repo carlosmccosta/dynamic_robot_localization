@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <VoxelFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double leaf_size_x, leaf_size_y, leaf_size_z;
 	private_node_handle->param("leaf_size_x", leaf_size_x, 0.01);
 	private_node_handle->param("leaf_size_y", leaf_size_y, 0.01);
@@ -51,7 +51,7 @@ void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 
 	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
 	cloud_publisher->setParameterServerArgumentToLoadTopicName("voxel_grid_filtered_cloud_publish_topic");
-	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 	CloudFilter<PointT>::setCloudPublisher(cloud_publisher);
 }
 

@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimationOMP-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void NormalEstimationOMP<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle) {
+void NormalEstimationOMP<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	int search_k;
 	private_node_handle->param("search_k", search_k, 0);
 	normal_estimator_.setKSearch(search_k);
@@ -31,7 +31,7 @@ void NormalEstimationOMP<PointT>::setupConfigurationFromParameterServer(ros::Nod
 		normal_estimator_.setRadiusSearch(search_radius);
 	}
 
-	NormalEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle);
+	NormalEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 template<typename PointT>
