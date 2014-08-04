@@ -138,8 +138,8 @@ void Localization<PointT>::setupReferencePointCloud() {
 
 template<typename PointT>
 void Localization<PointT>::setupLocalizationPipeline() {
-	private_node_handle_->param("normal_estimation/compute_normals_reference_cloud", compute_normals_reference_cloud_, false);
-	private_node_handle_->param("normal_estimation/compute_normals_ambient_cloud", compute_normals_ambient_cloud_, false);
+	private_node_handle_->param("normal_estimators/compute_normals_reference_cloud", compute_normals_reference_cloud_, false);
+	private_node_handle_->param("normal_estimators/compute_normals_ambient_cloud", compute_normals_ambient_cloud_, false);
 	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, false);
 	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, false);
 	private_node_handle_->param("transformation_validators/publish_tf_map_odom", publish_tf_map_odom_, false);
@@ -152,8 +152,8 @@ void Localization<PointT>::setupFiltersConfigurations() {
 	ambient_cloud_filters_.clear();
 	reference_cloud_filters_.clear();
 
-	loadFiltersFromParameterServer(reference_cloud_filters_, "filters/reference_pointcloud");
-	loadFiltersFromParameterServer(ambient_cloud_filters_, "filters/ambient_pointcloud");
+	loadFiltersFromParameterServer(reference_cloud_filters_, "filters/reference_pointcloud/");
+	loadFiltersFromParameterServer(ambient_cloud_filters_, "filters/ambient_pointcloud/");
 }
 
 
@@ -171,7 +171,7 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 			}
 
 			if (cloud_filter) {
-				cloud_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + "/" + filter_name + "/");
+				cloud_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + filter_name + "/");
 				filters_container.push_back(cloud_filter);
 			}
 		}
@@ -181,9 +181,26 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 
 template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorConfigurations() {
-	normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
-//	normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new MovingLeastSquares<PointT>());
-	normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
+	normal_estimator_.reset();
+	std::string configuration_namespace = "normal_estimators/";
+	XmlRpc::XmlRpcValue normal_estimators;
+	if (private_node_handle_->getParam(configuration_namespace, normal_estimators) && normal_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		std::string final_estimator_name;
+		for (XmlRpc::XmlRpcValue::iterator it = normal_estimators.begin(); it != normal_estimators.end(); ++it) {
+			std::string estimator_name = it->first;
+			if (estimator_name.find("normal_estimation_omp") != std::string::npos) {
+				normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
+				final_estimator_name = estimator_name;
+			} else if (estimator_name.find("moving_least_squares") != std::string::npos) {
+				normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new MovingLeastSquares<PointT>());
+				final_estimator_name = estimator_name;
+			}
+		}
+
+		if (normal_estimator_) {
+			normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + final_estimator_name + "/");
+		}
+	}
 }
 
 

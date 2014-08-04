@@ -22,12 +22,12 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void NormalEstimationOMP<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	int search_k;
-	private_node_handle->param("search_k", search_k, 0);
+	private_node_handle->param(configuration_namespace + "search_k", search_k, 0);
 	normal_estimator_.setKSearch(search_k);
 
 	if (search_k <= 0) {
 		double search_radius;
-		private_node_handle->param("search_radius", search_radius, 0.12);
+		private_node_handle->param(configuration_namespace + "search_radius", search_radius, 0.12);
 		normal_estimator_.setRadiusSearch(search_radius);
 	}
 

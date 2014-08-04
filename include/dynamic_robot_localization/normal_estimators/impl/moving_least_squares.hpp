@@ -22,28 +22,28 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	bool compute_normals;
-	private_node_handle->param("compute_normals", compute_normals, true);
+	private_node_handle->param(configuration_namespace + "compute_normals", compute_normals, true);
 	normal_estimator_.setComputeNormals(compute_normals);
 
 	int polynomial_order;
-	private_node_handle->param("polynomial_order", polynomial_order, 2);
+	private_node_handle->param(configuration_namespace + "polynomial_order", polynomial_order, 2);
 	normal_estimator_.setPolynomialOrder(polynomial_order);
 
 	bool polynomial_fit;
-	private_node_handle->param("polynomial_fit", polynomial_fit, true);
+	private_node_handle->param(configuration_namespace + "polynomial_fit", polynomial_fit, true);
 	normal_estimator_.setPolynomialFit(polynomial_fit);
 
 	double search_radius;
-	private_node_handle->param("search_radius", search_radius, 0.12);
+	private_node_handle->param(configuration_namespace + "search_radius", search_radius, 0.12);
 	normal_estimator_.setSearchRadius(search_radius);
 
 	double sqr_gauss_param;
-	private_node_handle->param("sqr_gauss_param", sqr_gauss_param, search_radius * search_radius);
+	private_node_handle->param(configuration_namespace + "sqr_gauss_param", sqr_gauss_param, search_radius * search_radius);
 	normal_estimator_.setSqrGaussParam(sqr_gauss_param);
 
 	typename pcl::MovingLeastSquares<PointT, PointT>::UpsamplingMethod upsample_method = pcl::MovingLeastSquares<PointT, PointT>::NONE;
 	std::string upsample_method_str;
-	private_node_handle->param("upsample_method", upsample_method_str, std::string("NONE"));
+	private_node_handle->param(configuration_namespace + "upsample_method", upsample_method_str, std::string("NONE"));
 	if (upsample_method_str == "SAMPLE_LOCAL_PLANE") {
 		upsample_method = pcl::MovingLeastSquares<PointT, PointT>::SAMPLE_LOCAL_PLANE;
 	} else if (upsample_method_str == "RANDOM_UNIFORM_DENSITY") {
@@ -54,23 +54,23 @@ void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::Node
 	normal_estimator_.setUpsamplingMethod(upsample_method);
 
 	double upsampling_radius;
-	private_node_handle->param("upsampling_radius", upsampling_radius, 0.05);
+	private_node_handle->param(configuration_namespace + "upsampling_radius", upsampling_radius, 0.05);
 	normal_estimator_.setUpsamplingRadius(upsampling_radius);
 
 	double upsampling_step;
-	private_node_handle->param("upsampling_step", upsampling_step, 0.01);
+	private_node_handle->param(configuration_namespace + "upsampling_step", upsampling_step, 0.01);
 	normal_estimator_.setUpsamplingStepSize(upsampling_step);
 
 	int desired_num_points_in_radius;
-	private_node_handle->param("desired_num_points_in_radius", desired_num_points_in_radius, 5);
+	private_node_handle->param(configuration_namespace + "desired_num_points_in_radius", desired_num_points_in_radius, 5);
 	normal_estimator_.setPointDensity(desired_num_points_in_radius);
 
 	double dilation_voxel_size;
-	private_node_handle->param("dilation_voxel_size", dilation_voxel_size, 0.01);
+	private_node_handle->param(configuration_namespace + "dilation_voxel_size", dilation_voxel_size, 0.01);
 	normal_estimator_.setDilationVoxelSize(dilation_voxel_size);
 
 	int dilation_iterations;
-	private_node_handle->param("dilation_iterations", dilation_iterations, 1);
+	private_node_handle->param(configuration_namespace + "dilation_iterations", dilation_iterations, 1);
 	normal_estimator_.setDilationIterations(dilation_iterations);
 
 	NormalEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);

@@ -25,7 +25,11 @@ NormalEstimator<PointT>::NormalEstimator() :
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	private_node_handle->param("display_normals", display_normals_, false);
+	std::string final_param_name;
+//	if (private_node_handle->searchParam(configuration_namespace + "display_normals", final_param_name)) {
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "display_normals", final_param_name)) {
+		private_node_handle->param(final_param_name, display_normals_, false);
+	}
 }
 
 
