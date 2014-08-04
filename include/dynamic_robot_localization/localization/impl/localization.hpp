@@ -130,37 +130,52 @@ template<typename PointT>
 void Localization<PointT>::setupReferencePointCloud() {
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
-	private_node_handle_->param("reference_pointclouds/save_reference_pointclouds_in_binary_format", save_reference_pointclouds_in_binary_format_, true);
-
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
+	private_node_handle_->param("reference_pointclouds/save_reference_pointclouds_in_binary_format", save_reference_pointclouds_in_binary_format_, true);
 }
 
 
 template<typename PointT>
 void Localization<PointT>::setupLocalizationPipeline() {
-	private_node_handle_->param("compute_normals_reference_cloud", compute_normals_reference_cloud_, false);
-	private_node_handle_->param("compute_normals_ambient_cloud", compute_normals_ambient_cloud_, false);
-	private_node_handle_->param("detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, false);
-	private_node_handle_->param("detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, false);
-	private_node_handle_->param("publish_tf_map_odom", publish_tf_map_odom_, false);
-	private_node_handle_->param("add_odometry_displacement", add_odometry_displacement_, false);
+	private_node_handle_->param("normal_estimation/compute_normals_reference_cloud", compute_normals_reference_cloud_, false);
+	private_node_handle_->param("normal_estimation/compute_normals_ambient_cloud", compute_normals_ambient_cloud_, false);
+	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, false);
+	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, false);
+	private_node_handle_->param("transformation_validators/publish_tf_map_odom", publish_tf_map_odom_, false);
+	private_node_handle_->param("transformation_validators/add_odometry_displacement", add_odometry_displacement_, false);
 }
 
 
 template<typename PointT>
 void Localization<PointT>::setupFiltersConfigurations() {
 	ambient_cloud_filters_.clear();
+	reference_cloud_filters_.clear();
 
-	/*typename CloudFilter<PointT>::Ptr pass_through(new PassThrough<PointT>());
-	pass_through->setupConfigurationFromParameterServer(node_handle_, private_node_handle_);
-	cloud_filters_.push_back(pass_through);*/
+	loadFiltersFromParameterServer(reference_cloud_filters_, "filters/reference_pointcloud");
+	loadFiltersFromParameterServer(ambient_cloud_filters_, "filters/ambient_pointcloud");
+}
 
-	typename CloudFilter<PointT>::Ptr voxel_grid(new VoxelGrid<PointT>());
-	voxel_grid->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-	ambient_cloud_filters_.push_back(voxel_grid);
 
-	reference_cloud_filters_.push_back(voxel_grid);
+template<typename PointT>
+void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace) {
+	XmlRpc::XmlRpcValue filters;
+	if (private_node_handle_->getParam(configuration_namespace, filters) && filters.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = filters.begin(); it != filters.end(); ++it) {
+			std::string filter_name = it->first;
+			typename CloudFilter<PointT>::Ptr cloud_filter;
+			if (filter_name.find("voxel_grid") != std::string::npos) {
+				cloud_filter.reset(new VoxelGrid<PointT>());
+			} else if (filter_name.find("pass_through") != std::string::npos) {
+				cloud_filter.reset(new PassThrough<PointT>());
+			}
+
+			if (cloud_filter) {
+				cloud_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + "/" + filter_name + "/");
+				filters_container.push_back(cloud_filter);
+			}
+		}
+	}
 }
 
 

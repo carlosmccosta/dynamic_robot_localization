@@ -12,8 +12,8 @@ publish_topic_names:
     localization_detailed_topic: 'localization_detailed'
     localization_diagnostics_topic: 'diagnostics'
     localization_times_topic: 'localization_times'
-    
-    
+
+
 frame_ids:
     map_frame_id: 'map'
     base_link_frame_id: 'base_footprint'
@@ -29,42 +29,44 @@ message_management:
 reference_pointclouds:
     reference_pointcloud_filename: ''
     reference_pointcloud_preprocessed_save_filename: ''
+    reference_pointcloud_keypoints_filename: ''
+    reference_pointcloud_keypoints_save_filename: ''
     save_reference_pointclouds_in_binary_format: true
 
 
 filters:
-    reference_point_cloud:
-        - voxel_grid:
+    reference_pointcloud:
+        1_pass_through:
+            pass_through_field_name: 'z'
+            pass_through_min_value: -0.47
+            pass_through_max_value: 1.8
+            pass_through_filtered_cloud_publish_topic: 'reference_pointcloud_passthrough_filter'
+        2_voxel_grid:
             leaf_size_x: 0.01
             leaf_size_y: 0.01
             leaf_size_z: 0.01
             filter_limit_field_name: 'z'
-            filter_limit_min: -1.0
-            filter_limit_max: 3.0
-            voxel_grid_filtered_cloud_publish_topic: ''
+            filter_limit_min: -0.47
+            filter_limit_max: 1.8
+            voxel_grid_filtered_cloud_publish_topic: 'reference_pointcloud_voxel_grid_filter'
             downsample_all_data: false
             save_leaf_layout: false
-        - pass_through:
+    ambient_pointcloud:
+        1_pass_through:
             pass_through_field_name: 'z'
-            pass_through_min_value: 0.0
-            pass_through_max_value: 0.0
-            pass_through_filtered_cloud_publish_topic: ''
-    ambient_point_cloud:
-        - voxel_grid:
+            pass_through_min_value: -0.47
+            pass_through_max_value: 1.8
+            pass_through_filtered_cloud_publish_topic: 'ambient_pointcloud_passthrough_filter'
+        2_voxel_grid:
             leaf_size_x: 0.01
             leaf_size_y: 0.01
             leaf_size_z: 0.01
             filter_limit_field_name: 'z'
-            filter_limit_min: -1.0
-            filter_limit_max: 3.0
-            voxel_grid_filtered_cloud_publish_topic: ''
+            filter_limit_min: -0.47
+            filter_limit_max: 1.8
+            voxel_grid_filtered_cloud_publish_topic: 'ambient_pointcloud_voxel_grid_filter'
             downsample_all_data: false
             save_leaf_layout: false
-        - pass_through:
-            pass_through_field_name: 'z'
-            pass_through_min_value: 0.0
-            pass_through_max_value: 0.0
-            pass_through_filtered_cloud_publish_topic: ''
 
 
 normal_estimation:
@@ -106,8 +108,6 @@ cloud_matcher:
         keypoint_detection:
             detect_keypoints_reference_cloud: false
             detect_keypoints_ambient_cloud: false
-            reference_pointcloud_keypoints_filename: ''
-            reference_pointcloud_keypoints_save_filename: ''
             detectors:
                 - intrinsic_shape_signature_3d:
                     salient_radius: 0.06

@@ -33,7 +33,7 @@ void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHand
 
 template<typename PointT>
 void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
-	if (!cloud_publish_topic_.empty() && cloud.points.size() > 0 && cloud_publisher_.getNumSubscribers() > 0) {
+	if (!cloud_publish_topic_.empty() && cloud.points.size() > 0) {
 		sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
 		pcl::toROSMsg(cloud, *cloud_msg);
 		cloud_publisher_.publish(cloud_msg);
