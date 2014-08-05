@@ -24,7 +24,7 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 	typename pcl::IterativeClosestPoint<PointT, PointT>::Ptr matcher(new pcl::IterativeClosestPoint<PointT, PointT>());
 
 	bool use_reciprocal_correspondences;
-	private_node_handle->param("use_reciprocal_correspondences", use_reciprocal_correspondences, true);
+	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, true);
 	matcher->setUseReciprocalCorrespondences(use_reciprocal_correspondences);
 
 	CloudMatcher<PointT>::setCloudMatcher(matcher);

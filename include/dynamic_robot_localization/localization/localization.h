@@ -121,7 +121,6 @@ class Localization : public ConfigurableObject {
 		void setupFrameIds();
 		void setupMessageManagement();
 		void setupReferencePointCloud();
-		void setupLocalizationPipeline();
 
 		virtual void setupFiltersConfigurations();
 		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
@@ -155,7 +154,7 @@ class Localization : public ConfigurableObject {
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& keypoints);
 
-		virtual bool applyCloudRegistration(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+		virtual bool applyCloudRegistration(std::vector< typename CloudMatcher<PointT>::Ptr >& matchers, typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				tf2::Transform& pointcloud_pose_in_out);

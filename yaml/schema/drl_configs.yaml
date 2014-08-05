@@ -111,17 +111,17 @@ normal_estimators:
 
 
 cloud_matchers:
-    max_correspondence_distance: 1.0
+    ignore_height_corrections: false
+    max_correspondence_distance: 0.1
     transformation_epsilon: 1e-8
     euclidean_fitness_epsilon: 1e-6
-    max_number_of_registration_iterations: 500
-    max_number_of_ransac_iterations: 500
+    max_number_of_registration_iterations: 250
+    max_number_of_ransac_iterations: 250
     ransac_outlier_rejection_threshold: 0.05
     match_only_keypoints: false
     display_cloud_aligment: false
     maximum_number_of_displayed_correspondences: 0
-    ignore_height_corrections: false
-    feature_matcher:
+    feature_matchers:
         display_feature_matching: false
 #        keypoint_detectors:
 #            reference_pointcloud:
@@ -174,7 +174,7 @@ cloud_matchers:
                 min_point_count_in_neighbourhood: 0
                 use_angular_domain: false
                 use_radial_structure: false
-        matcher:
+        matchers:
             sample_consensus_initial_alignment:
                 min_sample_distance: 1.0
                 number_of_samples: 3
@@ -184,11 +184,29 @@ cloud_matchers:
                 inlier_fraction: 0.25
                 number_of_samples: 3
                 correspondence_randomness: 10
-    point_matcher:
+    point_matchers:
         iterative_closest_point:
+            max_correspondence_distance: 0.05                   # overrides parent
+            transformation_epsilon: 1e-6                        # overrides parent
+            euclidean_fitness_epsilon: 1e-5                     # overrides parent
+            max_number_of_registration_iterations: 200          # overrides parent
+            max_number_of_ransac_iterations: 200                # overrides parent
+            ransac_outlier_rejection_threshold: 0.05            # overrides parent
+            match_only_keypoints: false                         # overrides parent
+            display_cloud_aligment: false                       # overrides parent
+            maximum_number_of_displayed_correspondences: 0      # overrides parent
             use_reciprocal_correspondences: true
-        iterative_closest_point_with_normals:
-            use_reciprocal_correspondences: true
+#        iterative_closest_point_with_normals:
+#            max_correspondence_distance: 0.05                   # overrides parent
+#            transformation_epsilon: 1e-6                        # overrides parent
+#            euclidean_fitness_epsilon: 1e-5                     # overrides parent
+#            max_number_of_registration_iterations: 200          # overrides parent
+#            max_number_of_ransac_iterations: 200                # overrides parent
+#            ransac_outlier_rejection_threshold: 0.05            # overrides parent
+#            match_only_keypoints: false                         # overrides parent
+#            display_cloud_aligment: false                       # overrides parent
+#            maximum_number_of_displayed_correspondences: 0      # overrides parent
+#            use_reciprocal_correspondences: true
 
 
 outlier_detectors:

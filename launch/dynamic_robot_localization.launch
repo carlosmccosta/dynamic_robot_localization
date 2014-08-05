@@ -21,11 +21,7 @@
 		<param name="reference_pointclouds/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" /> 			<!-- default: empty -->
 		<param name="reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" /> 					<!-- default: empty -->
 		<param name="reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" /> 		<!-- default: empty -->
-
-
-		<!-- =============== pipeline =============== -->
-		<param name="match_only_keypoints" type="bool" value="false" /> 															<!-- default: false -->
-
+		
 
 		<!-- =============== initial alignment =============== -->
 		<param name="min_sample_distance" type="double" value="1.0" />
@@ -56,21 +52,7 @@
 		<param name="local_radius" type="double" value="0.2" />		
 
 
-		<!-- =============== registration =============== -->
-		<param name="final_registration" type="str" value="IterativeClosestPoint" />
-		<param name="ignore_height_corrections" type="bool" value="false" />															<!-- default: false -->
-		<param name="use_reciprocal_correspondences" type="bool" value="true" />
-		<param name="max_correspondence_distance" type="double" value="0.05" />
-		<param name="transformation_epsilon" type="double" value="1e-6" />
-		<param name="euclidean_fitness_epsilon" type="double" value="1e-5" />
-		<param name="max_number_of_registration_iterations" type="int" value="200" />
-		<param name="max_number_of_ransac_iterations" type="int" value="200" />
-		<param name="ransac_outlier_rejection_threshold" type="double" value="0.05" />
-
-
 		<!-- ############### debugging ############### -->
-		<param name="display_cloud_aligment" type="bool" value="false" />
 		<param name="display_feature_matching" type="bool" value="false" /> 															<!-- default: false -->
-		<param name="number_maximum_displayed_correspondences" type="int" value="0" />
 	</node>
 </launch>
