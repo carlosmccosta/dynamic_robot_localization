@@ -1,4 +1,0 @@
-similarity_threshold: 0.8
-inlier_fraction: 0.25
-number_of_samples: 3
-correspondence_randomness: 10

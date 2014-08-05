@@ -1,9 +1,0 @@
-leaf_size_x: 0.01
-leaf_size_y: 0.01
-leaf_size_z: 0.01
-filter_limit_field_name: 'z'
-filter_limit_min: -1.0
-filter_limit_max: 3.0
-voxel_grid_filtered_cloud_publish_topic: ''
-downsample_all_data: false
-save_leaf_layout: false

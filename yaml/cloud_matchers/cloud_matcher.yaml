@@ -1,9 +1,0 @@
-max_correspondence_distance: 1.0
-transformation_epsilon: 1e-8
-euclidean_fitness_epsilon: 1e-6
-max_number_of_registration_iterations: 500
-max_number_of_ransac_iterations: 500
-ransac_outlier_rejection_threshold: 0.05
-match_only_keypoints: false
-display_cloud_aligment: false
-maximum_number_of_displayed_correspondences: 0

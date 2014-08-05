@@ -22,39 +22,39 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double salient_radius;
-	private_node_handle->param("salient_radius", salient_radius, 0.06);
+	private_node_handle->param(configuration_namespace + "salient_radius", salient_radius, 0.06);
 	keypoint_detector_.setSalientRadius(salient_radius);
 
 	double non_max_radius;
-	private_node_handle->param("non_max_radius", non_max_radius, 0.04);
+	private_node_handle->param(configuration_namespace + "non_max_radius", non_max_radius, 0.04);
 	keypoint_detector_.setNonMaxRadius(non_max_radius);
 
 	double normal_radius;
-	private_node_handle->param("normal_radius", normal_radius, 0.04);
+	private_node_handle->param(configuration_namespace + "normal_radius", normal_radius, 0.04);
 	keypoint_detector_.setNormalRadius(normal_radius);
 
 	double border_radius;
-	private_node_handle->param("border_radius", border_radius, 0.0);
+	private_node_handle->param(configuration_namespace + "border_radius", border_radius, 0.0);
 	keypoint_detector_.setBorderRadius(border_radius);
 
 	double threshold21;
-	private_node_handle->param("threshold21", threshold21, 0.975);
+	private_node_handle->param(configuration_namespace + "threshold21", threshold21, 0.975);
 	keypoint_detector_.setThreshold21(threshold21);
 
 	double threshold32;
-	private_node_handle->param("threshold32", threshold32, 0.975);
+	private_node_handle->param(configuration_namespace + "threshold32", threshold32, 0.975);
 	keypoint_detector_.setThreshold32(threshold32);
 
 	int min_neighbors;
-	private_node_handle->param("min_neighbors", min_neighbors, 5);
+	private_node_handle->param(configuration_namespace + "min_neighbors", min_neighbors, 5);
 	keypoint_detector_.setMinNeighbors(min_neighbors);
 
 	double angle_threshold;
-	private_node_handle->param("angle_threshold", angle_threshold, 1.57);
+	private_node_handle->param(configuration_namespace + "angle_threshold", angle_threshold, 1.57);
 	keypoint_detector_.setAngleThreshold(angle_threshold);
 
 	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
-	cloud_publisher->setParameterServerArgumentToLoadTopicName("iss3_keypoints_cloud_publish_topic");
+	cloud_publisher->setParameterServerArgumentToLoadTopicName(configuration_namespace + "iss3_keypoints_cloud_publish_topic");
 	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 	KeypointDetector<PointT>::setCloudPublisher(cloud_publisher);
 }

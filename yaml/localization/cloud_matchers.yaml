@@ -1,5 +1,0 @@
-ignore_height_corrections: false
-pose_tracking_timeout: 2.0
-keypoint_descriptor: ''
-final_registration: 'IterativeClosestPoint'
-outlier_detector: ''

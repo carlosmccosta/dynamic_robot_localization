@@ -24,8 +24,6 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 Localization<PointT>::Localization() :
 	save_reference_pointclouds_in_binary_format_(true),
-	detect_keypoints_reference_cloud_(true),
-	detect_keypoints_ambient_cloud_(true),
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
@@ -64,7 +62,8 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupFiltersConfigurations();
 	setupNormalEstimatorConfigurations();
 	setupKeypointDetectors();
-	setupCloudMatchersConfigurations();
+	setupPointCloudMatchersConfigurations();
+	setupFeatureCloudMatchersConfigurations();
 	setupTransformationValidatorsConfigurations();
 	setupOutlierDetectorsConfigurations();
 
@@ -136,8 +135,6 @@ void Localization<PointT>::setupReferencePointCloud() {
 
 template<typename PointT>
 void Localization<PointT>::setupLocalizationPipeline() {
-	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, false);
-	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, false);
 	private_node_handle_->param("transformation_validators/publish_tf_map_odom", publish_tf_map_odom_, false);
 	private_node_handle_->param("transformation_validators/add_odometry_displacement", add_odometry_displacement_, false);
 }
@@ -206,18 +203,56 @@ void Localization<PointT>::loadNormalEstimatorFromParameterServer(typename Norma
 
 template<typename PointT>
 void Localization<PointT>::setupKeypointDetectors() {
-	keypoint_detectors_.clear();
-	typename KeypointDetector<PointT>::Ptr default_keypoint_detector(new IntrinsicShapeSignature3D<PointT>());
-	default_keypoint_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-	keypoint_detectors_.push_back(default_keypoint_detector);
+	reference_cloud_keypoint_detectors_.clear();
+	ambient_cloud_keypoint_detectors_.clear();
+
+	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, "cloud_matchers/feature_matcher/keypoint_detectors/reference_pointcloud/");
+	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, "cloud_matchers/feature_matcher/keypoint_detectors/ambient_pointcloud/");
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupCloudMatchersConfigurations() {
-	private_node_handle_->param("ignore_height_corrections", ignore_height_corrections_, false);
+void Localization<PointT>::loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace) {
+	XmlRpc::XmlRpcValue detectors;
+	if (private_node_handle_->getParam(configuration_namespace, detectors) && detectors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = detectors.begin(); it != detectors.end(); ++it) {
+			std::string detector_name = it->first;
+			typename KeypointDetector<PointT>::Ptr keypoint_detector;
+			if (detector_name.find("intrinsic_shape_signature_3d") != std::string::npos) {
+				keypoint_detector.reset(new IntrinsicShapeSignature3D<PointT>());
+			}
 
-	cloud_matchers_.clear();
+			if (keypoint_detector) {
+				keypoint_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + detector_name + "/");
+				keypoint_detectors.push_back(keypoint_detector);
+			}
+		}
+	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupPointCloudMatchersConfigurations() {
+	private_node_handle_->param("cloud_matchers/ignore_height_corrections", ignore_height_corrections_, false);
+
+	pointcloud_matchers_.clear();
+	std::string final_registration;
+	private_node_handle_->param("final_registration", final_registration, std::string("IterativeClosestPoint"));
+	if (final_registration == "IterativeClosestPoint") {
+		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPoint<PointT>());
+		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
+		pointcloud_matchers_.push_back(final_aligment_matcher);
+	} else if (final_registration == "IterativeClosestPointWithNormals") {
+		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
+		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
+		pointcloud_matchers_.push_back(final_aligment_matcher);
+	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupFeatureCloudMatchersConfigurations() {
+	featurecloud_matchers_.clear();
 
 	std::string keypoint_descriptor;
 	private_node_handle_->param("keypoint_descriptor", keypoint_descriptor, std::string(""));
@@ -228,55 +263,42 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 		typename FeatureMatcher<PointT, pcl::PFHSignature125>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::PFHSignature125>());
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(initial_aligment_matcher);
+		featurecloud_matchers_.push_back(initial_aligment_matcher);
 	} else if (keypoint_descriptor == "FPFH") {
 		typename KeypointDescriptor<PointT, pcl::FPFHSignature33>::Ptr keypoint_descriptor(new FPFH<PointT, pcl::FPFHSignature33>());
 		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
 		typename FeatureMatcher<PointT, pcl::FPFHSignature33>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(initial_aligment_matcher);
+		featurecloud_matchers_.push_back(initial_aligment_matcher);
 	} else if (keypoint_descriptor == "SHOT") {
 		typename KeypointDescriptor<PointT, pcl::SHOT352>::Ptr keypoint_descriptor(new SHOT<PointT, pcl::SHOT352>());
 		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
 		typename FeatureMatcher<PointT, pcl::SHOT352>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::SHOT352>());
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(initial_aligment_matcher);
+		featurecloud_matchers_.push_back(initial_aligment_matcher);
 	} else if (keypoint_descriptor == "3DSC") {
 		typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new ShapeContext3D<PointT, pcl::ShapeContext1980>());
 		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
 		typename FeatureMatcher<PointT, pcl::ShapeContext1980>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ShapeContext1980>());
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(initial_aligment_matcher);
+		featurecloud_matchers_.push_back(initial_aligment_matcher);
 	} else if (keypoint_descriptor == "USC") {
 		typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new UniqueShapeContext<PointT, pcl::ShapeContext1980>());
 		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
 		typename FeatureMatcher<PointT, pcl::ShapeContext1980>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ShapeContext1980>());
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(initial_aligment_matcher);
+		featurecloud_matchers_.push_back(initial_aligment_matcher);
 	} else if (keypoint_descriptor == "ESF") {
 		typename KeypointDescriptor<PointT, pcl::ESFSignature640>::Ptr keypoint_descriptor(new ESF<PointT, pcl::ESFSignature640>());
 		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
 		typename FeatureMatcher<PointT, pcl::ESFSignature640>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ESFSignature640>());
 		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
 		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(initial_aligment_matcher);
-	}
-
-
-	std::string final_registration;
-	private_node_handle_->param("final_registration", final_registration, std::string("IterativeClosestPoint"));
-	if (final_registration == "IterativeClosestPoint") {
-		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPoint<PointT>());
-		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(final_aligment_matcher);
-	} else if (final_registration == "IterativeClosestPointWithNormals") {
-		typename CloudMatcher<PointT>::Ptr final_aligment_matcher(new IterativeClosestPointWithNormals<PointT>());
-		final_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		cloud_matchers_.push_back(final_aligment_matcher);
+		featurecloud_matchers_.push_back(initial_aligment_matcher);
 	}
 }
 
@@ -401,7 +423,7 @@ template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->points.size();
 
-	if (!applyFilters(reference_pointcloud_, reference_cloud_filters_)) { return false; }
+	if (!applyFilters(reference_cloud_filters_, reference_pointcloud_)) { return false; }
 	localization_diagnostics_msg_.number_points_reference_pointcloud_after_filtering = reference_pointcloud_->points.size();
 
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
@@ -420,9 +442,9 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 
-		if (detect_keypoints_reference_cloud_) {
+		if (!reference_cloud_keypoint_detectors_.empty()) {
 			if (reference_pointcloud_keypoints_filename_.empty() || pcl::io::loadPCDFile<PointT>(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints) != 0) {
-				if (!applyKeypointDetection(reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
+				if (!applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
 
 				if (!reference_pointcloud_keypoints_save_filename_.empty()) {
 					ROS_DEBUG_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->points.size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
@@ -435,8 +457,8 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints->points.size();
 
 
-		for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
-			cloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
+		for (size_t i = 0; i < pointcloud_matchers_.size(); ++i) {
+			pointcloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
 		}
 
 		publishReferencePointCloud();
@@ -568,7 +590,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.pose_corrections.orientation.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
 				localization_detailed_msg.pose_corrections.orientation.w = localization_detailed_msg.pose_corrections.orientation.x + localization_detailed_msg.pose_corrections.orientation.y + localization_detailed_msg.pose_corrections.orientation.z;
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
-				localization_detailed_msg.aligment_fitness = cloud_matchers_.back()->getCloudMatcher()->getFitnessScore();
+				localization_detailed_msg.aligment_fitness = pointcloud_matchers_.back()->getCloudMatcher()->getFitnessScore();
 				localization_detailed_publisher_.publish(localization_detailed_msg);
 			}
 
@@ -612,7 +634,7 @@ void Localization<PointT>::resetPointCloudHeight(pcl::PointCloud<PointT>& pointc
 
 
 template<typename PointT>
-bool Localization<PointT>::applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud, std::vector< typename CloudFilter<PointT>::Ptr > cloud_filters) {
+bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
 	for (size_t i = 0; i < cloud_filters.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
 		cloud_filters[i]->filter(pointcloud, filtered_ambient_pointcloud);
@@ -624,7 +646,7 @@ bool Localization<PointT>::applyFilters(typename pcl::PointCloud<PointT>::Ptr& p
 
 
 template<typename PointT>
-bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
+bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
 	if (!normal_estimator) return false;
 
 	tf2::Transform sensor_pose_tf_guess;
@@ -644,13 +666,14 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 
 
 template<typename PointT>
-bool Localization<PointT>::applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, typename pcl::PointCloud<PointT>::Ptr& keypoints) {
-	for (size_t i = 0; i < keypoint_detectors_.size(); ++i) {
+bool Localization<PointT>::applyKeypointDetection(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, typename pcl::PointCloud<PointT>::Ptr& keypoints) {
+	keypoints->points.clear();
+	for (size_t i = 0; i < keypoint_detectors.size(); ++i) {
 		if (i == 0) {
-			keypoint_detectors_[i]->findKeypoints(pointcloud, keypoints, pointcloud, surface_search_method);
+			keypoint_detectors[i]->findKeypoints(pointcloud, keypoints, pointcloud, surface_search_method);
 		} else {
 			typename pcl::PointCloud<PointT>::Ptr keypoints_temp(new pcl::PointCloud<PointT>());
-			keypoint_detectors_[i]->findKeypoints(pointcloud, keypoints_temp, pointcloud, surface_search_method);
+			keypoint_detectors[i]->findKeypoints(pointcloud, keypoints_temp, pointcloud, surface_search_method);
 			*keypoints += *keypoints_temp;
 		}
 	}
@@ -668,9 +691,9 @@ bool Localization<PointT>::applyCloudRegistration(typename pcl::PointCloud<Point
 	if (ambient_pointcloud->points.empty()) { return false; }
 
 	bool registration_successful = false;
-	for (size_t i = 0; i < cloud_matchers_.size(); ++i) {
+	for (size_t i = 0; i < pointcloud_matchers_.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_aligned(new pcl::PointCloud<PointT>());
-		if (cloud_matchers_[i]->registerCloud(ambient_pointcloud, surface_search_method, pointcloud_keypoints, pointcloud_pose_in_out, ambient_pointcloud_aligned, false)) {
+		if (pointcloud_matchers_[i]->registerCloud(ambient_pointcloud, surface_search_method, pointcloud_keypoints, pointcloud_pose_in_out, ambient_pointcloud_aligned, false)) {
 			registration_successful = true;
 			ambient_pointcloud = ambient_pointcloud_aligned; // switch pointers
 		}
@@ -698,7 +721,7 @@ template<typename PointT>
 bool Localization<PointT>::applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators_.size(); ++i) {
 		if (!transformation_validators_[i]->validateNewLocalizationPose((last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_ < pose_tracking_timeout_)) ? last_accepted_pose_ : pointcloud_pose_initial_guess, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out,
-				cloud_matchers_.back()->getCloudMatcher()->getFitnessScore(), max_outlier_percentage)) {
+				pointcloud_matchers_.back()->getCloudMatcher()->getFitnessScore(), max_outlier_percentage)) {
 			return false;
 		}
 	}
@@ -717,7 +740,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	PerformanceTimer performance_timer;
 	performance_timer.start();
 	// ==============================================================  filters
-	if (!applyFilters(ambient_pointcloud, ambient_cloud_filters_)) { return false; }
+	if (!applyFilters(ambient_cloud_filters_, ambient_pointcloud)) { return false; }
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_after_filtering = ambient_pointcloud->points.size();
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
@@ -736,8 +759,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	// ==============================================================  keypoint selection
 	performance_timer.restart();
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
-	if (detect_keypoints_ambient_cloud_) {
-		if (!applyKeypointDetection(ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
+	if (!ambient_cloud_keypoint_detectors_.empty()) {
+		if (!applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
 	}
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = ambient_pointcloud_keypoints->points.size();
 	localization_times_msg_.keypoint_selection_time = performance_timer.getElapsedTimeInMilliSec();
@@ -745,7 +768,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  cloud registration
 	performance_timer.restart();
-	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, detect_keypoints_ambient_cloud_ ? ambient_pointcloud_keypoints : ambient_pointcloud, pointcloud_pose_corrected_out)) { return false; }
+	if (!applyCloudRegistration(ambient_pointcloud, ambient_search_method, !ambient_cloud_keypoint_detectors_.empty() ? ambient_pointcloud_keypoints : ambient_pointcloud, pointcloud_pose_corrected_out)) { return false; }
 	localization_times_msg_.pointcloud_registration_time = performance_timer.getElapsedTimeInMilliSec();
 
 

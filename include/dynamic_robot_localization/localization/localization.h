@@ -128,7 +128,9 @@ class Localization : public ConfigurableObject {
 		virtual void setupNormalEstimatorConfigurations();
 		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
 		virtual void setupKeypointDetectors();
-		virtual void setupCloudMatchersConfigurations();
+		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
+		virtual void setupPointCloudMatchersConfigurations();
+		virtual void setupFeatureCloudMatchersConfigurations();
 		virtual void setupTransformationValidatorsConfigurations();
 		virtual void setupOutlierDetectorsConfigurations();
 
@@ -144,12 +146,12 @@ class Localization : public ConfigurableObject {
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
 
-		virtual bool applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud, std::vector< typename CloudFilter<PointT>::Ptr > cloud_filters);
+		virtual bool applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud);
 
-		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
 
-		virtual bool applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool applyKeypointDetection(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& keypoints);
 
@@ -209,8 +211,6 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
 		bool save_reference_pointclouds_in_binary_format_;
-		bool detect_keypoints_reference_cloud_;
-		bool detect_keypoints_ambient_cloud_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
@@ -247,8 +247,10 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
-		std::vector< typename KeypointDetector<PointT>::Ptr > keypoint_detectors_;
-		std::vector< typename CloudMatcher<PointT>::Ptr > cloud_matchers_;
+		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;
+		std::vector< typename KeypointDetector<PointT>::Ptr > ambient_cloud_keypoint_detectors_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > pointcloud_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > featurecloud_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		double outlier_percentage_;

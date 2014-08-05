@@ -1,6 +1,0 @@
-reference_pointcloud_publish_topic: 'reference_pointcloud'
-aligned_pointcloud_publish_topic: 'aligned_pointcloud'
-pose_publish_topic: '/initialpose'
-localization_detailed_topic: 'localization_detailed'
-localization_diagnostics_topic: 'diagnostics'
-localization_times_topic: 'localization_times'

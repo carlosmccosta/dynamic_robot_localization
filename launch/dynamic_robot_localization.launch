@@ -24,17 +24,7 @@
 
 
 		<!-- =============== pipeline =============== -->
-		<param name="detect_keypoints_reference_cloud" type="bool" value="false" />													<!-- default: true -->
-		<param name="detect_keypoints_ambient_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="match_only_keypoints" type="bool" value="false" /> 															<!-- default: false -->
-
-
-		<!-- =============== keypoint detection =============== -->
-		<param name="iss3_keypoints_cloud_publish_topic" type="str" value="ambient_keypoints" />
-		<param name="salient_radius" type="double" value="0.18" /> 																	<!-- default: 0.06 -->
-		<param name="non_max_radius" type="double" value="0.12" /> 																	<!-- default: 0.04 -->
-		<param name="normal_radius" type="double" value="0.09" /> 																	<!-- default: 0.04 -->
-		<param name="border_radius" type="double" value="0.0" />
 
 
 		<!-- =============== initial alignment =============== -->

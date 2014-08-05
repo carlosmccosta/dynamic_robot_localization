@@ -1,3 +1,0 @@
-max_seconds_scan_age: 0.5
-min_seconds_between_scan_registration: 0.05
-min_seconds_between_reference_pointcloud_update: 5.0

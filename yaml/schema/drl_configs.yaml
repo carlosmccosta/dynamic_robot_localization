@@ -123,49 +123,57 @@ cloud_matchers:
     ignore_height_corrections: false
     feature_matcher:
         display_feature_matching: false
-        keypoint_detection:
-            detect_keypoints_reference_cloud: false
-            detect_keypoints_ambient_cloud: false
-            detectors:
-                intrinsic_shape_signature_3d:
-                    salient_radius: 0.06
-                    non_max_radius: 0.04
-                    normal_radius: 0.04
-                    border_radius: 0.0
-                    threshold21: 0.975
-                    threshold32: 0.975
-                    min_neighbors: 5
-                    angle_threshold: 1.57
-                    iss3_keypoints_cloud_publish_topic: ''
-        keypoint_description:
+#        keypoint_detectors:
+#            reference_pointcloud:
+#                intrinsic_shape_signature_3d:
+#                    salient_radius: 0.18
+#                    non_max_radius: 0.12
+#                    normal_radius: 0.09
+#                    border_radius: 0.0
+#                    threshold21: 0.975
+#                    threshold32: 0.975
+#                    min_neighbors: 5
+#                    angle_threshold: 1.57
+#                    iss3_keypoints_cloud_publish_topic: 'reference_keypoints'
+#            ambient_pointcloud:
+#                intrinsic_shape_signature_3d:
+#                    salient_radius: 0.18
+#                    non_max_radius: 0.12
+#                    normal_radius: 0.09
+#                    border_radius: 0.0
+#                    threshold21: 0.975
+#                    threshold32: 0.975
+#                    min_neighbors: 5
+#                    angle_threshold: 1.57
+#                    iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
+        keypoint_descriptors:
             feature_descriptor_k_search: 10
             feature_descriptor_radius_search: 0.1
             reference_pointcloud_descriptors_filename: ''
             reference_pointcloud_descriptors_save_filename: ''
             save_descriptors_in_binary_format : true
-            descriptors:
-                pfh:
-                    use_internal_cache: true
-                    maximum_cache_size: 33554432
-                fpfh:
-                    number_subdivisions_f1: 11
-                    number_subdivisions_f2: 11
-                    number_subdivisions_f3: 11
-                shot:
-                    lrf_radius: 0.05
-                shape_context_3d:
-                    minimal_radius: 0.1
-                    point_density_radius: 0.2
-                unique_shape_context:
-                    minimal_radius: 0.1
-                    point_density_radius: 0.2
-                    local_radius: 2.5
-                spin_image:
-                    image_width: 8
-                    support_angle_cos: 0.0
-                    min_point_count_in_neighbourhood: 0
-                    use_angular_domain: false
-                    use_radial_structure: false
+            pfh:
+                use_internal_cache: true
+                maximum_cache_size: 33554432
+            fpfh:
+                number_subdivisions_f1: 11
+                number_subdivisions_f2: 11
+                number_subdivisions_f3: 11
+            shot:
+                lrf_radius: 0.05
+            shape_context_3d:
+                minimal_radius: 0.1
+                point_density_radius: 0.2
+            unique_shape_context:
+                minimal_radius: 0.1
+                point_density_radius: 0.2
+                local_radius: 2.5
+            spin_image:
+                image_width: 8
+                support_angle_cos: 0.0
+                min_point_count_in_neighbourhood: 0
+                use_angular_domain: false
+                use_radial_structure: false
         matcher:
             sample_consensus_initial_alignment:
                 min_sample_distance: 1.0

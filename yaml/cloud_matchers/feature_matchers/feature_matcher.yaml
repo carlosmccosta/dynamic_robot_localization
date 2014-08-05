@@ -1,4 +1,0 @@
-display_feature_matching: false
-reference_pointcloud_descriptors_filename: ''
-reference_pointcloud_descriptors_save_filename: ''
-save_descriptors_in_binary_format : true
