@@ -126,6 +126,7 @@ class Localization : public ConfigurableObject {
 		virtual void setupFiltersConfigurations();
 		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
 		virtual void setupNormalEstimatorConfigurations();
+		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
 		virtual void setupKeypointDetectors();
 		virtual void setupCloudMatchersConfigurations();
 		virtual void setupTransformationValidatorsConfigurations();
@@ -145,7 +146,7 @@ class Localization : public ConfigurableObject {
 
 		virtual bool applyFilters(typename pcl::PointCloud<PointT>::Ptr& pointcloud, std::vector< typename CloudFilter<PointT>::Ptr > cloud_filters);
 
-		virtual bool applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
 
 		virtual bool applyKeypointDetection(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
@@ -209,8 +210,6 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
 		bool save_reference_pointclouds_in_binary_format_;
-		bool compute_normals_reference_cloud_;
-		bool compute_normals_ambient_cloud_;
 		bool detect_keypoints_reference_cloud_;
 		bool detect_keypoints_ambient_cloud_;
 		double max_outliers_percentage_;
@@ -247,7 +246,8 @@ class Localization : public ConfigurableObject {
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_;
-		typename NormalEstimator<PointT>::Ptr normal_estimator_;
+		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
+		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > keypoint_detectors_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > cloud_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;

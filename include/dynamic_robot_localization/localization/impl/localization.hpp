@@ -24,8 +24,6 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 Localization<PointT>::Localization() :
 	save_reference_pointclouds_in_binary_format_(true),
-	compute_normals_reference_cloud_(true),
-	compute_normals_ambient_cloud_(true),
 	detect_keypoints_reference_cloud_(true),
 	detect_keypoints_ambient_cloud_(true),
 	max_outliers_percentage_(0.6),
@@ -138,8 +136,6 @@ void Localization<PointT>::setupReferencePointCloud() {
 
 template<typename PointT>
 void Localization<PointT>::setupLocalizationPipeline() {
-	private_node_handle_->param("normal_estimators/compute_normals_reference_cloud", compute_normals_reference_cloud_, false);
-	private_node_handle_->param("normal_estimators/compute_normals_ambient_cloud", compute_normals_ambient_cloud_, false);
 	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_reference_cloud", detect_keypoints_reference_cloud_, false);
 	private_node_handle_->param("cloud_matcher/feature_matcher/keypoint_detection/detect_keypoints_ambient_cloud", detect_keypoints_ambient_cloud_, false);
 	private_node_handle_->param("transformation_validators/publish_tf_map_odom", publish_tf_map_odom_, false);
@@ -181,24 +177,28 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 
 template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorConfigurations() {
-	normal_estimator_.reset();
-	std::string configuration_namespace = "normal_estimators/";
+	loadNormalEstimatorFromParameterServer(reference_cloud_normal_estimator_, "normal_estimators/reference_pointcloud/");
+	loadNormalEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "normal_estimators/ambient_pointcloud/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace) {
+	normal_estimator.reset();
 	XmlRpc::XmlRpcValue normal_estimators;
 	if (private_node_handle_->getParam(configuration_namespace, normal_estimators) && normal_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
-		std::string final_estimator_name;
 		for (XmlRpc::XmlRpcValue::iterator it = normal_estimators.begin(); it != normal_estimators.end(); ++it) {
 			std::string estimator_name = it->first;
 			if (estimator_name.find("normal_estimation_omp") != std::string::npos) {
-				normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
-				final_estimator_name = estimator_name;
+				normal_estimator = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
 			} else if (estimator_name.find("moving_least_squares") != std::string::npos) {
-				normal_estimator_ = typename NormalEstimator<PointT>::Ptr(new MovingLeastSquares<PointT>());
-				final_estimator_name = estimator_name;
+				normal_estimator = typename NormalEstimator<PointT>::Ptr(new MovingLeastSquares<PointT>());
 			}
-		}
 
-		if (normal_estimator_) {
-			normal_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + final_estimator_name + "/");
+			if (normal_estimator) {
+				normal_estimator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + estimator_name + "/");
+				return;
+			}
 		}
 	}
 }
@@ -380,8 +380,8 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 	localization_diagnostics_msg_.number_points_reference_pointcloud_after_filtering = reference_pointcloud_->points.size();
 
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
-	if (compute_normals_reference_cloud_) {
-		if (!applyNormalEstimation(reference_pointcloud_, reference_pointcloud_search_method_)) { return false; }
+	if (reference_cloud_normal_estimator_) {
+		if (!applyNormalEstimation(reference_cloud_normal_estimator_, reference_pointcloud_, reference_pointcloud_search_method_)) { return false; }
 		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_); // update kdtree
 	}
 
@@ -599,7 +599,9 @@ bool Localization<PointT>::applyFilters(typename pcl::PointCloud<PointT>::Ptr& p
 
 
 template<typename PointT>
-bool Localization<PointT>::applyNormalEstimation(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
+bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
+	if (!normal_estimator) return false;
+
 	tf2::Transform sensor_pose_tf_guess;
 	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
 		sensor_pose_tf_guess.setIdentity();
@@ -609,7 +611,7 @@ bool Localization<PointT>::applyNormalEstimation(typename pcl::PointCloud<PointT
 		pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
 	}*/
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
-	normal_estimator_->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, ambient_pointcloud_with_normals);
+	normal_estimator->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, ambient_pointcloud_with_normals);
 	pointcloud = ambient_pointcloud_with_normals; // switch pointers
 
 	return !pointcloud->points.empty();
@@ -715,8 +717,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	performance_timer.restart();
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
 	ambient_search_method->setInputCloud(ambient_pointcloud);
-	if (compute_normals_ambient_cloud_) {
-		if (!applyNormalEstimation(ambient_pointcloud, ambient_search_method)) { return false; }
+	if (ambient_cloud_normal_estimator_) {
+		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
 		ambient_search_method->setInputCloud(ambient_pointcloud);
 	}
 	localization_times_msg_.surface_normal_estimation_time = performance_timer.getElapsedTimeInMilliSec();

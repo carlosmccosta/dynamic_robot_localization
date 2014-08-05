@@ -70,29 +70,47 @@ filters:
 
 
 normal_estimators:
-    compute_normals_reference_cloud: false
-    compute_normals_ambient_cloud: false
-    display_normals: false
-    normal_estimation_omp:
-        display_normals: false # overrides parent
-        search_k: 0
-        search_radius: 0.12
-    moving_least_squares:
-#       display_normals: false # uses parent
-        compute_normals: true
-        polynomial_order: 2
-        polynomial_fit: true
-        search_radius: 0.12
-        sqr_gauss_param: 0.0144
-        upsample_method: NONE
-        upsampling_radius: 0.05
-        upsampling_step: 0.01
-        desired_num_points_in_radius: 5
-        dilation_voxel_size: 0.01
-        dilation_iterations: 1
+    reference_pointcloud:
+        display_normals: false
+        1_normal_estimation_omp:
+            display_normals: false # overrides parent
+            search_k: 0
+            search_radius: 0.12
+        moving_least_squares:
+    #       display_normals: false # uses parent
+            compute_normals: true
+            polynomial_order: 2
+            polynomial_fit: true
+            search_radius: 0.12
+            sqr_gauss_param: 0.0144
+            upsample_method: NONE
+            upsampling_radius: 0.05
+            upsampling_step: 0.01
+            desired_num_points_in_radius: 5
+            dilation_voxel_size: 0.01
+            dilation_iterations: 1
+    ambient_pointcloud:
+        display_normals: false
+        normal_estimation_omp:
+            display_normals: false # overrides parent
+            search_k: 0
+            search_radius: 0.12
+        1_moving_least_squares:
+    #       display_normals: false # uses parent
+            compute_normals: true
+            polynomial_order: 2
+            polynomial_fit: true
+            search_radius: 0.12
+            sqr_gauss_param: 0.0144
+            upsample_method: NONE
+            upsampling_radius: 0.05
+            upsampling_step: 0.01
+            desired_num_points_in_radius: 5
+            dilation_voxel_size: 0.01
+            dilation_iterations: 1
 
 
-cloud_matcher:
+cloud_matchers:
     max_correspondence_distance: 1.0
     transformation_epsilon: 1e-8
     euclidean_fitness_epsilon: 1e-6
@@ -166,11 +184,10 @@ cloud_matcher:
             use_reciprocal_correspondences: true
 
 
-outlier_detection:
-    aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
-    detectors:
-        - euclidean_outlier_detector:
-            max_inliers_distance: 0.01
+outlier_detectors:
+    euclidean_outlier_detector:
+        max_inliers_distance: 0.01
+        aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
 
 
 transformation_validators:
