@@ -23,7 +23,7 @@ EuclideanOutlierDetector<PointT>::EuclideanOutlierDetector() : max_inliers_dista
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanOutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void EuclideanOutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	private_node_handle->param("max_inliers_distance", max_inliers_distance_, 0.01);
+	private_node_handle->param(configuration_namespace + "max_inliers_distance", max_inliers_distance_, 0.01);
 	OutlierDetector<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
