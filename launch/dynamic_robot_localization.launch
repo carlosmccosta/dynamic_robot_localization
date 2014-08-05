@@ -24,16 +24,9 @@
 
 
 		<!-- =============== pipeline =============== -->
-		<param name="compute_normals_reference_cloud" type="bool" value="false" />													<!-- default: true -->
-		<param name="compute_normals_ambient_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="detect_keypoints_reference_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="detect_keypoints_ambient_cloud" type="bool" value="false" />													<!-- default: true -->
 		<param name="match_only_keypoints" type="bool" value="false" /> 															<!-- default: false -->
-
-
-		<!-- =============== normal estimation =============== -->
-		<param name="search_k" type="int" value="0" />	 																			<!-- default: 0 -->
-		<param name="search_radius" type="double" value="0.25" /> 																	<!-- default: 0.12 -->
 
 
 		<!-- =============== keypoint detection =============== -->
@@ -85,24 +78,7 @@
 		<param name="ransac_outlier_rejection_threshold" type="double" value="0.05" />
 
 
-		<!-- =============== transformation validator =============== -->
-		<param name="max_transformation_angle" type="double" value="0.4" />
-		<param name="max_transformation_distance" type="double" value="0.035" />
-		<param name="max_new_pose_diff_angle" type="double" value="0.6" />
-		<param name="max_new_pose_diff_distance" type="double" value="0.2" />
-		<param name="max_alignment_fitness" type="double" value="3.0" />
-		<param name="max_outliers_percentage" type="double" value="0.7" /> 																<!-- default: 0.6 -->
-
-
-		<!-- =============== outlier detection =============== -->
-		<param name="outlier_detector" type="str" value="EuclideanOutlierDetector" />
-		<param name="aligned_pointcloud_outliers_publish_topic" type="str" value="aligned_pointcloud_outliers" />
-		<param name="max_inliers_distance" type="double" value="0.01" />
-
-
-
 		<!-- ############### debugging ############### -->
-<!-- 		<param name="display_normals" type="bool" value="false" /> -->
 		<param name="display_cloud_aligment" type="bool" value="false" />
 		<param name="display_feature_matching" type="bool" value="false" /> 															<!-- default: false -->
 		<param name="number_maximum_displayed_correspondences" type="int" value="0" />

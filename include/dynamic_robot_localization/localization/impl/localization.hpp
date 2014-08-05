@@ -216,9 +216,6 @@ void Localization<PointT>::setupKeypointDetectors() {
 template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
 	private_node_handle_->param("ignore_height_corrections", ignore_height_corrections_, false);
-	double pose_tracking_timeout;
-	private_node_handle_->param("pose_tracking_timeout", pose_tracking_timeout, 2.0);
-	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
 
 	cloud_matchers_.clear();
 
@@ -286,10 +283,28 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 
 template<typename PointT>
 void Localization<PointT>::setupTransformationValidatorsConfigurations() {
+	std::string configuration_namespace = "transformation_validators/";
+	double pose_tracking_timeout;
+	private_node_handle_->param(configuration_namespace + "pose_tracking_timeout", pose_tracking_timeout, 2.0);
+	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
+
+
 	transformation_validators_.clear();
-	TransformationValidator::Ptr default_validator(new EuclideanTransformationValidator());
-	default_validator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-	transformation_validators_.push_back(default_validator);
+	XmlRpc::XmlRpcValue transformation_validators;
+	if (private_node_handle_->getParam(configuration_namespace, transformation_validators) && transformation_validators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = transformation_validators.begin(); it != transformation_validators.end(); ++it) {
+			std::string validator_name = it->first;
+			TransformationValidator::Ptr transformation_validator;
+			if (validator_name.find("euclidean_transformation_validator") != std::string::npos) {
+				transformation_validator.reset(new EuclideanTransformationValidator());
+			}
+
+			if (transformation_validator) {
+				transformation_validator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + validator_name + "/");
+				transformation_validators_.push_back(transformation_validator);
+			}
+		}
+	}
 }
 
 

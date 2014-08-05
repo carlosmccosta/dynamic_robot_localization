@@ -28,12 +28,12 @@ EuclideanTransformationValidator::EuclideanTransformationValidator() :
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanTransformationValidator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 void EuclideanTransformationValidator::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	private_node_handle->param("max_transformation_angle", max_transformation_angle_, 0.7);
-	private_node_handle->param("max_transformation_distance", max_transformation_distance_, 0.1);
-	private_node_handle->param("max_new_pose_diff_angle", max_new_pose_diff_angle_, 1.59);
-	private_node_handle->param("max_new_pose_diff_distance", max_new_pose_diff_distance_, 0.2);
-	private_node_handle->param("max_alignment_fitness", max_alignment_fitness_, 0.1);
-	private_node_handle->param("max_outliers_percentage", max_outliers_percentage_, 0.6);
+	private_node_handle->param(configuration_namespace + "max_transformation_angle", max_transformation_angle_, 0.7);
+	private_node_handle->param(configuration_namespace + "max_transformation_distance", max_transformation_distance_, 0.1);
+	private_node_handle->param(configuration_namespace + "max_new_pose_diff_angle", max_new_pose_diff_angle_, 1.59);
+	private_node_handle->param(configuration_namespace + "max_new_pose_diff_distance", max_new_pose_diff_distance_, 0.2);
+	private_node_handle->param(configuration_namespace + "max_alignment_fitness", max_alignment_fitness_, 0.1);
+	private_node_handle->param(configuration_namespace + "max_outliers_percentage", max_outliers_percentage_, 0.6);
 }
 
 bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose, double alignment_fitness, double outliers_percentage) {
