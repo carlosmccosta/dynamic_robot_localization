@@ -24,8 +24,8 @@ void ShapeContext3D<PointT, FeatureT>::setupConfigurationFromParameterServer(ros
 	typename pcl::ShapeContext3DEstimation<PointT, PointT, FeatureT>::Ptr feature_descriptor(new pcl::ShapeContext3DEstimation<PointT, PointT, FeatureT>());
 
 	double minimal_radius, point_density_radius;
-	private_node_handle->param("minimal_radius", minimal_radius, 0.1);
-	private_node_handle->param("point_density_radius", point_density_radius, 0.2);
+	private_node_handle->param(configuration_namespace + "minimal_radius", minimal_radius, 0.1);
+	private_node_handle->param(configuration_namespace + "point_density_radius", point_density_radius, 0.2);
 	feature_descriptor->setMinimalRadius(minimal_radius);
 	feature_descriptor->setPointDensityRadius(point_density_radius);
 

@@ -25,7 +25,7 @@ void SHOT<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHand
 	typename pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>::Ptr feature_descriptor(new pcl::SHOTEstimationOMP<PointT, PointT, FeatureT>());
 
 	double lrf_radius;
-	private_node_handle->param("lrf_radius", lrf_radius, 0.05);
+	private_node_handle->param(configuration_namespace + "lrf_radius", lrf_radius, 0.05);
 	feature_descriptor->setLRFRadius(lrf_radius);
 
 	KeypointDescriptor<PointT, FeatureT>::setFeatureDescriptor(feature_descriptor);

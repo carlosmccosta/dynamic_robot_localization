@@ -21,11 +21,15 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <FeatureMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	std::string final_param_name;
+	std::string search_namespace = private_node_handle->getNamespace() + "/" + configuration_namespace;
+
 	bool display_feature_matching;
-	private_node_handle->param("display_feature_matching", display_feature_matching, false);
-	private_node_handle->param("reference_pointcloud_descriptors_filename", reference_pointcloud_descriptors_filename_, std::string(""));
-	private_node_handle->param("reference_pointcloud_descriptors_save_filename", reference_pointcloud_descriptors_save_filename_, std::string(""));
-	private_node_handle->param("save_descriptors_in_binary_format", save_descriptors_in_binary_format_, true);
+	if (ros::param::search(search_namespace, "display_feature_matching", final_param_name)) { private_node_handle->param(final_param_name, display_feature_matching, false); }
+	if (ros::param::search(search_namespace, "reference_pointcloud_descriptors_filename", final_param_name)) { private_node_handle->param(final_param_name, reference_pointcloud_descriptors_filename_, std::string("")); }
+	if (ros::param::search(search_namespace, "reference_pointcloud_descriptors_save_filename", final_param_name)) { private_node_handle->param(final_param_name, reference_pointcloud_descriptors_save_filename_, std::string("")); }
+	if (ros::param::search(search_namespace, "save_descriptors_in_binary_format", final_param_name)) { private_node_handle->param(final_param_name, save_descriptors_in_binary_format_, true); }
+
 	CloudMatcher<PointT>::setDisplayCloudAligment(display_feature_matching);
 
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);

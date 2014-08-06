@@ -69,9 +69,9 @@ filters:
             save_leaf_layout: false
 
 
-normal_estimators:
-    reference_pointcloud:
-        display_normals: false
+#normal_estimators:
+#    reference_pointcloud:
+#        display_normals: false # can be overridden in child namespaces
 #        normal_estimation_omp:
 #            display_normals: false # overrides parent
 #            search_k: 0
@@ -89,8 +89,8 @@ normal_estimators:
 #            desired_num_points_in_radius: 5
 #            dilation_voxel_size: 0.01
 #            dilation_iterations: 1
-    ambient_pointcloud:
-        display_normals: false
+#    ambient_pointcloud:
+#        display_normals: false
 #        normal_estimation_omp:
 #            display_normals: false # overrides parent
 #            search_k: 0
@@ -121,8 +121,11 @@ cloud_matchers:
     match_only_keypoints: false
     display_cloud_aligment: false
     maximum_number_of_displayed_correspondences: 0
-    feature_matchers:
-        display_feature_matching: false
+#    feature_matchers:
+#        display_feature_matching: false                         # can be overridden in child namespaces
+#        reference_pointcloud_descriptors_filename: ''           # can be overridden in child namespaces
+#        reference_pointcloud_descriptors_save_filename: ''      # can be overridden in child namespaces
+#        save_descriptors_in_binary_format : true                # can be overridden in child namespaces
 #        keypoint_detectors:
 #            reference_pointcloud:
 #                intrinsic_shape_signature_3d:
@@ -146,51 +149,48 @@ cloud_matchers:
 #                    min_neighbors: 5
 #                    angle_threshold: 1.57
 #                    iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
-        keypoint_descriptors:
-            feature_descriptor_k_search: 10
-            feature_descriptor_radius_search: 0.1
-            reference_pointcloud_descriptors_filename: ''
-            reference_pointcloud_descriptors_save_filename: ''
-            save_descriptors_in_binary_format : true
-            pfh:
-                use_internal_cache: true
-                maximum_cache_size: 33554432
-            fpfh:
-                number_subdivisions_f1: 11
-                number_subdivisions_f2: 11
-                number_subdivisions_f3: 11
-            shot:
-                lrf_radius: 0.05
-            shape_context_3d:
-                minimal_radius: 0.1
-                point_density_radius: 0.2
-            unique_shape_context:
-                minimal_radius: 0.1
-                point_density_radius: 0.2
-                local_radius: 2.5
-            spin_image:
-                image_width: 8
-                support_angle_cos: 0.0
-                min_point_count_in_neighbourhood: 0
-                use_angular_domain: false
-                use_radial_structure: false
-        matchers:
-            sample_consensus_initial_alignment:
-                min_sample_distance: 1.0
-                number_of_samples: 3
-                correspondence_randomness: 10
-            sample_consensus_initial_alignment_prerejective:
-                similarity_threshold: 0.8
-                inlier_fraction: 0.25
-                number_of_samples: 3
-                correspondence_randomness: 10
+#        keypoint_descriptors:
+#            feature_descriptor_k_search: 0                         # can be overridden in child namespaces
+#            feature_descriptor_radius_search: 0.2                   # can be overridden in child namespaces
+#            pfh:
+#                use_internal_cache: true
+#                maximum_cache_size: 33554432
+#            fpfh:
+#                number_subdivisions_f1: 11
+#                number_subdivisions_f2: 11
+#                number_subdivisions_f3: 11
+#            shot:
+#                lrf_radius: 0.2
+#            shape_context_3d:
+#                minimal_radius: 0.2
+#                point_density_radius: 0.4
+#            unique_shape_context:
+#                minimal_radius: 0.2
+#                point_density_radius: 0.4
+#                local_radius: 0.2
+#            spin_image:
+#                image_width: 8
+#                support_angle_cos: 0.0
+#                min_point_count_in_neighbourhood: 0
+#                use_angular_domain: false
+#                use_radial_structure: false
+#        matchers:
+#            sample_consensus_initial_alignment:
+#                min_sample_distance: 1.0
+#                number_of_samples: 3
+#                correspondence_randomness: 10
+#            sample_consensus_initial_alignment_prerejective:
+#                similarity_threshold: 0.5
+#                inlier_fraction: 0.15
+#                number_of_samples: 5
+#                correspondence_randomness: 40
     point_matchers:
         iterative_closest_point:
             max_correspondence_distance: 0.05                   # overrides parent
-            transformation_epsilon: 1e-6                        # overrides parent
-            euclidean_fitness_epsilon: 1e-5                     # overrides parent
-            max_number_of_registration_iterations: 200          # overrides parent
-            max_number_of_ransac_iterations: 200                # overrides parent
+            transformation_epsilon: 1e-3                        # overrides parent
+            euclidean_fitness_epsilon: 1e-3                     # overrides parent
+            max_number_of_registration_iterations: 50          # overrides parent
+            max_number_of_ransac_iterations: 50                # overrides parent
             ransac_outlier_rejection_threshold: 0.05            # overrides parent
             match_only_keypoints: false                         # overrides parent
             display_cloud_aligment: false                       # overrides parent

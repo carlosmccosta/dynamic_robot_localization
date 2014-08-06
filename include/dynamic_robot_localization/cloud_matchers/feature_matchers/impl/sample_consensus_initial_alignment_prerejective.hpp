@@ -31,18 +31,18 @@ void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigu
         ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 
 	double similarity_threshold;
-	private_node_handle->param("similarity_threshold", similarity_threshold, 0.8);
+	private_node_handle->param(configuration_namespace + "similarity_threshold", similarity_threshold, 0.8);
 	matcher_scia_->setSimilarityThreshold(similarity_threshold);
 
 	double inlier_fraction;
-	private_node_handle->param("inlier_fraction", inlier_fraction, 0.25);
+	private_node_handle->param(configuration_namespace + "inlier_fraction", inlier_fraction, 0.25);
 	matcher_scia_->setInlierFraction(inlier_fraction);
 
-	private_node_handle->param("number_of_samples", number_of_samples_, 3);
+	private_node_handle->param(configuration_namespace + "number_of_samples", number_of_samples_, 3);
 	matcher_scia_->setNumberOfSamples(number_of_samples_);
 
 	int correspondence_randomness;
-	private_node_handle->param("correspondence_randomness", correspondence_randomness, 10);
+	private_node_handle->param(configuration_namespace + "correspondence_randomness", correspondence_randomness, 10);
 	matcher_scia_->setCorrespondenceRandomness(correspondence_randomness);
 
 	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);

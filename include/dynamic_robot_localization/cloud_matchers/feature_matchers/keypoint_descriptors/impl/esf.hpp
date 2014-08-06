@@ -16,33 +16,15 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT, typename FeatureT>
-ESF<PointT, FeatureT>::ESF() :
-	feature_descriptor_esf_(new pcl::ESFEstimation<PointT, FeatureT>()) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <ESF-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 void ESF<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	typename pcl::ESFEstimation<PointT, FeatureT>::Ptr feature_descriptor(new pcl::ESFEstimation<PointT, FeatureT>());
+
+	KeypointDescriptor<PointT, FeatureT>::setFeatureDescriptor(feature_descriptor);
 	KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
-}
-
-
-template<typename PointT, typename FeatureT>
-typename pcl::PointCloud<FeatureT>::Ptr ESF<PointT, FeatureT>::computeKeypointsDescriptors(
-        typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints, typename pcl::PointCloud<PointT>::Ptr& surface,
-        typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
-
-	typename pcl::PointCloud<FeatureT>::Ptr descriptors(new pcl::PointCloud<FeatureT>());
-
-	if (feature_descriptor_esf_) {
-		feature_descriptor_esf_->setSearchMethod(surface_search_method);
-		feature_descriptor_esf_->setSearchSurface(surface);
-		feature_descriptor_esf_->setInputCloud(pointcloud_keypoints);
-		feature_descriptor_esf_->compute(*descriptors);
-	}
-
-	return descriptors;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </ESF-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

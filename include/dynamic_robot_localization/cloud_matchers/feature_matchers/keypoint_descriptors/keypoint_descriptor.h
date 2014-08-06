@@ -64,11 +64,11 @@ class KeypointDescriptor : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </KeypointDescriptor-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		const typename pcl::FeatureFromNormals<PointT, PointT, FeatureT>::Ptr& getFeatureDescriptor() const { return feature_descriptor_; }
+		const typename pcl::Feature<PointT, FeatureT>::Ptr& getFeatureDescriptor() const { return feature_descriptor_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		void setFeatureDescriptor(const typename pcl::FeatureFromNormals<PointT, PointT, FeatureT>::Ptr& feature_descriptor) { feature_descriptor_ = feature_descriptor; }
+		void setFeatureDescriptor(const typename pcl::Feature<PointT, FeatureT>::Ptr& feature_descriptor) { feature_descriptor_ = feature_descriptor; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -78,7 +78,7 @@ class KeypointDescriptor : public ConfigurableObject {
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-		typename pcl::FeatureFromNormals<PointT, PointT, FeatureT>::Ptr feature_descriptor_;
+		typename pcl::Feature<PointT, FeatureT>::Ptr feature_descriptor_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

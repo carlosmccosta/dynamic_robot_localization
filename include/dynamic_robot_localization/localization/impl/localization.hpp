@@ -254,51 +254,67 @@ template<typename PointT>
 void Localization<PointT>::setupFeatureCloudMatchersConfigurations() {
 	featurecloud_matchers_.clear();
 
-	std::string keypoint_descriptor;
-	private_node_handle_->param("keypoint_descriptor", keypoint_descriptor, std::string(""));
+	std::string keypoint_descriptor_configuration_namespace = "cloud_matchers/feature_matchers/keypoint_descriptors/";
+	XmlRpc::XmlRpcValue keypoint_descriptors;
+	if (private_node_handle_->getParam(keypoint_descriptor_configuration_namespace, keypoint_descriptors) && keypoint_descriptors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = keypoint_descriptors.begin(); it != keypoint_descriptors.end(); ++it) {
+			std::string descriptor_name = it->first;
+			if (descriptor_name.find("fpfh") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::FPFHSignature33>::Ptr keypoint_descriptor(new FPFH<PointT, pcl::FPFHSignature33>());
+				loadKeypointMatcherFromParameterServer<pcl::FPFHSignature33>(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			} else if (descriptor_name.find("pfh") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::PFHSignature125>::Ptr keypoint_descriptor(new PFH<PointT, pcl::PFHSignature125>());
+				loadKeypointMatcherFromParameterServer<pcl::PFHSignature125>(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			} else if (descriptor_name.find("shot") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::SHOT352>::Ptr keypoint_descriptor(new SHOT<PointT, pcl::SHOT352>());
+				loadKeypointMatcherFromParameterServer<pcl::SHOT352>(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			} else if (descriptor_name.find("shape_context_3d") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new ShapeContext3D<PointT, pcl::ShapeContext1980>());
+				loadKeypointMatcherFromParameterServer<pcl::ShapeContext1980>(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			} else if (descriptor_name.find("unique_shape_context") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new UniqueShapeContext<PointT, pcl::ShapeContext1980>());
+				loadKeypointMatcherFromParameterServer<pcl::ShapeContext1980>(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			}/* else if (descriptor_name.find("spin_image") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::Histogram<153> >::Ptr keypoint_descriptor(new SpinImage< PointT, pcl::Histogram<153> >());
+				loadKeypointMatcherFromParameterServer< pcl::Histogram<153> >(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			}*/ else if (descriptor_name.find("esf") != std::string::npos) {
+				typename KeypointDescriptor<PointT, pcl::ESFSignature640>::Ptr keypoint_descriptor(new ESF<PointT, pcl::ESFSignature640>());
+				loadKeypointMatcherFromParameterServer<pcl::ESFSignature640>(keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/");
+				return;
+			}
+		}
+	}
+}
 
-	if (keypoint_descriptor == "PFH") {
-		typename KeypointDescriptor<PointT, pcl::PFHSignature125>::Ptr keypoint_descriptor(new PFH<PointT, pcl::PFHSignature125>());
-		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		typename FeatureMatcher<PointT, pcl::PFHSignature125>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::PFHSignature125>());
-		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		featurecloud_matchers_.push_back(initial_aligment_matcher);
-	} else if (keypoint_descriptor == "FPFH") {
-		typename KeypointDescriptor<PointT, pcl::FPFHSignature33>::Ptr keypoint_descriptor(new FPFH<PointT, pcl::FPFHSignature33>());
-		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		typename FeatureMatcher<PointT, pcl::FPFHSignature33>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::FPFHSignature33>());
-		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		featurecloud_matchers_.push_back(initial_aligment_matcher);
-	} else if (keypoint_descriptor == "SHOT") {
-		typename KeypointDescriptor<PointT, pcl::SHOT352>::Ptr keypoint_descriptor(new SHOT<PointT, pcl::SHOT352>());
-		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		typename FeatureMatcher<PointT, pcl::SHOT352>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::SHOT352>());
-		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		featurecloud_matchers_.push_back(initial_aligment_matcher);
-	} else if (keypoint_descriptor == "3DSC") {
-		typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new ShapeContext3D<PointT, pcl::ShapeContext1980>());
-		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		typename FeatureMatcher<PointT, pcl::ShapeContext1980>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ShapeContext1980>());
-		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		featurecloud_matchers_.push_back(initial_aligment_matcher);
-	} else if (keypoint_descriptor == "USC") {
-		typename KeypointDescriptor<PointT, pcl::ShapeContext1980>::Ptr keypoint_descriptor(new UniqueShapeContext<PointT, pcl::ShapeContext1980>());
-		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		typename FeatureMatcher<PointT, pcl::ShapeContext1980>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ShapeContext1980>());
-		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		featurecloud_matchers_.push_back(initial_aligment_matcher);
-	} else if (keypoint_descriptor == "ESF") {
-		typename KeypointDescriptor<PointT, pcl::ESFSignature640>::Ptr keypoint_descriptor(new ESF<PointT, pcl::ESFSignature640>());
-		keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		typename FeatureMatcher<PointT, pcl::ESFSignature640>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, pcl::ESFSignature640>());
-		initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
-		initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, "");
-		featurecloud_matchers_.push_back(initial_aligment_matcher);
+
+template<typename PointT>
+template<typename DescriptorT>
+void Localization<PointT>::loadKeypointMatcherFromParameterServer(typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor, std::string keypoint_descriptor_configuration_namespace) {
+	keypoint_descriptor->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, keypoint_descriptor_configuration_namespace);
+
+	std::string configuration_namespace = "cloud_matchers/feature_matchers/matchers/";
+	XmlRpc::XmlRpcValue keypoint_descriptors;
+	if (private_node_handle_->getParam(configuration_namespace, keypoint_descriptors) && keypoint_descriptors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = keypoint_descriptors.begin(); it != keypoint_descriptors.end(); ++it) {
+			std::string matcher_name = it->first;
+			if (matcher_name.find("sample_consensus_initial_alignment_prerejective") != std::string::npos) {
+				typename FeatureMatcher<PointT, DescriptorT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignmentPrerejective<PointT, DescriptorT>());
+				initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+				initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + matcher_name + "/");
+				featurecloud_matchers_.push_back(initial_aligment_matcher);
+			} else if (matcher_name.find("sample_consensus_initial_alignment") != std::string::npos) {
+				typename FeatureMatcher<PointT, DescriptorT>::Ptr initial_aligment_matcher(new SampleConsensusInitialAlignment<PointT, DescriptorT>());
+				initial_aligment_matcher->setKeypointDescriptor(keypoint_descriptor);
+				initial_aligment_matcher->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + matcher_name + "/");
+				featurecloud_matchers_.push_back(initial_aligment_matcher);
+			}
+		}
 	}
 }
 

@@ -135,6 +135,7 @@ add_library(drl_keypoint_detectors
 
 add_library(drl_keypoint_descriptors
     src/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor.cpp
+    src/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor_from_normals.cpp
     src/cloud_matchers/feature_matchers/keypoint_descriptors/pfh.cpp
     src/cloud_matchers/feature_matchers/keypoint_descriptors/fpfh.cpp
     src/cloud_matchers/feature_matchers/keypoint_descriptors/shot.cpp

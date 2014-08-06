@@ -22,14 +22,17 @@ namespace dynamic_robot_localization {
 template<typename PointT, typename FeatureT>
 void KeypointDescriptor<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	if (feature_descriptor_) { // subclass must set pointer first
-		int fpfh_k_search;
-		private_node_handle->param("feature_descriptor_k_search", fpfh_k_search, 10);
-		feature_descriptor_->setKSearch(fpfh_k_search);
+		std::string final_param_name;
+		std::string search_namespace = private_node_handle->getNamespace() + "/" + configuration_namespace;
 
-		if (fpfh_k_search <= 0) {
-			double fpfh_radius_search;
-			private_node_handle->param("feature_descriptor_radius_search", fpfh_radius_search, 0.1);
-			feature_descriptor_->setRadiusSearch(fpfh_radius_search);
+		int feature_descriptor_k_search = 10;
+		if (ros::param::search(search_namespace, "feature_descriptor_k_search", final_param_name)) { private_node_handle->param(final_param_name, feature_descriptor_k_search, 10); }
+		feature_descriptor_->setKSearch(feature_descriptor_k_search);
+
+		if (feature_descriptor_k_search <= 0) {
+			double feature_descriptor_radius_search = 0.1;
+			if (ros::param::search(search_namespace, "feature_descriptor_radius_search", final_param_name)) { private_node_handle->param(final_param_name, feature_descriptor_radius_search, 0.1); }
+			feature_descriptor_->setRadiusSearch(feature_descriptor_radius_search);
 		} else {
 			feature_descriptor_->setRadiusSearch(0.0);
 		}
@@ -48,7 +51,6 @@ typename pcl::PointCloud<FeatureT>::Ptr KeypointDescriptor<PointT, FeatureT>::co
 		feature_descriptor_->setSearchMethod(surface_search_method);
 		feature_descriptor_->setSearchSurface(surface);
 		feature_descriptor_->setInputCloud(pointcloud_keypoints);
-		feature_descriptor_->setInputNormals(surface);
 		feature_descriptor_->compute(*descriptors);
 	}
 

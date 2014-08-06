@@ -130,6 +130,7 @@ class Localization : public ConfigurableObject {
 		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
 		virtual void setupPointCloudMatchersConfigurations();
 		virtual void setupFeatureCloudMatchersConfigurations();
+		template <typename DescriptorT> void loadKeypointMatcherFromParameterServer(typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor, std::string keypoint_descriptor_configuration_namespace);
 		virtual void setupTransformationValidatorsConfigurations();
 		virtual void setupOutlierDetectorsConfigurations();
 
@@ -259,6 +260,7 @@ class Localization : public ConfigurableObject {
 };
 
 } /* namespace dynamic_robot_localization */
+
 
 
 #ifdef DRL_NO_PRECOMPILE
