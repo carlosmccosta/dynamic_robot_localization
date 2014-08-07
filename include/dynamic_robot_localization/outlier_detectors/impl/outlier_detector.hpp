@@ -23,7 +23,7 @@ template<typename PointT>
 void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	std::string aligned_pointcloud_outliers_publish_topic, final_param_name;
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "aligned_pointcloud_outliers_publish_topic", final_param_name)) {
-		private_node_handle->param(final_param_name, aligned_pointcloud_outliers_publish_topic, std::string("aligned_pointcloud_outliers"));
+		private_node_handle->param(final_param_name, aligned_pointcloud_outliers_publish_topic, std::string(""));
 	}
 
 	if (!aligned_pointcloud_outliers_publish_topic.empty()) {

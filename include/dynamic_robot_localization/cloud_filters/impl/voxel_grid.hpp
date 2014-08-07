@@ -45,8 +45,8 @@ void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 	filter_.setFilterFieldName(filter_limit_field_name);
 
 	double filter_limit_min, filter_limit_max;
-	private_node_handle->param(configuration_namespace + "filter_limit_min", filter_limit_min, -1.0);
-	private_node_handle->param(configuration_namespace + "filter_limit_max", filter_limit_max, 3.0);
+	private_node_handle->param(configuration_namespace + "filter_limit_min", filter_limit_min, -5.0);
+	private_node_handle->param(configuration_namespace + "filter_limit_max", filter_limit_max, 5.0);
 	filter_.setFilterLimits(filter_limit_min, filter_limit_max);
 
 	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());

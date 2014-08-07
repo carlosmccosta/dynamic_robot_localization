@@ -22,8 +22,8 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	double pass_through_min_value, pass_through_max_value;
-	private_node_handle->param(configuration_namespace + "pass_through_min_value", pass_through_min_value, 0.0);
-	private_node_handle->param(configuration_namespace + "pass_through_max_value", pass_through_max_value, 0.0);
+	private_node_handle->param(configuration_namespace + "pass_through_min_value", pass_through_min_value, -5.0);
+	private_node_handle->param(configuration_namespace + "pass_through_max_value", pass_through_max_value, 5.0);
 
 	std::string field_name;
 	private_node_handle->param(configuration_namespace + "pass_through_field_name", field_name, std::string("z"));

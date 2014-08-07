@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/schema/drl_configs.yaml" />
+	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking.yaml" />
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_filename" default="" />
@@ -9,16 +9,14 @@
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 
 
-<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
-		<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
 		<rosparam command="load" file="$(arg yaml_configuration_filename)" subst_value="true" />
-
-		<!-- =============== reference point cloud =============== -->
-		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" /> 												<!-- default: empty -->
-		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" /> 			<!-- default: empty -->
-		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" /> 							<!-- default: empty -->
-		<param name="reference_pointclouds/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" /> 					<!-- default: empty -->
-		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" /> 				<!-- default: empty -->
-		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" /> 	<!-- default: empty -->
+		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
+		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" />
+		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" />
 	</node>
 </launch>

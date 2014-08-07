@@ -1,0 +1,198 @@
+#publish_topic_names:
+#    reference_pointcloud_publish_topic: ''
+#    aligned_pointcloud_publish_topic: ''
+#    localization_detailed_publish_topic: ''
+#    localization_diagnostics_publish_topic: '' 
+#    localization_times_publish_topic: ''
+
+
+filters:
+    reference_pointcloud:
+        1_pass_through_x:
+            pass_through_field_name: 'x'
+            pass_through_min_value: -5.387
+            pass_through_max_value: 3.001
+            pass_through_filtered_cloud_publish_topic: ''
+        2_pass_through_y:
+            pass_through_field_name: 'y'
+            pass_through_min_value: -4.181
+            pass_through_max_value: 8.207
+            pass_through_filtered_cloud_publish_topic: ''
+        3_voxel_grid:
+            leaf_size_x: 0.01
+            leaf_size_y: 0.01
+            leaf_size_z: 0.01
+            filter_limit_field_name: 'z'
+            filter_limit_min: -0.001
+            filter_limit_max: 1.8
+            voxel_grid_filtered_cloud_publish_topic: ''
+            downsample_all_data: false
+            save_leaf_layout: false
+    ambient_pointcloud:
+        1_voxel_grid:
+            leaf_size_x: 0.05
+            leaf_size_y: 0.05
+            leaf_size_z: 0.05
+            filter_limit_field_name: 'z'
+            filter_limit_min: -1.001
+            filter_limit_max: 1.8
+            voxel_grid_filtered_cloud_publish_topic: ''
+            downsample_all_data: false
+            save_leaf_layout: false
+
+
+#normal_estimators:
+#    reference_pointcloud:
+#        display_normals: false # can be overridden in child namespaces
+#        normal_estimation_omp:
+#            display_normals: false # overrides parent
+#            search_k: 0
+#            search_radius: 0.12
+#        moving_least_squares:
+##            display_normals: false # uses parent
+#            compute_normals: true
+#            polynomial_order: 2
+#            polynomial_fit: true
+#            search_radius: 0.12
+#            sqr_gauss_param: 0.0144
+#            upsample_method: NONE
+#            upsampling_radius: 0.05
+#            upsampling_step: 0.01
+#            desired_num_points_in_radius: 5
+#            dilation_voxel_size: 0.01
+#            dilation_iterations: 1
+#    ambient_pointcloud:
+#        display_normals: false
+#        normal_estimation_omp:
+#            display_normals: false # overrides parent
+#            search_k: 0
+#            search_radius: 0.12
+#        moving_least_squares:
+##            display_normals: false # uses parent
+#            compute_normals: true
+#            polynomial_order: 2
+#            polynomial_fit: true
+#            search_radius: 0.12
+#            sqr_gauss_param: 0.0144
+#            upsample_method: NONE
+#            upsampling_radius: 0.05
+#            upsampling_step: 0.01
+#            desired_num_points_in_radius: 5
+#            dilation_voxel_size: 0.01
+#            dilation_iterations: 1
+
+
+cloud_matchers:
+    ignore_height_corrections: false
+    max_correspondence_distance: 0.1
+    transformation_epsilon: 1e-8
+    euclidean_fitness_epsilon: 1e-6
+    max_number_of_registration_iterations: 250
+    max_number_of_ransac_iterations: 250
+    ransac_outlier_rejection_threshold: 0.05
+    match_only_keypoints: false
+    display_cloud_aligment: false
+    maximum_number_of_displayed_correspondences: 0
+#    feature_matchers:
+#        display_feature_matching: false                         # can be overridden in child namespaces
+#        reference_pointcloud_descriptors_filename: ''           # can be overridden in child namespaces
+#        reference_pointcloud_descriptors_save_filename: ''      # can be overridden in child namespaces
+#        save_descriptors_in_binary_format : true                # can be overridden in child namespaces
+#        keypoint_detectors:
+#            reference_pointcloud:
+#                intrinsic_shape_signature_3d:
+#                    salient_radius: 0.18
+#                    non_max_radius: 0.12
+#                    normal_radius: 0.09
+#                    border_radius: 0.0
+#                    threshold21: 0.975
+#                    threshold32: 0.975
+#                    min_neighbors: 5
+#                    angle_threshold: 1.57
+#                    iss3_keypoints_cloud_publish_topic: 'reference_keypoints'
+#            ambient_pointcloud:
+#                intrinsic_shape_signature_3d:
+#                    salient_radius: 0.18
+#                    non_max_radius: 0.12
+#                    normal_radius: 0.09
+#                    border_radius: 0.0
+#                    threshold21: 0.975
+#                    threshold32: 0.975
+#                    min_neighbors: 5
+#                    angle_threshold: 1.57
+#                    iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
+#        keypoint_descriptors:
+#            feature_descriptor_k_search: 0                         # can be overridden in child namespaces
+#            feature_descriptor_radius_search: 0.2                   # can be overridden in child namespaces
+#            pfh:
+#                use_internal_cache: true
+#                maximum_cache_size: 33554432
+#            fpfh:
+#                number_subdivisions_f1: 11
+#                number_subdivisions_f2: 11
+#                number_subdivisions_f3: 11
+#            shot:
+#                lrf_radius: 0.2
+#            shape_context_3d:
+#                minimal_radius: 0.2
+#                point_density_radius: 0.4
+#            unique_shape_context:
+#                minimal_radius: 0.2
+#                point_density_radius: 0.4
+#                local_radius: 0.2
+#            spin_image:
+#                image_width: 8
+#                support_angle_cos: 0.0
+#                min_point_count_in_neighbourhood: 0
+#                use_angular_domain: false
+#                use_radial_structure: false
+#        matchers:
+#            sample_consensus_initial_alignment:
+#                min_sample_distance: 1.0
+#                number_of_samples: 3
+#                correspondence_randomness: 10
+#            sample_consensus_initial_alignment_prerejective:
+#                similarity_threshold: 0.5
+#                inlier_fraction: 0.15
+#                number_of_samples: 5
+#                correspondence_randomness: 40
+    point_matchers:
+        iterative_closest_point:
+            max_correspondence_distance: 0.05                   # overrides parent
+            transformation_epsilon: 1e-3                        # overrides parent
+            euclidean_fitness_epsilon: 1e-3                     # overrides parent
+            max_number_of_registration_iterations: 100          # overrides parent
+            max_number_of_ransac_iterations: 100                # overrides parent
+            ransac_outlier_rejection_threshold: 0.05            # overrides parent
+            match_only_keypoints: false                         # overrides parent
+            display_cloud_aligment: false                       # overrides parent
+            maximum_number_of_displayed_correspondences: 0      # overrides parent
+            use_reciprocal_correspondences: true
+#        iterative_closest_point_with_normals:
+#            max_correspondence_distance: 0.05                   # overrides parent
+#            transformation_epsilon: 1e-6                        # overrides parent
+#            euclidean_fitness_epsilon: 1e-5                     # overrides parent
+#            max_number_of_registration_iterations: 200          # overrides parent
+#            max_number_of_ransac_iterations: 200                # overrides parent
+#            ransac_outlier_rejection_threshold: 0.05            # overrides parent
+#            match_only_keypoints: false                         # overrides parent
+#            display_cloud_aligment: false                       # overrides parent
+#            maximum_number_of_displayed_correspondences: 0      # overrides parent
+#            use_reciprocal_correspondences: true
+
+
+outlier_detectors:
+    euclidean_outlier_detector:
+        max_inliers_distance: 0.01
+        aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
+
+
+transformation_validators:
+    pose_tracking_timeout: 2.0
+    euclidean_transformation_validator:
+        max_transformation_angle: 0.4
+        max_transformation_distance: 0.04
+        max_new_pose_diff_angle: 0.6
+        max_new_pose_diff_distance: 0.2
+        max_alignment_fitness: 3.0
+        max_outliers_percentage: 0.7

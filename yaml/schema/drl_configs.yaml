@@ -1,31 +1,87 @@
+#####################################################################################################################################################
+#####################################################  Dynamic Robot Localization configuration #####################################################
+#####################################################################################################################################################
+
+# >>>>>>>>>>>>>>>>>>>>>> General information
+#   This file provides the configuration layout for the dynamic_robot_localization ROS node.
+#   The parser was designed to detect the presence of the supported processing blocks and load the appropriate configurations.
+#   The parameters aren't loaded directly from the yaml file. Instead they are loaded from the ROS parameter server,
+# in order to allow other nodes to query the configuration of the localization system.
+#   Another advantage of using the parameter server is that the parameters can be inserted directly in the launch file,
+# or loaded from one or even several yaml files. This allows to reuse and override parameters across similar configurations.
+#   All parameters have default values, which means it is only necessary to specify the ones that are different from the defaults.
+#   Nevertheless, the localization pipeline is empty, and the parameters are only queried if the processing block is specified.
+#   Some of the configuration blocks are provided by default to allow some consistency across configurations.
+#   The following blocks don't need to be specified: [ subscribe_topic_names | publish_topic_names | frame_ids | message_management ]
+
+
+# >>>>>>>>>>>>>>>>>>>>>> Reference cloud sources
+#   The localization system can load the reference cloud from different sources.
+#   The first is from a 2D ROS nav_msgs::OccupancyGrid and will limit the localization system to 3 DoF
+#   The other sources allow 6 DoF localization by either loading point clouds from a file (.pcd) or
+# from a ROS topic with sensor_msgs::PointCloud2 messages (useful when using dynamic map update).
+#   To allow fast switching between each source, a overriding methodology is employed.
+#   As such, the highest priority is given to reference clouds coming from a file.
+#   If a file isn't provided, the ROS topic with sensor_msgs::PointCloud2 is used.
+#   If the ROS topic isn't specified, the 2D map is loaded from nav_msgs::OccupancyGrid.
+
+
+# >>>>>>>>>>>>>>>>>>>>>> Saving reference cloud data
+#   To allow fast startup of the localization system, the reference point cloud with / without normals and
+# its associated keypoints / descriptors can be loaded / saved from / to files in either binary or text format.
+
+
+# >>>>>>>>>>>>>>>>>>>>>> Configuration
+#   Given that the parameter server stores values sorted by their name in each namespace,
+# some configuration blocks allow the addition of pre and postfixes in their name, in order to ensure the desired processing order.
+#   It should be noted that some sections only support the specification of one processing block,
+# so the prefix can be used to switch between blocks in the yaml configuration file.
+#   Also, if a publish topic name is empty, messages will not be created (avoids overhead of message creation and dispatch -> useful for final deployment of the localization system).
+#   Bellow is the configuration and default values currently supported by the dynamic_robot_localization system.
+
+
+
+# ===================================================================================================================================================
+#   These are the topics from which the localization system will receive the reference and ambient point clouds
 subscribe_topic_names:
-    ambient_pointcloud_topic: 'assembled_pointcloud'
-    reference_costmap_topic: '/map'
-    reference_pointcloud_topic: ''
-    #reference_pointcloud_topic: 'octomap_point_cloud_centers'
+    ambient_pointcloud_topic: 'ambient_pointcloud'                  # sensor_msgs::PointCloud2 | Cloud with points coming from sensing devices that will be used to update the localization pose
+    reference_costmap_topic: '/map'                                 # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
+    reference_pointcloud_topic: ''                                  # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'octomap_point_cloud_centers'
 
 
+# ===================================================================================================================================================
+#   To avoid remaps in the launch file and collision with other nodes topics, the topic names in which the localization system publishes messages can be specified.
+#   Also, topics are published latched, which means the last message is buffered and sent to any new subscribers (allows to switch on / off the pointclouds in rviz)
 publish_topic_names:
-    reference_pointcloud_publish_topic: 'reference_pointcloud'
-    aligned_pointcloud_publish_topic: 'aligned_pointcloud'
-    pose_publish_topic: '/initialpose'
-    localization_detailed_topic: 'localization_detailed'
-    localization_diagnostics_topic: 'diagnostics'
-    localization_times_topic: 'localization_times'
+    reference_pointcloud_publish_topic: 'reference_pointcloud'      # sensor_msgs::PointCloud2 | Reference cloud currently being used by the localization system
+    aligned_pointcloud_publish_topic: 'aligned_pointcloud'          # sensor_msgs::PointCloud2 | Point cloud coming from the ambient_pointcloud_topic after applying the registration correction
+    pose_publish_topic: '/initialpose'                              # geometry_msgs::PoseWithCovarianceStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages, such as amcl)
+    localization_detailed_publish_topic: 'localization_detailed'    # dynamic_robot_localization::LocalizationDetailed | Provides detailed information of the current pose computed by the localization system (pose + pose_corrections + outlier_percentage + aligmenet_fitness)
+    localization_diagnostics_publish_topic: 'diagnostics'           # dynamic_robot_localization::LocalizationDiagnostics | Provides information about the number of points / keypoints in the reference / ambient cloud (before and after filtering) 
+    localization_times_publish_topic: 'localization_times'          # dynamic_robot_localization::LocalizationTimes | Provides information about the wall clock times (in milliseconds) of the main localization steps (as well as the global time)
 
 
+# ===================================================================================================================================================
+#   Frame ids required to compute the appropriate world transformations.
+#   The localization system publishes a tf correction between map_frame_id and base_link_frame_id
+#   The sensor_frame_id is used in the surface normal estimation.
 frame_ids:
     map_frame_id: 'map'
     base_link_frame_id: 'base_footprint'
     sensor_frame_id: 'hokuyo_tilt_laser_link'
 
 
+# ===================================================================================================================================================
+#   Parameters to control the incoming message flow
 message_management:
-    max_seconds_scan_age: 0.5
-    min_seconds_between_scan_registration: 0.05
-    min_seconds_between_reference_pointcloud_update: 5.0
+    max_seconds_ambient_pointcloud: 0.5                             # Ambient point clouds with age larger than this value will be discarded
+    min_seconds_between_scan_registration: 0.05                     # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
+    min_seconds_between_reference_pointcloud_update: 5.0            # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
 
 
+# ===================================================================================================================================================
+#   Full path to the reference clouds.
+#   It is recommend to set these values in the launch file using the ROS $(find package_name)/file_name.yaml
 reference_pointclouds:
     reference_pointcloud_filename: ''
     reference_pointcloud_preprocessed_save_filename: ''
@@ -34,192 +90,169 @@ reference_pointclouds:
     save_reference_pointclouds_in_binary_format: true
 
 
+# ===================================================================================================================================================
+#   Several filters can be specified for the reference_pointcloud and ambient_pointcloud.
+#   Filters are not shared between reference_pointcloud and ambient_pointcloud.
+#   Bellow they are specified only in the ambient_pointcloud namespace to avoid repetition.
 filters:
     reference_pointcloud:
-        1_pass_through_x:
-            pass_through_field_name: 'x'
-            pass_through_min_value: -5.387
-            pass_through_max_value: 3.001
-            pass_through_filtered_cloud_publish_topic: ''
-        2_pass_through_y:
-            pass_through_field_name: 'y'
-            pass_through_min_value: -4.181
-            pass_through_max_value: 8.207
-            pass_through_filtered_cloud_publish_topic: ''
-        3_voxel_grid:
-            leaf_size_x: 0.05
-            leaf_size_y: 0.05
-            leaf_size_z: 0.05
-            filter_limit_field_name: 'z'
-            filter_limit_min: -0.001
-            filter_limit_max: 1.8
-            voxel_grid_filtered_cloud_publish_topic: ''
-            downsample_all_data: false
-            save_leaf_layout: false
     ambient_pointcloud:
-        1_voxel_grid:
-            leaf_size_x: 0.05
-            leaf_size_y: 0.05
-            leaf_size_z: 0.05
-            filter_limit_field_name: 'z'
-            filter_limit_min: -1.001
-            filter_limit_max: 1.8
+        pass_through:                                               # Allows prefix and postfix of letters to ensure parsing order
+            pass_through_field_name: 'z'                            # Field name -> [ x | y | z ]
+            pass_through_min_value: -5.0
+            pass_through_max_value: 5.0
+            pass_through_filtered_cloud_publish_topic: ''
+        voxel_grid:                                                 # Allows prefix and postfix of letters to ensure parsing order
+            leaf_size_x: 0.01
+            leaf_size_y: 0.01
+            leaf_size_z: 0.01
+            filter_limit_field_name: 'z'                            # Field name -> [ x | y | z ]
+            filter_limit_min: -5.0
+            filter_limit_max: 5.0
             voxel_grid_filtered_cloud_publish_topic: ''
             downsample_all_data: false
             save_leaf_layout: false
 
 
-#normal_estimators:
-#    reference_pointcloud:
-#        display_normals: false # can be overridden in child namespaces
-#        normal_estimation_omp:
-#            display_normals: false # overrides parent
-#            search_k: 0
-#            search_radius: 0.12
-#        moving_least_squares:
-##            display_normals: false # uses parent
-#            compute_normals: true
-#            polynomial_order: 2
-#            polynomial_fit: true
-#            search_radius: 0.12
-#            sqr_gauss_param: 0.0144
-#            upsample_method: NONE
-#            upsampling_radius: 0.05
-#            upsampling_step: 0.01
-#            desired_num_points_in_radius: 5
-#            dilation_voxel_size: 0.01
-#            dilation_iterations: 1
-#    ambient_pointcloud:
-#        display_normals: false
-#        normal_estimation_omp:
-#            display_normals: false # overrides parent
-#            search_k: 0
-#            search_radius: 0.12
-#        moving_least_squares:
-##            display_normals: false # uses parent
-#            compute_normals: true
-#            polynomial_order: 2
-#            polynomial_fit: true
-#            search_radius: 0.12
-#            sqr_gauss_param: 0.0144
-#            upsample_method: NONE
-#            upsampling_radius: 0.05
-#            upsampling_step: 0.01
-#            desired_num_points_in_radius: 5
-#            dilation_voxel_size: 0.01
-#            dilation_iterations: 1
+# ===================================================================================================================================================
+#   One normal estimator can be specified for the reference_pointcloud and another for the ambient_pointcloud.
+#   The reference_pointcloud and ambient_pointcloud have the same parameters (they were omitted in the reference_pointcloud to avoid repetition).
+#   The normal estimator is not shared because the reference and ambient pointcloud can have different point density, and as such, may require the normal estimator to have different parameters values.
+#   Moreover, it may be useful to use more robust normal estimators in the ambient point cloud (such as moving_least_squares), and faster estimators in the reference cloud.
+#   Bellow is an example of parameter override, in which the display_normals parameter in the normal_estimators/ambient_pointcloud/ namespace is overridden
+# by the same parameter in the normal_estimators/ambient_pointcloud/normal_estimation_omp child namespace.
+normal_estimators:
+    reference_pointcloud:
+    ambient_pointcloud:
+        display_normals: false                                      # Can be overridden in child namespaces
+        normal_estimation_omp:                                      # Allows prefix and postfix of letters to ensure parsing order
+            display_normals: true                                   # Overrides parameter in parent namespace
+            search_k: 0
+            search_radius: 0.12
+        moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order
+            compute_normals: true
+            polynomial_order: 2
+            polynomial_fit: true
+            search_radius: 0.12
+            sqr_gauss_param: 0.0144
+            upsample_method: NONE
+            upsampling_radius: 0.05
+            upsampling_step: 0.01
+            desired_num_points_in_radius: 5
+            dilation_voxel_size: 0.01
+            dilation_iterations: 1
 
 
+# ===================================================================================================================================================
+#   There are two main categories of cloud matchers. One that registers clouds of points and another that matches point descriptors.
+#   They share some parameters that are present in the cloud_matchers/ namespace, and that can be overridden in the child namespaces.
+#   An example of parameter override (max_number_of_registration_iterations) is present in namespace cloud_matchers/point_matchers/iterative_closest_point
+#   Point matchers are very fast algorithms that can be used for pose tracking. They can work with points only or also with surface normals. However, they require
+# an initial pose close to the real world pose, otherwise they wont be able to perform the cloud registration.
+#   Feature matchers are much slower, because they require feature detection, description and matching, and should be used only to estimate the initial pose,
+# in order to allow the point matchers to perform tracking. Moreover, the localization system is designed to use the feature matchers as a recovery subsystem,
+# in which they are used if the pose tracking failed during a giving period of time.
 cloud_matchers:
-    ignore_height_corrections: false
-    max_correspondence_distance: 0.1
-    transformation_epsilon: 1e-8
-    euclidean_fitness_epsilon: 1e-6
-    max_number_of_registration_iterations: 250
-    max_number_of_ransac_iterations: 250
-    ransac_outlier_rejection_threshold: 0.05
-    match_only_keypoints: false
-    display_cloud_aligment: false
-    maximum_number_of_displayed_correspondences: 0
-#    feature_matchers:
-#        display_feature_matching: false                         # can be overridden in child namespaces
-#        reference_pointcloud_descriptors_filename: ''           # can be overridden in child namespaces
-#        reference_pointcloud_descriptors_save_filename: ''      # can be overridden in child namespaces
-#        save_descriptors_in_binary_format : true                # can be overridden in child namespaces
-#        keypoint_detectors:
-#            reference_pointcloud:
-#                intrinsic_shape_signature_3d:
-#                    salient_radius: 0.18
-#                    non_max_radius: 0.12
-#                    normal_radius: 0.09
-#                    border_radius: 0.0
-#                    threshold21: 0.975
-#                    threshold32: 0.975
-#                    min_neighbors: 5
-#                    angle_threshold: 1.57
-#                    iss3_keypoints_cloud_publish_topic: 'reference_keypoints'
-#            ambient_pointcloud:
-#                intrinsic_shape_signature_3d:
-#                    salient_radius: 0.18
-#                    non_max_radius: 0.12
-#                    normal_radius: 0.09
-#                    border_radius: 0.0
-#                    threshold21: 0.975
-#                    threshold32: 0.975
-#                    min_neighbors: 5
-#                    angle_threshold: 1.57
-#                    iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
-#        keypoint_descriptors:
-#            feature_descriptor_k_search: 0                         # can be overridden in child namespaces
-#            feature_descriptor_radius_search: 0.2                   # can be overridden in child namespaces
-#            pfh:
-#                use_internal_cache: true
-#                maximum_cache_size: 33554432
-#            fpfh:
-#                number_subdivisions_f1: 11
-#                number_subdivisions_f2: 11
-#                number_subdivisions_f3: 11
-#            shot:
-#                lrf_radius: 0.2
-#            shape_context_3d:
-#                minimal_radius: 0.2
-#                point_density_radius: 0.4
-#            unique_shape_context:
-#                minimal_radius: 0.2
-#                point_density_radius: 0.4
-#                local_radius: 0.2
-#            spin_image:
-#                image_width: 8
-#                support_angle_cos: 0.0
-#                min_point_count_in_neighbourhood: 0
-#                use_angular_domain: false
-#                use_radial_structure: false
-#        matchers:
-#            sample_consensus_initial_alignment:
-#                min_sample_distance: 1.0
-#                number_of_samples: 3
-#                correspondence_randomness: 10
-#            sample_consensus_initial_alignment_prerejective:
-#                similarity_threshold: 0.5
-#                inlier_fraction: 0.15
-#                number_of_samples: 5
-#                correspondence_randomness: 40
+    ignore_height_corrections: false                                # When activated, the pose corrections in the z axis will be ignored
+    pose_tracking_timeout: 2.0                                      # When point cloud registration has failed during this amount of time, feature matching is activated (pose tracking recovery)
+    max_correspondence_distance: 0.1                                # Can be overridden in child namespaces
+    transformation_epsilon: 1e-8                                    # Can be overridden in child namespaces
+    euclidean_fitness_epsilon: 1e-6                                 # Can be overridden in child namespaces
+    max_number_of_registration_iterations: 250                      # Can be overridden in child namespaces
+    max_number_of_ransac_iterations: 250                            # Can be overridden in child namespaces
+    ransac_outlier_rejection_threshold: 0.05                        # Can be overridden in child namespaces
+    match_only_keypoints: false                                     # Can be overridden in child namespaces
+    display_cloud_aligment: false                                   # Can be overridden in child namespaces
+    maximum_number_of_displayed_correspondences: 0                  # Can be overridden in child namespaces
+    feature_matchers:
+        display_feature_matching: false                             # Can be overridden in child namespaces
+        reference_pointcloud_descriptors_filename: ''               # Can be overridden in child namespaces
+        reference_pointcloud_descriptors_save_filename: ''          # Can be overridden in child namespaces
+        save_descriptors_in_binary_format : true                    # Can be overridden in child namespaces
+        #   Several keypoint detectors can be specified for the reference_pointcloud and for the ambient_pointcloud.
+        #   They were split in reference / ambient to allow parameter tuning to specific point cloud density and point distribution.
+        #   However, they should be the same algorithms in both clouds. ===> This is critical, if the same keypoints are not found in both clouds
+        # the descriptor matching will fail.
+        keypoint_detectors:
+            reference_pointcloud:
+            ambient_pointcloud:
+                intrinsic_shape_signature_3d:                       # Allows prefix and postfix of letters to ensure parsing order
+                    salient_radius: 0.18
+                    non_max_radius: 0.12
+                    normal_radius: 0.09
+                    border_radius: 0.0
+                    threshold21: 0.975
+                    threshold32: 0.975
+                    min_neighbors: 5
+                    angle_threshold: 1.57
+                    iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
+        #   One keypoint descriptor can be specified for both the reference and ambient point clouds.
+        #   It must be the same descriptor algorithm in order to allow the matching of the generated descriptors.
+        keypoint_descriptors:
+            #   feature_descriptor_k_search has higher priority than feature_descriptor_radius_search
+            #   As such, if feature_descriptor_k_search > 0 then feature_descriptor_radius_search = 0.0
+            feature_descriptor_k_search: 0                          # Can be overridden in child namespaces
+            feature_descriptor_radius_search: 0.2                   # Can be overridden in child namespaces
+            fpfh:                                                   # Allows prefix and postfix of letters to ensure parsing order
+                number_subdivisions_f1: 11
+                number_subdivisions_f2: 11
+                number_subdivisions_f3: 11
+            pfh:                                                    # Allows prefix and postfix of letters to ensure parsing order
+                use_internal_cache: true
+                maximum_cache_size: 33554432
+            shot:                                                   # Allows prefix and postfix of letters to ensure parsing order
+                lrf_radius: 0.05
+            shape_context_3d:                                       # Allows prefix and postfix of letters to ensure parsing order
+                minimal_radius: 0.2
+                point_density_radius: 0.4
+            unique_shape_context:                                   # Allows prefix and postfix of letters to ensure parsing order
+                minimal_radius: 0.1
+                point_density_radius: 0.2
+                local_radius: 2.5
+            spin_image:                                             # Allows prefix and postfix of letters to ensure parsing order
+                image_width: 8
+                support_angle_cos: 0.0
+                min_point_count_in_neighbourhood: 0
+                use_angular_domain: false
+                use_radial_structure: false
+            esf:                                                    # Allows prefix and postfix of letters to ensure parsing order
+                feature_descriptor_radius_search: 0.25              # Overrides parameter in parent namespace
+        #   Several feature matchers can be specified. This allows the use of preprocessing matchers for filtering the point descriptors that will be used on matchers later on.
+        matchers:
+            sample_consensus_initial_alignment_prerejective:        # Allows prefix and postfix of letters to ensure parsing order
+                similarity_threshold: 0.8
+                inlier_fraction: 0.25
+                number_of_samples: 3
+                correspondence_randomness: 10
+            sample_consensus_initial_alignment:                     # Allows prefix and postfix of letters to ensure parsing order
+                min_sample_distance: 1.0
+                number_of_samples: 3
+                correspondence_randomness: 10
+    #   Several point matchers can be specified. This is useful to have a fast matcher that can achieve a rough registration and other matchers to refine it.
     point_matchers:
-        iterative_closest_point:
-            max_correspondence_distance: 0.05                   # overrides parent
-            transformation_epsilon: 1e-3                        # overrides parent
-            euclidean_fitness_epsilon: 1e-3                     # overrides parent
-            max_number_of_registration_iterations: 50          # overrides parent
-            max_number_of_ransac_iterations: 50                # overrides parent
-            ransac_outlier_rejection_threshold: 0.05            # overrides parent
-            match_only_keypoints: false                         # overrides parent
-            display_cloud_aligment: false                       # overrides parent
-            maximum_number_of_displayed_correspondences: 0      # overrides parent
+        iterative_closest_point:                                    # Allows prefix and postfix of letters to ensure parsing order
+            max_number_of_registration_iterations: 100              # Overrides parameter in parent namespace
             use_reciprocal_correspondences: true
-#        iterative_closest_point_with_normals:
-#            max_correspondence_distance: 0.05                   # overrides parent
-#            transformation_epsilon: 1e-6                        # overrides parent
-#            euclidean_fitness_epsilon: 1e-5                     # overrides parent
-#            max_number_of_registration_iterations: 200          # overrides parent
-#            max_number_of_ransac_iterations: 200                # overrides parent
-#            ransac_outlier_rejection_threshold: 0.05            # overrides parent
-#            match_only_keypoints: false                         # overrides parent
-#            display_cloud_aligment: false                       # overrides parent
-#            maximum_number_of_displayed_correspondences: 0      # overrides parent
-#            use_reciprocal_correspondences: true
+        iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order
+            use_reciprocal_correspondences: true
 
 
+# ===================================================================================================================================================
+#   Several outlier detectors can be used. This processing step is applied after cloud registration, and will only be used to validate the registration in the transformation_validators stage.
+#   It is also useful to perform dynamic map update, since the outliers pointcloud can be published and used in OctoMap.
 outlier_detectors:
-    euclidean_outlier_detector:
+    euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
         max_inliers_distance: 0.01
-        aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
+        aligned_pointcloud_outliers_publish_topic: ''               # OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched.
 
 
+# ===================================================================================================================================================
+#   Several transformation validators can be employed. They can be used to refine or reject a new pose estimation.
+#   A new pose estimation is rejected if one transformation_validators doesn't accept the new pose. As such, the most restrictive validators should be applied first.
 transformation_validators:
-    pose_tracking_timeout: 2.0
-    euclidean_transformation_validator:
+    euclidean_transformation_validator:                             # Allows prefix and postfix of letters to ensure parsing order
         max_transformation_angle: 0.4
-        max_transformation_distance: 0.035
+        max_transformation_distance: 0.04
         max_new_pose_diff_angle: 0.6
         max_new_pose_diff_distance: 0.2
         max_alignment_fitness: 3.0

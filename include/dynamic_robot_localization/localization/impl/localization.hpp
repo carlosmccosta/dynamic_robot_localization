@@ -82,7 +82,7 @@ void Localization<PointT>::setupGeneralConfigurations() {
 
 template<typename PointT>
 void Localization<PointT>::setupSubcriptionTopicNames() {
-	private_node_handle_->param("subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topic_, std::string("assembled_pointcloud"));
+	private_node_handle_->param("subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topic_, std::string("ambient_pointcloud"));
 	private_node_handle_->param("subscribe_topic_names/reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
 	private_node_handle_->param("subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
 }
@@ -93,9 +93,9 @@ void Localization<PointT>::setupPublishTopicNames() {
 	private_node_handle_->param("publish_topic_names/reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
 	private_node_handle_->param("publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("publish_topic_names/pose_publish_topic", pose_publish_topic_, std::string("/initialpose"));
-	private_node_handle_->param("publish_topic_names/localization_detailed_topic", localization_detailed_topic_, std::string("localization_detailed"));
-	private_node_handle_->param("publish_topic_names/localization_diagnostics_topic", localization_diagnostics_topic_, std::string("diagnostics"));
-	private_node_handle_->param("publish_topic_names/localization_times_topic", localization_times_topic_, std::string("localization_times"));
+	private_node_handle_->param("publish_topic_names/localization_detailed_publish_topic", localization_detailed_publish_topic_, std::string("localization_detailed"));
+	private_node_handle_->param("publish_topic_names/localization_diagnostics_publish_topic", localization_diagnostics_publish_topic_, std::string("diagnostics"));
+	private_node_handle_->param("publish_topic_names/localization_times_publish_topic", localization_times_publish_topic_, std::string("localization_times"));
 }
 
 
@@ -109,9 +109,9 @@ void Localization<PointT>::setupFrameIds() {
 
 template<typename PointT>
 void Localization<PointT>::setupMessageManagement() {
-	double max_seconds_scan_age;
-	private_node_handle_->param("message_management/max_seconds_scan_age", max_seconds_scan_age, 0.5);
-	max_seconds_scan_age_.fromSec(max_seconds_scan_age);
+	double max_seconds_ambient_pointcloud_age;
+	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 0.5);
+	max_seconds_ambient_pointcloud_age_.fromSec(max_seconds_ambient_pointcloud_age);
 
 	double min_seconds_between_scan_registration;
 	private_node_handle_->param("message_management/min_seconds_between_scan_registration", min_seconds_between_scan_registration, 0.05);
@@ -254,6 +254,10 @@ template<typename PointT>
 void Localization<PointT>::setupFeatureCloudMatchersConfigurations() {
 	featurecloud_matchers_.clear();
 
+	double pose_tracking_timeout;
+	private_node_handle_->param("cloud_matchers/pose_tracking_timeout", pose_tracking_timeout, 2.0);
+	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
+
 	std::string keypoint_descriptor_configuration_namespace = "cloud_matchers/feature_matchers/keypoint_descriptors/";
 	XmlRpc::XmlRpcValue keypoint_descriptors;
 	if (private_node_handle_->getParam(keypoint_descriptor_configuration_namespace, keypoint_descriptors) && keypoint_descriptors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
@@ -322,10 +326,6 @@ void Localization<PointT>::loadKeypointMatcherFromParameterServer(typename Keypo
 template<typename PointT>
 void Localization<PointT>::setupTransformationValidatorsConfigurations() {
 	std::string configuration_namespace = "transformation_validators/";
-	double pose_tracking_timeout;
-	private_node_handle_->param(configuration_namespace + "pose_tracking_timeout", pose_tracking_timeout, 2.0);
-	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
-
 
 	transformation_validators_.clear();
 	XmlRpc::XmlRpcValue transformation_validators;
@@ -488,12 +488,12 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 template<typename PointT>
 void Localization<PointT>::startLocalization() {
 	// publishers
-	reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 2, true);
-	aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5, true);
-	pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10, true);
-	localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_topic_, 10, true);
-	localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_topic_, 10, true);
-	localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_topic_, 10, true);
+	if (!reference_pointcloud_publish_topic_.empty()) reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 2, true);
+	if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5, true);
+	if (!pose_publish_topic_.empty()) pose_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_publish_topic_, 10, true);
+	if (!localization_detailed_publish_topic_.empty()) localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_publish_topic_, 10, true);
+	if (!localization_diagnostics_publish_topic_.empty()) localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_publish_topic_, 10, true);
+	if (!localization_times_publish_topic_.empty()) localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 10, true);
 
 
 	// subscribers
@@ -538,7 +538,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 	if (reference_pointcloud_received_
 			&& ambient_cloud_msg->data.size() > 0
 			&& elapsed_time_since_last_scan > min_seconds_between_scan_registration_
-			&& scan_age < max_seconds_scan_age_) {
+			&& scan_age < max_seconds_ambient_pointcloud_age_) {
 
 		last_scan_time_ = ros::Time::now();
 

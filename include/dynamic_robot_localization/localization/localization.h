@@ -193,9 +193,9 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_publish_topic_;
-		std::string localization_detailed_topic_;
-		std::string localization_diagnostics_topic_;
-		std::string localization_times_topic_;
+		std::string localization_detailed_publish_topic_;
+		std::string localization_diagnostics_publish_topic_;
+		std::string localization_times_publish_topic_;
 
 
 		// configuration fields
@@ -206,7 +206,7 @@ class Localization : public ConfigurableObject {
 		std::string map_frame_id_;
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;
-		ros::Duration max_seconds_scan_age_;
+		ros::Duration max_seconds_ambient_pointcloud_age_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
