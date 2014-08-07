@@ -45,11 +45,11 @@ cloud_matchers:
     ignore_height_corrections: false
     point_matchers:
         iterative_closest_point:
-            max_correspondence_distance: 0.05                   # overrides parent
+            max_correspondence_distance: 0.05                    # overrides parent
             transformation_epsilon: 1e-3                        # overrides parent
             euclidean_fitness_epsilon: 1e-3                     # overrides parent
-            max_number_of_registration_iterations: 150          # overrides parent
-            max_number_of_ransac_iterations: 150                # overrides parent
+            max_number_of_registration_iterations: 500          # overrides parent
+            max_number_of_ransac_iterations: 500                # overrides parent
             ransac_outlier_rejection_threshold: 0.05            # overrides parent
             match_only_keypoints: false                         # overrides parent
             display_cloud_aligment: false                       # overrides parent
@@ -67,8 +67,8 @@ transformation_validators:
     pose_tracking_timeout: 2.0
     euclidean_transformation_validator:
         max_transformation_angle: 0.4
-        max_transformation_distance: 0.04
+        max_transformation_distance: 0.025
         max_new_pose_diff_angle: 0.6
         max_new_pose_diff_distance: 0.2
-        max_alignment_fitness: 3.0
-        max_outliers_percentage: 0.7
+        max_alignment_fitness: 1.0
+        max_outliers_percentage: 0.6

@@ -721,15 +721,29 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 
 template<typename PointT>
 double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
+	detected_outliers_.clear();
 	if (ambient_pointcloud->points.empty()) { return 0.0; }
 
 	size_t number_outliers = 0;
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
-		sensor_msgs::PointCloud2Ptr outliers = outlier_detectors_[i]->processAndPublishOutliers(reference_pointcloud_search_method_, *ambient_pointcloud);
+		sensor_msgs::PointCloud2Ptr outliers = outlier_detectors_[i]->processOutliers(reference_pointcloud_search_method_, *ambient_pointcloud);
 		number_outliers += ((size_t) ((outliers->width * outliers->height)));
+		detected_outliers_.push_back(outliers);
 	}
 
 	return (double)number_outliers / (double) (ambient_pointcloud->points.size());
+}
+
+
+template<typename PointT>
+void Localization<PointT>::publishDetectedOutliers() {
+	if (outlier_detectors_.size() == detected_outliers_.size()) {
+		for (size_t i = 0; i < detected_outliers_.size(); ++i) {
+			outlier_detectors_[i]->publishOutliers(detected_outliers_[i]);
+		}
+	}
+
+	detected_outliers_.clear();
 }
 
 
@@ -808,6 +822,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_accepted_pose_ = pointcloud_pose_corrected_out;
 	last_accepted_pose_time_ = ros::Time::now();
 	last_accepted_pose_valid_ = true;
+	publishDetectedOutliers();
 
 	return true;
 }

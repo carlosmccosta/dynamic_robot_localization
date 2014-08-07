@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking.yaml" />
+	<arg name="yaml_configuration_filename" default="" />
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_filename" default="" />

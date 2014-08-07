@@ -161,6 +161,7 @@ class Localization : public ConfigurableObject {
 				tf2::Transform& pointcloud_pose_in_out);
 
 		virtual double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
+		virtual void publishDetectedOutliers();
 
 		virtual bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess,
 				tf2::Transform& pointcloud_pose_corrected_in_out,
@@ -254,6 +255,7 @@ class Localization : public ConfigurableObject {
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		double outlier_percentage_;
+		std::vector<sensor_msgs::PointCloud2Ptr> detected_outliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
 	// ========================================================================   </private-section>  ==========================================================================
