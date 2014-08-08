@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<!-- ======================================================= arguments ==================================================== -->
+	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters_2d.yaml" />
 	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking.yaml" />
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
@@ -21,6 +22,7 @@
 
 	<!-- ==================================================== localization system ============================================= -->
 	<include file="$(find dynamic_robot_localization)/launch/dynamic_robot_localization.launch">
+		<arg name="yaml_configuration_filters_filename" default="$(arg yaml_configuration_filters_filename)" />
 		<arg name="yaml_configuration_filename" default="$(arg yaml_configuration_filename)" />
 		<arg name="reference_pointcloud_filename" default="$(arg reference_pointcloud_filename)" />
 		<arg name="reference_pointcloud_keypoints_filename" default="$(arg reference_pointcloud_keypoints_filename)" />
