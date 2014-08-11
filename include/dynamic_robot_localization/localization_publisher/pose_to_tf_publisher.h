@@ -17,9 +17,10 @@
 // ROS includes
 #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <nav_msgs/Odometry.h>
 
 // external libs includes
 
@@ -55,8 +56,9 @@ class PoseToTFPublisher : ConfigurableObject {
 		void publishInitialPoseFromParameterServer();
 		void startPublishingTFFromPoseTopics();
 		void stopPublishingTFFromPoseTopics();
-		void publishTFMapToOdomFromPose(const geometry_msgs::PoseConstPtr& pose);
+		void publishTFMapToOdomFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
 		void publishTFMapToOdomFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
+		void publishTFMapToOdomFromOdometry(const nav_msgs::OdometryConstPtr& odom);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </ros integration functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <tf update functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -73,8 +75,8 @@ class PoseToTFPublisher : ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline std::string& getBaseLinkFrameId() { return base_link_frame_id_; }
-		inline std::string& getInitialPoseTopic() { return initial_pose_topic_; }
-		inline std::string& getInitialPoseWithCovarianceStampedTopic() { return initial_pose_with_covariance_stamped_topic_; }
+		inline std::string& getInitialPoseTopic() { return pose_stamped_topic_; }
+		inline std::string& getInitialPoseWithCovarianceStampedTopic() { return pose_with_covariance_stamped_topic_; }
 		inline std::string& getMapFrameId() { return map_frame_id_; }
 		inline std::string& getOdomFrameId() { return odom_frame_id_; }
 		inline double getPublishRate() const { return publish_rate_; }
@@ -96,9 +98,11 @@ class PoseToTFPublisher : ConfigurableObject {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		// configuration fields
-		std::string initial_pose_topic_;
-		std::string initial_pose_with_covariance_stamped_topic_;
+		std::string pose_stamped_topic_;
+		std::string pose_with_covariance_stamped_topic_;
+		std::string odometry_topic_;
 		double publish_rate_;
+		bool invert_published_pose_;
 
 		// frame reference ids
 		std::string map_frame_id_;
@@ -114,8 +118,9 @@ class PoseToTFPublisher : ConfigurableObject {
 		// ros communication fields
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
-		ros::Subscriber initial_pose_subscriber_;
-		ros::Subscriber initial_pose_with_covariance_stamped_subscriber_;
+		ros::Subscriber pose_stamped_subscriber_;
+		ros::Subscriber pose_with_covariance_stamped_subscriber_;
+		ros::Subscriber odometry_subscriber_;
 		tf2_ros::TransformBroadcaster transform_broadcaster_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
