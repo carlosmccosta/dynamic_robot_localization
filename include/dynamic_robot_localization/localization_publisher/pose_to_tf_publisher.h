@@ -69,7 +69,7 @@ class PoseToTFPublisher : ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <pose to tf functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		void publishTFMapToBaseLinkFromInitialPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
 		void publishTFMapToOdomFromGlobalPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
-		void publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link, ros::Time tf_time = ros::Time::now());
+		void publishTFMapToOdom(const tf2::Transform& transform_base_link_to_map, ros::Time tf_time = ros::Time::now());
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </pose to tf functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -102,7 +102,9 @@ class PoseToTFPublisher : ConfigurableObject {
 		std::string pose_with_covariance_stamped_topic_;
 		std::string odometry_topic_;
 		double publish_rate_;
-		bool invert_published_pose_;
+		bool invert_tf_transform_;
+		bool invert_tf_hierarchy_;
+		bool transform_pose_to_map_frame_id_;
 
 		// frame reference ids
 		std::string map_frame_id_;

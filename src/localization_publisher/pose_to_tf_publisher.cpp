@@ -17,7 +17,11 @@ namespace dynamic_robot_localization {
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 PoseToTFPublisher::PoseToTFPublisher() :
-		publish_rate_(100), invert_published_pose_(false), number_tfs_published_(0) {
+		publish_rate_(100),
+		invert_tf_transform_(false),
+		invert_tf_hierarchy_(false),
+		transform_pose_to_map_frame_id_(false),
+		number_tfs_published_(0) {
 }
 
 PoseToTFPublisher::~PoseToTFPublisher() {}
@@ -39,8 +43,12 @@ void PoseToTFPublisher::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 	private_node_handle_->param("odom_frame_id", odom_frame_id_, std::string("odom"));
 	private_node_handle_->param("base_link_frame_id", base_link_frame_id_, std::string("base_link"));
 
-	transform_stamped_map_to_odom_.child_frame_id = odom_frame_id_;
-	transform_stamped_map_to_odom_.header.frame_id = map_frame_id_;
+	private_node_handle_->param("invert_tf_transform", invert_tf_transform_, false);
+	private_node_handle_->param("invert_tf_hierarchy", invert_tf_hierarchy_, false);
+	private_node_handle_->param("transform_pose_to_map_frame_id", transform_pose_to_map_frame_id_, true);
+
+	transform_stamped_map_to_odom_.header.frame_id = invert_tf_hierarchy_ ? odom_frame_id_ : map_frame_id_;
+	transform_stamped_map_to_odom_.child_frame_id = invert_tf_hierarchy_ ? map_frame_id_ : odom_frame_id_;
 }
 
 
@@ -53,8 +61,6 @@ void PoseToTFPublisher::publishInitialPoseFromParameterServer() {
 	private_node_handle_->param("initial_roll", roll, 0.0);
 	private_node_handle_->param("initial_pitch", pitch, 0.0);
 	private_node_handle_->param("initial_yaw", yaw, 0.0);
-
-	private_node_handle_->param("invert_published_pose", invert_published_pose_, false);
 	publishTFMapToBaseLinkFromInitialPose(x, y, z, roll, pitch, yaw);
 }
 
@@ -106,7 +112,7 @@ void PoseToTFPublisher::publishTFMapToOdomFromPoseStamped(const geometry_msgs::P
 			tf2::Quaternion(pose->pose.orientation.x, pose->pose.orientation.y, pose->pose.orientation.z, pose->pose.orientation.w),
 			tf2::Vector3(pose->pose.position.x, pose->pose.position.y, pose->pose.position.z));
 
-	if (pose->header.frame_id != map_frame_id_) {
+	if (transform_pose_to_map_frame_id_ && pose->header.frame_id != map_frame_id_) {
 		// transform to map (global frame reference)
 		tf2::Transform transform_pose_to_map;
 		if (!tf_collector_.lookForTransform(transform_pose_to_map, map_frame_id_, pose->header.frame_id, pose->header.stamp)) {
@@ -114,6 +120,7 @@ void PoseToTFPublisher::publishTFMapToOdomFromPoseStamped(const geometry_msgs::P
 		}
 
 		transform_pose *= transform_pose_to_map;
+		ROS_INFO_STREAM("Pose received in " << pose->header.frame_id << " instead of " << map_frame_id_);
 	}
 
 	publishTFMapToOdom(transform_pose, pose->header.stamp);
@@ -168,7 +175,7 @@ void PoseToTFPublisher::publishTFMapToBaseLinkFromInitialPose(double x, double y
 
 	transform_map_to_odom_ = tf2::Transform(orientation, tf2::Vector3(x, y, z));
 
-	if (invert_published_pose_) {
+	if (invert_tf_transform_) {
 		transform_map_to_odom_ = transform_map_to_odom_.inverse();
 	}
 
@@ -184,17 +191,17 @@ void PoseToTFPublisher::publishTFMapToOdomFromGlobalPose(double x, double y, dou
 }
 
 
-void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_map_to_base_link, ros::Time tf_time) {
+void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_base_link_to_map, ros::Time tf_time) {
 	tf2::Transform transform_odom_to_base_link;
 	if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, tf_time)) {
 		return;
 	}
 
-	// map_to_base = map_to_odom * odom_to_base
-	// map_to_odom = map_to_base * base_to_odom)
-	transform_map_to_odom_ = transform_map_to_base_link * transform_odom_to_base_link;
+	// base_to_map = base_to_odom * odom_to_map
+	// odom_to_map = base_to_map * odom_to_base)
+	transform_map_to_odom_ = transform_base_link_to_map * transform_odom_to_base_link;
 
-	if (invert_published_pose_) {
+	if (invert_tf_transform_) {
 		transform_map_to_odom_ = transform_map_to_odom_.inverse();
 	}
 
