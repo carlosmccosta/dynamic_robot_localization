@@ -42,13 +42,11 @@
 
 
 	<!-- laser assembler -->
-	<group if="$(arg use_laser_assembler)">
-		<include file="$(find dynamic_robot_localization)/launch/laserscan_to_pointcloud_assembler.launch">
-			<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
-			<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
-			<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
-		</include>
-	</group>
+	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)">
+		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
+		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
+		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
+	</include>
 	
 
 	<!-- OctoMap for dynamic map update -->
