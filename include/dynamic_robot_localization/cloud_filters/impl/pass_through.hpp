@@ -21,15 +21,15 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PassThrough-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	double pass_through_min_value, pass_through_max_value;
-	private_node_handle->param(configuration_namespace + "pass_through_min_value", pass_through_min_value, -5.0);
-	private_node_handle->param(configuration_namespace + "pass_through_max_value", pass_through_max_value, 5.0);
+	double min_value, max_value;
+	private_node_handle->param(configuration_namespace + "min_value", min_value, -5.0);
+	private_node_handle->param(configuration_namespace + "max_value", max_value, 5.0);
 
 	std::string field_name;
-	private_node_handle->param(configuration_namespace + "pass_through_field_name", field_name, std::string("z"));
+	private_node_handle->param(configuration_namespace + "field_name", field_name, std::string("z"));
 
 	filter_.setFilterFieldName(field_name);
-	filter_.setFilterLimits(pass_through_min_value, pass_through_max_value);
+	filter_.setFilterLimits(min_value, max_value);
 
 	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
 	cloud_publisher->setParameterServerArgumentToLoadTopicName(configuration_namespace + "pass_through_filtered_cloud_publish_topic");

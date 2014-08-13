@@ -98,9 +98,9 @@ filters:
     reference_pointcloud:
     ambient_pointcloud:
         pass_through:                                               # Allows prefix and postfix of letters to ensure parsing order
-            pass_through_field_name: 'z'                            # Field name -> [ x | y | z ]
-            pass_through_min_value: -5.0
-            pass_through_max_value: 5.0
+            field_name: 'z'                            # Field name -> [ x | y | z ]
+            min_value: -5.0
+            max_value: 5.0
             pass_through_filtered_cloud_publish_topic: ''
         voxel_grid:                                                 # Allows prefix and postfix of letters to ensure parsing order
             leaf_size_x: 0.01

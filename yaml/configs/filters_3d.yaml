@@ -1,14 +1,14 @@
 filters:
     reference_pointcloud:
         1_pass_through_x:
-            pass_through_field_name: 'x'
-            pass_through_min_value: -5.387
-            pass_through_max_value: 3.001
+            field_name: 'x'
+            min_value: -5.387
+            max_value: 3.001
             pass_through_filtered_cloud_publish_topic: ''
         2_pass_through_y:
-            pass_through_field_name: 'y'
-            pass_through_min_value: -4.181
-            pass_through_max_value: 8.207
+            field_name: 'y'
+            min_value: -4.181
+            max_value: 8.207
             pass_through_filtered_cloud_publish_topic: ''
         3_voxel_grid:
             leaf_size_x: 0.01
