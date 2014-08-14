@@ -16,6 +16,7 @@
 #include <vector>
 #include <algorithm>
 #include <utility>
+#include <cmath>
 
 
 // ROS includes

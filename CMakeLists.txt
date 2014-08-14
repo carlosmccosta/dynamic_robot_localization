@@ -10,7 +10,7 @@ project(dynamic_robot_localization)
 # remove logging (ROSCONSOLE_SEVERITY_NONE=5)
 # set(ROS_COMPILE_FLAGS "-DROSCONSOLE_MIN_SEVERITY=5 ${ROS_COMPILE_FLAGS}")
 
-set(${PROJECT_NAME}_CATKIN_COMPONENTS 
+set(${PROJECT_NAME}_CATKIN_COMPONENTS
     roscpp
     std_msgs
     sensor_msgs
@@ -59,7 +59,7 @@ generate_messages(
 
 catkin_package(
     INCLUDE_DIRS include
-    LIBRARIES        
+    LIBRARIES
         drl_common
         drl_pose_to_tf_publisher
         drl_cloud_filters
@@ -176,8 +176,13 @@ add_library(drl_localization
 # executables
 #==================
 
-add_executable(drl_pose_to_tf_publisher_node src/localization_publisher/pose_to_tf_publisher_node.cpp)
-add_executable(drl_localization_node src/localization/localization_node.cpp)
+add_executable(drl_pose_to_tf_publisher_node
+    src/localization_publisher/pose_to_tf_publisher_node.cpp
+)
+
+add_executable(drl_localization_node
+    src/localization/localization_node.cpp
+)
 
 
 
@@ -186,7 +191,9 @@ add_executable(drl_localization_node src/localization/localization_node.cpp)
 #==================
 
 # add_dependencies(drl_localization ${PROJECT_NAME}_gencfg)
-add_dependencies(drl_localization ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(drl_localization
+    ${PROJECT_NAME}_generate_messages_cpp
+)
 
 
 #==================

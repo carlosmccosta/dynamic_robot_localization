@@ -598,13 +598,14 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.header.frame_id = ambient_cloud_msg->header.frame_id;
 				localization_detailed_msg.header.stamp = ambient_cloud_msg->header.stamp;
 				localization_detailed_msg.pose = pose_corrected_msg->pose;
-				localization_detailed_msg.pose_corrections.position.x = (pose_tf_corrected.getOrigin().getX() - pose_tf_initial_guess.getOrigin().getX()) * 1000.0; // mm
-				localization_detailed_msg.pose_corrections.position.y = (pose_tf_corrected.getOrigin().getY() - pose_tf_initial_guess.getOrigin().getY()) * 1000.0; // mm
-				localization_detailed_msg.pose_corrections.position.z = (pose_tf_corrected.getOrigin().getZ() - pose_tf_initial_guess.getOrigin().getZ()) * 1000.0; // mm
-				localization_detailed_msg.pose_corrections.orientation.x = angles::to_degrees(roll_corrected - roll_initial_guess);
-				localization_detailed_msg.pose_corrections.orientation.y = angles::to_degrees(pitch_corrected - pitch_initial_guess);
-				localization_detailed_msg.pose_corrections.orientation.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
-				localization_detailed_msg.pose_corrections.orientation.w = localization_detailed_msg.pose_corrections.orientation.x + localization_detailed_msg.pose_corrections.orientation.y + localization_detailed_msg.pose_corrections.orientation.z;
+				localization_detailed_msg.translation_corrections.x = (pose_tf_corrected.getOrigin().getX() - pose_tf_initial_guess.getOrigin().getX()) * 1000.0; // mm
+				localization_detailed_msg.translation_corrections.y = (pose_tf_corrected.getOrigin().getY() - pose_tf_initial_guess.getOrigin().getY()) * 1000.0; // mm
+				localization_detailed_msg.translation_corrections.z = (pose_tf_corrected.getOrigin().getZ() - pose_tf_initial_guess.getOrigin().getZ()) * 1000.0; // mm
+				localization_detailed_msg.translation_correction = std::abs(localization_detailed_msg.translation_corrections.x) + std::abs(localization_detailed_msg.translation_corrections.y) + std::abs(localization_detailed_msg.translation_corrections.z);
+				localization_detailed_msg.rotation_corrections.x = angles::to_degrees(roll_corrected - roll_initial_guess);
+				localization_detailed_msg.rotation_corrections.y = angles::to_degrees(pitch_corrected - pitch_initial_guess);
+				localization_detailed_msg.rotation_corrections.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
+				localization_detailed_msg.rotation_correction = std::abs(localization_detailed_msg.rotation_corrections.x) + std::abs(localization_detailed_msg.rotation_corrections.y) + std::abs(localization_detailed_msg.rotation_corrections.z);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
 				localization_detailed_msg.aligment_fitness = pointcloud_matchers_.back()->getCloudMatcher()->getFitnessScore();
 				localization_detailed_publisher_.publish(localization_detailed_msg);
