@@ -373,7 +373,7 @@ template<typename PointT>
 bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
 	if (pcl::io::loadPCDFile<PointT>(reference_pointcloud_filename, *reference_pointcloud_) == 0) {
 		if (!reference_pointcloud_->points.empty()) {
-			ROS_DEBUG_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
+			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
 			reference_pointcloud_->header.frame_id = map_frame_id_;
 
 			last_map_received_time_ = ros::Time::now();
@@ -398,7 +398,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 			if (!reference_pointcloud_->points.empty()) {
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
 					reference_pointcloud_2d_ = false;
-					ROS_DEBUG_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 				}
 			}
 		}
@@ -415,7 +415,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 			if (!reference_pointcloud_->points.empty()) {
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
 					reference_pointcloud_2d_ = true;
-					ROS_DEBUG_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
+					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 				}
 			}
 		}
@@ -452,7 +452,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		reference_pointcloud_received_ = true;
 
 		if (!reference_pointcloud_preprocessed_save_filename_.empty()) {
-			ROS_DEBUG_STREAM("Saving reference pointcloud preprocessed with " << reference_pointcloud_->points.size() << " points to file " << reference_pointcloud_preprocessed_save_filename_);
+			ROS_INFO_STREAM("Saving reference pointcloud preprocessed with " << reference_pointcloud_->points.size() << " points to file " << reference_pointcloud_preprocessed_save_filename_);
 			pcl::io::savePCDFile<PointT>(reference_pointcloud_preprocessed_save_filename_, *reference_pointcloud_, save_reference_pointclouds_in_binary_format_);
 		}
 
@@ -463,11 +463,11 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 				if (!applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
 
 				if (!reference_pointcloud_keypoints_save_filename_.empty()) {
-					ROS_DEBUG_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->points.size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
+					ROS_INFO_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->points.size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
 					pcl::io::savePCDFile<PointT>(reference_pointcloud_keypoints_save_filename_, *reference_pointcloud_keypoints, save_reference_pointclouds_in_binary_format_);
 				}
 			} else {
-				ROS_DEBUG_STREAM("Loaded " << reference_pointcloud_keypoints->points.size() << " keypoints from file " << reference_pointcloud_keypoints_filename_);
+				ROS_INFO_STREAM("Loaded " << reference_pointcloud_keypoints->points.size() << " keypoints from file " << reference_pointcloud_keypoints_filename_);
 			}
 		}
 		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints->points.size();
@@ -544,7 +544,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 		tf2::Transform pose_tf_initial_guess;
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_initial_guess, ambient_cloud_msg->header.frame_id, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
-			ROS_DEBUG_STREAM("Dropping pointcloud because tf between " << ambient_cloud_msg->header.frame_id << " and " << base_link_frame_id_ << " isn't available");
+			ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_cloud_msg->header.frame_id << " and " << base_link_frame_id_ << " isn't available");
 			return;
 		}
 
@@ -630,13 +630,13 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
 			}
 		} else {
-			ROS_DEBUG_STREAM("Discarded cloud because localization couldn't be calculated");
+			ROS_WARN_STREAM("Discarded cloud because localization couldn't be calculated");
 		}
 	} else {
 		if (!reference_pointcloud_received_) {
-			ROS_DEBUG_STREAM("Discarded cloud because there is no reference cloud to compare to");
+			ROS_WARN_STREAM("Discarded cloud because there is no reference cloud to compare to");
 		} else {
-			ROS_DEBUG_STREAM("Discarded cloud with age " << scan_age.toSec());
+			ROS_WARN_STREAM("Discarded cloud with [scan_age: " << scan_age.toSec() << "] [elapsed_time_since_last_scan: " << elapsed_time_since_last_scan << "] [points: " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << "]");
 		}
 	}
 }

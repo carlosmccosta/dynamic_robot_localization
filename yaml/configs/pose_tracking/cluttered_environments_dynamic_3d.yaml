@@ -1,11 +1,3 @@
-#publish_topic_names:
-#    reference_pointcloud_publish_topic: ''
-#    aligned_pointcloud_publish_topic: ''
-#    localization_detailed_publish_topic: ''
-#    localization_diagnostics_publish_topic: '' 
-#    localization_times_publish_topic: ''
-
-
 cloud_matchers:
     ignore_height_corrections: false
     pose_tracking_timeout: 3.0
