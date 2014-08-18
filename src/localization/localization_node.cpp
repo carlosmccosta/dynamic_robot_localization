@@ -23,7 +23,7 @@
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "drl_localization_node");
 
-	if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info)) {
+	if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
 		ros::console::notifyLoggerLevelsChanged();
 	}
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 		localization.startLocalization();
 	} else {*/
-		dynamic_robot_localization::Localization<pcl::PointNormal> localization;
+		dynamic_robot_localization::Localization<pcl::PointXYZINormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle, "");
 		localization.startLocalization();
 //	}

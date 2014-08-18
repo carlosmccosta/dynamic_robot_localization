@@ -148,7 +148,11 @@ add_library(drl_keypoint_descriptors
 add_library(drl_cloud_matchers
     src/cloud_matchers/cloud_matcher.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point.cpp
+    src/cloud_matchers/point_matchers/iterative_closest_point_non_linear.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point_with_normals.cpp
+    src/cloud_matchers/point_matchers/iterative_closest_point_generalized.cpp
+    src/cloud_matchers/point_matchers/normal_distributions_transform_2d.cpp
+    src/cloud_matchers/point_matchers/normal_distributions_transform_3d.cpp
     src/cloud_matchers/feature_matchers/feature_matcher.cpp
     src/cloud_matchers/feature_matchers/ia_ransac.cpp
     src/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.cpp

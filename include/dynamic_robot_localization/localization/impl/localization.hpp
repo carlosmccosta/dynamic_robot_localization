@@ -235,10 +235,18 @@ void Localization<PointT>::setupPointCloudMatchersConfigurations() {
 		for (XmlRpc::XmlRpcValue::iterator it = matchers.begin(); it != matchers.end(); ++it) {
 			std::string matcher_name = it->first;
 			typename CloudMatcher<PointT>::Ptr cloud_matcher;
-			if (matcher_name.find("iterative_closest_point_with_normals") != std::string::npos) {
+			if (matcher_name.find("iterative_closest_point_generalized") != std::string::npos) {
+				cloud_matcher.reset(new IterativeClosestPointGeneralized<PointT>());
+			} else if (matcher_name.find("iterative_closest_point_with_normals") != std::string::npos) {
 				cloud_matcher.reset(new IterativeClosestPointWithNormals<PointT>());
+			} else if (matcher_name.find("iterative_closest_point_non_linear") != std::string::npos) {
+				cloud_matcher.reset(new IterativeClosestPointNonLinear<PointT>());
 			} else if (matcher_name.find("iterative_closest_point") != std::string::npos) {
 				cloud_matcher.reset(new IterativeClosestPoint<PointT>());
+			} else if (matcher_name.find("normal_distributions_transform_2d") != std::string::npos) {
+				cloud_matcher.reset(new NormalDistributionsTransform2D<PointT>());
+			} else if (matcher_name.find("normal_distributions_transform_3d") != std::string::npos) {
+				cloud_matcher.reset(new NormalDistributionsTransform3D<PointT>());
 			}
 
 			if (cloud_matcher) {
@@ -377,8 +385,8 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 			reference_pointcloud_->header.frame_id = map_frame_id_;
 
 			last_map_received_time_ = ros::Time::now();
+			reference_pointcloud_2d_ = false;
 			if (updateLocalizationPipelineWithNewReferenceCloud()) {
-				reference_pointcloud_2d_ = false;
 				return true;
 			}
 		}
@@ -396,8 +404,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 		if (reference_pointcloud_msg->width > 0 && reference_pointcloud_msg->data.size() > 0 && reference_pointcloud_msg->fields.size() >= 3) {
 			pcl::fromROSMsg(*reference_pointcloud_msg, *reference_pointcloud_);
 			if (!reference_pointcloud_->points.empty()) {
+				reference_pointcloud_2d_ = false;
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
-					reference_pointcloud_2d_ = false;
 					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 				}
 			}
@@ -413,8 +421,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_)) {
 			if (!reference_pointcloud_->points.empty()) {
+				reference_pointcloud_2d_ = true;
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
-					reference_pointcloud_2d_ = true;
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->points.size() << " points");
 				}
 			}
@@ -675,7 +683,28 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 		pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
 	}*/
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
-	normal_estimator->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, ambient_pointcloud_with_normals);
+
+	typename pcl::PointCloud<PointT>::Ptr pointcloud_surface;
+	typename pcl::search::KdTree<PointT>::Ptr surface_search_method_final;
+	if (reference_pointcloud_2d_) {
+		pointcloud_surface.reset(new typename pcl::PointCloud<PointT>());
+		pcl::PointCloud<PointT> cloud_shifted_up, cloud_shifted_down;
+		pcl::transformPointCloud(*pointcloud, cloud_shifted_up, Eigen::Affine3f(Eigen::Translation3f(0.0, 0.0, 0.0025)));
+		pcl::transformPointCloud(*pointcloud, cloud_shifted_down, Eigen::Affine3f(Eigen::Translation3f(0.0, 0.0, -0.0025)));
+		*pointcloud_surface += *pointcloud;
+		*pointcloud_surface += cloud_shifted_up;
+		*pointcloud_surface += cloud_shifted_down;
+		surface_search_method_final.reset(new pcl::search::KdTree<PointT>());
+		surface_search_method_final->setInputCloud(pointcloud_surface);
+
+		/*pointcloud = pointcloud_surface;
+		surface_search_method = surface_search_method_final;*/
+	} else {
+		pointcloud_surface = pointcloud;
+		surface_search_method_final = surface_search_method;
+	}
+
+	normal_estimator->estimateNormals(pointcloud, pointcloud_surface, surface_search_method_final, sensor_pose_tf_guess, ambient_pointcloud_with_normals);
 	pointcloud = ambient_pointcloud_with_normals; // switch pointers
 
 	return !pointcloud->points.empty();

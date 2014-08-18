@@ -70,7 +70,11 @@
 
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_non_linear.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_with_normals.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_generalized.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/normal_distributions_transform_2d.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/normal_distributions_transform_3d.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment_prerejective.h>
 

@@ -10,7 +10,7 @@
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 
 
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" output="screen" launch-prefix="gdbserver localhost:1337"> -->
+<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
 		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_filename)" subst_value="true" />

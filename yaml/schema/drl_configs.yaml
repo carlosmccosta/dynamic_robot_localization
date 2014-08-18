@@ -233,8 +233,29 @@ cloud_matchers:
         iterative_closest_point:                                    # Allows prefix and postfix of letters to ensure parsing order
             max_number_of_registration_iterations: 100              # Overrides parameter in parent namespace
             use_reciprocal_correspondences: true
+        iterative_closest_point_non_linear:                         # Allows prefix and postfix of letters to ensure parsing order
+            use_reciprocal_correspondences: true
         iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order
             use_reciprocal_correspondences: true
+        iterative_closest_point_generalized:                        # Allows prefix and postfix of letters to ensure parsing order
+            use_reciprocal_correspondences: true
+            rotation_epsilon: 2e-3
+            correspondence_randomness: 20
+            maximum_optimizer_iterations: 20
+        normal_distributions_transform_2d:                          # Allows prefix and postfix of letters to ensure parsing order
+            grid_center_x: 0.0
+            grid_center_y: 0.0
+            grid_step_x: 1.0
+            grid_step_y: 1.0
+            grid_extent_x: 20.0
+            grid_extent_y: 20.0
+            grid_optimization_step_size_x: 1.0
+            grid_optimization_step_size_y: 1.0
+            grid_optimization_step_size_theta: 1.0
+        normal_distributions_transform_3d:                          # Allows prefix and postfix of letters to ensure parsing order
+            voxel_grid_resolution: 1.0
+            line_search_step_size: 0.1
+            outlier_ratio: 0.55
 
 
 # ===================================================================================================================================================
