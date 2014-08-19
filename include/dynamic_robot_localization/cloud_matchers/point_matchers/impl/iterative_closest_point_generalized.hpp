@@ -24,7 +24,7 @@ void IterativeClosestPointGeneralized<PointT>::setupConfigurationFromParameterSe
 	typename pcl::GeneralizedIterativeClosestPoint<PointT, PointT>::Ptr matcher(new pcl::GeneralizedIterativeClosestPoint<PointT, PointT>());
 
 	double rotation_epsilon;
-	private_node_handle->param(configuration_namespace + "rotation_epsilon", rotation_epsilon, 2e-3);
+	private_node_handle->param(configuration_namespace + "rotation_epsilon", rotation_epsilon, 0.002);
 	matcher->setRotationEpsilon(rotation_epsilon);
 
 	int correspondence_randomness;

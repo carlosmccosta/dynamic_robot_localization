@@ -56,7 +56,7 @@ void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCl
 	}
 
 	typename pcl::PointCloud<FeatureT>::Ptr reference_descriptors(new pcl::PointCloud<FeatureT>());
-	if (reference_pointcloud_descriptors_filename_.empty() || pcl::io::loadPCDFile<FeatureT>(reference_pointcloud_descriptors_filename_, *reference_descriptors) != 0) {
+	if (reference_pointcloud_descriptors_filename_.empty() || pointcloud_conversions::fromFile(reference_pointcloud_descriptors_filename_, *reference_descriptors)) {
 		if (keypoint_descriptor_) // must be set previously
 			reference_descriptors = keypoint_descriptor_->computeKeypointsDescriptors(reference_cloud_final, reference_cloud, search_method);
 	} else {

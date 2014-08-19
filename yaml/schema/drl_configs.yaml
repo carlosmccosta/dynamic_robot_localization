@@ -239,7 +239,7 @@ cloud_matchers:
             use_reciprocal_correspondences: true
         iterative_closest_point_generalized:                        # Allows prefix and postfix of letters to ensure parsing order
             use_reciprocal_correspondences: true
-            rotation_epsilon: 2e-3
+            rotation_epsilon: 0.002
             correspondence_randomness: 20
             maximum_optimizer_iterations: 20
         normal_distributions_transform_2d:                          # Allows prefix and postfix of letters to ensure parsing order

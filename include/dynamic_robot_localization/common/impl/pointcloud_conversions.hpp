@@ -51,6 +51,29 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 	return false;
 }
 
+
+template<typename PointT>
+bool fromFile(const std::string& filename, pcl::PointCloud<PointT>& pointcloud) {
+	std::string::size_type index = filename.rfind(".");
+	if (index == std::string::npos) return false;
+
+	std::string extension = filename.substr(index + 1);
+
+	if (extension == "pcd") {
+		if (pcl::io::loadPCDFile<PointT>(filename, pointcloud) == 0 && !pointcloud.points.empty()) return true;
+	} else {
+		pcl::PolygonMesh mesh;
+		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature
+			pcl::fromPCLPointCloud2(mesh.cloud, pointcloud);
+			return !pointcloud.points.empty();
+		}
+	}
+
+	return false;
+}
+
+
+
 } /* namespace pointcloud_conversions */
 } /* namespace dynamic_robot_localization */
 

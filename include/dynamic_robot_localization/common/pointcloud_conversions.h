@@ -12,14 +12,18 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <string>
 
 // ROS includes
 #include <nav_msgs/OccupancyGrid.h>
 
 // PCL includes
 #include <pcl/point_cloud.h>
+#include <pcl/PolygonMesh.h>
 
 // external libs includes
+#include <pcl/io/pcd_io.h>
+#include <pcl/io/vtk_lib_io.h>
 
 // project includes
 
@@ -33,6 +37,10 @@ namespace pointcloud_conversions {
 
 template <typename PointT>
 bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int threshold_for_map_cell_as_obstacle = 95);
+
+
+template <typename PointT>
+bool fromFile(const std::string& filename, pcl::PointCloud<PointT>& pointcloud);
 
 
 } /* namespace pointcloud_conversions */

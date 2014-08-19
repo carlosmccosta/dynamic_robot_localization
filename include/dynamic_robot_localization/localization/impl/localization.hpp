@@ -379,7 +379,7 @@ void Localization<PointT>::setupOutlierDetectorsConfigurations() {
 
 template<typename PointT>
 bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
-	if (pcl::io::loadPCDFile<PointT>(reference_pointcloud_filename, *reference_pointcloud_) == 0) {
+	if (pointcloud_conversions::fromFile(reference_pointcloud_filename, *reference_pointcloud_)) {
 		if (!reference_pointcloud_->points.empty()) {
 			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->points.size() << " points");
 			reference_pointcloud_->header.frame_id = map_frame_id_;
@@ -467,7 +467,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 
 		if (!reference_cloud_keypoint_detectors_.empty()) {
-			if (reference_pointcloud_keypoints_filename_.empty() || pcl::io::loadPCDFile<PointT>(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints) != 0) {
+			if (reference_pointcloud_keypoints_filename_.empty() || pointcloud_conversions::fromFile(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints)) {
 				if (!applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
 
 				if (!reference_pointcloud_keypoints_save_filename_.empty()) {
