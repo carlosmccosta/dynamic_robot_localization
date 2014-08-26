@@ -60,10 +60,13 @@ bool fromFile(const std::string& filename, pcl::PointCloud<PointT>& pointcloud) 
 	std::string extension = filename.substr(index + 1);
 
 	if (extension == "pcd") {
-		if (pcl::io::loadPCDFile<PointT>(filename, pointcloud) == 0 && !pointcloud.points.empty()) return true;
+		if (pcl::io::loadPCDFile(filename, pointcloud) == 0 && !pointcloud.points.empty()) return true;
+	} else if (extension == "ply") {
+		if (pcl::io::loadPLYFile(filename, pointcloud) == 0 && !pointcloud.points.empty()) return true;
 	} else {
 		pcl::PolygonMesh mesh;
-		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature
+		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .ply .stl
+//			std::cout << " +> PolygonMesh fields: " << pcl::getFieldsList(mesh.cloud).c_str() << "\n";
 			pcl::fromPCLPointCloud2(mesh.cloud, pointcloud);
 			return !pointcloud.points.empty();
 		}

@@ -127,7 +127,7 @@ normal_estimators:
         display_normals: false                                      # Can be overridden in child namespaces
         normal_estimation_omp:                                      # Allows prefix and postfix of letters to ensure parsing order
             display_normals: true                                   # Overrides parameter in parent namespace
-            search_k: 0
+            search_k: 0                                             # If search_k != 0 search_radius is ignored
             search_radius: 0.12
         moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order
             compute_normals: true

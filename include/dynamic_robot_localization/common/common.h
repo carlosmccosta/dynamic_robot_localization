@@ -11,7 +11,9 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // Define all point types that include PointXYZ and Normal data
 #define DRL_POINT_TYPES			\
-	(pcl::PointXYZINormal)
+	(pcl::PointNormal)			\
+	(pcl::PointXYZINormal)		\
+	(pcl::PointXYZRGBNormal)
 
 
 /*

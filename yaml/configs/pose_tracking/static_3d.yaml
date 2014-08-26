@@ -1,3 +1,11 @@
+normal_estimators:
+    reference_pointcloud:
+        display_normals: true
+        normal_estimation_omp:
+            search_k: 7
+            search_radius: 0.12
+
+
 cloud_matchers:
     ignore_height_corrections: false
     pose_tracking_timeout: 2.0

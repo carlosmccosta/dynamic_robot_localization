@@ -1,4 +1,4 @@
-/**\file planar_localization_node.cpp
+/**\file localization_node.cpp
  * \brief Description...
  *
  * @version 1.0

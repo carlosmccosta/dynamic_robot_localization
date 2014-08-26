@@ -20,10 +20,11 @@
 // PCL includes
 #include <pcl/point_cloud.h>
 #include <pcl/PolygonMesh.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
+#include <pcl/io/vtk_lib_io.h>
 
 // external libs includes
-#include <pcl/io/pcd_io.h>
-#include <pcl/io/vtk_lib_io.h>
 
 // project includes
 

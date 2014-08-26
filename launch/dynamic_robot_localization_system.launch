@@ -3,20 +3,23 @@
 	<!-- ======================================================= arguments ==================================================== -->
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters_2d.yaml" />
 	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking.yaml" />
+	<arg name="reference_pointcloud_filename" default="" />
+	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
+	<arg name="reference_pointcloud_keypoints_filename" default="" />
+	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
+	<arg name="reference_pointcloud_descriptors_filename" default="" />
+	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
 	<arg name="robot_initial_z" default="0.0" />
 	<arg name="robot_initial_roll" default="0.0" />
 	<arg name="robot_initial_pitch" default="0.0" />
 	<arg name="robot_initial_yaw" default="0.0" />
-	<arg name="laser_scan_topics" default="/tilt_scan" />
 	<arg name="use_laser_assembler" default="1" />
-	<arg name="use_dynamic_map_update" default="0" />
+	<arg name="laser_scan_topics" default="/tilt_scan" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="5" />
-	<arg name="timeout_for_cloud_assembly" default="0.5" />	
-	<arg name="reference_pointcloud_filename" default="" />
-	<arg name="reference_pointcloud_keypoints_filename" default="" />
-	<arg name="reference_pointcloud_descriptors_filename" default="" />
+	<arg name="timeout_for_cloud_assembly" default="0.5" />
+	<arg name="use_dynamic_map_update" default="0" />
 	<arg name="octomap_file" default="" />
 
 
@@ -24,9 +27,12 @@
 	<include file="$(find dynamic_robot_localization)/launch/dynamic_robot_localization.launch">
 		<arg name="yaml_configuration_filters_filename" default="$(arg yaml_configuration_filters_filename)" />
 		<arg name="yaml_configuration_filename" default="$(arg yaml_configuration_filename)" />
-		<arg name="reference_pointcloud_filename" default="$(arg reference_pointcloud_filename)" />
-		<arg name="reference_pointcloud_keypoints_filename" default="$(arg reference_pointcloud_keypoints_filename)" />
-		<arg name="reference_pointcloud_descriptors_filename" default="$(arg reference_pointcloud_descriptors_filename)" />
+		<arg name="reference_pointcloud_filename" value="$(arg reference_pointcloud_filename)" />
+		<arg name="reference_pointcloud_preprocessed_save_filename" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
+		<arg name="reference_pointcloud_keypoints_filename" value="$(arg reference_pointcloud_keypoints_filename)" />
+		<arg name="reference_pointcloud_keypoints_save_filename" value="$(arg reference_pointcloud_keypoints_save_filename)" />
+		<arg name="reference_pointcloud_descriptors_filename" value="$(arg reference_pointcloud_descriptors_filename)" />
+		<arg name="reference_pointcloud_descriptors_save_filename" value="$(arg reference_pointcloud_descriptors_save_filename)" />
 	</include>
 
 

@@ -188,6 +188,9 @@ add_executable(drl_localization_node
     src/localization/localization_node.cpp
 )
 
+add_executable(drl_mesh_to_pcd
+    src/tools/mesh_to_pcd.cpp
+)
 
 
 #==================
@@ -276,6 +279,12 @@ target_link_libraries(drl_localization
 
 target_link_libraries(drl_localization_node
     drl_localization
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(drl_mesh_to_pcd
+    drl_common
+    ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
