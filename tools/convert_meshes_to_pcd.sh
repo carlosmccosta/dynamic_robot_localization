@@ -6,7 +6,7 @@
 
 search_path=${1:-'./'}
 search_extension=${2:-'.stl'}
-max_parallel_jobs=${3:-4}
+max_parallel_jobs=${3:-8}
 conversion_extension=${4:-'.ply'}
 conversion_directory=${5:-'pointclouds'}
 meshlab_filters=${6:-'meshlab_filters.mlx'}
@@ -25,31 +25,46 @@ mkdir -p "${search_path}/${conversion_directory}"
 
 
 ######### convert files
-export job_ids=''
-export jobs_running=0
+job_ids_file='.job_ids'
+rm -f ${job_ids_file}
+jobs_running=0
 
 
 terminate_jobs() {
-	running_job_ids=`jobs -p`
-	echo " --> Killing job ids ${running_job_ids}"
-	for job_id in ${running_job_ids}
-	do
-		echo " !> Killing job with id ${job_id}"
-		kill ${job_id}
+	echo " --> Killing jobs..."
+	cat ${job_ids_file} | while read job_id; do
+		case ${job_id} in
+			''|*[!0-9]*) ;;
+			*)
+			echo " !> Killing job with id ${job_id}"
+			kill ${job_id}
+			;;
+		esac
 	done
+	
+	rm -f ${job_ids_file}
 	exit 0
 }
 
+
 wait_for_jobs() {
-	running_job_ids=`jobs -p`
-	echo "\nWaiting for jobs to finish (ids: ${running_job_ids})...\n"
-	for job_id in ${running_job_ids}
-	do
-		wait
+	echo "\nWaiting for jobs to finish...\n"
+	cat ${job_ids_file} | while read job_id; do
+		case ${job_id} in
+			''|*[!0-9]*) ;;
+			*)
+			echo " !> Waiting for job with id ${job_id}"
+			wait ${job_id}
+			;;
+		esac
 	done
+	
+	rm -f ${job_ids_file}
 }
 
+
 trap terminate_jobs 1 2 3 9 15
+
 
 find "${search_path}" -maxdepth 1 -name "*${search_extension}" -type f -printf "%f\n" | while read file; do
 	while [ ${jobs_running} -ge ${max_parallel_jobs} ]
@@ -80,15 +95,13 @@ find "${search_path}" -maxdepth 1 -name "*${search_extension}" -type f -printf "
 		echo " !> Finished conversion of ${conversion_file} into ${final_extension}\n"
 	} &
 	
-	job_ids="${job_ids} $!"
+	jobs -p > ${job_ids_file}
 	jobs_running=`expr ${jobs_running} + 1`
-	echo "===> job_ids: ${job_ids}"
-	echo "===> jobs_running: ${jobs_running}"
-	test="bbb"
 done
 
 wait_for_jobs
 
+
 echo "----------------------------------------------------------------------------------------------------"
 echo ">>>>> Finished mesh conversion. Converted files in directory ${search_path}/${conversion_directory}"
-echo "----------------------------------------------------------------------------------------------------"
+echo "----------------------------------------------------------------------------------------------------\n"
