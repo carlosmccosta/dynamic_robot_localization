@@ -1,0 +1,15 @@
+<!DOCTYPE FilterScript>
+<FilterScript>
+ <filter name="Compact faces"/>
+ <filter name="Compact vertices"/>
+ <filter name="Remove Duplicate Faces"/>
+ <filter name="Remove Duplicated Vertex"/>
+ <filter name="Remove Faces from Non Manifold Edges"/>
+ <filter name="Remove Unreferenced Vertex"/>
+ <filter name="Normalize Vertex Normals"/>
+ <filter name="Compute curvature principal directions">
+  <Param tooltip="Choose a method" description="Method:" enum_val0="Taubin approximation" enum_val1="Principal Component Analysis" enum_cardinality="4" enum_val2="Normal Cycles" enum_val3="Pseudoinverse Quadric Fitting" type="RichEnum" value="1" name="Method"/>
+  <Param tooltip="Choose the curvature that is mapped into quality and visualized as per vertex color." description="Color Mapping" enum_val0="Mean Curvature" enum_val1="Gaussian Curvature" enum_cardinality="3" enum_val2="None" type="RichEnum" value="2" name="CurvatureType"/>
+  <Param tooltip="If selected, before starting the filter will remove anyy unreference vertex (for which curvature values are not defined)" description="Remove Unreferenced Vertices" type="RichBool" value="true" name="Autoclean"/>
+ </filter>
+</FilterScript>

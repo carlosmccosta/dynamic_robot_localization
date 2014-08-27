@@ -1,0 +1,46 @@
+###################################################################################################
+# mesh conversions
+###################################################################################################
+
+### convert a mesh using tools/convert_mesh_to_pcd.sh
+convert_mesh_to_pcd.sh <input_file> [conversion_extension] [final_extension] [conversion_directory] [meshlab_filters] [meshlab_filters_options]
+convert_mesh_to_pcd.sh input.ply
+
+### convert all meshes inside a folder with a given extension using tools/convert_meshes_to_pcd.sh
+convert_meshes_to_pcd.sh [search_path] [search_extension] [conversion_extension] [final_extension] [conversion_directory] [meshlab_filters] [meshlab_filters_options]
+convert_meshes_to_pcd.sh '/path/to/folder' .ply
+
+
+### convert mesh to pcd using pcl vtk_io
+rosrun dynamic_robot_localization drl_mesh_to_pcd [path/]input.[pcd|obj|ply|stl|vtk] [path/]output.pcd [-binary 0|1] [-compressed 0|1] [-type PointNormal|PointXYZRGBNormal|auto]
+rosrun dynamic_robot_localization drl_mesh_to_pcd input.ply output.pcd -binary 1 -compressed 1 -type auto
+
+
+### convert ply to pcd using pcl utils
+pcl_ply2pcd -format 1 input.ply output.pcd
+
+
+### convert mesh to pcd using OpenSceneGraph
+rosrun mesh_to_pointcloud mesh_to_pcd [path/]input.[3dc|3ds|asc|ac|bsp|dae|dw|dxf|fbx|flt|gem|geo|iv|ive|logo|lwo|lw|lws|md2|obj|ogr|osg|pfb|ply|shp|stl|x|wrl] [path/]output.pcd [-binary 0|1] [-compressed 0|1] [-type PointXYZ|PointNormal|PointXYZRGB|PointXYZRGBNormal]
+rosrun mesh_to_pointcloud mesh_to_pcd input.ply input.pcd -binary 1 -type PointXYZRGBNormal
+
+
+### convert files in meshlab
+meshlabserver -i input.stl -o output.obj -s filters.mlx -om vc vq vn
+
+
+### change line in file
+sed -i '{line_number} c\{text}' {file_name}
+sed -i '11 c\property float curvature' input.ply
+
+### replace first occurrence of text
+sed -i 's/find/replace/' input_file
+sed -i 's/quality/curvature/' input.ply
+
+
+
+###################################################################################################
+# view point clouds from .pcd files
+###################################################################################################
+
+pcl_viewer input.pcd -normals 1 -normals_scale 0.01 -pc 1 -pc_scale 1 -ax 1 -opaque 0.1

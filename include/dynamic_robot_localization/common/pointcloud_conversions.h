@@ -19,6 +19,7 @@
 
 // PCL includes
 #include <pcl/point_cloud.h>
+#include <pcl/PCLPointCloud2.h>
 #include <pcl/PolygonMesh.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
@@ -40,8 +41,8 @@ template <typename PointT>
 bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int threshold_for_map_cell_as_obstacle = 95);
 
 
-template <typename PointT>
-bool fromFile(const std::string& filename, pcl::PointCloud<PointT>& pointcloud);
+template <typename PointCloudT>
+bool fromFile(const std::string& filename, PointCloudT& pointcloud);
 
 
 } /* namespace pointcloud_conversions */

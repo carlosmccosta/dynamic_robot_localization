@@ -32,7 +32,50 @@
 
 
 void showUsage(char* program_name) {
-	pcl::console::print_info("Usage: %s [path/]input.[pcd|obj|ply|stl|vtk] [path/]output.pcd [-binary 0|1]\n", program_name);
+	pcl::console::print_info("Usage: %s [path/]input.[pcd|obj|ply|stl|vtk] [path/]output.pcd [-binary 0|1] [-compressed 0|1] [-type PointNormal|PointXYZRGBNormal|auto]\n", program_name);
+}
+
+
+template<typename PointT>
+bool savePointCloud(char* output, bool binary_output_format, bool binary_compressed_output_format, PointT& pointcloud) {
+	if (binary_compressed_output_format) {
+		return pcl::io::savePCDFileBinaryCompressed(std::string(output), pointcloud) == 0;
+	} else {
+		return pcl::io::savePCDFile(std::string(output), pointcloud, binary_output_format) == 0;
+	}
+}
+
+template<>
+bool savePointCloud(char* output, bool binary_output_format, bool binary_compressed_output_format, pcl::PCLPointCloud2& pointcloud) {
+	return pcl::io::savePCDFile(std::string(output), pointcloud, Eigen::Vector4f::Zero(), Eigen::Quaternionf::Identity(), binary_output_format) == 0;
+}
+
+
+template<typename PointT>
+int convertMesh(char* input, char* output, bool binary_output_format, bool binary_compressed_output_format, PointT& pointcloud) {
+	pcl::console::print_highlight("==> Loading %s...\n", input);
+	dynamic_robot_localization::PerformanceTimer performance_timer;
+	performance_timer.start();
+
+	if (dynamic_robot_localization::pointcloud_conversions::fromFile(std::string(input), pointcloud)) {
+		pcl::console::print_highlight(" +> Loaded %d points in %s\n", (pointcloud.width * pointcloud.height), performance_timer.getElapsedTimeFormated().c_str());
+		pcl::console::print_highlight(" +> Pointcloud fields: %s\n\n", pcl::getFieldsList(pointcloud).c_str());
+		std::string save_type = (binary_output_format ? "binary" : "ascii");
+		if (binary_compressed_output_format) { save_type += " compressed"; }
+		pcl::console::print_highlight("==> Saving pointcloud to %s in %s format...\n", output, save_type.c_str());
+		performance_timer.restart();
+
+		if (savePointCloud(output, binary_output_format, binary_compressed_output_format, pointcloud)) {
+			pcl::console::print_highlight(" +> Saved %d points in %s taking %s\n\n", (pointcloud.width * pointcloud.height), output, performance_timer.getElapsedTimeFormated().c_str());
+		} else {
+			pcl::console::print_error(" !> Failed to save to file %s\n\n", output);
+		}
+	} else {
+		pcl::console::print_error(" !> Failed to load file %s\n\n", input);
+		return (-1);
+	}
+
+	return 0;
 }
 
 
@@ -50,27 +93,20 @@ int main(int argc, char** argv) {
 	bool binary_output_format = true;
 	pcl::console::parse_argument(argc, argv, "-binary", binary_output_format);
 
-	pcl::PointCloud<pcl::PointNormal> pointcloud;
-	pcl::console::print_highlight("==> Loading %s...\n", argv[1]);
-	dynamic_robot_localization::PerformanceTimer performance_timer;
-	performance_timer.start();
-	if (dynamic_robot_localization::pointcloud_conversions::fromFile(std::string(argv[1]), pointcloud)) {
-		pcl::console::print_highlight(" +> Loaded %d points in %s\n", (pointcloud.width * pointcloud.height), performance_timer.getElapsedTimeFormated().c_str());
-		pcl::console::print_highlight(" +> Pointcloud fields: %s\n\n", pcl::getFieldsList(pointcloud).c_str());
+	bool binary_compressed_output_format = true;
+	pcl::console::parse_argument(argc, argv, "-compressed", binary_compressed_output_format);
 
-		pcl::console::print_highlight("==> Saving pointcloud to %s in %s format...\n", argv[2], (binary_output_format ? "binary" : "ascii"));
-		performance_timer.restart();
-		if (pcl::io::savePCDFile<pcl::PointNormal>(std::string(argv[2]), pointcloud, binary_output_format) == 0) {
-			pcl::console::print_highlight(" +> Saved %d points in %s\n\n", (pointcloud.width * pointcloud.height), performance_timer.getElapsedTimeFormated().c_str());
-		} else {
-			pcl::console::print_error(" !> Failed to save to file %s\n\n", argv[2]);
-			showUsage(argv[0]);
-			return (-1);
-		}
-	} else {
-		pcl::console::print_error(" !> Failed to load file %s\n\n", argv[1]);
-		showUsage(argv[0]);
-		return (-1);
+	std::string type("PointNormal");
+	pcl::console::parse_argument(argc, argv, "-type", type);
+	if (type == "PointNormal") {
+		pcl::PointCloud<pcl::PointNormal> pointcloud;
+		if (convertMesh(argv[1], argv[2], binary_output_format, binary_compressed_output_format, pointcloud) != 0) { showUsage(argv[0]); return (-1); }
+	} else if (type == "PointXYZRGBNormal") {
+		pcl::PointCloud<pcl::PointXYZRGBNormal> pointcloud;
+		if (convertMesh(argv[1], argv[2], binary_output_format, binary_compressed_output_format, pointcloud) != 0) { showUsage(argv[0]); return (-1); }
+	} else if (type == "auto") {
+		pcl::PCLPointCloud2 pointcloud;
+		if (convertMesh(argv[1], argv[2], binary_output_format, binary_compressed_output_format, pointcloud) != 0) { showUsage(argv[0]); return (-1); }
 	}
 
 	return 0;
