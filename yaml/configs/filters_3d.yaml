@@ -2,34 +2,34 @@ filters:
     reference_pointcloud:
         1_pass_through_x:
             field_name: 'x'
-            min_value: -5.387
-            max_value: 3.001
+            min_value: -5.392
+            max_value: 3.0069
             pass_through_filtered_cloud_publish_topic: ''
         2_pass_through_y:
             field_name: 'y'
-            min_value: -4.181
-            max_value: 8.207
+            min_value: -4.186
+            max_value: 8.212
             pass_through_filtered_cloud_publish_topic: ''
         3_pass_through_z:
             field_name: 'z'
             min_value: -0.001
             max_value: 1.8
             pass_through_filtered_cloud_publish_topic: ''
-        3_voxel_grid:
-            leaf_size_x: 0.02
-            leaf_size_y: 0.02
-            leaf_size_z: 0.02
-            filter_limit_field_name: 'z'
-            filter_limit_min: -0.001
-            filter_limit_max: 1.8
-            voxel_grid_filtered_cloud_publish_topic: ''
-            downsample_all_data: false
-            save_leaf_layout: false
+#        3_voxel_grid:
+#            leaf_size_x: 0.02
+#            leaf_size_y: 0.02
+#            leaf_size_z: 0.02
+#            filter_limit_field_name: 'z'
+#            filter_limit_min: -0.001
+#            filter_limit_max: 1.8
+#            voxel_grid_filtered_cloud_publish_topic: ''
+#            downsample_all_data: false
+#            save_leaf_layout: false
     ambient_pointcloud:
         1_voxel_grid:
-            leaf_size_x: 0.05
-            leaf_size_y: 0.05
-            leaf_size_z: 0.05
+            leaf_size_x: 0.025
+            leaf_size_y: 0.025
+            leaf_size_z: 0.025
             filter_limit_field_name: 'z'
             filter_limit_min: -1.001
             filter_limit_max: 1.8

@@ -6,10 +6,9 @@
 
 input_file=${1:?'Must specify file to convert'}
 conversion_extension=${2:-'.ply'}
-conversion_directory=${3:-'pointclouds'}
-meshlab_filters=${4:-'meshlab_filters.mlx'}
-meshlab_filters_options=${5:-'-om vq vn'} #-om vc vq vn
-final_extension=${6:-'.pcd'}
+meshlab_filters=${3:-'meshlab_filters.mlx'}
+meshlab_filters_options=${4:-'-om vq vn'} #-om vc vq vn
+final_extension=${5:-'.pcd'}
 
 
 

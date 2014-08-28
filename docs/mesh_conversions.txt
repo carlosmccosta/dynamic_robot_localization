@@ -3,7 +3,7 @@
 ###################################################################################################
 
 ### convert a mesh using tools/convert_mesh_to_pcd.sh
-convert_mesh_to_pcd.sh <input_file> [conversion_extension] [conversion_directory] [meshlab_filters] [meshlab_filters_options] [final_extension]
+convert_mesh_to_pcd.sh <input_file> [conversion_extension] [meshlab_filters] [meshlab_filters_options] [final_extension]
 convert_mesh_to_pcd.sh input.ply
 
 ### convert all meshes inside a folder with a given extension using tools/convert_meshes_to_pcd.sh
