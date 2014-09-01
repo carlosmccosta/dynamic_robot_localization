@@ -257,6 +257,10 @@ cloud_matchers:
             line_search_step_size: 0.1
             outlier_ratio: 0.55
 
+recovery_matchers:                                                  # Any of the feature / point matchers can be used (same configuration layout). Allows prefix and postfix of letters to ensure parsing order
+    feature_matchers:
+    point_matchers:
+
 
 # ===================================================================================================================================================
 #   Several outlier detectors can be used. This processing step is applied after cloud registration, and will only be used to validate the registration in the transformation_validators stage.
@@ -270,7 +274,10 @@ outlier_detectors:
 # ===================================================================================================================================================
 #   Several transformation validators can be employed. They can be used to refine or reject a new pose estimation.
 #   A new pose estimation is rejected if one transformation_validators doesn't accept the new pose. As such, the most restrictive validators should be applied first.
+#   Two separate groups of validators can be specified. The transformation_validators are applied when the registration matchers perform as expected.
+#   The second group (transformation_validators_recovery) will override the first and will only be applied when the recovery matchers were successfully applied.
 transformation_validators:
+transformation_validators_recovery:
     euclidean_transformation_validator:                             # Allows prefix and postfix of letters to ensure parsing order
         max_transformation_angle: 0.4
         max_transformation_distance: 0.04

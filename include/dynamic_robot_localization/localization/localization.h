@@ -133,10 +133,13 @@ class Localization : public ConfigurableObject {
 		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
 		virtual void setupKeypointDetectors();
 		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
-		virtual void setupPointCloudMatchersConfigurations();
-		virtual void setupFeatureCloudMatchersConfigurations();
-		template <typename DescriptorT> void loadKeypointMatcherFromParameterServer(typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor, std::string keypoint_descriptor_configuration_namespace);
-		virtual void setupTransformationValidatorsConfigurations();
+		virtual void setupCloudMatchersConfigurations();
+		virtual void setupPointCloudMatchersConfigurations(std::vector< typename CloudMatcher<PointT>::Ptr >& pointcloud_matchers, const std::string& configuration_namespace);
+		virtual void setupFeatureCloudMatchersConfigurations(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, const std::string& configuration_namespace);
+		template <typename DescriptorT>
+		void loadKeypointMatcherFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor,
+				const std::string& keypoint_descriptor_configuration_namespace, const std::string& feature_matcher_configuration_namespace);
+		virtual void setupTransformationValidatorsConfigurations(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace);
 		virtual void setupOutlierDetectorsConfigurations();
 
 		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename);
@@ -168,9 +171,8 @@ class Localization : public ConfigurableObject {
 		virtual double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
 		virtual void publishDetectedOutliers();
 
-		virtual bool applyTransformationValidators(const tf2::Transform& pointcloud_pose_initial_guess,
-				tf2::Transform& pointcloud_pose_corrected_in_out,
-				double max_outlier_percentage);
+		virtual bool applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators,
+				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
 
 		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				const tf2::Transform& pointcloud_pose_initial_guess,
@@ -257,9 +259,12 @@ class Localization : public ConfigurableObject {
 		std::vector< typename KeypointDetector<PointT>::Ptr > ambient_cloud_keypoint_detectors_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > pointcloud_matchers_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > featurecloud_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > recovery_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
+		std::vector< TransformationValidator::Ptr > transformation_validators_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		double outlier_percentage_;
+		double aligment_fitness_;
 		std::vector<sensor_msgs::PointCloud2Ptr> detected_outliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
