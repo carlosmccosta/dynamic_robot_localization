@@ -2,7 +2,8 @@
 <launch>
 	<!-- ======================================================= arguments ==================================================== -->
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters_2d.yaml" />
-	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking.yaml" />
+	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/static_2d.yaml" />
+	<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_2d.yaml" />
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_filename" default="" />
@@ -27,6 +28,7 @@
 	<include file="$(find dynamic_robot_localization)/launch/dynamic_robot_localization.launch">
 		<arg name="yaml_configuration_filters_filename" default="$(arg yaml_configuration_filters_filename)" />
 		<arg name="yaml_configuration_filename" default="$(arg yaml_configuration_filename)" />
+		<arg name="yaml_configuration_recovery_filename" default="$(arg yaml_configuration_recovery_filename)" />
 		<arg name="reference_pointcloud_filename" value="$(arg reference_pointcloud_filename)" />
 		<arg name="reference_pointcloud_preprocessed_save_filename" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<arg name="reference_pointcloud_keypoints_filename" value="$(arg reference_pointcloud_keypoints_filename)" />

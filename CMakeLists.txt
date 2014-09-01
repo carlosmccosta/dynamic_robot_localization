@@ -104,6 +104,7 @@ include_directories(
 
 add_library(drl_common
     src/common/configurable_object.cpp
+    src/common/circular_buffer_pointcloud.cpp
     src/common/cloud_publisher.cpp
     src/common/pointcloud_conversions.cpp
     src/common/pointcloud2_builder.cpp

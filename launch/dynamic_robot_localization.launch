@@ -2,6 +2,7 @@
 <launch>
 	<arg name="yaml_configuration_filters_filename" default="" />
 	<arg name="yaml_configuration_filename" default="" />
+	<arg name="yaml_configuration_recovery_filename" default="" />
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_filename" default="" />
@@ -14,6 +15,7 @@
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
 		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
