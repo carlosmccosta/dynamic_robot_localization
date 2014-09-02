@@ -40,12 +40,12 @@ void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandleP
 
 template<typename PointT>
 void PassThrough<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
-	size_t number_of_points_in_input_cloud = input_cloud->points.size();
+	size_t number_of_points_in_input_cloud = input_cloud->size();
 	filter_.setInputCloud(input_cloud);
 	filter_.filter(*output_cloud);
 
 	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
-	ROS_DEBUG_STREAM("PassThrough reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->points.size() << " points");
+	ROS_DEBUG_STREAM("PassThrough reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->size() << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PassThrough-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

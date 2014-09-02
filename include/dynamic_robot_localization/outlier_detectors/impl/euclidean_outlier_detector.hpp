@@ -33,9 +33,9 @@ sensor_msgs::PointCloud2Ptr EuclideanOutlierDetector<PointT>::processOutliers(ty
 	std::vector<float> nn_distances(1);
 
 	PointCloud2Builder pointcloud_builder;
-	pointcloud_builder.createNewCloud(ambient_pointcloud.header.frame_id, ambient_pointcloud.points.size());
+	pointcloud_builder.createNewCloud(ambient_pointcloud.header.frame_id, ambient_pointcloud.size());
 
-	for (size_t i = 0; i < ambient_pointcloud.points.size(); ++i) {
+	for (size_t i = 0; i < ambient_pointcloud.size(); ++i) {
 		PointT point = ambient_pointcloud.points[i];
 		reference_pointcloud_search_method->nearestKSearch(point, 1, nn_indices, nn_distances);
 		if (nn_distances[0] > max_inliers_distance_) {

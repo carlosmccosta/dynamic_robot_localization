@@ -90,7 +90,7 @@ void MovingLeastSquares<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
 	}
 
-	ROS_DEBUG_STREAM("MovingLeastSquares computed " << pointcloud_with_normals_out->points.size() << " normals from a cloud with " << pointcloud->points.size() << " points");
+	ROS_DEBUG_STREAM("MovingLeastSquares computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud->size() << " points");
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </MovingLeastSquares-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

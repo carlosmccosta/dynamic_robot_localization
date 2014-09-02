@@ -84,6 +84,7 @@
 #include <dynamic_robot_localization/outlier_detectors/outlier_detector.h>
 #include <dynamic_robot_localization/outlier_detectors/euclidean_outlier_detector.h>
 
+#include <dynamic_robot_localization/common/circular_buffer_pointcloud.h>
 #include <dynamic_robot_localization/common/performance_timer.h>
 
 // project msgs
@@ -250,6 +251,8 @@ class Localization : public ConfigurableObject {
 
 		// localization fields
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
+		typename CircularBufferPointCloud<PointT>::Ptr ambient_pointcloud_with_circular_buffer_;
+		size_t last_number_points_inserted_in_circular_buffer_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_;

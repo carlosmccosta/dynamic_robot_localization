@@ -59,7 +59,7 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
 	}
 
-	ROS_DEBUG_STREAM("NormalEstimationOMP computed " << pointcloud_with_normals_out->points.size() << " normals from a cloud with " << pointcloud->points.size() << " points");
+	ROS_DEBUG_STREAM("NormalEstimationOMP computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud->size() << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimationOMP-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

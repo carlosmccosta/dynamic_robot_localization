@@ -242,11 +242,11 @@ template<typename PointSource, typename PointTarget>
 void RegistrationVisualizer<PointSource, PointTarget>::updateIntermediateCloud(
         const pcl::PointCloud<PointSource> &cloud_src, const std::vector<int> &indices_src,
         const pcl::PointCloud<PointTarget> &cloud_tgt, const std::vector<int> &indices_tgt) {
-	if (cloud_source_->points.empty()) {
+	if (cloud_source_->empty()) {
 		setSourceCloud(cloud_src);
 	}
 
-	if (cloud_target_->points.empty()) {
+	if (cloud_target_->empty()) {
 		setTargetCloud(cloud_tgt);
 	}
 

@@ -17,7 +17,7 @@ recovery_matchers:
 transformation_validators_recovery:
     euclidean_transformation_validator:
         max_transformation_angle: 45.0
-        max_transformation_distance: 1.0
+        max_transformation_distance: 0.75
         max_new_pose_diff_angle: 90.0
         max_new_pose_diff_distance: 2.0
         max_alignment_fitness: 2.5

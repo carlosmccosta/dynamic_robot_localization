@@ -49,7 +49,7 @@ void SampleConsensusInitialAlignment<PointT, FeatureT>::setMatcherReferenceDescr
 template<typename PointT, typename FeatureT>
 void SampleConsensusInitialAlignment<PointT, FeatureT>::setMatcherAmbientDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& ambient_descriptors) {
 	matcher_scia_->setSourceFeatures(ambient_descriptors);
-	matcher_scia_->setNumberOfSamples(std::min(number_of_samples_, (int)ambient_descriptors->points.size()));
+	matcher_scia_->setNumberOfSamples(std::min(number_of_samples_, (int)ambient_descriptors->size()));
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SampleConsensusInitialAlignment-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

@@ -70,7 +70,7 @@ void IntrinsicShapeSignature3D<PointT>::findKeypoints(typename pcl::PointCloud<P
 	keypoint_detector_.compute(*pointcloud_keypoints_out);
 
 	KeypointDetector<PointT>::getCloudPublisher()->publishPointCloud(*pointcloud_keypoints_out);
-	ROS_DEBUG_STREAM("IntrinsicShapeSignature3D found " << pointcloud_keypoints_out->points.size() << " keypoints in pointcloud with " << pointcloud->points.size() << " points");
+	ROS_DEBUG_STREAM("IntrinsicShapeSignature3D found " << pointcloud_keypoints_out->size() << " keypoints in pointcloud with " << pointcloud->size() << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IntrinsicShapeSignature3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

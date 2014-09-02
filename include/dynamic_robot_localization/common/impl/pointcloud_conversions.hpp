@@ -27,7 +27,7 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 		pointcloud.is_dense = false;
 		pointcloud.header.frame_id = occupancy_grid.header.frame_id;
 		pointcloud.header.stamp = occupancy_grid.header.stamp.toNSec() / 1e3;
-		pointcloud.points.clear();
+		pointcloud.clear();
 
 		size_t data_position = 0;
 		PointT new_point;
@@ -37,14 +37,14 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 			for (unsigned int x = 0; x < map_width; ++x) {
 				if (occupancy_grid.data[data_position] > threshold_for_map_cell_as_obstacle) {
 					new_point.x = (float)x * map_resolution + map_origin_x;
-					pointcloud.points.push_back(new_point);
+					pointcloud.push_back(new_point);
 				}
 
 				++data_position;
 			}
 		}
 
-		pointcloud.width = pointcloud.points.size();
+		pointcloud.width = pointcloud.size();
 		return true;
 	}
 
@@ -60,9 +60,9 @@ bool fromFile(const std::string& filename, PointCloudT& pointcloud) {
 	std::string extension = filename.substr(index + 1);
 
 	if (extension == "pcd") {
-		if (pcl::io::loadPCDFile(filename, pointcloud) == 0 && !pointcloud.points.empty()) return true;
+		if (pcl::io::loadPCDFile(filename, pointcloud) == 0 && !pointcloud.empty()) return true;
 	} else if (extension == "ply") {
-		if (pcl::io::loadPLYFile(filename, pointcloud) == 0 && !pointcloud.points.empty()) {
+		if (pcl::io::loadPLYFile(filename, pointcloud) == 0 && !pointcloud.empty()) {
 			// fix PLYReader import
 			pointcloud.sensor_origin_ = Eigen::Vector4f::Zero();
 			pointcloud.sensor_orientation_ = Eigen::Quaternionf::Identity();
@@ -72,7 +72,7 @@ bool fromFile(const std::string& filename, PointCloudT& pointcloud) {
 		pcl::PolygonMesh mesh;
 		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .ply .stl
 			pcl::fromPCLPointCloud2(mesh.cloud, pointcloud);
-			return !pointcloud.points.empty();
+			return !pointcloud.empty();
 		}
 	}
 
