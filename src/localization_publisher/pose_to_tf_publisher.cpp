@@ -20,7 +20,7 @@ PoseToTFPublisher::PoseToTFPublisher() :
 		publish_rate_(100),
 		invert_tf_transform_(false),
 		invert_tf_hierarchy_(false),
-		transform_pose_to_map_frame_id_(false),
+		transform_pose_to_map_frame_id_(true),
 		number_tfs_published_(0) {
 }
 
