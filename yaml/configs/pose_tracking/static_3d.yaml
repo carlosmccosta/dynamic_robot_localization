@@ -18,12 +18,12 @@ cloud_matchers:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
-            max_correspondence_distance: 0.03
+            max_correspondence_distance: 0.1
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
             max_number_of_registration_iterations: 250
             max_number_of_ransac_iterations: 250
-            ransac_outlier_rejection_threshold: 0.05
+            ransac_outlier_rejection_threshold: 0.1
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0

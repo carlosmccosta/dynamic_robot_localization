@@ -13,12 +13,23 @@
 #   Nevertheless, the localization pipeline is empty, and the parameters are only queried if the processing block is specified.
 #   Some of the configuration blocks are provided by default to allow some consistency across configurations.
 #   The following blocks don't need to be specified: [ subscribe_topic_names | publish_topic_names | frame_ids | message_management ]
+#   Parameters are by default expressed using ROS units conventions (REP 103 -> http://www.ros.org/reps/rep-0103.html) (unless stated otherwise).
+#       - Lengths   -> meters
+#       - Angles    -> radians
+#       - Time      -> seconds
+#       - Frequency -> hz
+#       - Axis      -> x - forward | y - left | z - up
+#   The ROS parameter server can store strings, doubles, ints and booleans. As such, the convention used is <parameter_name: value|list> and value is:
+#       - string    -> '.*'             | ex: 'value'
+#       - double    -> [0-9].[0-9]+     | ex: 0.0
+#       - int       -> [0-9]+           | ex: 0
+#       - boolean   -> [true|false]     | ex: true
 
 
 # >>>>>>>>>>>>>>>>>>>>>> Reference cloud sources
 #   The localization system can load the reference cloud from different sources.
 #   The first is from a 2D ROS nav_msgs::OccupancyGrid and will limit the localization system to 3 DoF
-#   The other sources allow 6 DoF localization by either loading point clouds from a file (.pcd) or
+#   The other sources allow 6 DoF localization by either loading point clouds from a file (.pcd|.ply|.obj|.stl|.vtk) or
 # from a ROS topic with sensor_msgs::PointCloud2 messages (useful when using dynamic map update).
 #   To allow fast switching between each source, a overriding methodology is employed.
 #   As such, the highest priority is given to reference clouds coming from a file.
@@ -77,7 +88,7 @@ message_management:
     max_seconds_ambient_pointcloud: 0.5                             # Ambient point clouds with age larger than this value will be discarded
     min_seconds_between_scan_registration: 0.05                     # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
     min_seconds_between_reference_pointcloud_update: 5.0            # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
-    maximum_number_points_ambient_pointcloud_circular_buffer: 0            # If != 0, the ambient pointcloud uses a circular buffer with the specified size
+    maximum_number_points_ambient_pointcloud_circular_buffer: 0     # If != 0, the ambient pointcloud uses a circular buffer with the specified size of points
 
 
 # ===================================================================================================================================================
@@ -99,7 +110,7 @@ filters:
     reference_pointcloud:
     ambient_pointcloud:
         pass_through:                                               # Allows prefix and postfix of letters to ensure parsing order
-            field_name: 'z'                            # Field name -> [ x | y | z ]
+            field_name: 'z'                                         # Field name -> [ x | y | z ]
             min_value: -5.0
             max_value: 5.0
             pass_through_filtered_cloud_publish_topic: ''
@@ -151,7 +162,7 @@ normal_estimators:
 #   Point matchers are very fast algorithms that can be used for pose tracking. They can work with points only or also with surface normals. However, they require
 # an initial pose close to the real world pose, otherwise they wont be able to perform the cloud registration.
 #   Feature matchers are much slower, because they require feature detection, description and matching, and should be used only to estimate the initial pose,
-# in order to allow the point matchers to perform tracking. Moreover, the localization system is designed to use the feature matchers as a recovery subsystem,
+# in order to allow the point matchers to perform tracking. Moreover, the localization system can use the feature matchers as a recovery subsystem,
 # in which they are used if the pose tracking failed during a giving period of time.
 cloud_matchers:
     ignore_height_corrections: false                                # When activated, the pose corrections in the z axis will be ignored
@@ -191,7 +202,7 @@ cloud_matchers:
         #   It must be the same descriptor algorithm in order to allow the matching of the generated descriptors.
         keypoint_descriptors:
             #   feature_descriptor_k_search has higher priority than feature_descriptor_radius_search
-            #   As such, if feature_descriptor_k_search > 0 then feature_descriptor_radius_search = 0.0
+            #   As such, if feature_descriptor_k_search > 0 then feature_descriptor_radius_search = 0.0 (will be ignored)
             feature_descriptor_k_search: 0                          # Can be overridden in child namespaces
             feature_descriptor_radius_search: 0.2                   # Can be overridden in child namespaces
             fpfh:                                                   # Allows prefix and postfix of letters to ensure parsing order
@@ -258,6 +269,8 @@ cloud_matchers:
             line_search_step_size: 0.1
             outlier_ratio: 0.55
 
+#   Several recovery matchers can be specified, and will be applied if the cloud registration specified above fails or if the registration is rejected by the transformation validators specified below.
+#   This is useful to tune the cloud registration to the environment and robot operation (above), and also have a recovery configuration with more robust / computation expensive setup for anomalous operation situations.
 recovery_matchers:          # Any of the feature / point matchers shown above can be used (same configuration layout). Allows prefix and postfix of letters to ensure parsing order inside each type of matcher.
     feature_matchers:       # Feature matchers are applied before point matchers.
     point_matchers:
@@ -274,9 +287,10 @@ outlier_detectors:
 
 # ===================================================================================================================================================
 #   Several transformation validators can be employed. They can be used to refine or reject a new pose estimation.
-#   A new pose estimation is rejected if one transformation_validators doesn't accept the new pose. As such, the most restrictive validators should be applied first.
-#   Two separate groups of validators can be specified. The transformation_validators are applied when the registration matchers perform as expected.
-#   The second group (transformation_validators_recovery) will override the first and will only be applied when the recovery matchers were successfully applied.
+#   A new pose estimation is rejected if one transformation validator doesn't accept the new pose. As such, the most restrictive validators should be applied first.
+#   Two separate groups of validators can be specified:
+#     - The <transformation_validators> are applied when the registration matchers perform as expected.
+#     - The <transformation_validators_recovery> will override the first and will only be applied when the recovery matchers were successfully applied (if not specified, the <transformation_validators> will be used instead).
 transformation_validators:
 transformation_validators_recovery:
     euclidean_transformation_validator:                             # Allows prefix and postfix of letters to ensure parsing order
