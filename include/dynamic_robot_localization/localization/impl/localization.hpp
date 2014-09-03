@@ -120,11 +120,11 @@ void Localization<PointT>::setupFrameIds() {
 template<typename PointT>
 void Localization<PointT>::setupMessageManagement() {
 	double max_seconds_ambient_pointcloud_age;
-	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 0.5);
+	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 1.0);
 	max_seconds_ambient_pointcloud_age_.fromSec(max_seconds_ambient_pointcloud_age);
 
 	double min_seconds_between_scan_registration;
-	private_node_handle_->param("message_management/min_seconds_between_scan_registration", min_seconds_between_scan_registration, 0.05);
+	private_node_handle_->param("message_management/min_seconds_between_scan_registration", min_seconds_between_scan_registration, 0.0);
 	min_seconds_between_scan_registration_.fromSec(min_seconds_between_scan_registration);
 
 	double min_seconds_between_reference_pointcloud_update;

@@ -38,10 +38,10 @@ void EuclideanTransformationValidator::setupConfigurationFromParameterServer(ros
 
 bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose, double alignment_fitness, double outliers_percentage) {
 	double transform_distance = (new_pose.getOrigin() - initial_guess.getOrigin()).length();
-	double transform_angle = std::abs(new_pose.getRotation().getAngle() - initial_guess.getRotation().getAngle());
+	double transform_angle = std::abs(new_pose.getRotation().angleShortestPath(initial_guess.getRotation()));
 
 	double new_pose_distance = (new_pose.getOrigin() - last_accepted_pose.getOrigin()).length();
-	double new_pose_angle = std::abs(new_pose.getRotation().getAngle() - last_accepted_pose.getRotation().getAngle());
+	double new_pose_angle = std::abs(new_pose.getRotation().angleShortestPath(last_accepted_pose.getRotation()));
 
 	if (alignment_fitness < max_alignment_fitness_
 			&& outliers_percentage < max_outliers_percentage_

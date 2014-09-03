@@ -85,8 +85,8 @@ frame_ids:
 # ===================================================================================================================================================
 #   Parameters to control the incoming message flow
 message_management:
-    max_seconds_ambient_pointcloud: 0.5                             # Ambient point clouds with age larger than this value will be discarded
-    min_seconds_between_scan_registration: 0.05                     # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
+    max_seconds_ambient_pointcloud: 1.0                             # Ambient point clouds with age larger than this value will be discarded
+    min_seconds_between_scan_registration: 0.0                      # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
     min_seconds_between_reference_pointcloud_update: 5.0            # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
     maximum_number_points_ambient_pointcloud_circular_buffer: 0     # If != 0, the ambient pointcloud uses a circular buffer with the specified size of points
 
