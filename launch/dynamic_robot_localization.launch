@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
 	<arg name="yaml_configuration_filters_filename" default="" />
 	<arg name="yaml_configuration_filename" default="" />
 	<arg name="yaml_configuration_recovery_filename" default="" />
@@ -16,6 +17,7 @@
 		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
+		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />

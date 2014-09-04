@@ -215,8 +215,8 @@ void Localization<PointT>::setupKeypointDetectors() {
 	reference_cloud_keypoint_detectors_.clear();
 	ambient_cloud_keypoint_detectors_.clear();
 
-	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, "cloud_matchers/feature_matcher/keypoint_detectors/reference_pointcloud/");
-	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, "cloud_matchers/feature_matcher/keypoint_detectors/ambient_pointcloud/");
+	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, "keypoint_detectors/reference_pointcloud/");
+	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, "keypoint_detectors/ambient_pointcloud/");
 }
 
 
@@ -564,7 +564,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 	ros::Duration scan_age = ros::Time::now() - ambient_cloud_msg->header.stamp;
 	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
 
-	ROS_DEBUG_STREAM("Received pointcloud with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_msg->header.stamp);
+	ROS_DEBUG_STREAM("Received pointcloud in frame " << ambient_cloud_msg->header.frame_id << " with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_msg->header.stamp);
 
 	if (reference_pointcloud_received_
 			&& ambient_cloud_msg->data.size() > 0
@@ -573,14 +573,38 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 		last_scan_time_ = ros::Time::now();
 
+		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
+		pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
+
+		if (ambient_pointcloud->header.frame_id != map_frame_id_) {
+			tf2::Transform pose_tf_cloud_to_map;
+			if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_map, map_frame_id_, ambient_pointcloud->header.frame_id, ambient_cloud_msg->header.stamp)) {
+				ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << map_frame_id_ << " isn't available");
+				return;
+			}
+
+			Eigen::Vector3f offset(
+					pose_tf_cloud_to_map.getOrigin().getX(),
+					pose_tf_cloud_to_map.getOrigin().getY(),
+					pose_tf_cloud_to_map.getOrigin().getZ());
+
+			Eigen::Quaternionf rotation(
+					pose_tf_cloud_to_map.getRotation().getW(),
+					pose_tf_cloud_to_map.getRotation().getX(),
+					pose_tf_cloud_to_map.getRotation().getY(),
+					pose_tf_cloud_to_map.getRotation().getZ());
+
+			pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, offset, rotation);
+			ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
+			ambient_pointcloud->header.frame_id = map_frame_id_;
+		}
+
 		tf2::Transform pose_tf_initial_guess;
-		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_initial_guess, ambient_cloud_msg->header.frame_id, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
-			ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_cloud_msg->header.frame_id << " and " << base_link_frame_id_ << " isn't available");
+		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_initial_guess, map_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
+			ROS_WARN_STREAM("Dropping pointcloud because tf between " << map_frame_id_ << " and " << base_link_frame_id_ << " isn't available");
 			return;
 		}
 
-		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
-		pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
 		if (reference_pointcloud_2d_) {
 			resetPointCloudHeight(*ambient_pointcloud);
 		}
@@ -589,7 +613,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		tf2::Transform pose_tf_corrected;
 		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, pose_tf_initial_guess, pose_tf_corrected)) {
 			geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
-			pose_corrected_msg->header.frame_id = ambient_cloud_msg->header.frame_id;
+			pose_corrected_msg->header.frame_id = map_frame_id_;
 
 			if (ignore_height_corrections_) {
 				pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
@@ -624,7 +648,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				pose_corrected_matrix.getRPY(roll_corrected, pitch_corrected, yaw_corrected);
 
 				LocalizationDetailed localization_detailed_msg;
-				localization_detailed_msg.header.frame_id = ambient_cloud_msg->header.frame_id;
+				localization_detailed_msg.header.frame_id = map_frame_id_;
 				localization_detailed_msg.header.stamp = ambient_cloud_msg->header.stamp;
 				localization_detailed_msg.pose = pose_corrected_msg->pose;
 				localization_detailed_msg.translation_corrections.x = (pose_tf_corrected.getOrigin().getX() - pose_tf_initial_guess.getOrigin().getX()) * 1000.0; // mm
@@ -641,14 +665,14 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			}
 
 			if (!localization_times_publisher_.getTopic().empty()) {
-				localization_times_msg_.header.frame_id = ambient_cloud_msg->header.frame_id;
+				localization_times_msg_.header.frame_id = map_frame_id_;
 				localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
 				localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
 				localization_times_publisher_.publish(localization_times_msg_);
 			}
 
 			if (!localization_diagnostics_publisher_.getTopic().empty()) {
-				localization_diagnostics_msg_.header.frame_id = ambient_cloud_msg->header.frame_id;
+				localization_diagnostics_msg_.header.frame_id = map_frame_id_;
 				localization_diagnostics_msg_.header.stamp = ambient_cloud_msg->header.stamp;
 				localization_diagnostics_publisher_.publish(localization_diagnostics_msg_);
 			}

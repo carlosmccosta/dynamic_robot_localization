@@ -122,8 +122,8 @@ filters:
             filter_limit_min: -5.0
             filter_limit_max: 5.0
             voxel_grid_filtered_cloud_publish_topic: ''
-            downsample_all_data: false
-            save_leaf_layout: false
+            downsample_all_data: false                              # Set to true if all fields need to be downsampled, or false if just XYZ
+            save_leaf_layout: false                                 # Set to true if leaf layout information needs to be saved for later access
 
 
 # ===================================================================================================================================================
@@ -136,23 +136,42 @@ filters:
 normal_estimators:
     reference_pointcloud:
     ambient_pointcloud:
-        display_normals: false                                      # Can be overridden in child namespaces
+        display_normals: false                                      # Can be overridden in child namespaces | Displays a bocking window with the estimated normals
         normal_estimation_omp:                                      # Allows prefix and postfix of letters to ensure parsing order
             display_normals: true                                   # Overrides parameter in parent namespace
-            search_k: 0                                             # If search_k != 0 search_radius is ignored
-            search_radius: 0.12
+            search_k: 0                                             # The number of k nearest neighbors to use for the feature estimation. If search_k != 0 search_radius is ignored
+            search_radius: 0.12                                     # The sphere radius that is to be used for determining the nearest neighbors used for the normal estimation
         moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order
-            compute_normals: true
-            polynomial_order: 2
-            polynomial_fit: true
-            search_radius: 0.12
-            sqr_gauss_param: 0.0144
-            upsample_method: NONE
-            upsampling_radius: 0.05
-            upsampling_step: 0.01
-            desired_num_points_in_radius: 5
-            dilation_voxel_size: 0.01
-            dilation_iterations: 1
+            compute_normals: true                                   # Set whether the algorithm should also store the normals computed
+            polynomial_order: 2                                     # The order of the polynomial to be fit
+            polynomial_fit: true                                    # Sets whether the surface and normal are approximated using a polynomial, or only via tangent estimation
+            search_radius: 0.12                                     # The sphere radius that is to be used for determining the k-nearest neighbors used for fitting
+            sqr_gauss_param: 0.0144                                 # Set the parameter used for distance based weighting of neighbors (the square of the search radius works best in general)
+            upsample_method: NONE                                   # The upsampling method to be used ( NONE | DISTINCT_CLOUD | SAMPLE_LOCAL_PLANE | RANDOM_UNIFORM_DENSITY | VOXEL_GRID_DILATION )
+            upsampling_radius: 0.05                                 # The radius of the circle in the local point plane that will be sampled (used only in the case of SAMPLE_LOCAL_PLANE upsampling)
+            upsampling_step: 0.01                                   # The step size for the local plane sampling (used only in the case of SAMPLE_LOCAL_PLANE upsampling)
+            desired_num_points_in_radius: 5                         # The parameter that specifies the desired number of points within the search radius (used only in the case of RANDOM_UNIFORM_DENSITY upsampling)
+            dilation_voxel_size: 0.01                               # The voxel size for the voxel grid (used only in the VOXEL_GRID_DILATION upsampling method)
+            dilation_iterations: 1                                  # The number of dilation steps of the voxel grid (used only in the VOXEL_GRID_DILATION upsampling method)
+
+
+#   Several keypoint detectors can be specified for the reference_pointcloud and for the ambient_pointcloud.
+#   They were split in reference / ambient to allow parameter tuning to specific point cloud density and point distribution.
+#   However, they should be the same algorithms in both clouds. ===> This is critical, if the same keypoints are not found in both clouds
+# the descriptor matching will fail.
+keypoint_detectors:
+    reference_pointcloud:
+    ambient_pointcloud:
+        intrinsic_shape_signature_3d:                               # Allows prefix and postfix of letters to ensure parsing order
+            salient_radius: 0.18                                    # The radius of the spherical neighborhood used to compute the scatter matrix
+            non_max_radius: 0.12                                    # The radius for the application of the non maxima supression algorithm
+            normal_radius: 0.09                                     # The radius used for the estimation of the surface normals of the input cloud. If the radius is too large, the temporal performances of the detector may degrade significantly
+            border_radius: 0.0                                      # The radius used for the estimation of the boundary points. If the radius is too large, the temporal performances of the detector may degrade significantly (0 disables the border estimation)
+            threshold21: 0.975                                      # The upper bound on the ratio between the second and the first eigenvalue
+            threshold32: 0.975                                      # The upper bound on the ratio between the third and the second eigenvalue
+            min_neighbors: 5                                        # The minimum number of neighbors that has to be found while applying the non maxima suppression algorithm              
+            angle_threshold: 1.57                                   # The decision boundary (angle threshold) that marks points as boundary or regular. (default pi / 2.0)
+            iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
 
 
 # ===================================================================================================================================================
@@ -167,79 +186,62 @@ normal_estimators:
 cloud_matchers:
     ignore_height_corrections: false                                # When activated, the pose corrections in the z axis will be ignored
     pose_tracking_timeout: 2.0                                      # When point cloud registration has failed during this amount of time, feature matching is activated (pose tracking recovery)
-    max_correspondence_distance: 0.1                                # Can be overridden in child namespaces
-    transformation_epsilon: 1e-8                                    # Can be overridden in child namespaces
-    euclidean_fitness_epsilon: 1e-6                                 # Can be overridden in child namespaces
-    max_number_of_registration_iterations: 250                      # Can be overridden in child namespaces
-    max_number_of_ransac_iterations: 250                            # Can be overridden in child namespaces
-    ransac_outlier_rejection_threshold: 0.05                        # Can be overridden in child namespaces
-    match_only_keypoints: false                                     # Can be overridden in child namespaces
-    display_cloud_aligment: false                                   # Can be overridden in child namespaces
-    maximum_number_of_displayed_correspondences: 0                  # Can be overridden in child namespaces
+    max_correspondence_distance: 0.1                                # Can be overridden in child namespaces | The maximum distance threshold between two correspondent points in source <-> target. If the distance is larger than this threshold, the points will be ignored in the alignment process
+    transformation_epsilon: 1e-8                                    # Can be overridden in child namespaces | The transformation epsilon (maximum allowable difference between two consecutive transformations) in order for an optimization to be considered as having converged to the final solution
+    euclidean_fitness_epsilon: 1e-6                                 # Can be overridden in child namespaces | The maximum allowed distance error before the algorithm will be considered to have converged
+    max_number_of_registration_iterations: 250                      # Can be overridden in child namespaces | The maximum number of iterations the internal optimization should run for
+    max_number_of_ransac_iterations: 250                            # Can be overridden in child namespaces | The number of iterations RANSAC should run for
+    ransac_outlier_rejection_threshold: 0.05                        # Can be overridden in child namespaces | The matcher considers a point to be an inlier, if the distance between the target data index and the transformed source index is smaller than the given inlier distance threshold
+    match_only_keypoints: false                                     # Can be overridden in child namespaces | Uses only keypoints in the coud registration (if available)
+    display_cloud_aligment: false                                   # Can be overridden in child namespaces | Display cloud aligment in a separate window
+    maximum_number_of_displayed_correspondences: 0                  # Can be overridden in child namespaces | How many correspondances of the registration will be displayed
     feature_matchers:
-        display_feature_matching: false                             # Can be overridden in child namespaces
+        display_feature_matching: false                             # Can be overridden in child namespaces | Display feature matching registration
         reference_pointcloud_descriptors_filename: ''               # Can be overridden in child namespaces
         reference_pointcloud_descriptors_save_filename: ''          # Can be overridden in child namespaces
         save_descriptors_in_binary_format : true                    # Can be overridden in child namespaces
-        #   Several keypoint detectors can be specified for the reference_pointcloud and for the ambient_pointcloud.
-        #   They were split in reference / ambient to allow parameter tuning to specific point cloud density and point distribution.
-        #   However, they should be the same algorithms in both clouds. ===> This is critical, if the same keypoints are not found in both clouds
-        # the descriptor matching will fail.
-        keypoint_detectors:
-            reference_pointcloud:
-            ambient_pointcloud:
-                intrinsic_shape_signature_3d:                       # Allows prefix and postfix of letters to ensure parsing order
-                    salient_radius: 0.18
-                    non_max_radius: 0.12
-                    normal_radius: 0.09
-                    border_radius: 0.0
-                    threshold21: 0.975
-                    threshold32: 0.975
-                    min_neighbors: 5
-                    angle_threshold: 1.57
-                    iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
         #   One keypoint descriptor can be specified for both the reference and ambient point clouds.
         #   It must be the same descriptor algorithm in order to allow the matching of the generated descriptors.
         keypoint_descriptors:
             #   feature_descriptor_k_search has higher priority than feature_descriptor_radius_search
             #   As such, if feature_descriptor_k_search > 0 then feature_descriptor_radius_search = 0.0 (will be ignored)
-            feature_descriptor_k_search: 0                          # Can be overridden in child namespaces
-            feature_descriptor_radius_search: 0.2                   # Can be overridden in child namespaces
+            feature_descriptor_k_search: 0                          # Can be overridden in child namespaces | The number of k nearest neighbors to use for the descriptor estimation
+            feature_descriptor_radius_search: 0.2                   # Can be overridden in child namespaces | The sphere radius that is to be used for determining the nearest neighbors used for the descriptor estimation
             fpfh:                                                   # Allows prefix and postfix of letters to ensure parsing order
-                number_subdivisions_f1: 11
-                number_subdivisions_f2: 11
-                number_subdivisions_f3: 11
+                number_subdivisions_f1: 11                          # The number of subdivisions for each angular feature interval
+                number_subdivisions_f2: 11                          # The number of subdivisions for each angular feature interval
+                number_subdivisions_f3: 11                          # The number of subdivisions for each angular feature interval
             pfh:                                                    # Allows prefix and postfix of letters to ensure parsing order
-                use_internal_cache: true
-                maximum_cache_size: 33554432
+                use_internal_cache: true                            # Whether to use an internal cache mechanism for removing redundant calculations or not
+                maximum_cache_size: 33554432                        # The maximum internal cache size. Defaults to 2GB worth of entries
             shot:                                                   # Allows prefix and postfix of letters to ensure parsing order
-                lrf_radius: 0.05
+                lrf_radius: 0.05                                    # The radius used for local reference frame estimation
             shape_context_3d:                                       # Allows prefix and postfix of letters to ensure parsing order
-                minimal_radius: 0.2
-                point_density_radius: 0.4
+                minimal_radius: 0.2                                 # Minimal radius value for the search sphere
+                point_density_radius: 0.4                           # This radius is used to compute local point density density = number of points within this radius
             unique_shape_context:                                   # Allows prefix and postfix of letters to ensure parsing order
-                minimal_radius: 0.1
-                point_density_radius: 0.2
-                local_radius: 2.5
+                minimal_radius: 0.1                                 # Minimal radius value for the search sphere
+                point_density_radius: 0.2                           # This radius is used to compute local point density density = number of points within this radius
+                local_radius: 2.5                                   # The radius to compute the Local Reference Frame
             spin_image:                                             # Allows prefix and postfix of letters to ensure parsing order
-                image_width: 8
-                support_angle_cos: 0.0
-                min_point_count_in_neighbourhood: 0
-                use_angular_domain: false
-                use_radial_structure: false
+                image_width: 8                                      # The resolution of the spin image (the number of bins along one dimension)
+                support_angle_cos: 0.0                              # The maximum angle for the point normal to get to support region
+                min_point_count_in_neighbourhood: 0                 # Minimal points count for spin image computation
+                use_angular_domain: false                           # Angular spin-image differs from the vanilla one in the way that not the points are collected in the bins but the angles between their normals and the normal to the reference point
+                use_radial_structure: false                         # Instead of rectangular coordinate system for reference frame polar coordinates are used. Binning is done depending on the distance and inclination angle from the reference point
             esf:                                                    # Allows prefix and postfix of letters to ensure parsing order
                 feature_descriptor_radius_search: 0.25              # Overrides parameter in parent namespace
         #   Several feature matchers can be specified. This allows the use of preprocessing matchers for filtering the point descriptors that will be used on matchers later on.
         matchers:
             sample_consensus_initial_alignment_prerejective:        # Allows prefix and postfix of letters to ensure parsing order
-                similarity_threshold: 0.8
-                inlier_fraction: 0.25
-                number_of_samples: 3
-                correspondence_randomness: 10
+                similarity_threshold: 0.8                           # The similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object, where 1 is a perfect match
+                inlier_fraction: 0.25                               # Required inlier fraction, must be in [0,1]
+                number_of_samples: 3                                # Set the number of samples to use during each iteration
+                correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence. A higher value will add more randomness to the feature matching
             sample_consensus_initial_alignment:                     # Allows prefix and postfix of letters to ensure parsing order
-                min_sample_distance: 1.0
-                number_of_samples: 3
-                correspondence_randomness: 10
+                min_sample_distance: 1.0                            # The minimum distances between samples
+                number_of_samples: 3                                # The number of samples to use during each iteration
+                correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence
     #   Several point matchers can be specified. This is useful to have a fast matcher that can achieve a rough registration and other matchers to refine it.
     point_matchers:
         iterative_closest_point:                                    # Allows prefix and postfix of letters to ensure parsing order
@@ -251,23 +253,23 @@ cloud_matchers:
             use_reciprocal_correspondences: true
         iterative_closest_point_generalized:                        # Allows prefix and postfix of letters to ensure parsing order
             use_reciprocal_correspondences: true
-            rotation_epsilon: 0.002
-            correspondence_randomness: 20
-            maximum_optimizer_iterations: 20
+            rotation_epsilon: 0.002                                 # The rotation epsilon (maximum allowable difference between two consecutive rotations) in order for an optimization to be considered as having converged to the final solution
+            correspondence_randomness: 20                           # The number of neighbors used when selecting a point neighborhood to compute covariances
+            maximum_optimizer_iterations: 20                        # Number of iterations at the optimization step
         normal_distributions_transform_2d:                          # Allows prefix and postfix of letters to ensure parsing order
-            grid_center_x: 0.0
-            grid_center_y: 0.0
-            grid_step_x: 1.0
-            grid_step_y: 1.0
-            grid_extent_x: 20.0
-            grid_extent_y: 20.0
-            grid_optimization_step_size_x: 1.0
-            grid_optimization_step_size_y: 1.0
-            grid_optimization_step_size_theta: 1.0
+            grid_center_x: 0.0                                      # X center of the ndt grid (target coordinate system)
+            grid_center_y: 0.0                                      # Y center of the ndt grid (target coordinate system)
+            grid_step_x: 1.0                                        # Grid spacing (x step) of the NDT grid
+            grid_step_y: 1.0                                        # Grid spacing (y step) of the NDT grid
+            grid_extent_x: 20.0                                     # NDT Grid extent (in x direction from the grid center)
+            grid_extent_y: 20.0                                     # NDT Grid extent (in y direction from the grid center)
+            grid_optimization_step_size_x: 1.0                      # Lambda x step size: 1 is simple newton optimization, smaller values may improve convergence
+            grid_optimization_step_size_y: 1.0                      # Lambda y step size: 1 is simple newton optimization, smaller values may improve convergence
+            grid_optimization_step_size_theta: 1.0                  # Lambda theta  size: 1 is simple newton optimization, smaller values may improve convergence
         normal_distributions_transform_3d:                          # Allows prefix and postfix of letters to ensure parsing order
-            voxel_grid_resolution: 1.0
-            line_search_step_size: 0.1
-            outlier_ratio: 0.55
+            voxel_grid_resolution: 1.0                              # Resolution side length of voxels
+            line_search_step_size: 0.1                              # The newton line search maximum step length
+            outlier_ratio: 0.55                                     # Point cloud outlier ratio
 
 #   Several recovery matchers can be specified, and will be applied if the cloud registration specified above fails or if the registration is rejected by the transformation validators specified below.
 #   This is useful to tune the cloud registration to the environment and robot operation (above), and also have a recovery configuration with more robust / computation expensive setup for anomalous operation situations.
@@ -281,8 +283,8 @@ recovery_matchers:          # Any of the feature / point matchers shown above ca
 #   It is also useful to perform dynamic map update, since the outliers pointcloud can be published and used in OctoMap.
 outlier_detectors:
     euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
-        max_inliers_distance: 0.01
-        aligned_pointcloud_outliers_publish_topic: ''               # OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched.
+        max_inliers_distance: 0.01                                  # A point in the ambient cloud will be considered outlier if it does't have a point in the reference cloud within a sphere with this radius
+        aligned_pointcloud_outliers_publish_topic: ''               # OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched
 
 
 # ===================================================================================================================================================
@@ -294,9 +296,9 @@ outlier_detectors:
 transformation_validators:
 transformation_validators_recovery:
     euclidean_transformation_validator:                             # Allows prefix and postfix of letters to ensure parsing order
-        max_transformation_angle: 0.4
-        max_transformation_distance: 0.04
-        max_new_pose_diff_angle: 0.6
-        max_new_pose_diff_distance: 0.2
-        max_alignment_fitness: 3.0
-        max_outliers_percentage: 0.7
+        max_transformation_angle: 0.4                               # Pose corrections with a angle greater than this value will be rejected
+        max_transformation_distance: 0.04                           # Pose corrections with a translation greater than this value will be rejected
+        max_new_pose_diff_angle: 0.6                                # Pose recovery with a angle greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
+        max_new_pose_diff_distance: 0.2                             # Pose recovery with a translation greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
+        max_alignment_fitness: 3.0                                  # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected
+        max_outliers_percentage: 0.7                                # Pose corrections which have a cloud registration outlier percentage greater than this value will be rejected

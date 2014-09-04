@@ -35,9 +35,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
-#include <pcl_conversions/pcl_conversions.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/common/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
