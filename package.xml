@@ -2,7 +2,7 @@
 <package>
 	<name>dynamic_robot_localization</name>
 	<version>0.1.0</version>
-	<description>The dynamic_robot_localization package offers 6DOF localization using PCL</description>
+	<description>The dynamic_robot_localization package offers 3 DOF and 6 DOF localization using PCL</description>
 	<maintainer email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</maintainer>
 	<license>BSD</license>
 	<author email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</author>

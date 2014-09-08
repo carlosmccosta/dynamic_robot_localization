@@ -132,6 +132,7 @@ add_library(drl_normal_estimators
 add_library(drl_keypoint_detectors
     src/cloud_matchers/feature_matchers/keypoint_detectors/keypoint_detector.cpp
     src/cloud_matchers/feature_matchers/keypoint_detectors/intrinsic_shape_signature_3d.cpp
+    src/cloud_matchers/feature_matchers/keypoint_detectors/sift_3d.cpp
 )
 
 add_library(drl_keypoint_descriptors

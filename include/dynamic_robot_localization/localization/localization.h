@@ -26,6 +26,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <dynamic_reconfigure/server.h>
@@ -60,6 +61,7 @@
 
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_detectors/keypoint_detector.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_detectors/intrinsic_shape_signature_3d.h>
+#include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_detectors/sift_3d.h>
 
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/pfh.h>
@@ -202,7 +204,8 @@ class Localization : public ConfigurableObject {
 		// publish topic names
 		std::string reference_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
-		std::string pose_publish_topic_;
+		std::string pose_stamped_publish_topic_;
+		std::string pose_with_covariance_stamped_publish_topic_;
 		std::string localization_detailed_publish_topic_;
 		std::string localization_diagnostics_publish_topic_;
 		std::string localization_times_publish_topic_;
@@ -245,7 +248,8 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber reference_pointcloud_subscriber_;
 		ros::Publisher reference_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
-		ros::Publisher pose_publisher_;
+		ros::Publisher pose_with_covariance_stamped_publisher_;
+		ros::Publisher pose_stamped_publisher_;
 		ros::Publisher localization_detailed_publisher_;
 		ros::Publisher localization_diagnostics_publisher_;
 		ros::Publisher localization_times_publisher_;

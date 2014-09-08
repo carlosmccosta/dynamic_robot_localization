@@ -12,16 +12,22 @@ normal_estimators:
 
 keypoint_detectors:
     ambient_pointcloud:
-        intrinsic_shape_signature_3d:
-            salient_radius: 0.18
-            non_max_radius: 0.12
-            normal_radius: 0.09
-            border_radius: 0.0
-            threshold21: 0.975
-            threshold32: 0.975
-            min_neighbors: 5
-            angle_threshold: 1.57
-            iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
+#        intrinsic_shape_signature_3d:
+#            salient_radius: 0.14
+#            non_max_radius: 0.08
+#            normal_radius: 0.08
+#            border_radius: 0.0
+#            threshold21: 0.975
+#            threshold32: 0.975
+#            min_neighbors: 5
+#            angle_threshold: 1.57
+#            iss3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
+        sift_3d:
+            min_scale: 0.01
+            number_octaves: 3
+            number_scales_per_octave: 4
+            min_contrast: 0.001
+            sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
 
 
 cloud_matchers:

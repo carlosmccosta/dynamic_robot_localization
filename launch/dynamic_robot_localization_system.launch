@@ -11,6 +11,7 @@
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
+	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
 	<arg name="robot_initial_z" default="0.0" />
@@ -26,22 +27,23 @@
 
 
 	<!-- ==================================================== localization system ============================================= -->
-	<include file="$(find dynamic_robot_localization)/launch/dynamic_robot_localization.launch">
-		<arg name="ambient_pointcloud_topic" default="$(arg ambient_pointcloud_topic)" />
-		<arg name="yaml_configuration_filters_filename" default="$(arg yaml_configuration_filters_filename)" />
-		<arg name="yaml_configuration_filename" default="$(arg yaml_configuration_filename)" />
-		<arg name="yaml_configuration_recovery_filename" default="$(arg yaml_configuration_recovery_filename)" />
-		<arg name="reference_pointcloud_filename" value="$(arg reference_pointcloud_filename)" />
-		<arg name="reference_pointcloud_preprocessed_save_filename" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
-		<arg name="reference_pointcloud_keypoints_filename" value="$(arg reference_pointcloud_keypoints_filename)" />
-		<arg name="reference_pointcloud_keypoints_save_filename" value="$(arg reference_pointcloud_keypoints_save_filename)" />
-		<arg name="reference_pointcloud_descriptors_filename" value="$(arg reference_pointcloud_descriptors_filename)" />
-		<arg name="reference_pointcloud_descriptors_save_filename" value="$(arg reference_pointcloud_descriptors_save_filename)" />
-	</include>
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
+		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
+		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
+		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
+		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" />
+		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" />
+	</node>
 
 
 	<!-- map to odom publisher -->
-	<include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch">
+	<include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
 		<arg name="initial_x" default="$(arg robot_initial_x)" />
 		<arg name="initial_y" default="$(arg robot_initial_y)" />
 		<arg name="initial_z" default="$(arg robot_initial_z)" />
@@ -52,7 +54,7 @@
 
 
 	<!-- laser assembler -->
-	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)">
+	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)" >
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
@@ -60,10 +62,8 @@
 	
 
 	<!-- OctoMap for dynamic map update -->
-	<group if="$(arg use_dynamic_map_update)">
-		<include file="$(find dynamic_robot_localization)/launch/octo_map.launch">
-			<arg name="octomap_file" default="$(arg octomap_file)" />
-		</include>
-	</group>
+	<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" if="$(arg use_dynamic_map_update)" >
+		<arg name="octomap_file" default="$(arg octomap_file)" />
+	</include>
 </launch>
  

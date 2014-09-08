@@ -66,7 +66,8 @@ subscribe_topic_names:
 publish_topic_names:
     reference_pointcloud_publish_topic: 'reference_pointcloud'      # sensor_msgs::PointCloud2 | Reference cloud currently being used by the localization system
     aligned_pointcloud_publish_topic: 'aligned_pointcloud'          # sensor_msgs::PointCloud2 | Point cloud coming from the ambient_pointcloud_topic after applying the registration correction
-    pose_publish_topic: '/initialpose'                              # geometry_msgs::PoseWithCovarianceStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages, such as amcl)
+    pose_stamped_publish_topic: 'localization_pose'                 # geometry_msgs::PoseStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages or to visualize in rviz)
+    pose_with_covariance_stamped_publish_topic: '/initialpose'      # geometry_msgs::PoseWithCovarianceStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages, such as amcl)
     localization_detailed_publish_topic: 'localization_detailed'    # dynamic_robot_localization::LocalizationDetailed | Provides detailed information of the current pose computed by the localization system (pose + pose_corrections + outlier_percentage + aligmenet_fitness)
     localization_diagnostics_publish_topic: 'diagnostics'           # dynamic_robot_localization::LocalizationDiagnostics | Provides information about the number of points / keypoints in the reference / ambient cloud (before and after filtering) 
     localization_times_publish_topic: 'localization_times'          # dynamic_robot_localization::LocalizationTimes | Provides information about the wall clock times (in milliseconds) of the main localization steps (as well as the global time)
@@ -163,15 +164,21 @@ keypoint_detectors:
     reference_pointcloud:
     ambient_pointcloud:
         intrinsic_shape_signature_3d:                               # Allows prefix and postfix of letters to ensure parsing order
-            salient_radius: 0.18                                    # The radius of the spherical neighborhood used to compute the scatter matrix
-            non_max_radius: 0.12                                    # The radius for the application of the non maxima supression algorithm
-            normal_radius: 0.09                                     # The radius used for the estimation of the surface normals of the input cloud. If the radius is too large, the temporal performances of the detector may degrade significantly
-            border_radius: 0.0                                      # The radius used for the estimation of the boundary points. If the radius is too large, the temporal performances of the detector may degrade significantly (0 disables the border estimation)
+            salient_radius: 0.06                                    # The radius of the spherical neighborhood used to compute the scatter matrix (usually 6 * model_resolution)
+            non_max_radius: 0.04                                    # The radius for the application of the non maxima supression algorithm (usually 4 * model_resolution)
+            normal_radius: 0.04                                     # The radius used for the estimation of the surface normals of the input cloud. If the radius is too large, the temporal performances of the detector may degrade significantly (usually 4 * model_resolution)
+            border_radius: 0.0                                      # The radius used for the estimation of the boundary points. If the radius is too large, the temporal performances of the detector may degrade significantly (0 disables the border estimation) (usually 1 * model_resolution)
             threshold21: 0.975                                      # The upper bound on the ratio between the second and the first eigenvalue
             threshold32: 0.975                                      # The upper bound on the ratio between the third and the second eigenvalue
-            min_neighbors: 5                                        # The minimum number of neighbors that has to be found while applying the non maxima suppression algorithm              
+            min_neighbors: 5                                        # The minimum number of neighbors that has to be found while applying the non maxima suppression algorithm
             angle_threshold: 1.57                                   # The decision boundary (angle threshold) that marks points as boundary or regular. (default pi / 2.0)
-            iss3_keypoints_cloud_publish_topic: 'ambient_keypoints'
+            iss3d_keypoints_cloud_publish_topic: ''                 # Topic where the detected keypoints will be published (sugestion ambient_keypoints)
+        sift_3d:                                                    # Allows prefix and postfix of letters to ensure parsing order
+            min_scale: 0.01                                         # The standard deviation of the smallest scale in the scale space
+            number_octaves: 3                                       # The number of octaves (i.e. doublings of scale) to compute
+            number_scales_per_octave: 4                             # The number of scales to compute within each octave
+            min_contrast: 0.001                                     # The minimum contrast required for detection
+            sift3d_keypoints_cloud_publish_topic: ''                # Topic where the detected keypoints will be published (sugestion ambient_keypoints)
 
 
 # ===================================================================================================================================================
@@ -301,4 +308,4 @@ transformation_validators_recovery:
         max_new_pose_diff_angle: 0.6                                # Pose recovery with a angle greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
         max_new_pose_diff_distance: 0.2                             # Pose recovery with a translation greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
         max_alignment_fitness: 3.0                                  # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected
-        max_outliers_percentage: 0.7                                # Pose corrections which have a cloud registration outlier percentage greater than this value will be rejected
+        max_outliers_percentage: 0.7                                # Pose corrections which have a cloud registration outlier percentage [0-1] greater than this value will be rejected

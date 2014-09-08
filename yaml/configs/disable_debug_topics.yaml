@@ -1,6 +1,7 @@
 publish_topic_names:
     reference_pointcloud_publish_topic: ''
     aligned_pointcloud_publish_topic: ''
+    pose_stamped_publish_topic: ''
     localization_detailed_publish_topic: ''
     localization_diagnostics_publish_topic: ''
     localization_times_publish_topic: ''
