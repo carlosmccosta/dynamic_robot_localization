@@ -3,7 +3,7 @@
 	<!-- ======================================================= arguments ==================================================== -->
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters_2d.yaml" />
-	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/static_2d.yaml" />
+	<arg name="yaml_configuration_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_2d.yaml" />
 	<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_2d.yaml" />
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />

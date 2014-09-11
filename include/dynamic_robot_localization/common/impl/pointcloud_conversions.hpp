@@ -20,8 +20,8 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 		unsigned int map_width = occupancy_grid.info.width;
 		unsigned int map_height = occupancy_grid.info.height;
 
-		float map_origin_x = occupancy_grid.info.origin.position.x;
-		float map_origin_y = occupancy_grid.info.origin.position.y;
+		float map_origin_x = occupancy_grid.info.origin.position.x + map_resolution / 2.0;
+		float map_origin_y = occupancy_grid.info.origin.position.y + map_resolution / 2.0;
 
 		pointcloud.height = 1;
 		pointcloud.is_dense = false;
