@@ -897,7 +897,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	performance_timer.restart();
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 	if (!ambient_cloud_keypoint_detectors_.empty()) {
-		if (!applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints)) { return false; }
+		applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
 	}
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = ambient_pointcloud_keypoints->size();
 	localization_times_msg_.keypoint_selection_time = performance_timer.getElapsedTimeInMilliSec();
