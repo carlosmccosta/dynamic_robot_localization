@@ -2,7 +2,7 @@
 <launch>
 	<!-- ======================================================= arguments ==================================================== -->
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
-	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters_2d.yaml" />
+	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
 	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_2d.yaml" />
 	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_2d.yaml" />
 	<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_2d.yaml" />
@@ -13,6 +13,7 @@
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 	<arg name="publish_tf_map_odom" default="1" />
+	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" />
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
 	<arg name="robot_initial_z" default="0.0" />
@@ -21,6 +22,12 @@
 	<arg name="robot_initial_yaw" default="0.0" />
 	<arg name="use_laser_assembler" default="1" />
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
+	<arg name="map_frame_id" default="map" />
+	<arg name="base_link_frame_id" default="base_footprint" />
+	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
+	<arg name="invert_tf_transform" default="false" />
+	<arg name="invert_tf_hierarchy" default="false" />
+	<arg name="transform_pose_to_map_frame_id" default="true" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
 	<arg name="timeout_for_cloud_assembly" default="0.5" />
 	<arg name="use_dynamic_map_update" default="0" />
@@ -34,7 +41,11 @@
 		<rosparam command="load" file="$(arg yaml_configuration_pose_estimation_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_tracking_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
+		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
+		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
+		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
 		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
+		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="$(arg pose_with_covariance_stamped_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
@@ -46,12 +57,18 @@
 
 	<!-- map to odom publisher -->
 	<include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
+		<arg name="pose_with_covariance_stamped_topic" default="$(arg pose_with_covariance_stamped_topic)" />
+		<arg name="map_frame_id" default="$(arg map_frame_id)" />
+		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
 		<arg name="initial_x" default="$(arg robot_initial_x)" />
 		<arg name="initial_y" default="$(arg robot_initial_y)" />
 		<arg name="initial_z" default="$(arg robot_initial_z)" />
 		<arg name="initial_roll" default="$(arg robot_initial_roll)" />
 		<arg name="initial_pitch" default="$(arg robot_initial_pitch)" />
 		<arg name="initial_yaw" default="$(arg robot_initial_yaw)" />
+		<arg name="invert_tf_transform" default="$(arg invert_tf_transform)" />
+		<arg name="invert_tf_hierarchy" default="$(arg invert_tf_hierarchy)" />
+		<arg name="transform_pose_to_map_frame_id" default="$(arg transform_pose_to_map_frame_id)" />
 	</include>
 
 
@@ -59,6 +76,7 @@
 	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)" >
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
+		<arg name="target_frame" default="$(arg map_frame_id)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
 	</include>
 	

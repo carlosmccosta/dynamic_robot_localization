@@ -4,11 +4,11 @@ cloud_matchers:
     point_matchers:
         iterative_closest_point:
 #        iterative_closest_point_non_linear:
-            max_correspondence_distance: 0.05
+            max_correspondence_distance: 0.35
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
-            max_number_of_registration_iterations: 75
-            max_number_of_ransac_iterations: 75
+            max_number_of_registration_iterations: 100
+            max_number_of_ransac_iterations: 100
             ransac_outlier_rejection_threshold: 0.05
             match_only_keypoints: false
             display_cloud_aligment: false
@@ -18,15 +18,15 @@ cloud_matchers:
 
 outlier_detectors:
     euclidean_outlier_detector:
-        max_inliers_distance: 0.01
+        max_inliers_distance: 0.02
         aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
 
 
 transformation_validators:
     euclidean_transformation_validator:
-        max_transformation_angle: 0.4
-        max_transformation_distance: 0.035
-        max_new_pose_diff_angle: 0.6
-        max_new_pose_diff_distance: 0.1
+        max_transformation_angle: 0.7
+        max_transformation_distance: 0.15
+        max_new_pose_diff_angle: 1.1
+        max_new_pose_diff_distance: 0.3
         max_alignment_fitness: 2.5
         max_outliers_percentage: 0.75
