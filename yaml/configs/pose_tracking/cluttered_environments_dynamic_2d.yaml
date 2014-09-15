@@ -29,4 +29,4 @@ transformation_validators:
         max_new_pose_diff_angle: 0.6
         max_new_pose_diff_distance: 0.1
         max_alignment_fitness: 2.5
-        max_outliers_percentage: 0.75
+        max_outliers_percentage: 0.35

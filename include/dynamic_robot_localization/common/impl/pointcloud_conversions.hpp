@@ -23,6 +23,13 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 		float map_origin_x = occupancy_grid.info.origin.position.x + map_resolution / 2.0;
 		float map_origin_y = occupancy_grid.info.origin.position.y + map_resolution / 2.0;
 
+		Eigen::Transform<float, 3, Eigen::Affine> transform(
+				Eigen::Quaternionf(
+						occupancy_grid.info.origin.orientation.w,
+						occupancy_grid.info.origin.orientation.x,
+						occupancy_grid.info.origin.orientation.y,
+						occupancy_grid.info.origin.orientation.z));
+
 		pointcloud.height = 1;
 		pointcloud.is_dense = false;
 		pointcloud.header.frame_id = occupancy_grid.header.frame_id;
@@ -31,12 +38,16 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 
 		size_t data_position = 0;
 		PointT new_point;
-		new_point.z = 0;
 		for (unsigned int y = 0; y < map_height; ++y) {
-			new_point.y = (float)y * map_resolution + map_origin_y;
+			float y_map = (float)y * map_resolution;
 			for (unsigned int x = 0; x < map_width; ++x) {
 				if (occupancy_grid.data[data_position] > threshold_for_map_cell_as_obstacle) {
-					new_point.x = (float)x * map_resolution + map_origin_x;
+					new_point.x = (float)x * map_resolution;
+					new_point.y = y_map;
+					new_point.z = 0;
+					new_point = pcl::transformPoint(new_point, transform);
+					new_point.x += map_origin_x;
+					new_point.y += map_origin_y;
 					pointcloud.push_back(new_point);
 				}
 

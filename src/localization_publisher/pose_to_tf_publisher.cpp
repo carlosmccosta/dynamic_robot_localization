@@ -54,14 +54,15 @@ void PoseToTFPublisher::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 
 void PoseToTFPublisher::publishInitialPoseFromParameterServer() {
 	// initial pose tf
-	double roll, pitch, yaw, x, y, z;
+	double x, y, z, roll, pitch, yaw;
 	private_node_handle_->param("initial_x", x, 0.0);
 	private_node_handle_->param("initial_y", y, 0.0);
 	private_node_handle_->param("initial_z", z, 0.0);
 	private_node_handle_->param("initial_roll", roll, 0.0);
 	private_node_handle_->param("initial_pitch", pitch, 0.0);
 	private_node_handle_->param("initial_yaw", yaw, 0.0);
-	publishTFMapToBaseLinkFromInitialPose(x, y, z, roll, pitch, yaw);
+//	publishTFMapToOdomFromInitialPose(x, y, z, roll, pitch, yaw);
+	publishTFMapToOdomFromGlobalPose(x, y, z, roll, pitch, yaw);
 }
 
 
@@ -169,7 +170,7 @@ void PoseToTFPublisher::publishTFMapToOdom() {
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <pose to tf functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-void PoseToTFPublisher::publishTFMapToBaseLinkFromInitialPose(double x, double y, double z, double roll, double pitch, double yaw) {
+void PoseToTFPublisher::publishTFMapToOdomFromInitialPose(double x, double y, double z, double roll, double pitch, double yaw) {
 	tf2::Quaternion orientation;
 	orientation.setRPY(roll, pitch, yaw);
 
@@ -187,15 +188,26 @@ void PoseToTFPublisher::publishTFMapToBaseLinkFromInitialPose(double x, double y
 void PoseToTFPublisher::publishTFMapToOdomFromGlobalPose(double x, double y, double z, double roll, double pitch, double yaw) {
 	tf2::Quaternion orientation;
 	orientation.setRPY(roll, pitch, yaw);
-	publishTFMapToOdom(tf2::Transform(orientation, tf2::Vector3(x, y, z)));
+	if (!publishTFMapToOdom(tf2::Transform(orientation, tf2::Vector3(x, y, z)), ros::Time::now(), ros::Duration(5))) {
+		ros::Time end_time = ros::Time::now() + ros::Duration(10);
+		ros::Duration wait_duration(0.005);
+
+		while (ros::Time::now() < end_time) {
+			if (publishTFMapToOdom(tf2::Transform(orientation, tf2::Vector3(x, y, z)))) { return; }
+			wait_duration.sleep();
+		}
+
+		ROS_WARN_STREAM("Failed to find TF between " << odom_frame_id_ << " and " << base_link_frame_id_ << " when setting initial pose");
+		publishTFMapToOdomFromInitialPose(x, y, z, roll, pitch, y);
+	}
 }
 
 
-void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_base_link_to_map, ros::Time tf_time) {
-	if (base_link_frame_id_ != "") {
+bool PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_base_link_to_map, ros::Time tf_time, ros::Duration tf_timeout) {
+	if (!base_link_frame_id_.empty() && !odom_frame_id_.empty()) {
 		tf2::Transform transform_odom_to_base_link;
-		if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, tf_time)) {
-			return;
+		if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, tf_time, tf_timeout)) {
+			return false;
 		}
 
 		// base_to_map = base_to_odom * odom_to_map
@@ -211,6 +223,7 @@ void PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_base_
 
 	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(transform_map_to_odom_, transform_stamped_map_to_odom_.transform);
 	publishTFMapToOdom();
+	return true;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </pose to tf functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

@@ -25,8 +25,8 @@ outlier_detectors:
 transformation_validators:
     euclidean_transformation_validator:
         max_transformation_angle: 0.7
-        max_transformation_distance: 0.15
+        max_transformation_distance: 0.35
         max_new_pose_diff_angle: 1.1
-        max_new_pose_diff_distance: 0.3
+        max_new_pose_diff_distance: 0.5
         max_alignment_fitness: 2.5
         max_outliers_percentage: 0.75

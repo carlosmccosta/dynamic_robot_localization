@@ -19,6 +19,7 @@
 
 // PCL includes
 #include <pcl/point_cloud.h>
+#include <pcl/common/transforms.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/PolygonMesh.h>
 #include <pcl/io/pcd_io.h>
@@ -26,6 +27,7 @@
 #include <pcl/io/vtk_lib_io.h>
 
 // external libs includes
+#include <Eigen/src/Geometry/Transform.h>
 
 // project includes
 

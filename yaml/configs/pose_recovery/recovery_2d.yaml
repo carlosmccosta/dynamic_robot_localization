@@ -2,12 +2,12 @@ recovery_matchers:
     point_matchers:
 #        iterative_closest_point:
         iterative_closest_point_non_linear:
-            max_correspondence_distance: 0.5
+            max_correspondence_distance: 0.75
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
             max_number_of_registration_iterations: 200
             max_number_of_ransac_iterations: 200
-            ransac_outlier_rejection_threshold: 0.10
+            ransac_outlier_rejection_threshold: 0.05
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
@@ -16,9 +16,9 @@ recovery_matchers:
 
 transformation_validators_recovery:
     euclidean_transformation_validator:
-        max_transformation_angle: 0.89
-        max_transformation_distance: 0.5
+        max_transformation_angle: 1.57
+        max_transformation_distance: 0.65
         max_new_pose_diff_angle: 2.09
         max_new_pose_diff_distance: 2.0
         max_alignment_fitness: 2.5
-        max_outliers_percentage: 0.25
+        max_outliers_percentage: 0.5
