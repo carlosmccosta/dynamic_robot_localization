@@ -3,7 +3,7 @@ float64 global_time
 float64 filtering_time
 float64 surface_normal_estimation_time
 float64 keypoint_selection_time
-float64 featurecloud_registration_time
+float64 initial_pose_estimation_time
 float64 pointcloud_registration_time
 float64 outlier_detection_time
 float64 transformation_validators_time

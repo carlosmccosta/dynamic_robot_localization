@@ -65,15 +65,20 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupKeypointDetectors();
 	setupCloudMatchersConfigurations();
 
-	pointcloud_matchers_.clear();
-	recovery_matchers_.clear();
-	setupFeatureCloudMatchersConfigurations(featurecloud_matchers_, "cloud_matchers/feature_matchers/");
-	setupPointCloudMatchersConfigurations(pointcloud_matchers_, "cloud_matchers/point_matchers/");
-	setupFeatureCloudMatchersConfigurations(recovery_matchers_, "recovery_matchers/feature_matchers/");
-	setupPointCloudMatchersConfigurations(recovery_matchers_, "recovery_matchers/point_matchers/");
+	initial_pose_estimators_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(initial_pose_estimators_matchers_, "initial_pose_estimators_matchers/feature_matchers/");
+	setupPointCloudMatchersConfigurations(initial_pose_estimators_matchers_, "initial_pose_estimators_matchers/point_matchers/");
+
+	tracking_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/feature_matchers/");
+	setupPointCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/point_matchers/");
+
+	tracking_recovery_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(tracking_recovery_matchers_, "tracking_recovery_matchers/feature_matchers/");
+	setupPointCloudMatchersConfigurations(tracking_recovery_matchers_, "tracking_recovery_matchers/point_matchers/");
 
 	setupTransformationValidatorsConfigurations(transformation_validators_, "transformation_validators/");
-	setupTransformationValidatorsConfigurations(transformation_validators_recovery_, "transformation_validators_recovery/");
+	setupTransformationValidatorsConfigurations(transformation_validators_tracking_recovery_, "transformation_validators_tracking_recovery/");
 	setupOutlierDetectorsConfigurations();
 
 	pose_to_tf_publisher_.setupConfigurationFromParameterServer(node_handle, private_node_handle, "");
@@ -85,8 +90,8 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 template<typename PointT>
 void Localization<PointT>::setupGeneralConfigurations() {
-	private_node_handle_->param("transformation_validators/publish_tf_map_odom", publish_tf_map_odom_, false);
-	private_node_handle_->param("transformation_validators/add_odometry_displacement", add_odometry_displacement_, false);
+	private_node_handle_->param("general_configurations/publish_tf_map_odom", publish_tf_map_odom_, false);
+	private_node_handle_->param("general_configurations/add_odometry_displacement", add_odometry_displacement_, false);
 }
 
 
@@ -245,10 +250,10 @@ void Localization<PointT>::loadKeypointDetectorsFromParameterServer(std::vector<
 
 template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
-	private_node_handle_->param("cloud_matchers/ignore_height_corrections", ignore_height_corrections_, false);
+	private_node_handle_->param("tracking_matchers/ignore_height_corrections", ignore_height_corrections_, false);
 
 	double pose_tracking_timeout;
-	private_node_handle_->param("cloud_matchers/pose_tracking_timeout", pose_tracking_timeout, 2.0);
+	private_node_handle_->param("tracking_matchers/pose_tracking_timeout", pose_tracking_timeout, 2.0);
 	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
 }
 
@@ -499,16 +504,16 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints->size();
 
 
-		for (size_t i = 0; i < featurecloud_matchers_.size(); ++i) {
-			featurecloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
+		for (size_t i = 0; i < initial_pose_estimators_matchers_.size(); ++i) {
+			initial_pose_estimators_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
 		}
 
-		for (size_t i = 0; i < pointcloud_matchers_.size(); ++i) {
-			pointcloud_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
+		for (size_t i = 0; i < tracking_matchers_.size(); ++i) {
+			tracking_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
 		}
 
-		for (size_t i = 0; i < recovery_matchers_.size(); ++i) {
-			recovery_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
+		for (size_t i = 0; i < tracking_recovery_matchers_.size(); ++i) {
+			tracking_recovery_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
 		}
 
 		publishReferencePointCloud();
@@ -676,7 +681,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.rotation_corrections.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
 				localization_detailed_msg.rotation_correction = std::abs(localization_detailed_msg.rotation_corrections.x) + std::abs(localization_detailed_msg.rotation_corrections.y) + std::abs(localization_detailed_msg.rotation_corrections.z);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
-				localization_detailed_msg.aligment_fitness = pointcloud_matchers_.back()->getCloudMatcher()->getFitnessScore();
+				localization_detailed_msg.aligment_fitness = aligment_fitness_;
 				localization_detailed_publisher_.publish(localization_detailed_msg);
 			}
 
@@ -903,22 +908,22 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_times_msg_.keypoint_selection_time = performance_timer.getElapsedTimeInMilliSec();
 
 
-	// ==============================================================  feature cloud registration
+	// ==============================================================  initial pose estimation when tracking is lost
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
 	performance_timer.restart();
 	aligment_fitness_ = 0.0;
-	bool lost_tracking = ros::Time::now() - last_accepted_pose_time_ > pose_tracking_timeout_;
-	if (!featurecloud_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose with feature matching
-		if (!applyCloudRegistration(featurecloud_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
+	bool lost_tracking = (ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_;
+	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose with
+		if (!applyCloudRegistration(initial_pose_estimators_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
 	}
-	localization_times_msg_.featurecloud_registration_time = performance_timer.getElapsedTimeInMilliSec();
+	localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 
 
-	// ==============================================================  point cloud registration with registration recovery
+	// ==============================================================  point cloud registration with recovery
 	performance_timer.restart();
 	bool performed_recovery = false;
-	if (!applyCloudRegistration(pointcloud_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
-		if (!recovery_matchers_.empty() && applyCloudRegistration(recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+	if (!applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+		if (!tracking_recovery_matchers_.empty() && applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
 			ROS_INFO("Successfully performed registration recovery");
 			performed_recovery = true;
 		} else {
@@ -937,13 +942,13 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	// ==============================================================  localization post processors with registration recovery
 	performance_timer.restart();
 	localization_times_msg_.transformation_validators_time = 0.0;
-	if (performed_recovery && !transformation_validators_recovery_.empty()) {
-		if (!applyTransformationValidators(transformation_validators_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
+	if (performed_recovery && !transformation_validators_tracking_recovery_.empty()) {
+		if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
 	} else {
 		if (!applyTransformationValidators(transformation_validators_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
-			if (!performed_recovery && !recovery_matchers_.empty() && applyCloudRegistration(recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+			if (!performed_recovery && !tracking_recovery_matchers_.empty() && applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
 				ROS_INFO("Successfully performed registration recovery");
 				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 
@@ -952,7 +957,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 				localization_times_msg_.outlier_detection_time += performance_timer.getElapsedTimeInMilliSec();
 
 				performance_timer.restart();
-				if (!applyTransformationValidators(transformation_validators_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
+				if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
 			} else {
 				return false;
 			}

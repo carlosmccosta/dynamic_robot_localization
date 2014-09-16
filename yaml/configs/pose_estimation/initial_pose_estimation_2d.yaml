@@ -24,3 +24,20 @@
 #            number_scales_per_octave: 4
 #            min_contrast: 0.001
 #            sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
+
+
+
+initial_pose_estimators_matchers:
+    point_matchers:
+#        iterative_closest_point:
+        iterative_closest_point_non_linear:
+            max_correspondence_distance: 10.0
+            transformation_epsilon: 1e-4
+            euclidean_fitness_epsilon: 1e-4
+            max_number_of_registration_iterations: 350
+            max_number_of_ransac_iterations: 350
+            ransac_outlier_rejection_threshold: 0.05
+            match_only_keypoints: false
+            display_cloud_aligment: false
+            maximum_number_of_displayed_correspondences: 0
+            use_reciprocal_correspondences: true

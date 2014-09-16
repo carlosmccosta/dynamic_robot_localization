@@ -182,15 +182,15 @@ keypoint_detectors:
 
 
 # ===================================================================================================================================================
+#   Several tracking matchers can be used to perform high accuracy pose estimation.
 #   There are two main categories of cloud matchers. One that registers clouds of points and another that matches point descriptors.
-#   They share some parameters that are present in the cloud_matchers/ namespace, and that can be overridden in the child namespaces.
-#   An example of parameter override (max_number_of_registration_iterations) is present in namespace cloud_matchers/point_matchers/iterative_closest_point
+#   They share some parameters that are present in the tracking_matchers/ namespace, and that can be overridden in the child namespaces.
+#   An example of parameter override (max_number_of_registration_iterations) is present in namespace tracking_matchers/point_matchers/iterative_closest_point
 #   Point matchers are very fast algorithms that can be used for pose tracking. They can work with points only or also with surface normals. However, they require
 # an initial pose close to the real world pose, otherwise they wont be able to perform the cloud registration.
-#   Feature matchers are much slower, because they require feature detection, description and matching, and should be used only to estimate the initial pose,
-# in order to allow the point matchers to perform tracking. Moreover, the localization system can use the feature matchers as a recovery subsystem,
-# in which they are used if the pose tracking failed during a giving period of time.
-cloud_matchers:
+#   Feature matchers are much slower, because they require feature detection, description and descriptor matching, and should only be used to estimate the initial pose (or when the odometry is very unreliable)
+# in order to allow the point matchers to perform tracking.
+tracking_matchers:
     ignore_height_corrections: false                                # When activated, the pose corrections in the z axis will be ignored
     pose_tracking_timeout: 2.0                                      # When point cloud registration has failed during this amount of time, feature matching is activated (pose tracking recovery)
     max_correspondence_distance: 0.1                                # Can be overridden in child namespaces | The maximum distance threshold between two correspondent points in source <-> target. If the distance is larger than this threshold, the points will be ignored in the alignment process
@@ -202,7 +202,7 @@ cloud_matchers:
     match_only_keypoints: false                                     # Can be overridden in child namespaces | Uses only keypoints in the coud registration (if available)
     display_cloud_aligment: false                                   # Can be overridden in child namespaces | Display cloud aligment in a separate window
     maximum_number_of_displayed_correspondences: 0                  # Can be overridden in child namespaces | How many correspondances of the registration will be displayed
-    feature_matchers:
+    feature_matchers:                                               # Feature matchers are applied before point matchers.
         display_feature_matching: false                             # Can be overridden in child namespaces | Display feature matching registration
         reference_pointcloud_descriptors_filename: ''               # Can be overridden in child namespaces
         reference_pointcloud_descriptors_save_filename: ''          # Can be overridden in child namespaces
@@ -278,11 +278,20 @@ cloud_matchers:
             line_search_step_size: 0.1                              # The newton line search maximum step length
             outlier_ratio: 0.55                                     # Point cloud outlier ratio
 
+
 #   Several recovery matchers can be specified, and will be applied if the cloud registration specified above fails or if the registration is rejected by the transformation validators specified below.
 #   This is useful to tune the cloud registration to the environment and robot operation (above), and also have a recovery configuration with more robust / computation expensive setup for anomalous operation situations.
-recovery_matchers:          # Any of the feature / point matchers shown above can be used (same configuration layout). Allows prefix and postfix of letters to ensure parsing order inside each type of matcher.
+tracking_recovery_matchers:          # Any of the feature / point matchers shown above can be used (same configuration layout). Allows prefix and postfix of letters to ensure parsing order inside each type of matcher.
     feature_matchers:       # Feature matchers are applied before point matchers.
     point_matchers:
+
+
+#    Given that the initial pose estimation can have a very different set of algorithms and parameters (in relation to tracking), the localization system will rely on the configuration under initial_pose_estimators_matchers/ namespace
+# for initial pose estiamtion when the tracking has failed to recover for over tracking_matchers/pose_tracking_timeout seconds.
+initial_pose_estimators_matchers:   # Any of the feature / point matchers shown above can be used (same configuration layout). Allows prefix and postfix of letters to ensure parsing order inside each type of matcher.
+    feature_matchers:               # Feature matchers are applied before point matchers.
+    point_matchers:
+
 
 
 # ===================================================================================================================================================
@@ -301,7 +310,7 @@ outlier_detectors:
 #     - The <transformation_validators> are applied when the registration matchers perform as expected.
 #     - The <transformation_validators_recovery> will override the first and will only be applied when the recovery matchers were successfully applied (if not specified, the <transformation_validators> will be used instead).
 transformation_validators:
-transformation_validators_recovery:
+transformation_validators_tracking_recovery:
     euclidean_transformation_validator:                             # Allows prefix and postfix of letters to ensure parsing order
         max_transformation_angle: 0.4                               # Pose corrections with a angle greater than this value will be rejected
         max_transformation_distance: 0.04                           # Pose corrections with a translation greater than this value will be rejected

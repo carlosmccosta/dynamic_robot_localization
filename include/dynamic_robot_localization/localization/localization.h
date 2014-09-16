@@ -265,11 +265,11 @@ class Localization : public ConfigurableObject {
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > ambient_cloud_keypoint_detectors_;
-		std::vector< typename CloudMatcher<PointT>::Ptr > pointcloud_matchers_;
-		std::vector< typename CloudMatcher<PointT>::Ptr > featurecloud_matchers_;
-		std::vector< typename CloudMatcher<PointT>::Ptr > recovery_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > initial_pose_estimators_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > tracking_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > tracking_recovery_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
-		std::vector< TransformationValidator::Ptr > transformation_validators_recovery_;
+		std::vector< TransformationValidator::Ptr > transformation_validators_tracking_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		double outlier_percentage_;
 		double aligment_fitness_;
