@@ -41,6 +41,7 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 		tf2::Transform& viewpoint_guess,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
 
+	size_t pointcloud_original_size = pointcloud->size();
 	std::vector<int> indexes;
 	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
 
@@ -59,7 +60,7 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
 	}
 
-	ROS_DEBUG_STREAM("NormalEstimationOMP computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud->size() << " points");
+	ROS_DEBUG_STREAM("NormalEstimationOMP computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimationOMP-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
@@ -70,8 +71,6 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 // =============================================================================   <private-section>   =========================================================================
 // =============================================================================   </private-section>  =========================================================================
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <template instantiations>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 } /* namespace dynamic_robot_localization */
 

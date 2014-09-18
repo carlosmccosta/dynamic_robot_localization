@@ -56,6 +56,7 @@
 #include <dynamic_robot_localization/cloud_filters/pass_through.h>
 
 #include <dynamic_robot_localization/normal_estimators/normal_estimator.h>
+#include <dynamic_robot_localization/normal_estimators/normal_estimator_sac.h>
 #include <dynamic_robot_localization/normal_estimators/normal_estimation_omp.h>
 #include <dynamic_robot_localization/normal_estimators/moving_least_squares.h>
 

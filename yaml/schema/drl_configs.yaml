@@ -138,17 +138,29 @@ normal_estimators:
     reference_pointcloud:
     ambient_pointcloud:
         display_normals: false                                      # Can be overridden in child namespaces | Displays a bocking window with the estimated normals
+        normal_estimator_sac:                                       # Allows prefix and postfix of letters to ensure parsing order
+            model_type: 'SACMODEL_LINE'                             # The type of geometry model to use. Supported geometry types: SACMODEL_LINE -> for planar pointclouds | SACMODEL_PLANE -> for 3D pointclouds
+            method_type: 'SAC_RANSAC'                               # The type of sample consensus method to use. Supported methods: SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC
+            inlier_distance_threshold: 0.025                        # Points with a distance to the estimated model less than this threshold will be considered inliers
+            max_iterations: 50                                      # The maximum number of iterations that the sample consensus method will run
+            probability_of_sample_without_outliers: 0.99            # Probability of choosing at least one sample free from outliers
+            optimize_coefficients: true                             # true for enabling model coefficient refinement
+            min_model_radius: -1.0                                  # Minimum expected model radius (< 0 will ignore model radius constraints)
+            max_model_radius: -1.0                                  # Maximum expected model radius (< 0 will ignore model radius constraints)
+            random_samples_max_k: 5                                 # The number of k nearest neighbors to use for the normal estimation. If search_k != 0 search_radius is ignored
+            random_samples_max_radius: 0.05                         # The sphere radius that will be used to find the nearest neighbors used for the normal estimation
+            minimum_inliers_percentage: 0.5                         # Minimum inliers percentage [0-1] to accept a model given by the SAC estimation
         normal_estimation_omp:                                      # Allows prefix and postfix of letters to ensure parsing order
             display_normals: true                                   # Overrides parameter in parent namespace
             search_k: 0                                             # The number of k nearest neighbors to use for the feature estimation. If search_k != 0 search_radius is ignored
-            search_radius: 0.12                                     # The sphere radius that is to be used for determining the nearest neighbors used for the normal estimation
+            search_radius: 0.12                                     # The sphere radius that will be used to find the nearest neighbors used for the normal estimation
         moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order
             compute_normals: true                                   # Set whether the algorithm should also store the normals computed
             polynomial_order: 2                                     # The order of the polynomial to be fit
             polynomial_fit: true                                    # Sets whether the surface and normal are approximated using a polynomial, or only via tangent estimation
-            search_radius: 0.12                                     # The sphere radius that is to be used for determining the k-nearest neighbors used for fitting
+            search_radius: 0.12                                     # The sphere radius that is to be used for determining the k-nearest neighbors used for surface fitting
             sqr_gauss_param: 0.0144                                 # Set the parameter used for distance based weighting of neighbors (the square of the search radius works best in general)
-            upsample_method: NONE                                   # The upsampling method to be used ( NONE | DISTINCT_CLOUD | SAMPLE_LOCAL_PLANE | RANDOM_UNIFORM_DENSITY | VOXEL_GRID_DILATION )
+            upsample_method: 'NONE'                                 # The upsampling method to be used ( NONE | DISTINCT_CLOUD | SAMPLE_LOCAL_PLANE | RANDOM_UNIFORM_DENSITY | VOXEL_GRID_DILATION )
             upsampling_radius: 0.05                                 # The radius of the circle in the local point plane that will be sampled (used only in the case of SAMPLE_LOCAL_PLANE upsampling)
             upsampling_step: 0.01                                   # The step size for the local plane sampling (used only in the case of SAMPLE_LOCAL_PLANE upsampling)
             desired_num_points_in_radius: 5                         # The parameter that specifies the desired number of points within the search radius (used only in the case of RANDOM_UNIFORM_DENSITY upsampling)

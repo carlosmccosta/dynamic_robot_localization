@@ -201,7 +201,9 @@ void Localization<PointT>::loadNormalEstimatorFromParameterServer(typename Norma
 	if (private_node_handle_->getParam(configuration_namespace, normal_estimators) && normal_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
 		for (XmlRpc::XmlRpcValue::iterator it = normal_estimators.begin(); it != normal_estimators.end(); ++it) {
 			std::string estimator_name = it->first;
-			if (estimator_name.find("normal_estimation_omp") != std::string::npos) {
+			if (estimator_name.find("normal_estimator_sac") != std::string::npos) {
+				normal_estimator = typename NormalEstimator<PointT>::Ptr(new NormalEstimatorSAC<PointT>());
+			} else if (estimator_name.find("normal_estimation_omp") != std::string::npos) {
 				normal_estimator = typename NormalEstimator<PointT>::Ptr(new NormalEstimationOMP<PointT>());
 			} else if (estimator_name.find("moving_least_squares") != std::string::npos) {
 				normal_estimator = typename NormalEstimator<PointT>::Ptr(new MovingLeastSquares<PointT>());
@@ -747,35 +749,13 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 	tf2::Transform sensor_pose_tf_guess;
 	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
 		sensor_pose_tf_guess.setIdentity();
-	}/* else {
-		pointcloud->sensor_origin_(0) = sensor_pose_tf_guess.getOrigin().getX();
-		pointcloud->sensor_origin_(1) = sensor_pose_tf_guess.getOrigin().getY();
-		pointcloud->sensor_origin_(2) = sensor_pose_tf_guess.getOrigin().getZ();
-	}*/
-	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_with_normals(new pcl::PointCloud<PointT>());
-
-	typename pcl::PointCloud<PointT>::Ptr pointcloud_surface;
-	typename pcl::search::KdTree<PointT>::Ptr surface_search_method_final;
-	if (reference_pointcloud_2d_) {
-		pointcloud_surface.reset(new typename pcl::PointCloud<PointT>());
-		pcl::PointCloud<PointT> cloud_shifted_up, cloud_shifted_down;
-		pcl::transformPointCloud(*pointcloud, cloud_shifted_up, Eigen::Affine3f(Eigen::Translation3f(0.0, 0.0, 0.0025)));
-		pcl::transformPointCloud(*pointcloud, cloud_shifted_down, Eigen::Affine3f(Eigen::Translation3f(0.0, 0.0, -0.0025)));
-		*pointcloud_surface += *pointcloud;
-		*pointcloud_surface += cloud_shifted_up;
-		*pointcloud_surface += cloud_shifted_down;
-		surface_search_method_final.reset(new pcl::search::KdTree<PointT>());
-		surface_search_method_final->setInputCloud(pointcloud_surface);
-
-		/*pointcloud = pointcloud_surface;
-		surface_search_method = surface_search_method_final;*/
-	} else {
-		pointcloud_surface = pointcloud;
-		surface_search_method_final = surface_search_method;
 	}
 
-	normal_estimator->estimateNormals(pointcloud, pointcloud_surface, surface_search_method_final, sensor_pose_tf_guess, ambient_pointcloud_with_normals);
-	pointcloud = ambient_pointcloud_with_normals; // switch pointers
+	if (reference_pointcloud_2d_) {
+		sensor_pose_tf_guess.getOrigin().setZ(0.0);
+	}
+
+	normal_estimator->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, pointcloud);
 
 	return !pointcloud->empty();
 }

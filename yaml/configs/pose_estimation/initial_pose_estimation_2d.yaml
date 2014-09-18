@@ -1,9 +1,18 @@
 #normal_estimators:
 #    ambient_pointcloud:
-#        display_normals: false
-#        normal_estimation_omp:
-#            search_k: 7
-#            search_radius: 0.12
+#        display_normals: true
+#        normal_estimator_sac:
+#            model_type: 'SACMODEL_LINE'
+#            method_type: 'SAC_RANSAC'
+#            inlier_distance_threshold: 0.025
+#            max_iterations: 50
+#            sac_termination_probability: 0.99
+#            optimize_coefficients: true
+#            min_model_radius: -1.0
+#            max_model_radius: -1.0
+#            random_samples_max_k: 0
+#            random_samples_max_radius: 0.07
+#            minimum_inliers_percentage: 0.5
 #
 #
 #keypoint_detectors:

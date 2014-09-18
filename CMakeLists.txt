@@ -125,6 +125,7 @@ add_library(drl_cloud_filters
 
 add_library(drl_normal_estimators
     src/normal_estimators/normal_estimator.cpp
+    src/normal_estimators/normal_estimator_sac.cpp
     src/normal_estimators/normal_estimation_omp.cpp
     src/normal_estimators/moving_least_squares.cpp
 )

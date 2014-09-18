@@ -40,8 +40,10 @@ void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::P
 	normals_visualizer.initCameraParameters ();
 	normals_visualizer.setCameraPosition(-6, 0, 0, 0, 0, 1);
 	normals_visualizer.addCoordinateSystem (0.5, 0);
-	normals_visualizer.addPointCloudNormals<PointT, PointT>(pointcloud_with_normals, pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
-	normals_visualizer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, VISUALIZER_NORMALS_ID);
+	normals_visualizer.addPointCloudNormals<PointT>(pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
+	pcl::visualization::PointCloudColorHandlerCustom<PointT> color_handler(pointcloud_with_normals, 0, 255, 0);
+	normals_visualizer.addPointCloud(pointcloud_with_normals, color_handler, "Cloud points");
+	normals_visualizer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "Cloud points");
 
 //	normals_visualizer_->spinOnce(5, true);
 //	normals_visualizer_->spin();
@@ -50,7 +52,7 @@ void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::P
 		normals_visualizer.spinOnce(100);
 		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
 	}
-	normals_visualizer.close();
+//	normals_visualizer.close();
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
