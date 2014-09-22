@@ -17,6 +17,9 @@
 #            random_samples_max_radius: 0.15
 #            minimum_inliers_percentage: 0.5
 #    ambient_pointcloud:
+#        compute_normals_when_tracking_pose: false
+#        compute_normals_when_recovering_pose: false
+#        compute_normals_when_estimating_pose: true
 #        display_normals: false
 #        normal_estimator_sac:
 #            model_type: 'SACMODEL_LINE'
@@ -53,7 +56,7 @@
 #            min_scale: 0.01
 #            number_octaves: 3
 #            number_scales_per_octave: 4
-#            min_contrast: 0.007
+#            min_contrast: 0.005
 #            sift3d_keypoints_cloud_publish_topic: 'reference_keypoints'
 ##        intrinsic_shape_signature_3d:
 ##            salient_radius: 0.14
@@ -66,11 +69,14 @@
 ##            angle_threshold: 1.57
 ##            iss3d_keypoints_cloud_publish_topic: 'reference_keypoints'
 #    ambient_pointcloud:
+#        compute_keypoints_when_tracking_pose: false
+#        compute_keypoints_when_recovering_pose: false
+#        compute_keypoints_when_estimating_pose: true
 #        sift_3d:
 #            min_scale: 0.01
 #            number_octaves: 3
 #            number_scales_per_octave: 4
-#            min_contrast: 0.007
+#            min_contrast: 0.005
 #            sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
 ##        intrinsic_shape_signature_3d:
 ##            salient_radius: 0.14

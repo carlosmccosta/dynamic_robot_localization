@@ -28,6 +28,12 @@ Localization<PointT>::Localization() :
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
+	compute_normals_when_tracking_pose_(false),
+	compute_normals_when_recovering_pose_(false),
+	compute_normals_when_estimating_pose_(true),
+	compute_keypoints_when_tracking_pose_(false),
+	compute_keypoints_when_recovering_pose_(false),
+	compute_keypoints_when_estimating_pose_(true),
 	last_scan_time_(0),
 	last_map_received_time_(0),
 	reference_pointcloud_received_(false),
@@ -193,6 +199,9 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 
 template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorsConfigurations() {
+	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_tracking_pose", compute_normals_when_tracking_pose_, false);
+	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_recovering_pose", compute_normals_when_recovering_pose_, false);
+	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_estimating_pose", compute_normals_when_estimating_pose_, true);
 	loadNormalEstimatorFromParameterServer(reference_cloud_normal_estimator_, "normal_estimators/reference_pointcloud/");
 	loadNormalEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "normal_estimators/ambient_pointcloud/");
 }
@@ -256,6 +265,10 @@ template<typename PointT>
 void Localization<PointT>::setupKeypointDetectors() {
 	reference_cloud_keypoint_detectors_.clear();
 	ambient_cloud_keypoint_detectors_.clear();
+
+	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_tracking_pose", compute_keypoints_when_tracking_pose_, false);
+	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_recovering_pose", compute_keypoints_when_recovering_pose_, false);
+	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_estimating_pose", compute_keypoints_when_estimating_pose_, true);
 
 	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, "keypoint_detectors/reference_pointcloud/");
 	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, "keypoint_detectors/ambient_pointcloud/");
@@ -794,6 +807,9 @@ template<typename PointT>
 bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
 	if (!normal_estimator) return false;
 
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+
 	tf2::Transform sensor_pose_tf_guess;
 	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
 		sensor_pose_tf_guess.setIdentity();
@@ -805,12 +821,17 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 
 	normal_estimator->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, pointcloud);
 
+	localization_times_msg_.surface_normal_estimation_time += performance_timer.getElapsedTimeInMilliSec();
+
 	return pointcloud->size() > minimum_number_of_points_in_ambient_pointcloud_;
 }
 
 
 template<typename PointT>
 bool Localization<PointT>::applyKeypointDetection(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, typename pcl::PointCloud<PointT>::Ptr& keypoints) {
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+
 	keypoints->clear();
 	for (size_t i = 0; i < keypoint_detectors.size(); ++i) {
 		if (i == 0) {
@@ -821,6 +842,9 @@ bool Localization<PointT>::applyKeypointDetection(std::vector< typename Keypoint
 			*keypoints += *keypoints_temp;
 		}
 	}
+
+	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = keypoints->size();
+	localization_times_msg_.keypoint_selection_time += performance_timer.getElapsedTimeInMilliSec();
 
 	return keypoints->size() > 3;
 }
@@ -916,23 +940,24 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 
 	// ==============================================================  normal estimation
-	performance_timer.restart();
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
 	ambient_search_method->setInputCloud(ambient_pointcloud);
-	if (ambient_cloud_normal_estimator_) {
+	bool computed_normals = false;
+	localization_times_msg_.surface_normal_estimation_time = 0.0;
+	if (compute_normals_when_tracking_pose_ && ambient_cloud_normal_estimator_) {
 		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+		computed_normals = true;
 	}
-	localization_times_msg_.surface_normal_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 
 
 	// ==============================================================  keypoint selection
-	performance_timer.restart();
+	localization_times_msg_.keypoint_selection_time = 0.0;
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
-	if (!ambient_cloud_keypoint_detectors_.empty()) {
+	bool computed_keypoints = false;
+	if (compute_keypoints_when_tracking_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
 		applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
+		computed_keypoints = true;
 	}
-	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = ambient_pointcloud_keypoints->size();
-	localization_times_msg_.keypoint_selection_time = performance_timer.getElapsedTimeInMilliSec();
 
 
 	// ==============================================================  initial pose estimation when tracking is lost
@@ -941,23 +966,54 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	aligment_fitness_ = 0.0;
 	bool lost_tracking = (ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_;
 	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose with
+		if (!computed_normals && compute_normals_when_estimating_pose_ && ambient_cloud_normal_estimator_) {
+			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+			computed_normals = true;
+		}
+
+		if (!computed_keypoints && compute_keypoints_when_estimating_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+			applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
+			computed_keypoints = true;
+		}
+
 		if (!applyCloudRegistration(initial_pose_estimators_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
+		ROS_INFO("Successfully performed initial pose estimation");
 	}
 	localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 
 
 	// ==============================================================  point cloud registration with recovery
 	performance_timer.restart();
+	localization_times_msg_.pointcloud_registration_time = 0.0;
 	bool performed_recovery = false;
 	if (!applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
-		if (!tracking_recovery_matchers_.empty() && applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
-			ROS_INFO("Successfully performed registration recovery");
-			performed_recovery = true;
-		} else {
+		if (tracking_recovery_matchers_.empty()) {
 			return false;
+		} else {
+			localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
+			if (!computed_normals && compute_normals_when_recovering_pose_ && ambient_cloud_normal_estimator_) {
+				if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+				computed_normals = true;
+			}
+
+			if (!computed_keypoints && compute_keypoints_when_recovering_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+				applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
+				computed_keypoints = true;
+			}
+
+			performance_timer.restart();
+			if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+				ROS_INFO("Successfully performed registration recovery");
+				performed_recovery = true;
+				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
+			} else {
+				return false;
+			}
 		}
+	} else {
+		localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 	}
-	localization_times_msg_.pointcloud_registration_time = performance_timer.getElapsedTimeInMilliSec();
+
 
 
 	// ==============================================================  outlier detection
@@ -975,16 +1031,30 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		if (!applyTransformationValidators(transformation_validators_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
-			if (!performed_recovery && !tracking_recovery_matchers_.empty() && applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
-				ROS_INFO("Successfully performed registration recovery");
-				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
+			if (!performed_recovery && !tracking_recovery_matchers_.empty()) {
+				if (!computed_normals && compute_normals_when_recovering_pose_ && ambient_cloud_normal_estimator_) {
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+					computed_normals = true;
+				}
 
-				performance_timer.restart();
-				outlier_percentage_ = applyOutlierDetection(ambient_pointcloud);
-				localization_times_msg_.outlier_detection_time += performance_timer.getElapsedTimeInMilliSec();
+				if (!computed_keypoints && compute_keypoints_when_recovering_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+					applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
+					computed_keypoints = true;
+				}
 
-				performance_timer.restart();
-				if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
+				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+					ROS_INFO("Successfully performed registration recovery");
+					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
+
+					performance_timer.restart();
+					outlier_percentage_ = applyOutlierDetection(ambient_pointcloud);
+					localization_times_msg_.outlier_detection_time += performance_timer.getElapsedTimeInMilliSec();
+
+					performance_timer.restart();
+					if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
+				} else {
+					return false;
+				}
 			} else {
 				return false;
 			}
