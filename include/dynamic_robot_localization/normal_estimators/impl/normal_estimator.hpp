@@ -54,6 +54,20 @@ void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 
 
 template<typename PointT>
+void NormalEstimator<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		typename pcl::PointCloud<PointT>::Ptr& surface, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, tf2::Transform& viewpoint_guess,
+		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
+	if (curvature_estimator_) {
+		curvature_estimator_->estimatePointsCurvature(pointcloud_with_normals_out, surface_search_method);
+	}
+
+	if (display_normals_) {
+		displayNormals(pointcloud_with_normals_out);
+	}
+}
+
+
+template<typename PointT>
 void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals) {
 	pcl::visualization::PCLVisualizer normals_visualizer("Normals");
 	normals_visualizer.setBackgroundColor (0, 0, 0);
@@ -61,7 +75,7 @@ void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::P
 	normals_visualizer.setCameraPosition(-6, 0, 0, 0, 0, 1);
 	normals_visualizer.addCoordinateSystem (0.5, 0);
 	normals_visualizer.addPointCloudNormals<PointT>(pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
-	pcl::visualization::PointCloudColorHandlerCustom<PointT> color_handler(pointcloud_with_normals, 0, 255, 0);
+	pcl::visualization::PointCloudColorHandlerGenericField<PointT> color_handler(pointcloud_with_normals, "curvature");
 	normals_visualizer.addPointCloud(pointcloud_with_normals, color_handler, "Cloud points");
 	normals_visualizer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "Cloud points");
 

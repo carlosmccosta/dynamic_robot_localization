@@ -62,7 +62,8 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	// localization pipeline configurations
 	setupReferencePointCloud();
 	setupFiltersConfigurations();
-	setupNormalEstimatorConfigurations();
+	setupNormalEstimatorsConfigurations();
+	setupCurvatureEstimatorsConfigurations();
 	setupKeypointDetectors();
 	setupCloudMatchersConfigurations();
 
@@ -191,9 +192,16 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 
 
 template<typename PointT>
-void Localization<PointT>::setupNormalEstimatorConfigurations() {
+void Localization<PointT>::setupNormalEstimatorsConfigurations() {
 	loadNormalEstimatorFromParameterServer(reference_cloud_normal_estimator_, "normal_estimators/reference_pointcloud/");
 	loadNormalEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "normal_estimators/ambient_pointcloud/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupCurvatureEstimatorsConfigurations() {
+	loadCurvatureEstimatorFromParameterServer(reference_cloud_normal_estimator_, "curvature_estimators/reference_pointcloud/");
+	loadCurvatureEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "curvature_estimators/ambient_pointcloud/");
 }
 
 
@@ -215,6 +223,29 @@ void Localization<PointT>::loadNormalEstimatorFromParameterServer(typename Norma
 			if (normal_estimator) {
 				normal_estimator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + estimator_name + "/");
 				return;
+			}
+		}
+	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::loadCurvatureEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace) {
+	if (normal_estimator) {
+		XmlRpc::XmlRpcValue curvature_estimators;
+		typename CurvatureEstimator<PointT>::Ptr curvature_estimator;
+		if (private_node_handle_->getParam(configuration_namespace, curvature_estimators) && curvature_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+			for (XmlRpc::XmlRpcValue::iterator it = curvature_estimators.begin(); it != curvature_estimators.end(); ++it) {
+				std::string estimator_name = it->first;
+				if (estimator_name.find("principal_curvatures_estimation") != std::string::npos) {
+					curvature_estimator = typename CurvatureEstimator<PointT>::Ptr(new PrincipalCurvaturesEstimation<PointT>());
+				}
+
+				if (curvature_estimator) {
+					curvature_estimator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + estimator_name + "/");
+					normal_estimator->setCurvatureEstimator(curvature_estimator);
+					return;
+				}
 			}
 		}
 	}
@@ -452,7 +483,9 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_)) {
 			if (!reference_pointcloud_->empty()) {
 				reference_pointcloud_2d_ = true;
-				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
+				bool flip_normals_using_occupancy_grid_analysis;
+				private_node_handle_->param("normal_estimators/reference_pointcloud/flip_normals_using_occupancy_grid_analysis", flip_normals_using_occupancy_grid_analysis, true);
+				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points");
 				}
@@ -888,7 +921,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	if (ambient_cloud_normal_estimator_) {
 		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
-		ambient_search_method->setInputCloud(ambient_pointcloud);
 	}
 	localization_times_msg_.surface_normal_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 

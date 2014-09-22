@@ -30,6 +30,7 @@
 
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
+#include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -65,7 +66,7 @@ class NormalEstimator : public ConfigurableObject {
 				typename pcl::PointCloud<PointT>::Ptr& surface,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 				tf2::Transform& viewpoint_guess,
-				typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) = 0;
+				typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out);
 
 		void displayNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -77,11 +78,13 @@ class NormalEstimator : public ConfigurableObject {
 		double getOccupancyGridAnalysisRadius() const { return occupancy_grid_analysis_radius_; }
 		double getOccupancyGridAnalysisRadiusResolutionPercentage() const { return occupancy_grid_analysis_radius_resolution_percentage_; }
 		nav_msgs::OccupancyGridConstPtr& getOccupancyGridMsg() { return occupancy_grid_msg_; }
+		typename CurvatureEstimator<PointT>::Ptr& getCurvatureEstimator() { return curvature_estimator_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		void setOccupancyGridMsg(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg) { occupancy_grid_msg_ = occupancy_grid_msg; }
 		void resetOccupancyGridMsg() { occupancy_grid_msg_.reset(); }
+		void setCurvatureEstimator(const typename CurvatureEstimator<PointT>::Ptr& curvature_estimator) { curvature_estimator_ = curvature_estimator; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -97,11 +100,11 @@ class NormalEstimator : public ConfigurableObject {
 		double occupancy_grid_analysis_radius_;
 		double occupancy_grid_analysis_radius_resolution_percentage_;
 		nav_msgs::OccupancyGridConstPtr occupancy_grid_msg_;
+		typename CurvatureEstimator<PointT>::Ptr curvature_estimator_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
 } /* namespace dynamic_robot_localization */
-
 
 
 #ifdef DRL_NO_PRECOMPILE

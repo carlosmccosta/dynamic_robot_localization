@@ -63,6 +63,7 @@ catkin_package(
         drl_common
         drl_pose_to_tf_publisher
         drl_cloud_filters
+        drl_curvature_estimators
         drl_normal_estimators
         drl_keypoint_detectors
         drl_cloud_matchers
@@ -122,6 +123,11 @@ add_library(drl_cloud_filters
     src/cloud_filters/cloud_filter.cpp
     src/cloud_filters/voxel_grid.cpp
     src/cloud_filters/pass_through.cpp
+)
+
+add_library(drl_curvature_estimators
+    src/curvature_estimators/curvature_estimator.cpp
+    src/curvature_estimators/principal_curvatures_estimation.cpp
 )
 
 add_library(drl_normal_estimators
@@ -231,8 +237,15 @@ target_link_libraries(drl_cloud_filters
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_curvature_estimators
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_normal_estimators
     drl_common
+    drl_curvature_estimators
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )

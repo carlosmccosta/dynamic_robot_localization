@@ -82,15 +82,29 @@ void MovingLeastSquares<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 		typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
 		tf2::Transform& viewpoint_guess,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
+	size_t pointcloud_original_size = pointcloud->size();
+	if (pointcloud_original_size < 3) { return; }
+
+	std::vector<int> indexes;
+	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
+	indexes.clear();
+
 	normal_estimator_.setSearchMethod(surface_search_method);
 	normal_estimator_.setInputCloud(pointcloud);
 	normal_estimator_.process(*pointcloud_with_normals_out);
 
-	if (NormalEstimator<PointT>::getDisplayNormals()) {
-		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
+	pcl::removeNaNFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	indexes.clear();
+	pcl::removeNaNNormalsFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	indexes.clear();
+
+	ROS_DEBUG_STREAM("MovingLeastSquares computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
+
+	if (pointcloud_with_normals_out->size() != pointcloud_original_size) {
+		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
 
-	ROS_DEBUG_STREAM("MovingLeastSquares computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud->size() << " points");
+	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </MovingLeastSquares-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

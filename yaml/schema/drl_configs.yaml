@@ -137,6 +137,7 @@ filters:
 # by the same parameter in the normal_estimators/ambient_pointcloud/normal_estimation_omp child namespace.
 normal_estimators:
     reference_pointcloud:
+        flip_normals_using_occupancy_grid_analysis: true            # Only used in the reference pointcloud
     ambient_pointcloud:
         display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
         # If the normals are being computed from a nav_msgs::OccupancyGrid, their orientation can be corrected by flipping them to the side that has more empty space (instead of flipping to the sensor view) (to disable, set k to 0 and both radius to < 0)
@@ -144,7 +145,7 @@ normal_estimators:
         occupancy_grid_analysis_k: 0                                # Can be overridden in child namespaces | The number of neighbors to use when fliping normals (<= 0 -> ignore k, > 0 -> will be used instead of the radius specified in the parameters below)
         occupancy_grid_analysis_radius: -1.0                        # Can be overridden in child namespaces | The distance radius to use when flipping normals (< 0 -> ignore radius, will not be used if occupancy_grid_analysis_radius_resolution_percentage > 0)
         occupancy_grid_analysis_radius_resolution_percentage: 4.0   # Can be overridden in child namespaces | The distance radius to use when flipping normals in relation to the nav_msgs::OccupancyGrid resolution (radius = map_resolution * occupancy_grid_analysis_radius_resolution_percentage) (< 0 -> ignore this radius) 
-        normal_estimator_sac:                                       # Allows prefix and postfix of letters to ensure parsing order
+        normal_estimator_sac:                                       # Allows prefix and postfix of letters to ensure parsing order | Estimates the normal of points by fitting either a plane or a line in the neighborhood of each point using Sample Consensus methods
             model_type: 'SACMODEL_LINE'                             # The type of geometry model to use. Supported geometry types: SACMODEL_LINE -> for planar pointclouds | SACMODEL_PLANE -> for 3D pointclouds
             method_type: 'SAC_RANSAC'                               # The type of sample consensus method to use. Supported methods: SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC
             inlier_distance_threshold: 0.025                        # Points with a distance to the estimated model less than this threshold will be considered inliers
@@ -156,11 +157,11 @@ normal_estimators:
             random_samples_max_k: 5                                 # The number of k nearest neighbors to use for the normal estimation. If search_k != 0 search_radius is ignored
             random_samples_max_radius: 0.05                         # The sphere radius that will be used to find the nearest neighbors used for the normal estimation
             minimum_inliers_percentage: 0.5                         # Minimum inliers percentage [0-1] to accept a model given by the SAC estimation
-        normal_estimation_omp:                                      # Allows prefix and postfix of letters to ensure parsing order
+        normal_estimation_omp:                                      # Allows prefix and postfix of letters to ensure parsing order | Estimates the normal and curvature of points by performing Principal Component Analysis
             display_normals: true                                   # Overrides parameter in parent namespace
-            search_k: 0                                             # The number of k nearest neighbors to use for the feature estimation. If search_k != 0 search_radius is ignored
+            search_k: 0                                             # The number of k nearest neighbors to use for the normal estimation. If search_k != 0 search_radius is ignored
             search_radius: 0.12                                     # The sphere radius that will be used to find the nearest neighbors used for the normal estimation
-        moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order
+        moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order | Estimates the normal and curvature of points by performing surface fitting and resampling
             compute_normals: true                                   # Set whether the algorithm should also store the normals computed
             polynomial_order: 2                                     # The order of the polynomial to be fit
             polynomial_fit: true                                    # Sets whether the surface and normal are approximated using a polynomial, or only via tangent estimation
@@ -172,6 +173,16 @@ normal_estimators:
             desired_num_points_in_radius: 5                         # The parameter that specifies the desired number of points within the search radius (used only in the case of RANDOM_UNIFORM_DENSITY upsampling)
             dilation_voxel_size: 0.01                               # The voxel size for the voxel grid (used only in the VOXEL_GRID_DILATION upsampling method)
             dilation_iterations: 1                                  # The number of dilation steps of the voxel grid (used only in the VOXEL_GRID_DILATION upsampling method)
+
+
+curvature_estimators:
+    reference_pointcloud:
+    ambient_pointcloud:
+        principal_curvatures_estimation:
+            search_k: 0                                                 # The number of k nearest neighbors to use for the curvature estimation. If search_k != 0 search_radius is ignored
+            search_radius: 0.12                                         # The sphere radius that will be used to find the nearest neighbors used for the curvature estimation
+            curvature_type: 'CURVATURE_TYPE_MEAN'                       # Type of curvature to compute from the Principal Curvature estimation k1 and k2 eigen values | Supported types: CURVATURE_TYPE_MEAN |CURVATURE_TYPE_GAUSSIAN
+            update_normals_with_principal_component_directions: false   # If true, it will update the normals with the computed principal directions
 
 
 #   Several keypoint detectors can be specified for the reference_pointcloud and for the ambient_pointcloud.

@@ -55,6 +55,8 @@
 #include <dynamic_robot_localization/cloud_filters/voxel_grid.h>
 #include <dynamic_robot_localization/cloud_filters/pass_through.h>
 
+#include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
+#include <dynamic_robot_localization/curvature_estimators/principal_curvatures_estimation.h>
 #include <dynamic_robot_localization/normal_estimators/normal_estimator.h>
 #include <dynamic_robot_localization/normal_estimators/normal_estimator_sac.h>
 #include <dynamic_robot_localization/normal_estimators/normal_estimation_omp.h>
@@ -134,8 +136,10 @@ class Localization : public ConfigurableObject {
 
 		virtual void setupFiltersConfigurations();
 		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
-		virtual void setupNormalEstimatorConfigurations();
+		virtual void setupNormalEstimatorsConfigurations();
+		virtual void setupCurvatureEstimatorsConfigurations();
 		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
+		void loadCurvatureEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
 		virtual void setupKeypointDetectors();
 		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
 		virtual void setupCloudMatchersConfigurations();

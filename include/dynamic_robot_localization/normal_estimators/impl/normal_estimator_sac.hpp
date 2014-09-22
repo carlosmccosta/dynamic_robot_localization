@@ -87,6 +87,8 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 
 	std::vector<int> indexes;
 	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
+	indexes.clear();
+
 	pointcloud_with_normals_out = pointcloud;
 	sac_segmentation_.setSamplesMaxDist(random_samples_max_radius_, surface_search_method);
 	sac_segmentation_.setInputCloud(pointcloud_with_normals_out);
@@ -160,7 +162,9 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 	}
 
 	pcl::removeNaNFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	indexes.clear();
 	pcl::removeNaNNormalsFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	indexes.clear();
 
 
 	if (NormalEstimator<PointT>::getOccupancyGridMsg()) {
@@ -180,9 +184,11 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 
 	ROS_DEBUG_STREAM("NormalEstimatorSAC computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
 
-	if (NormalEstimator<PointT>::getDisplayNormals()) {
-		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
+	if (pointcloud_with_normals_out->size() != pointcloud_original_size) {
+		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
+
+	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimatorSAC-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
