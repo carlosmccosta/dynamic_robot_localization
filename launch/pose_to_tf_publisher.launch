@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+	<arg name="initial_pose_in_map_to_base" default="true" />
 	<arg name="initial_x" default="0.0" />
 	<arg name="initial_y" default="0.0" />
 	<arg name="initial_z" default="0.0" />
@@ -11,7 +12,7 @@
 	<arg name="odometry_topic" default="" />
 	<arg name="map_frame_id" default="map" />
 	<arg name="odom_frame_id" default="odom" />
-	<arg name="publish_rate" default="200.0" />
+	<arg name="publish_rate" default="100.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="-1.0" />
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="invert_tf_transform" default="false" />
@@ -33,6 +34,7 @@
 		<param name="invert_tf_transform" type="bool" value="$(arg invert_tf_transform)" />
 		<param name="invert_tf_hierarchy" type="bool" value="$(arg invert_tf_hierarchy)" />
 		<param name="transform_pose_to_map_frame_id" type="bool" value="$(arg transform_pose_to_map_frame_id)" />
+		<param name="initial_pose_in_map_to_base" type="bool" value="$(arg initial_pose_in_map_to_base)" />
 		<param name="initial_x" type="double" value="$(arg initial_x)" />
 		<param name="initial_y" type="double" value="$(arg initial_y)" />
 		<param name="initial_z" type="double" value="$(arg initial_z)" />

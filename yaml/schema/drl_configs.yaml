@@ -89,6 +89,7 @@ message_management:
     max_seconds_ambient_pointcloud: 1.0                             # Ambient point clouds with age larger than this value will be discarded
     min_seconds_between_scan_registration: 0.0                      # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
     min_seconds_between_reference_pointcloud_update: 5.0            # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
+    minimum_number_of_points_in_ambient_pointcloud: 10
     maximum_number_points_ambient_pointcloud_circular_buffer: 0     # If != 0, the ambient pointcloud uses a circular buffer with the specified size of points
 
 
@@ -137,7 +138,12 @@ filters:
 normal_estimators:
     reference_pointcloud:
     ambient_pointcloud:
-        display_normals: false                                      # Can be overridden in child namespaces | Displays a bocking window with the estimated normals
+        display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
+        # If the normals are being computed from a nav_msgs::OccupancyGrid, their orientation can be corrected by flipping them to the side that has more empty space (instead of flipping to the sensor view) (to disable, set k to 0 and both radius to < 0)
+        display_occupancy_grid_pointcloud: false                    # Can be overridden in child namespaces | Displays a blocking window with the pointcloud created from the nav_msgs::OccupancyGrid
+        occupancy_grid_analysis_k: 0                                # Can be overridden in child namespaces | The number of neighbors to use when fliping normals (<= 0 -> ignore k, > 0 -> will be used instead of the radius specified in the parameters below)
+        occupancy_grid_analysis_radius: -1.0                        # Can be overridden in child namespaces | The distance radius to use when flipping normals (< 0 -> ignore radius, will not be used if occupancy_grid_analysis_radius_resolution_percentage > 0)
+        occupancy_grid_analysis_radius_resolution_percentage: 4.0   # Can be overridden in child namespaces | The distance radius to use when flipping normals in relation to the nav_msgs::OccupancyGrid resolution (radius = map_resolution * occupancy_grid_analysis_radius_resolution_percentage) (< 0 -> ignore this radius) 
         normal_estimator_sac:                                       # Allows prefix and postfix of letters to ensure parsing order
             model_type: 'SACMODEL_LINE'                             # The type of geometry model to use. Supported geometry types: SACMODEL_LINE -> for planar pointclouds | SACMODEL_PLANE -> for 3D pointclouds
             method_type: 'SAC_RANSAC'                               # The type of sample consensus method to use. Supported methods: SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC

@@ -15,21 +15,28 @@
 #include <string>
 
 // ROS includes
+#include <ros/console.h>
 #include <nav_msgs/OccupancyGrid.h>
 
 // PCL includes
 #include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/point_representation.h>
 #include <pcl/common/transforms.h>
+#include <pcl/search/kdtree.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/PolygonMesh.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
 #include <pcl/io/vtk_lib_io.h>
+#include <pcl/visualization/cloud_viewer.h>
 
 // external libs includes
 #include <Eigen/src/Geometry/Transform.h>
+#include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
+#include <dynamic_robot_localization/common/math_utils.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -39,9 +46,16 @@ namespace dynamic_robot_localization {
 // ##############################################################################   pointcloud_conversions   #############################################################################
 namespace pointcloud_conversions {
 
-template <typename PointT>
-bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int threshold_for_map_cell_as_obstacle = 95);
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+typedef std::vector<signed char> OccupancyGridValues;
+typedef boost::shared_ptr< OccupancyGridValues > OccupancyGridValuesPtr;
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+template <typename PointT>
+bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, OccupancyGridValuesPtr occupancy_grid_values = OccupancyGridValuesPtr(), int threshold_for_map_cell_as_obstacle = 95);
+
+template <typename PointT>
+size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int search_k, float search_radius, bool show_occupancy_grid_pointcloud = false);
 
 template <typename PointCloudT>
 bool fromFile(const std::string& filename, PointCloudT& pointcloud);

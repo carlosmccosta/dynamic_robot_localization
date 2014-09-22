@@ -19,7 +19,11 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 NormalEstimator<PointT>::NormalEstimator() :
-	display_normals_(false) {}
+	display_normals_(false),
+	display_occupancy_grid_pointcloud_(false),
+	occupancy_grid_analysis_k_(0),
+	occupancy_grid_analysis_radius_(-1.0),
+	occupancy_grid_analysis_radius_resolution_percentage_(4.0) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -29,6 +33,22 @@ void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 //	if (private_node_handle->searchParam(configuration_namespace + "display_normals", final_param_name)) {
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "display_normals", final_param_name)) {
 		private_node_handle->param(final_param_name, display_normals_, false);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "display_occupancy_grid_pointcloud", final_param_name)) {
+		private_node_handle->param(final_param_name, display_occupancy_grid_pointcloud_, false);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "occupancy_grid_analysis_k", final_param_name)) {
+		private_node_handle->param(final_param_name, occupancy_grid_analysis_k_, 0);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "occupancy_grid_analysis_radius", final_param_name)) {
+		private_node_handle->param(final_param_name, occupancy_grid_analysis_radius_, -1.0);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "occupancy_grid_analysis_radius_resolution_percentage", final_param_name)) {
+		private_node_handle->param(final_param_name, occupancy_grid_analysis_radius_resolution_percentage_, 4.0);
 	}
 }
 

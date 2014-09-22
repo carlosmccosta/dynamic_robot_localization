@@ -16,6 +16,10 @@
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "drl_pose_to_tf_publisher");
 
+	if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
+		ros::console::notifyLoggerLevelsChanged();
+	}
+
 	ros::NodeHandlePtr node_handle(new ros::NodeHandle());
 	ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
 	dynamic_robot_localization::PoseToTFPublisher pose_to_tf_publisher;

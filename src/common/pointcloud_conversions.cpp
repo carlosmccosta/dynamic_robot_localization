@@ -15,8 +15,13 @@
 #ifndef DRL_NO_PRECOMPILE
 #include <pcl/impl/instantiate.hpp>
 #include <pcl/point_types.h>
-#define PCL_INSTANTIATE_DRLfromROSMsg(T) template bool dynamic_robot_localization::pointcloud_conversions::fromROSMsg<T>(const nav_msgs::OccupancyGrid&, pcl::PointCloud<T>&, int);
+
+#define PCL_INSTANTIATE_DRLfromROSMsg(T) template bool dynamic_robot_localization::pointcloud_conversions::fromROSMsg<T>(const nav_msgs::OccupancyGrid&, pcl::PointCloud<T>&, dynamic_robot_localization::pointcloud_conversions::OccupancyGridValuesPtr, int);
 PCL_INSTANTIATE(DRLfromROSMsg, DRL_POINT_TYPES)
+
+#define PCL_INSTANTIATE_DRLflipPointCloudNormalsUsingOccpancyGrid(T) template size_t dynamic_robot_localization::pointcloud_conversions::flipPointCloudNormalsUsingOccpancyGrid<T>(const nav_msgs::OccupancyGrid&, pcl::PointCloud<T>&, int, float, bool);
+PCL_INSTANTIATE(DRLflipPointCloudNormalsUsingOccpancyGrid, DRL_POINT_TYPES)
+
 #define PCL_INSTANTIATE_DRLfromFile(T) template bool dynamic_robot_localization::pointcloud_conversions::fromFile< pcl::PointCloud<T> >(const std::string&, pcl::PointCloud<T>&);
 PCL_INSTANTIATE(DRLfromFile, DRL_POINT_TYPES)
 PCL_INSTANTIATE(DRLfromFile, DRL_DESCRIPTOR_TYPES)

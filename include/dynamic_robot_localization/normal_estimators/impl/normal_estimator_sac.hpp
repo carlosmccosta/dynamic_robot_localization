@@ -84,6 +84,9 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
 	size_t pointcloud_original_size = pointcloud->size();
 	if (pointcloud_original_size < 3) { return; }
+
+	std::vector<int> indexes;
+	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
 	pointcloud_with_normals_out = pointcloud;
 	sac_segmentation_.setSamplesMaxDist(random_samples_max_radius_, surface_search_method);
 	sac_segmentation_.setInputCloud(pointcloud_with_normals_out);
@@ -119,7 +122,7 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 			pcl::ModelCoefficients coefficients;
 			pcl::PointIndices inliers;
 			sac_segmentation_.segment(inliers, coefficients);
-			if (!inliers.indices.empty() && !coefficients.values.empty() && nn_indices->size() / inliers.indices.size() > minimum_inliers_percentage_) {
+			if (!inliers.indices.empty() && !coefficients.values.empty() && inliers.indices.size() > 1 && nn_indices->size() / inliers.indices.size() > minimum_inliers_percentage_) {
 				if (sac_segmentation_.getModelType() == pcl::SACMODEL_LINE) {
 					if (coefficients.values.size() == 6) {
 						tf2::Vector3 line_vector(coefficients.values[3], coefficients.values[4], coefficients.values[5]);
@@ -152,14 +155,34 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 			current_point.normal_x = normal[0];
 			current_point.normal_y = normal[1];
 			current_point.normal_z = normal[2];
+			current_point.curvature = 0.0;
 		}
 	}
+
+	pcl::removeNaNFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	pcl::removeNaNNormalsFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+
+
+	if (NormalEstimator<PointT>::getOccupancyGridMsg()) {
+		int search_k = NormalEstimator<PointT>::getOccupancyGridAnalysisK();
+		double search_radius = NormalEstimator<PointT>::getOccupancyGridAnalysisRadiusResolutionPercentage();
+		if (search_radius > 0) {
+			search_radius *= NormalEstimator<PointT>::getOccupancyGridMsg()->info.resolution;
+		} else {
+			search_radius = NormalEstimator<PointT>::getOccupancyGridAnalysisRadius();
+		}
+
+		if (search_k > 0 || search_radius > 0) {
+			size_t number_normals_flipped = pointcloud_conversions::flipPointCloudNormalsUsingOccpancyGrid(*(NormalEstimator<PointT>::getOccupancyGridMsg()), *pointcloud_with_normals_out, search_k, search_radius, NormalEstimator<PointT>::getDisplayOccupancyGridPointcloud());
+			ROS_DEBUG_STREAM("NormalEstimatorSAC: Flipped " << number_normals_flipped << " normals using OccupancyGrid analysis [ search_k: " << search_k << " | search_radius: " << search_radius << " ]");
+		}
+	}
+
+	ROS_DEBUG_STREAM("NormalEstimatorSAC computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
 
 	if (NormalEstimator<PointT>::getDisplayNormals()) {
 		NormalEstimator<PointT>::displayNormals(pointcloud_with_normals_out);
 	}
-
-	ROS_DEBUG_STREAM("NormalEstimatorSAC computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimatorSAC-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

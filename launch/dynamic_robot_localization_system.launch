@@ -15,6 +15,7 @@
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" />
 	<arg name="pose_stamped_topic" default="localization_pose" />
+	<arg name="robot_initial_pose_in_map_to_base" default="true" />
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
 	<arg name="robot_initial_z" default="0.0" />
@@ -27,7 +28,7 @@
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 	<arg name="publish_pose_tf_rate" default="200.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="1.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="-1.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
@@ -68,6 +69,7 @@
 		<arg name="odometry_topic" default="" />
 		<arg name="map_frame_id" default="$(arg map_frame_id)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
+		<arg name="initial_pose_in_map_to_base" default="$(arg robot_initial_pose_in_map_to_base)" />
 		<arg name="initial_x" default="$(arg robot_initial_x)" />
 		<arg name="initial_y" default="$(arg robot_initial_y)" />
 		<arg name="initial_z" default="$(arg robot_initial_z)" />

@@ -23,6 +23,7 @@
 #include <nav_msgs/Odometry.h>
 
 // external libs includes
+#include <boost/math/special_functions/fpclassify.hpp>
 
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
@@ -64,11 +65,12 @@ class PoseToTFPublisher : ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <tf update functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bool addOdometryDisplacementToTransform(tf2::Transform& transform, const ros::Time& time_of_transform, const ros::Time& target_time);
 		bool publishTFMapToOdom(bool check_pose_timeout = true);
+		bool updateTFMessage(tf2::Transform& transform);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </tf update functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <pose to tf functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		void publishTFMapToOdomFromInitialPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
-		void publishTFMapToOdomFromGlobalPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
+		void publishTFMapToOdomFromMapToOdomPose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
+		void publishTFMapToOdomFromMapToBasePose(double x, double y, double z = 0, double roll = 0, double pitch = 0, double yaw = 0);
 		bool publishTFMapToOdom(const tf2::Transform& transform_base_link_to_map, ros::Time tf_time = ros::Time::now(), ros::Duration tf_timeout = ros::Duration(0.1), bool check_pose_timeout = true);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </pose to tf functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

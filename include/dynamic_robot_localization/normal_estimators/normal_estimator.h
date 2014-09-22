@@ -17,6 +17,7 @@
 // ROS includes
 #include <ros/ros.h>
 #include <tf2/LinearMath/Transform.h>
+#include <nav_msgs/OccupancyGrid.h>
 
 // PCL includes
 #include <pcl/point_cloud.h>
@@ -71,9 +72,16 @@ class NormalEstimator : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bool getDisplayNormals() const { return display_normals_; }
+		bool getDisplayOccupancyGridPointcloud() const { return display_occupancy_grid_pointcloud_; }
+		int getOccupancyGridAnalysisK() const { return occupancy_grid_analysis_k_; }
+		double getOccupancyGridAnalysisRadius() const { return occupancy_grid_analysis_radius_; }
+		double getOccupancyGridAnalysisRadiusResolutionPercentage() const { return occupancy_grid_analysis_radius_resolution_percentage_; }
+		nav_msgs::OccupancyGridConstPtr& getOccupancyGridMsg() { return occupancy_grid_msg_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		void setOccupancyGridMsg(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg) { occupancy_grid_msg_ = occupancy_grid_msg; }
+		void resetOccupancyGridMsg() { occupancy_grid_msg_.reset(); }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -84,6 +92,11 @@ class NormalEstimator : public ConfigurableObject {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		bool display_normals_;
+		bool display_occupancy_grid_pointcloud_;
+		int occupancy_grid_analysis_k_;
+		double occupancy_grid_analysis_radius_;
+		double occupancy_grid_analysis_radius_resolution_percentage_;
+		nav_msgs::OccupancyGridConstPtr occupancy_grid_msg_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

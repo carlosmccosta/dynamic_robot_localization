@@ -224,6 +224,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
+		int minimum_number_of_points_in_ambient_pointcloud_;
 		bool save_reference_pointclouds_in_binary_format_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
@@ -274,7 +275,7 @@ class Localization : public ConfigurableObject {
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		double outlier_percentage_;
 		double aligment_fitness_;
-		std::vector<sensor_msgs::PointCloud2Ptr> detected_outliers_;
+		std::vector< sensor_msgs::PointCloud2Ptr > detected_outliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
 	// ========================================================================   </private-section>  ==========================================================================
