@@ -27,7 +27,7 @@
 	<arg name="map_frame_id" default="map" />
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
-	<arg name="publish_pose_tf_rate" default="200.0" />
+	<arg name="publish_pose_tf_rate" default="100.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="-1.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
@@ -49,7 +49,7 @@
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
 		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
 		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
-		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="$(arg pose_with_covariance_stamped_topic)" />
+		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="" />
 		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />

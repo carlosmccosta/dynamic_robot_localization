@@ -17,6 +17,7 @@
 // ROS includes
 #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -57,6 +58,7 @@ class PoseToTFPublisher : ConfigurableObject {
 		void publishInitialPoseFromParameterServer();
 		void startPublishingTFFromPoseTopics();
 		void stopPublishingTFFromPoseTopics();
+		void publishTFMapToOdomFromPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
 		void publishTFMapToOdomFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
 		void publishTFMapToOdomFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
 		void publishTFMapToOdomFromOdometry(const nav_msgs::OdometryConstPtr& odom);
