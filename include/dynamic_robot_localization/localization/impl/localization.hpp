@@ -723,11 +723,13 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			}
 
 			if (!localization_detailed_publisher_.getTopic().empty()) {
-				tf2::Matrix3x3 pose_initial_guess_matrix(tf2::Quaternion(pose_tf_initial_guess.getRotation().getX(), pose_tf_initial_guess.getRotation().getY(), pose_tf_initial_guess.getRotation().getZ(), pose_tf_initial_guess.getRotation().getW()));
+				tf2::Quaternion pose_tf_initial_guess_q(pose_tf_initial_guess.getRotation().getX(), pose_tf_initial_guess.getRotation().getY(), pose_tf_initial_guess.getRotation().getZ(), pose_tf_initial_guess.getRotation().getW());
+				tf2::Matrix3x3 pose_initial_guess_matrix(pose_tf_initial_guess_q);
 				tf2Scalar roll_initial_guess, pitch_initial_guess, yaw_initial_guess;
 				pose_initial_guess_matrix.getRPY(roll_initial_guess, pitch_initial_guess, yaw_initial_guess);
 
-				tf2::Matrix3x3 pose_corrected_matrix(tf2::Quaternion(pose_tf_corrected.getRotation().getX(), pose_tf_corrected.getRotation().getY(), pose_tf_corrected.getRotation().getZ(), pose_tf_corrected.getRotation().getW()));
+				tf2::Quaternion pose_tf_corrected_q(pose_tf_corrected.getRotation().getX(), pose_tf_corrected.getRotation().getY(), pose_tf_corrected.getRotation().getZ(), pose_tf_corrected.getRotation().getW());
+				tf2::Matrix3x3 pose_corrected_matrix(pose_tf_corrected_q);
 				tf2Scalar roll_corrected, pitch_corrected, yaw_corrected;
 				pose_corrected_matrix.getRPY(roll_corrected, pitch_corrected, yaw_corrected);
 
@@ -738,11 +740,14 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.translation_corrections.x = (pose_tf_corrected.getOrigin().getX() - pose_tf_initial_guess.getOrigin().getX()) * 1000.0; // mm
 				localization_detailed_msg.translation_corrections.y = (pose_tf_corrected.getOrigin().getY() - pose_tf_initial_guess.getOrigin().getY()) * 1000.0; // mm
 				localization_detailed_msg.translation_corrections.z = (pose_tf_corrected.getOrigin().getZ() - pose_tf_initial_guess.getOrigin().getZ()) * 1000.0; // mm
-				localization_detailed_msg.translation_correction = std::abs(localization_detailed_msg.translation_corrections.x) + std::abs(localization_detailed_msg.translation_corrections.y) + std::abs(localization_detailed_msg.translation_corrections.z);
+				localization_detailed_msg.translation_correction = std::sqrt(
+						localization_detailed_msg.translation_corrections.x * localization_detailed_msg.translation_corrections.x +
+						localization_detailed_msg.translation_corrections.y * localization_detailed_msg.translation_corrections.y +
+						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z);
 				localization_detailed_msg.rotation_corrections.x = angles::to_degrees(roll_corrected - roll_initial_guess);
 				localization_detailed_msg.rotation_corrections.y = angles::to_degrees(pitch_corrected - pitch_initial_guess);
 				localization_detailed_msg.rotation_corrections.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
-				localization_detailed_msg.rotation_correction = std::abs(localization_detailed_msg.rotation_corrections.x) + std::abs(localization_detailed_msg.rotation_corrections.y) + std::abs(localization_detailed_msg.rotation_corrections.z);
+				localization_detailed_msg.rotation_correction = pose_tf_initial_guess_q.angleShortestPath(pose_tf_corrected_q);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
 				localization_detailed_msg.aligment_fitness = aligment_fitness_;
 				localization_detailed_publisher_.publish(localization_detailed_msg);

@@ -48,8 +48,8 @@ curvature_estimators:
             search_radius: 0.15
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
-#
-#
+
+
 #keypoint_detectors:
 #    reference_pointcloud:
 ##        reference_pointcloud_keypoints_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/sift_keypoints.pcd'
