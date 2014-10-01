@@ -1,57 +1,59 @@
-#normal_estimators:
-#    reference_pointcloud:
-#        display_normals: false
-#        display_occupancy_grid_pointcloud: false
-#        flip_normals_using_occupancy_grid_analysis: true
-#        occupancy_grid_analysis_radius_resolution_percentage: 4.0
-#        normal_estimator_sac:
-#            model_type: 'SACMODEL_LINE'
-#            method_type: 'SAC_RANSAC'
-#            inlier_distance_threshold: 0.025
-#            max_iterations: 50
-#            sac_termination_probability: 0.99
-#            optimize_coefficients: true
-#            min_model_radius: -1.0
-#            max_model_radius: -1.0
-#            random_samples_max_k: 0
-#            random_samples_max_radius: 0.15
-#            minimum_inliers_percentage: 0.5
-#    ambient_pointcloud:
-#        compute_normals_when_tracking_pose: false
-#        compute_normals_when_recovering_pose: false
-#        compute_normals_when_estimating_pose: true
-#        display_normals: false
-#        normal_estimator_sac:
-#            model_type: 'SACMODEL_LINE'
-#            method_type: 'SAC_RANSAC'
-#            inlier_distance_threshold: 0.025
-#            max_iterations: 50
-#            sac_termination_probability: 0.99
-#            optimize_coefficients: true
-#            min_model_radius: -1.0
-#            max_model_radius: -1.0
-#            random_samples_max_k: 0
-#            random_samples_max_radius: 0.15
-#            minimum_inliers_percentage: 0.5
-#
-#
-#curvature_estimators:
-#    reference_pointcloud:
-#        principal_curvatures_estimation:
-#            search_k: 0
-#            search_radius: 0.15
-#            curvature_type: 'CURVATURE_TYPE_MEAN'
-#            update_normals_with_principal_component_directions: false
-#    ambient_pointcloud:
-#        principal_curvatures_estimation:
-#            search_k: 0
-#            search_radius: 0.15
-#            curvature_type: 'CURVATURE_TYPE_MEAN'
-#            update_normals_with_principal_component_directions: false
+normal_estimators:
+    reference_pointcloud:
+        display_normals: false
+        display_occupancy_grid_pointcloud: false
+        flip_normals_using_occupancy_grid_analysis: true
+        occupancy_grid_analysis_radius_resolution_percentage: 4.0
+        normal_estimator_sac:
+            model_type: 'SACMODEL_LINE'
+            method_type: 'SAC_RANSAC'
+            inlier_distance_threshold: 0.025
+            max_iterations: 50
+            sac_termination_probability: 0.99
+            optimize_coefficients: true
+            min_model_radius: -1.0
+            max_model_radius: -1.0
+            random_samples_max_k: 0
+            random_samples_max_radius: 0.15
+            minimum_inliers_percentage: 0.5
+    ambient_pointcloud:
+        compute_normals_when_tracking_pose: false
+        compute_normals_when_recovering_pose: false
+        compute_normals_when_estimating_pose: true
+        display_normals: false
+        normal_estimator_sac:
+            model_type: 'SACMODEL_LINE'
+            method_type: 'SAC_RANSAC'
+            inlier_distance_threshold: 0.025
+            max_iterations: 50
+            sac_termination_probability: 0.99
+            optimize_coefficients: true
+            min_model_radius: -1.0
+            max_model_radius: -1.0
+            random_samples_max_k: 0
+            random_samples_max_radius: 0.15
+            minimum_inliers_percentage: 0.5
+
+
+curvature_estimators:
+    reference_pointcloud:
+        principal_curvatures_estimation:
+            search_k: 0
+            search_radius: 0.15
+            curvature_type: 'CURVATURE_TYPE_MEAN'
+            update_normals_with_principal_component_directions: false
+    ambient_pointcloud:
+        principal_curvatures_estimation:
+            search_k: 0
+            search_radius: 0.15
+            curvature_type: 'CURVATURE_TYPE_MEAN'
+            update_normals_with_principal_component_directions: false
 #
 #
 #keypoint_detectors:
 #    reference_pointcloud:
+##        reference_pointcloud_keypoints_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/sift_keypoints.pcd'
+##        reference_pointcloud_keypoints_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/sift_keypoints.pcd'
 #        sift_3d:
 #            min_scale: 0.01
 #            number_octaves: 3
@@ -69,7 +71,7 @@
 ##            angle_threshold: 1.57
 ##            iss3d_keypoints_cloud_publish_topic: 'reference_keypoints'
 #    ambient_pointcloud:
-#        compute_keypoints_when_tracking_pose: false
+#        compute_keypoints_when_tracking_pose: true
 #        compute_keypoints_when_recovering_pose: false
 #        compute_keypoints_when_estimating_pose: true
 #        sift_3d:
@@ -91,9 +93,47 @@
 
 
 initial_pose_estimators_matchers:
+#    feature_matchers:
+#        display_feature_matching: false
+##        reference_pointcloud_descriptors_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/fpfh_descriptors.pcd'
+##        reference_pointcloud_descriptors_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/fpfh_descriptors.pcd'
+#        save_descriptors_in_binary_format : true
+#        keypoint_descriptors:
+#            feature_descriptor_k_search: 0
+#            feature_descriptor_radius_search: 0.1
+#            fpfh:
+#                number_subdivisions_f1: 11
+#                number_subdivisions_f2: 11
+#                number_subdivisions_f3: 11
+##            pfh:
+##                use_internal_cache: true
+##                maximum_cache_size: 33554432
+##            shot:
+##                lrf_radius: 0.05
+##            shape_context_3d:
+##                minimal_radius: 0.2
+##                point_density_radius: 0.4
+##            unique_shape_context:
+##                minimal_radius: 0.1
+##                point_density_radius: 0.2
+##                local_radius: 2.5
+##            esf:
+##                feature_descriptor_radius_search: 0.25
+#        matchers:
+#            sample_consensus_initial_alignment_prerejective:
+#                similarity_threshold: 0.8
+#                inlier_fraction: 0.25
+#                number_of_samples: 3
+#                correspondence_randomness: 10
+##            sample_consensus_initial_alignment:
+##                min_sample_distance: 0.5
+##                number_of_samples: 3
+##                correspondence_randomness: 10
     point_matchers:
 #        iterative_closest_point:
-        iterative_closest_point_non_linear:
+#        iterative_closest_point_non_linear:
+#        iterative_closest_point_with_normals:
+        iterative_closest_point_generalized:
             max_correspondence_distance: 10.0
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
@@ -103,4 +143,7 @@ initial_pose_estimators_matchers:
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
+            rotation_epsilon: 0.002
+            correspondence_randomness: 50
+            maximum_optimizer_iterations: 100
             use_reciprocal_correspondences: true

@@ -95,12 +95,10 @@ message_management:
 
 # ===================================================================================================================================================
 #   Full path to the reference clouds.
-#   It is recommend to set these values in the launch file using the ROS $(find package_name)/file_name.yaml
+#   It is recommend to set these values in the launch file using the ROS $(find package_name)/file_name
 reference_pointclouds:
     reference_pointcloud_filename: ''
     reference_pointcloud_preprocessed_save_filename: ''
-    reference_pointcloud_keypoints_filename: ''
-    reference_pointcloud_keypoints_save_filename: ''
     save_reference_pointclouds_in_binary_format: true
 
 
@@ -194,6 +192,8 @@ curvature_estimators:
 # the descriptor matching will fail.
 keypoint_detectors:
     reference_pointcloud:
+        reference_pointcloud_keypoints_filename: ''
+        reference_pointcloud_keypoints_save_filename: ''
     ambient_pointcloud:
         compute_keypoints_when_tracking_pose: false                 # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
         compute_keypoints_when_recovering_pose: false               # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
@@ -239,11 +239,11 @@ tracking_matchers:
     maximum_number_of_displayed_correspondences: 0                  # Can be overridden in child namespaces | How many correspondances of the registration will be displayed
     feature_matchers:                                               # Feature matchers are applied before point matchers.
         display_feature_matching: false                             # Can be overridden in child namespaces | Display feature matching registration
-        reference_pointcloud_descriptors_filename: ''               # Can be overridden in child namespaces
-        reference_pointcloud_descriptors_save_filename: ''          # Can be overridden in child namespaces
-        save_descriptors_in_binary_format : true                    # Can be overridden in child namespaces
         #   One keypoint descriptor can be specified for both the reference and ambient point clouds.
         #   It must be the same descriptor algorithm in order to allow the matching of the generated descriptors.
+        reference_pointcloud_descriptors_filename: ''               # Can be overridden in child namespaces of matchers/
+        reference_pointcloud_descriptors_save_filename: ''          # Can be overridden in child namespaces of matchers/
+        save_descriptors_in_binary_format: true                     # Can be overridden in child namespaces of matchers/
         keypoint_descriptors:
             #   feature_descriptor_k_search has higher priority than feature_descriptor_radius_search
             #   As such, if feature_descriptor_k_search > 0 then feature_descriptor_radius_search = 0.0 (will be ignored)

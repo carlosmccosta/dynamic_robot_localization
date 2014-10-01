@@ -39,12 +39,8 @@
 
 
 	<!-- ==================================================== localization system ============================================= -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
+<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
-		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
-		<rosparam command="load" file="$(arg yaml_configuration_pose_estimation_filename)" subst_value="true" />
-		<rosparam command="load" file="$(arg yaml_configuration_tracking_filename)" subst_value="true" />
-		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
 		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
@@ -53,10 +49,14 @@
 		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
-		<param name="reference_pointclouds/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
-		<param name="reference_pointclouds/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
-		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" />
-		<param name="cloud_matchers/feature_matchers/reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" />
+		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
+		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
+		<param name="initial_pose_estimators_matchers/feature_matchers/reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" />
+		<param name="initial_pose_estimators_matchers/feature_matchers/reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" />
+		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_pose_estimation_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_tracking_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
 	</node>
 
 

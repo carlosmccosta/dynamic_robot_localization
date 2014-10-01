@@ -23,7 +23,6 @@ template<typename PointT, typename FeatureT>
 void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	std::string final_param_name;
 	std::string search_namespace = private_node_handle->getNamespace() + "/" + configuration_namespace;
-
 	bool display_feature_matching;
 	if (ros::param::search(search_namespace, "display_feature_matching", final_param_name)) { private_node_handle->param(final_param_name, display_feature_matching, false); }
 	if (ros::param::search(search_namespace, "reference_pointcloud_descriptors_filename", final_param_name)) { private_node_handle->param(final_param_name, reference_pointcloud_descriptors_filename_, std::string("")); }
@@ -41,7 +40,7 @@ void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros
 template<typename PointT, typename FeatureT>
 void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud,
 		typename pcl::PointCloud<PointT>::Ptr& reference_cloud_keypoints,
-        typename pcl::search::KdTree<PointT>::Ptr& search_method) {
+		typename pcl::search::KdTree<PointT>::Ptr& search_method) {
 
 	typename pcl::PointCloud<PointT>::Ptr& reference_cloud_final = reference_cloud_keypoints->empty() ? reference_cloud : reference_cloud_keypoints;
 
