@@ -138,8 +138,8 @@ normal_estimators:
         flip_normals_using_occupancy_grid_analysis: true            # Only used in the reference pointcloud
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false                   # Some registration algorithms don't require normals. Only activate its calculation when required
-        compute_normals_when_recovering_pose: false                 # Some registration algorithms don't require normals. Only activate its calculation when required
-        compute_normals_when_estimating_pose: true                  # Some registration algorithms don't require normals. Only activate its calculation when required
+        compute_normals_when_recovering_pose_tracking: false        # Some registration algorithms don't require normals. Only activate its calculation when required
+        compute_normals_when_estimating_initial_pose: true          # Some registration algorithms don't require normals. Only activate its calculation when required
         display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
         # If the normals are being computed from a nav_msgs::OccupancyGrid, their orientation can be corrected by flipping them to the side that has more empty space (instead of flipping to the sensor view) (to disable, set k to 0 and both radius to < 0)
         display_occupancy_grid_pointcloud: false                    # Can be overridden in child namespaces | Displays a blocking window with the pointcloud created from the nav_msgs::OccupancyGrid
@@ -196,8 +196,8 @@ keypoint_detectors:
         reference_pointcloud_keypoints_save_filename: ''
     ambient_pointcloud:
         compute_keypoints_when_tracking_pose: false                 # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
-        compute_keypoints_when_recovering_pose: false               # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
-        compute_keypoints_when_estimating_pose: true                # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
+        compute_keypoints_when_recovering_pose_tracking: false      # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
+        compute_keypoints_when_estimating_initial_pose: true        # Keypoints can take a long time to compute and usually require the computation of normals. Only activate its calculation if required
         intrinsic_shape_signature_3d:                               # Allows prefix and postfix of letters to ensure parsing order
             salient_radius: 0.06                                    # The radius of the spherical neighborhood used to compute the scatter matrix (usually 6 * model_resolution)
             non_max_radius: 0.04                                    # The radius for the application of the non maxima supression algorithm (usually 4 * model_resolution)

@@ -210,7 +210,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	std::vector<std::vector<int> > similar_features(input_->size());
 
 
-#ifdef USE_GROUPING
+#ifndef USE_GROUPING
 	//
 	//  Find Model-Scene Correspondences with KdTree
 	//
@@ -236,14 +236,14 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	//
 	// filter outliers
 	//
-/*	pcl::CorrespondencesPtr filtered_corrs(new pcl::Correspondences());
+	pcl::CorrespondencesPtr filtered_corrs(new pcl::Correspondences());
 	for (size_t i = 0; i < correspondence_rejectors_.size(); ++i) {
 		filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
 		correspondence_rejectors_[i]->getRemainingCorrespondences(*model_scene_corrs, *filtered_corrs);
 		if (filtered_corrs->size() < 3) break;
 		model_scene_corrs = filtered_corrs;
 	}
-	model_scene_corrs = filtered_corrs;*/
+	model_scene_corrs = filtered_corrs;
 
 	//
 	//  Actual Clustering
@@ -251,7 +251,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
 	std::vector<pcl::Correspondences> clustered_corrs;
 
-	bool use_hough_ = true;
+	bool use_hough_ = false;
 	if (use_hough_) {
 		//
 		//  Compute (Keypoints) Reference Frames only for Hough
@@ -482,8 +482,8 @@ void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setupCorre
 	pcl::Registration<PointSource, PointTarget>::clearCorrespondenceRejectors();
 
 
-	/*typename pcl::registration::CorrespondenceRejectorOneToOne::Ptr corr_rej_o2o(new pcl::registration::CorrespondenceRejectorOneToOne());
-	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_o2o);*/
+	typename pcl::registration::CorrespondenceRejectorOneToOne::Ptr corr_rej_o2o(new pcl::registration::CorrespondenceRejectorOneToOne());
+	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_o2o);
 
 
 	/*typename pcl::registration::CorrespondenceRejectorMedianDistance::Ptr corr_rej_median (new pcl::registration::CorrespondenceRejectorMedianDistance);

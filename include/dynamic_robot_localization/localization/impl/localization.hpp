@@ -29,11 +29,11 @@ Localization<PointT>::Localization() :
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
 	compute_normals_when_tracking_pose_(false),
-	compute_normals_when_recovering_pose_(false),
-	compute_normals_when_estimating_pose_(true),
+	compute_normals_when_recovering_pose_tracking_(false),
+	compute_normals_when_estimating_initial_pose_(true),
 	compute_keypoints_when_tracking_pose_(false),
-	compute_keypoints_when_recovering_pose_(false),
-	compute_keypoints_when_estimating_pose_(true),
+	compute_keypoints_when_recovering_pose_tracking_(false),
+	compute_keypoints_when_estimating_initial_pose_(true),
 	last_scan_time_(0),
 	last_map_received_time_(0),
 	reference_pointcloud_received_(false),
@@ -198,8 +198,8 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 template<typename PointT>
 void Localization<PointT>::setupNormalEstimatorsConfigurations() {
 	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_tracking_pose", compute_normals_when_tracking_pose_, false);
-	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_recovering_pose", compute_normals_when_recovering_pose_, false);
-	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_estimating_pose", compute_normals_when_estimating_pose_, true);
+	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_recovering_pose_tracking", compute_normals_when_recovering_pose_tracking_, false);
+	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_estimating_initial_pose", compute_normals_when_estimating_initial_pose_, true);
 	loadNormalEstimatorFromParameterServer(reference_cloud_normal_estimator_, "normal_estimators/reference_pointcloud/");
 	loadNormalEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "normal_estimators/ambient_pointcloud/");
 }
@@ -267,8 +267,8 @@ void Localization<PointT>::setupKeypointDetectors() {
 	private_node_handle_->param("keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
 	private_node_handle_->param("keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
 	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_tracking_pose", compute_keypoints_when_tracking_pose_, false);
-	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_recovering_pose", compute_keypoints_when_recovering_pose_, false);
-	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_estimating_pose", compute_keypoints_when_estimating_pose_, true);
+	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_recovering_pose_tracking", compute_keypoints_when_recovering_pose_tracking_, false);
+	private_node_handle_->param("keypoint_detectors/ambient_pointcloud/compute_keypoints_when_estimating_initial_pose", compute_keypoints_when_estimating_initial_pose_, true);
 
 	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, "keypoint_detectors/reference_pointcloud/");
 	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, "keypoint_detectors/ambient_pointcloud/");
@@ -975,61 +975,58 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
 	performance_timer.restart();
 	aligment_fitness_ = 0.0;
-	bool lost_tracking = (ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_;
-	if (lost_tracking) {
-		ROS_ERROR("Lost tracking!");
-	}
+	bool lost_tracking = last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_;
+	if (lost_tracking) { ROS_ERROR("Lost tracking!"); }
 
-	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose with
+	bool performed_recovery = false;
+	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose
 		ROS_INFO("Performing initial pose recovery");
-		if (!computed_normals && compute_normals_when_estimating_pose_ && ambient_cloud_normal_estimator_) {
+		if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
 			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
 			computed_normals = true;
 		}
 
-		if (!computed_keypoints && compute_keypoints_when_estimating_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+		if (!computed_keypoints && compute_keypoints_when_estimating_initial_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
 			applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
 			computed_keypoints = true;
 		}
 
 		if (!applyCloudRegistration(initial_pose_estimators_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
+		localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 		ROS_INFO("Successfully performed initial pose estimation");
-	}
-	localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
+	} else {
+		// ==============================================================  point cloud registration with recovery
+		performance_timer.restart();
+		localization_times_msg_.pointcloud_registration_time = 0.0;
 
+		if (!applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+			if (tracking_recovery_matchers_.empty()) {
+				return false;
+			} else {
+				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
+				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+					computed_normals = true;
+				}
 
-	// ==============================================================  point cloud registration with recovery
-	performance_timer.restart();
-	localization_times_msg_.pointcloud_registration_time = 0.0;
-	bool performed_recovery = false;
-	if (!applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
-		if (tracking_recovery_matchers_.empty()) {
-			return false;
+				if (!computed_keypoints && compute_keypoints_when_recovering_pose_tracking_ && !ambient_cloud_keypoint_detectors_.empty()) {
+					applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
+					computed_keypoints = true;
+				}
+
+				performance_timer.restart();
+				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
+					ROS_INFO("Successfully performed registration recovery");
+					performed_recovery = true;
+					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
+				} else {
+					return false;
+				}
+			}
 		} else {
 			localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
-			if (!computed_normals && compute_normals_when_recovering_pose_ && ambient_cloud_normal_estimator_) {
-				if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
-				computed_normals = true;
-			}
-
-			if (!computed_keypoints && compute_keypoints_when_recovering_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
-				applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
-				computed_keypoints = true;
-			}
-
-			performance_timer.restart();
-			if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) {
-				ROS_INFO("Successfully performed registration recovery");
-				performed_recovery = true;
-				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
-			} else {
-				return false;
-			}
 		}
-	} else {
-		localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 	}
-
 
 
 	// ==============================================================  outlier detection
@@ -1048,12 +1045,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
 			if (!performed_recovery && !tracking_recovery_matchers_.empty()) {
-				if (!computed_normals && compute_normals_when_recovering_pose_ && ambient_cloud_normal_estimator_) {
+				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
 					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
 					computed_normals = true;
 				}
 
-				if (!computed_keypoints && compute_keypoints_when_recovering_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+				if (!computed_keypoints && compute_keypoints_when_recovering_pose_tracking_ && !ambient_cloud_keypoint_detectors_.empty()) {
 					applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints);
 					computed_keypoints = true;
 				}

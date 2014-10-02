@@ -22,8 +22,8 @@ tracking_recovery_matchers:
 transformation_validators_tracking_recovery:
     euclidean_transformation_validator:
         max_transformation_angle: 2.09
-        max_transformation_distance: 0.65
+        max_transformation_distance: 1.0
         max_new_pose_diff_angle: 3.14
-        max_new_pose_diff_distance: 2.0
-        max_alignment_fitness: 5
+        max_new_pose_diff_distance: 2.5
+        max_alignment_fitness: 5.0
         max_outliers_percentage: 0.5

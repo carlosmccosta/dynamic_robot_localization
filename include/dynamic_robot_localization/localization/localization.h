@@ -234,11 +234,11 @@ class Localization : public ConfigurableObject {
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
 		bool compute_normals_when_tracking_pose_;
-		bool compute_normals_when_recovering_pose_;
-		bool compute_normals_when_estimating_pose_;
+		bool compute_normals_when_recovering_pose_tracking_;
+		bool compute_normals_when_estimating_initial_pose_;
 		bool compute_keypoints_when_tracking_pose_;
-		bool compute_keypoints_when_recovering_pose_;
-		bool compute_keypoints_when_estimating_pose_;
+		bool compute_keypoints_when_recovering_pose_tracking_;
+		bool compute_keypoints_when_estimating_initial_pose_;
 
 		// state fields
 		ros::Time last_scan_time_;
