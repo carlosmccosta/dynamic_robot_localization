@@ -38,6 +38,9 @@ void PoseToTFPublisher::setupConfigurationFromParameterServer(ros::NodeHandlePtr
 
 	private_node_handle_->param("publish_rate", publish_rate_, 100.0);
 	private_node_handle_->param("publish_last_pose_tf_timeout_seconds", publish_last_pose_tf_timeout_seconds_, -1.0);
+	double tf_lookup_timeout;
+	private_node_handle_->param("tf_lookup_timeout", tf_lookup_timeout, 0.5);
+	tf_lookup_timeout_.fromSec(tf_lookup_timeout);
 
 	private_node_handle_->param("pose_stamped_topic", pose_stamped_topic_, std::string(""));
 	private_node_handle_->param("pose_with_covariance_stamped_topic", pose_with_covariance_stamped_topic_, std::string("/initialpose"));
@@ -124,10 +127,11 @@ void PoseToTFPublisher::publishTFMapToOdomFromPose(const geometry_msgs::Pose& po
 	ros::Time pose_time_updated = pose_time;
 	if (pose_time.sec == 0 && pose_time.nsec == 0) { // time in the future to override any poses coming from the localization node
 		pose_time_updated = ros::Time::now() + ros::Duration(0.25);
+		ROS_INFO("Reseting initial pose...");
 	}
 
 	if (pose_time_updated < last_pose_time_ || frame_id.empty()) {
-		ROS_INFO_STREAM("Dropping new pose with time [" << pose_time_updated << "] and frame_id [" << frame_id << "]");
+		ROS_WARN_STREAM("Dropping new pose with time [" << pose_time_updated << "] and frame_id [" << frame_id << "]");
 		return;
 	}
 
@@ -137,16 +141,17 @@ void PoseToTFPublisher::publishTFMapToOdomFromPose(const geometry_msgs::Pose& po
 
 	if (transform_pose_to_map_frame_id_ && frame_id != map_frame_id_) {
 		// transform to map (global frame reference)
+		ROS_WARN_STREAM("Pose received in " << frame_id << " frame instead of " << map_frame_id_);
 		tf2::Transform transform_pose_to_map;
-		if (!tf_collector_.lookForTransform(transform_pose_to_map, map_frame_id_, frame_id, pose_time)) {
+		if (!tf_collector_.lookForTransform(transform_pose_to_map, map_frame_id_, frame_id, pose_time, tf_lookup_timeout_)) {
+			ROS_WARN_STREAM("Dropping new pose with time [" << pose_time_updated << "] because there isn't tf between [" << map_frame_id_ << "] and [" << frame_id << "]");
 			return;
 		}
 
 		transform_pose *= transform_pose_to_map;
-		ROS_INFO_STREAM("Pose received in " << frame_id << " frame instead of " << map_frame_id_);
 	}
 
-	publishTFMapToOdom(transform_pose, pose_time);
+	publishTFMapToOdom(transform_pose, pose_time, tf_lookup_timeout_);
 	last_pose_time_ = pose_time_updated;
 }
 
@@ -171,7 +176,7 @@ void PoseToTFPublisher::publishTFMapToOdomFromOdometry(const nav_msgs::OdometryC
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <tf update functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 bool PoseToTFPublisher::addOdometryDisplacementToTransform(tf2::Transform& transform, const ros::Time& time_of_transform, const ros::Time& target_time) {
 	tf2::Transform odometry_tf_from_pose_time_to_now;
-	if (tf_collector_.lookForTransform(odometry_tf_from_pose_time_to_now, base_link_frame_id_, target_time, base_link_frame_id_, time_of_transform, map_frame_id_)) {
+	if (tf_collector_.lookForTransform(odometry_tf_from_pose_time_to_now, base_link_frame_id_, target_time, base_link_frame_id_, time_of_transform, map_frame_id_, tf_lookup_timeout_)) {
 		// include odometry displacement from pose publish time to current time
 		transform = transform * odometry_tf_from_pose_time_to_now.inverse();
 		return true;
@@ -208,6 +213,7 @@ bool PoseToTFPublisher::updateTFMessage(tf2::Transform& transform) {
 		boost::math::isfinite(transform.getRotation().getW())) {
 
 		if (transform.getRotation().getX() == 0.0 && transform.getRotation().getY() == 0.0 && transform.getRotation().getZ() == 0.0 && transform.getRotation().getW() == 0.0) {
+			ROS_WARN("Dropped pose with invalid quaternion!");
 			return false;
 		}
 
@@ -219,6 +225,7 @@ bool PoseToTFPublisher::updateTFMessage(tf2::Transform& transform) {
 		return true;
 	}
 
+	ROS_WARN("Dropped pose with NaN numbers!");
 	return false;
 }
 
@@ -231,19 +238,20 @@ void PoseToTFPublisher::publishTFMapToOdomFromMapToOdomPose(double x, double y, 
 	tf2::Quaternion orientation;
 	orientation.setRPY(roll, pitch, yaw);
 
-	transform_map_to_odom_ = tf2::Transform(orientation, tf2::Vector3(x, y, z));
+	tf2::Transform transform_map_to_odom = tf2::Transform(orientation, tf2::Vector3(x, y, z));
 
 	if (invert_tf_transform_) {
-		transform_map_to_odom_ = transform_map_to_odom_.inverse();
+		transform_map_to_odom = transform_map_to_odom.inverse();
 	}
 
-	updateTFMessage(transform_map_to_odom_);
-	last_pose_time_ = ros::Time::now();
-	publishTFMapToOdom(false);
+	if (updateTFMessage(transform_map_to_odom)) {
+		last_pose_time_ = ros::Time::now();
+		publishTFMapToOdom(false);
 
-	ROS_INFO_STREAM("Published global pose from map to odom estimate [ x: " << x << ", y: " << y << ", z: " << z
-			<< " | r: " << roll << ", p: " << pitch << ", y: " << yaw
-			<< " | qx: " << orientation.x() << ", qy: " << orientation.y() << ", qz: " << orientation.z() << ", qw: " << orientation.w() << " ]");
+		ROS_INFO_STREAM("Published global pose from map to odom estimate [ x: " << x << ", y: " << y << ", z: " << z
+				<< " | r: " << roll << ", p: " << pitch << ", y: " << yaw
+				<< " | qx: " << orientation.x() << ", qy: " << orientation.y() << ", qz: " << orientation.z() << ", qw: " << orientation.w() << " ]");
+	}
 }
 
 
@@ -252,55 +260,59 @@ void PoseToTFPublisher::publishTFMapToOdomFromMapToBasePose(double x, double y, 
 	orientation.setRPY(roll, pitch, yaw);
 	tf2::Transform transform(orientation, tf2::Vector3(x, y, z));
 
-	transform_map_to_odom_ = transform;
-	last_pose_time_ = ros::Time::now();
-	updateTFMessage(transform_map_to_odom_);
+	if (updateTFMessage(transform)) {
+		last_pose_time_ = ros::Time::now();
 
-	if (publishTFMapToOdom(transform, ros::Time::now(), ros::Duration(5)), false) {
-		ROS_INFO_STREAM("Published global pose from map to base estimate [ x: " << x << ", y: " << y << ", z: " << z \
-				<< " | r: " << roll << ", p: " << pitch << ", y: " << yaw \
-				<< " | qx: " << orientation.x() << ", qy: " << orientation.y() << ", qz: " << orientation.z() << ", qw: " << orientation.w() << " ]");
-	} else {
-		ros::Time end_time = ros::Time::now() + ros::Duration(10);
-		ros::Duration wait_duration(0.005);
+		if (publishTFMapToOdom(transform, ros::Time::now(), ros::Duration(5)), false) {
+			ROS_INFO_STREAM("Published global pose from map to base estimate [ x: " << x << ", y: " << y << ", z: " << z \
+					<< " | r: " << roll << ", p: " << pitch << ", y: " << yaw \
+					<< " | qx: " << orientation.x() << ", qy: " << orientation.y() << ", qz: " << orientation.z() << ", qw: " << orientation.w() << " ]");
+		} else {
+			ros::Time end_time = ros::Time::now() + ros::Duration(10);
+			ros::Duration wait_duration(0.005);
 
-		while (ros::Time::now() < end_time) {
-			if (publishTFMapToOdom(transform, ros::Time::now(), ros::Duration(0.1), false)) {
-				ROS_INFO_STREAM("Published global pose from map to base estimate [ x: " << x << ", y: " << y << ", z: " << z \
-						<< " || r: " << roll << ", p: " << pitch << ", y: " << yaw \
-						<< " || qx: " << orientation.x() << ", qy: " << orientation.y() << ", qz: " << orientation.z() << ", qw: " << orientation.w() << " ]");
-				return;
+			while (ros::Time::now() < end_time) {
+				if (publishTFMapToOdom(transform, ros::Time::now(), tf_lookup_timeout_, false)) {
+					ROS_INFO_STREAM("Published global pose from map to base estimate [ x: " << x << ", y: " << y << ", z: " << z \
+							<< " || r: " << roll << ", p: " << pitch << ", y: " << yaw \
+							<< " || qx: " << orientation.x() << ", qy: " << orientation.y() << ", qz: " << orientation.z() << ", qw: " << orientation.w() << " ]");
+					return;
+				}
+				wait_duration.sleep();
 			}
-			wait_duration.sleep();
-		}
 
-		ROS_WARN_STREAM("Failed to find TF between " << odom_frame_id_ << " and " << base_link_frame_id_ << " when setting initial pose");
-		publishTFMapToOdomFromMapToOdomPose(x, y, z, roll, pitch, yaw);
+			ROS_WARN_STREAM("Failed to find TF between " << odom_frame_id_ << " and " << base_link_frame_id_ << " when setting initial pose");
+			publishTFMapToOdomFromMapToOdomPose(x, y, z, roll, pitch, yaw);
+		}
 	}
 }
 
 
 bool PoseToTFPublisher::publishTFMapToOdom(const tf2::Transform& transform_base_link_to_map, ros::Time tf_time, ros::Duration tf_timeout, bool check_pose_timeout) {
+	tf2::Transform transform = transform_base_link_to_map;
+
 	if (!base_link_frame_id_.empty() && !odom_frame_id_.empty()) {
 		tf2::Transform transform_odom_to_base_link;
 		if (!tf_collector_.lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, tf_time, tf_timeout)) {
+			ROS_WARN_STREAM("Dropping new pose with time [" << tf_time << "] because there isn't tf between [" << odom_frame_id_ << "] and [" << base_link_frame_id_ << "]");
 			return false;
 		}
 
 		// base_to_map = base_to_odom * odom_to_map
 		// odom_to_map = base_to_map * odom_to_base)
-		transform_map_to_odom_ = transform_base_link_to_map * transform_odom_to_base_link;
-	} else {
-		transform_map_to_odom_ = transform_base_link_to_map;
+		transform = transform_base_link_to_map * transform_odom_to_base_link;
 	}
 
 	if (invert_tf_transform_) {
-		transform_map_to_odom_ = transform_map_to_odom_.inverse();
+		transform = transform.inverse();
 	}
 
-	updateTFMessage(transform_map_to_odom_);
-	last_pose_time_ = tf_time;
-	return publishTFMapToOdom(check_pose_timeout);
+	if (updateTFMessage(transform)) {
+		last_pose_time_ = tf_time;
+		return publishTFMapToOdom(check_pose_timeout);
+	} else {
+		return false;
+	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </pose to tf functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

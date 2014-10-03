@@ -14,6 +14,7 @@
 	<arg name="odom_frame_id" default="odom" />
 	<arg name="publish_rate" default="100.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="-1.0" />
+	<arg name="tf_lookup_timeout" default="0.5" />
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
@@ -25,6 +26,7 @@
 	<node pkg="dynamic_robot_localization" type="drl_pose_to_tf_publisher_node" name="drl_pose_to_tf_publisher_node" ns="$(arg parameters_namespace)" output="screen">
 		<param name="publish_rate" type="double" value="$(arg publish_rate)" />
 		<param name="publish_last_pose_tf_timeout_seconds" type="double" value="$(arg publish_last_pose_tf_timeout_seconds)" /> <!-- if < 0 last pose received will be published forever with no timeout (until a new pose is received and updates the current publish pose) -->
+		<param name="tf_lookup_timeout" type="double" value="$(arg tf_lookup_timeout)" />
 		<param name="pose_with_covariance_stamped_topic" type="str" value="$(arg pose_with_covariance_stamped_topic)" />
 		<param name="pose_stamped_topic" type="str" value="$(arg pose_stamped_topic)" />
 		<param name="odometry_topic" type="str" value="$(arg odometry_topic)" />

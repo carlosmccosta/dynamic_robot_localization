@@ -210,7 +210,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	std::vector<std::vector<int> > similar_features(input_->size());
 
 
-#ifndef USE_GROUPING
+#ifdef USE_GROUPING
 	//
 	//  Find Model-Scene Correspondences with KdTree
 	//
@@ -251,7 +251,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > rototranslations;
 	std::vector<pcl::Correspondences> clustered_corrs;
 
-	bool use_hough_ = false;
+	#ifdef USE_HOUGH
 	if (use_hough_) {
 		//
 		//  Compute (Keypoints) Reference Frames only for Hough
@@ -288,7 +288,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 		//clusterer.cluster (clustered_corrs);
 		clusterer.recognize (rototranslations, clustered_corrs);
-	} else {
+	#else
 		pcl::GeometricConsistencyGrouping<PointSource, PointTarget> gc_clusterer;
 		gc_clusterer.setGCSize(0.01);
 		gc_clusterer.setGCThreshold(5);
@@ -297,7 +297,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 		gc_clusterer.setSceneCloud(input_);
 		gc_clusterer.setModelSceneCorrespondences(model_scene_corrs);
 		gc_clusterer.recognize(rototranslations, clustered_corrs);
-	}
+	#endif
 
 
 	if (update_visualizer_ != 0) {

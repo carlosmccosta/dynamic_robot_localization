@@ -244,6 +244,9 @@ class Localization : public ConfigurableObject {
 		ros::Time last_scan_time_;
 		ros::Time last_map_received_time_;
 		ros::Time last_accepted_pose_time_;
+		int pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_;
+		int pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_;
+		int pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
 		bool reference_pointcloud_received_;
 		bool reference_pointcloud_2d_;
 		bool ignore_height_corrections_;

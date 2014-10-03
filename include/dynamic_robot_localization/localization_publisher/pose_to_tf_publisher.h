@@ -85,7 +85,6 @@ class PoseToTFPublisher : ConfigurableObject {
 		inline std::string& getOdomFrameId() { return odom_frame_id_; }
 		inline double getPublishRate() const { return publish_rate_; }
 		laserscan_to_pointcloud::TFCollector& getTfCollector() { return tf_collector_; }
-		inline tf2::Transform& getTransformMapToOdom() { return transform_map_to_odom_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -107,6 +106,7 @@ class PoseToTFPublisher : ConfigurableObject {
 		std::string odometry_topic_;
 		double publish_rate_;
 		double publish_last_pose_tf_timeout_seconds_;
+		ros::Duration tf_lookup_timeout_;
 		ros::Time last_pose_time_;
 		bool invert_tf_transform_;
 		bool invert_tf_hierarchy_;
@@ -121,7 +121,6 @@ class PoseToTFPublisher : ConfigurableObject {
 		laserscan_to_pointcloud::TFCollector tf_collector_;
 		size_t number_tfs_published_;
 		geometry_msgs::TransformStamped transform_stamped_map_to_odom_;
-		tf2::Transform transform_map_to_odom_;
 
 		// ros communication fields
 		ros::NodeHandlePtr node_handle_;

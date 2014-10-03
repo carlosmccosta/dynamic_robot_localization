@@ -55,8 +55,8 @@
 		<param name="initial_pose_estimators_matchers/feature_matchers/reference_pointcloud_descriptors_save_filename" type="str" value="$(arg reference_pointcloud_descriptors_save_filename)" />
 		<rosparam command="load" file="$(arg yaml_configuration_filters_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_pose_estimation_filename)" subst_value="true" />
-		<rosparam command="load" file="$(arg yaml_configuration_tracking_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_tracking_filename)" subst_value="true" />
 	</node>
 
 

@@ -36,6 +36,10 @@ Localization<PointT>::Localization() :
 	compute_keypoints_when_estimating_initial_pose_(true),
 	last_scan_time_(0),
 	last_map_received_time_(0),
+	last_accepted_pose_time_(ros::Time::now()),
+	pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_(3),
+	pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_(20),
+	pose_tracking_number_of_failed_registrations_since_last_valid_pose_(0),
 	reference_pointcloud_received_(false),
 	reference_pointcloud_2d_(false),
 	ignore_height_corrections_(false),
@@ -304,6 +308,9 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 	double pose_tracking_timeout;
 	private_node_handle_->param("tracking_matchers/pose_tracking_timeout", pose_tracking_timeout, 2.0);
 	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
+
+	private_node_handle_->param("tracking_matchers/pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_, 3);
+	private_node_handle_->param("tracking_matchers/pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_, 20);
 }
 
 
@@ -581,18 +588,20 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 template<typename PointT>
 void Localization<PointT>::startLocalization() {
 	if (node_handle_ && private_node_handle_) {
+		last_accepted_pose_time_ = ros::Time::now();
+
 		// publishers
-		if (!reference_pointcloud_publish_topic_.empty()) reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 2, true);
-		if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 5, true);
-		if (!pose_with_covariance_stamped_publish_topic_.empty()) pose_with_covariance_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_publish_topic_, 10, true);
-		if (!pose_stamped_publish_topic_.empty()) pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 10, true);
-		if (!localization_detailed_publish_topic_.empty()) localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_publish_topic_, 10, true);
-		if (!localization_diagnostics_publish_topic_.empty()) localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_publish_topic_, 10, true);
-		if (!localization_times_publish_topic_.empty()) localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 10, true);
+		if (!reference_pointcloud_publish_topic_.empty()) reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 1, true);
+		if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 1, true);
+		if (!pose_with_covariance_stamped_publish_topic_.empty()) pose_with_covariance_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_publish_topic_, 5, true);
+		if (!pose_stamped_publish_topic_.empty()) pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 5, true);
+		if (!localization_detailed_publish_topic_.empty()) localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_publish_topic_, 5, true);
+		if (!localization_diagnostics_publish_topic_.empty()) localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_publish_topic_, 5, true);
+		if (!localization_times_publish_topic_.empty()) localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 5, true);
 
 
 		// subscribers
-		ambient_pointcloud_subscriber_ = node_handle_->subscribe(ambient_pointcloud_topic_, 2, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this);
+		ambient_pointcloud_subscriber_ = node_handle_->subscribe(ambient_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this);
 
 		if (reference_pointcloud_filename_.empty()) {
 			if (!reference_pointcloud_topic_.empty()) {
@@ -776,6 +785,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			if (ambient_pointcloud_with_circular_buffer_) {
 				ambient_pointcloud_with_circular_buffer_->eraseNewest(last_number_points_inserted_in_circular_buffer_);
 			}
+			++pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
 			ROS_WARN_STREAM("Discarded cloud because localization couldn't be calculated");
 		}
 	} else {
@@ -975,8 +985,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
 	performance_timer.restart();
 	aligment_fitness_ = 0.0;
-	bool lost_tracking = last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_;
-	if (lost_tracking) { ROS_ERROR("Lost tracking!"); }
+	bool lost_tracking = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_) ||
+			(pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_);
+	if (lost_tracking) {
+		ROS_ERROR("Lost tracking!");
+		last_accepted_pose_valid_ = false;
+	}
 
 	bool performed_recovery = false;
 	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose
@@ -1078,6 +1092,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_accepted_pose_ = pointcloud_pose_corrected_out;
 	last_accepted_pose_time_ = ros::Time::now();
 	last_accepted_pose_valid_ = true;
+	pose_tracking_number_of_failed_registrations_since_last_valid_pose_ = 0;
 	publishDetectedOutliers();
 
 	return true;

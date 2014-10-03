@@ -35,3 +35,8 @@ transformation_validators:
         max_new_pose_diff_distance: 0.1
         max_alignment_fitness: 5.0
         max_outliers_percentage: 0.35
+
+transformation_validators_tracking_recovery:
+    euclidean_transformation_validator:
+        max_alignment_fitness: 2.0
+        max_outliers_percentage: 0.4
