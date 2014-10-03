@@ -24,6 +24,7 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     dynamic_reconfigure
     cmake_modules
     laserscan_to_pointcloud
+    pose_to_tf_publisher
     message_generation
 )
 
@@ -61,7 +62,6 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
         drl_common
-        drl_pose_to_tf_publisher
         drl_cloud_filters
         drl_curvature_estimators
         drl_normal_estimators
@@ -113,10 +113,6 @@ add_library(drl_common
     src/common/registration_visualizer.cpp
     src/common/time_utils.cpp
     src/common/performance_timer.cpp
-)
-
-add_library(drl_pose_to_tf_publisher
-    src/localization_publisher/pose_to_tf_publisher.cpp
 )
 
 add_library(drl_cloud_filters
@@ -190,10 +186,6 @@ add_library(drl_localization
 # executables
 #==================
 
-add_executable(drl_pose_to_tf_publisher_node
-    src/localization_publisher/pose_to_tf_publisher_node.cpp
-)
-
 add_executable(drl_localization_node
     src/localization/localization_node.cpp
 )
@@ -219,15 +211,6 @@ add_dependencies(drl_localization
 
 target_link_libraries(drl_common
     ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_pose_to_tf_publisher
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_pose_to_tf_publisher_node
-    drl_pose_to_tf_publisher
     ${catkin_LIBRARIES}
 )
 
@@ -282,7 +265,6 @@ target_link_libraries(drl_outliers_detectors
 
 target_link_libraries(drl_localization
     drl_common
-    drl_pose_to_tf_publisher
     drl_cloud_filters
     drl_normal_estimators
     drl_keypoint_detectors

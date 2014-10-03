@@ -124,7 +124,7 @@ initial_pose_estimators_matchers:
             max_number_of_registration_iterations: 10000
             sample_consensus_initial_alignment_prerejective:
                 similarity_threshold: 0.75
-                inlier_fraction: 0.7
+                inlier_fraction: 0.75
                 number_of_samples: 20
                 correspondence_randomness: 100
 #            sample_consensus_initial_alignment:

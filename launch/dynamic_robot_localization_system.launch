@@ -61,7 +61,7 @@
 
 
 	<!-- map to odom publisher -->
-	<include file="$(find dynamic_robot_localization)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
+	<include file="$(find pose_to_tf_publisher)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
 		<arg name="publish_rate" default="$(arg publish_pose_tf_rate)" />
 		<arg name="publish_last_pose_tf_timeout_seconds" default="$(arg publish_last_pose_tf_timeout_seconds)" />
 		<arg name="pose_with_covariance_stamped_topic" default="$(arg pose_with_covariance_stamped_topic)" />
@@ -79,6 +79,7 @@
 		<arg name="invert_tf_transform" default="$(arg invert_tf_transform)" />
 		<arg name="invert_tf_hierarchy" default="$(arg invert_tf_hierarchy)" />
 		<arg name="transform_pose_to_map_frame_id" default="$(arg transform_pose_to_map_frame_id)" />
+		<arg name="parameters_namespace" default="dynamic_robot_localization" />
 	</include>
 
 

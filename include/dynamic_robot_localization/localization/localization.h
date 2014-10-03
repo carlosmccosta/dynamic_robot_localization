@@ -47,7 +47,7 @@
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/pointcloud_conversions.h>
-#include <dynamic_robot_localization/localization_publisher/pose_to_tf_publisher.h>
+#include <pose_to_tf_publisher/pose_to_tf_publisher.h>
 #include <laserscan_to_pointcloud/tf_collector.h>
 #include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
 
@@ -255,7 +255,7 @@ class Localization : public ConfigurableObject {
 
 
 		// ros communication fields
-		PoseToTFPublisher pose_to_tf_publisher_;
+		pose_to_tf_publisher::PoseToTFPublisher pose_to_tf_publisher_;
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
 		ros::Subscriber ambient_pointcloud_subscriber_;

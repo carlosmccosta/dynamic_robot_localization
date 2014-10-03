@@ -24,6 +24,7 @@
 	<build_depend>angles</build_depend>	
 	<build_depend>dynamic_reconfigure</build_depend>
 	<build_depend>laserscan_to_pointcloud</build_depend>
+	<build_depend>pose_to_tf_publisher</build_depend>
 	<build_depend>message_generation</build_depend>
 	<run_depend>eigen</run_depend>
 	<run_depend>cmake_modules</run_depend>
@@ -41,6 +42,7 @@
 	<run_depend>angles</run_depend>
 	<run_depend>dynamic_reconfigure</run_depend>
 	<run_depend>laserscan_to_pointcloud</run_depend>
+	<run_depend>pose_to_tf_publisher</run_depend>
 	<run_depend>message_generation</run_depend>
 	<run_depend>message_runtime</run_depend>
 	<run_depend>octomap_server</run_depend>	
