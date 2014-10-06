@@ -5,8 +5,8 @@ tracking_recovery_matchers:
             max_correspondence_distance: 0.75
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
-            max_number_of_registration_iterations: 750
-            max_number_of_ransac_iterations: 750
+            max_number_of_registration_iterations: 500
+            max_number_of_ransac_iterations: 500
             ransac_outlier_rejection_threshold: 0.75
             match_only_keypoints: false
             display_cloud_aligment: false

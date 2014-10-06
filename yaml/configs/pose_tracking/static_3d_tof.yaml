@@ -2,37 +2,11 @@
 #    maximum_number_points_ambient_pointcloud_circular_buffer: 750
 
 
-normal_estimators:
-    ambient_pointcloud:
-        display_normals: false
-        normal_estimation_omp:
-            search_k: 7
-            search_radius: 0.12
-
-
-keypoint_detectors:
-    ambient_pointcloud:
-#        intrinsic_shape_signature_3d:
-#            salient_radius: 0.14
-#            non_max_radius: 0.08
-#            normal_radius: 0.08
-#            border_radius: 0.0
-#            threshold21: 0.975
-#            threshold32: 0.975
-#            min_neighbors: 5
-#            angle_threshold: 1.57
-#            iss3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
-        sift_3d:
-            min_scale: 0.01
-            number_octaves: 3
-            number_scales_per_octave: 4
-            min_contrast: 0.001
-            sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
-
-
 tracking_matchers:
     ignore_height_corrections: false
     pose_tracking_timeout: 2.0
+    pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 5
+    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 10
     point_matchers:
 #        iterative_closest_point:
         iterative_closest_point_non_linear:
@@ -44,7 +18,7 @@ tracking_matchers:
             max_number_of_registration_iterations: 250
             max_number_of_ransac_iterations: 250
             ransac_outlier_rejection_threshold: 0.03
-            match_only_keypoints: true
+            match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
             rotation_epsilon: 0.002
@@ -67,3 +41,9 @@ transformation_validators:
         max_new_pose_diff_distance: 0.5
         max_alignment_fitness: 0.01
         max_outliers_percentage: 0.05
+
+
+transformation_validators_tracking_recovery:
+    euclidean_transformation_validator:
+        max_alignment_fitness: 2.0
+        max_outliers_percentage: 0.1

@@ -166,7 +166,8 @@ class Localization : public ConfigurableObject {
 		virtual bool applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud);
 
 		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
-				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method);
+				typename pcl::PointCloud<PointT>::Ptr& surface,
+				typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method);
 
 		virtual bool applyKeypointDetection(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
@@ -233,6 +234,7 @@ class Localization : public ConfigurableObject {
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
+		bool use_filtered_cloud_as_normal_estimation_surface_;
 		bool compute_normals_when_tracking_pose_;
 		bool compute_normals_when_recovering_pose_tracking_;
 		bool compute_normals_when_estimating_initial_pose_;

@@ -56,9 +56,9 @@ keypoint_detectors:
 #        reference_pointcloud_keypoints_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/sift_keypoints.pcd'
         sift_3d:
             min_scale: 0.01
-            number_octaves: 3
-            number_scales_per_octave: 4
-            min_contrast: 0.001
+            number_octaves: 4
+            number_scales_per_octave: 8
+            min_contrast: 0.0005
             sift3d_keypoints_cloud_publish_topic: 'reference_keypoints'
 #        intrinsic_shape_signature_3d:
 #            salient_radius: 0.14
@@ -76,9 +76,9 @@ keypoint_detectors:
         compute_keypoints_when_estimating_initial_pose: true
         sift_3d:
             min_scale: 0.01
-            number_octaves: 3
-            number_scales_per_octave: 4
-            min_contrast: 0.001
+            number_octaves: 4
+            number_scales_per_octave: 8
+            min_contrast: 0.0005
             sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
 #        intrinsic_shape_signature_3d:
 #            salient_radius: 0.14

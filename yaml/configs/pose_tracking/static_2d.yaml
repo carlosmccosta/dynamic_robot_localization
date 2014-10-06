@@ -1,7 +1,7 @@
 tracking_matchers:
     ignore_height_corrections: false
     pose_tracking_timeout: 2.0
-    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 20
+    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 10
     point_matchers:
         iterative_closest_point:
 #        iterative_closest_point_non_linear:

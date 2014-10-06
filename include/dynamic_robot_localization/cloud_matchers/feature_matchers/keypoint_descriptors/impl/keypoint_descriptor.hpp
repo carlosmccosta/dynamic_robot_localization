@@ -48,10 +48,12 @@ typename pcl::PointCloud<FeatureT>::Ptr KeypointDescriptor<PointT, FeatureT>::co
 	typename pcl::PointCloud<FeatureT>::Ptr descriptors(new pcl::PointCloud<FeatureT>());
 
 	if (feature_descriptor_) {
+		ROS_DEBUG_STREAM("Computing descriptors for " << pointcloud_keypoints->size() << " keypoints");
 		feature_descriptor_->setSearchMethod(surface_search_method);
 		feature_descriptor_->setSearchSurface(surface);
 		feature_descriptor_->setInputCloud(pointcloud_keypoints);
 		feature_descriptor_->compute(*descriptors);
+		ROS_DEBUG_STREAM("Finished computation of " << pointcloud_keypoints->size() << " descriptors");
 	}
 
 	return descriptors;

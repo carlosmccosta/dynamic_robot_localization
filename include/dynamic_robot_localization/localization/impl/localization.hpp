@@ -28,6 +28,7 @@ Localization<PointT>::Localization() :
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
+	use_filtered_cloud_as_normal_estimation_surface_(true),
 	compute_normals_when_tracking_pose_(false),
 	compute_normals_when_recovering_pose_tracking_(false),
 	compute_normals_when_estimating_initial_pose_(true),
@@ -204,6 +205,7 @@ void Localization<PointT>::setupNormalEstimatorsConfigurations() {
 	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_tracking_pose", compute_normals_when_tracking_pose_, false);
 	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_recovering_pose_tracking", compute_normals_when_recovering_pose_tracking_, false);
 	private_node_handle_->param("normal_estimators/ambient_pointcloud/compute_normals_when_estimating_initial_pose", compute_normals_when_estimating_initial_pose_, true);
+	private_node_handle_->param("normal_estimators/ambient_pointcloud/use_filtered_cloud_as_normal_estimation_surface", use_filtered_cloud_as_normal_estimation_surface_, true);
 	loadNormalEstimatorFromParameterServer(reference_cloud_normal_estimator_, "normal_estimators/reference_pointcloud/");
 	loadNormalEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "normal_estimators/ambient_pointcloud/");
 }
@@ -531,12 +533,17 @@ template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
 
+	typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_raw;
+	if (!use_filtered_cloud_as_normal_estimation_surface_) {
+		reference_pointcloud_raw = reference_pointcloud_;
+	}
+
 	if (!applyFilters(reference_cloud_filters_, reference_pointcloud_)) { return false; }
 	localization_diagnostics_msg_.number_points_reference_pointcloud_after_filtering = reference_pointcloud_->size();
 
 	reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 	if (reference_cloud_normal_estimator_) {
-		if (!applyNormalEstimation(reference_cloud_normal_estimator_, reference_pointcloud_, reference_pointcloud_search_method_)) { return false; }
+		if (!applyNormalEstimation(reference_cloud_normal_estimator_, reference_pointcloud_, reference_pointcloud_raw, reference_pointcloud_search_method_)) { return false; }
 		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_); // update kdtree
 	}
 
@@ -551,7 +558,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 
 		if (!reference_cloud_keypoint_detectors_.empty()) {
-			if (reference_pointcloud_keypoints_filename_.empty() || pointcloud_conversions::fromFile(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints)) {
+			if (reference_pointcloud_keypoints_filename_.empty() || !pointcloud_conversions::fromFile(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints)) {
 				if (!applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
 
 				if (!reference_pointcloud_keypoints_save_filename_.empty()) {
@@ -819,7 +826,8 @@ bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT
 
 
 template<typename PointT>
-bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
+bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr& surface,
+		typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method) {
 	if (!normal_estimator) return false;
 
 	PerformanceTimer performance_timer;
@@ -834,7 +842,19 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 		sensor_pose_tf_guess.getOrigin().setZ(0.0);
 	}
 
-	normal_estimator->estimateNormals(pointcloud, pointcloud, surface_search_method, sensor_pose_tf_guess, pointcloud);
+	if (surface && surface->size() > minimum_number_of_points_in_ambient_pointcloud_) {
+		ROS_DEBUG_STREAM("Using raw pointcloud with " << surface->size() << " points as surface for normal estimation");
+		typename pcl::search::KdTree<PointT>::Ptr surface_search_method(new pcl::search::KdTree<PointT>());
+		surface_search_method->setInputCloud(surface);
+		size_t number_surface_points = surface_search_method->getInputCloud()->size();
+		normal_estimator->estimateNormals(pointcloud, surface, surface_search_method, sensor_pose_tf_guess, pointcloud);
+
+		if (number_surface_points != surface_search_method->getInputCloud()->size()) {
+			pointcloud_search_method = surface_search_method; // normal estimator changed the number of pointcloud points and updated the search kd tree
+		}
+	} else {
+		normal_estimator->estimateNormals(pointcloud, pointcloud, pointcloud_search_method, sensor_pose_tf_guess, pointcloud);
+	}
 
 	localization_times_msg_.surface_normal_estimation_time += performance_timer.getElapsedTimeInMilliSec();
 
@@ -942,6 +962,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false;
 	}
 
+	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
+	if (!use_filtered_cloud_as_normal_estimation_surface_) {
+		ambient_pointcloud_raw = ambient_pointcloud;
+	}
+
 	PerformanceTimer performance_timer;
 	performance_timer.start();
 	// ==============================================================  filters
@@ -966,7 +991,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool computed_normals = false;
 	localization_times_msg_.surface_normal_estimation_time = 0.0;
 	if (compute_normals_when_tracking_pose_ && ambient_cloud_normal_estimator_) {
-		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 		computed_normals = true;
 	}
 
@@ -996,7 +1021,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose
 		ROS_INFO("Performing initial pose recovery");
 		if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
-			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 			computed_normals = true;
 		}
 
@@ -1019,7 +1044,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			} else {
 				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 					computed_normals = true;
 				}
 
@@ -1060,7 +1085,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			performance_timer.restart();
 			if (!performed_recovery && !tracking_recovery_matchers_.empty()) {
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_search_method)) { return false; }
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 					computed_normals = true;
 				}
 

@@ -140,6 +140,7 @@ normal_estimators:
         compute_normals_when_tracking_pose: false                   # Some registration algorithms don't require normals. Only activate its calculation when required
         compute_normals_when_recovering_pose_tracking: false        # Some registration algorithms don't require normals. Only activate its calculation when required
         compute_normals_when_estimating_initial_pose: true          # Some registration algorithms don't require normals. Only activate its calculation when required
+        use_filtered_cloud_as_normal_estimation_surface: true       # Normals can be estimated with the filtered cloud or with the original ambient cloud as search surface
         display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
         # If the normals are being computed from a nav_msgs::OccupancyGrid, their orientation can be corrected by flipping them to the side that has more empty space (instead of flipping to the sensor view) (to disable, set k to 0 and both radius to < 0)
         display_occupancy_grid_pointcloud: false                    # Can be overridden in child namespaces | Displays a blocking window with the pointcloud created from the nav_msgs::OccupancyGrid
