@@ -128,25 +128,25 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 template<typename PointSource, typename PointTarget, typename FeatureT> void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::computeTransformation(
         PointCloudSource &output, const Eigen::Matrix4f& guess) {
 	// Some sanity checks first
-	if (!input_features_) {
+	if (!input_features_ || input_features_->empty()) {
 		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
 		PCL_ERROR("No source features were given! Call setSourceFeatures before aligning.\n");
 		return;
 	}
-	if (!target_features_) {
+	if (!target_features_ || target_features_->empty()) {
 		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
 		PCL_ERROR("No target features were given! Call setTargetFeatures before aligning.\n");
 		return;
 	}
 
-	if (input_->size() != input_features_->size()) {
+	if (input_->size() != input_features_->size() || input_->empty()) {
 		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
 		PCL_ERROR("The source points and source feature points need to be in a one-to-one relationship! Current input cloud sizes: %ld vs %ld.\n", input_->size(),
 		        input_features_->size());
 		return;
 	}
 
-	if (target_->size() != target_features_->size()) {
+	if (target_->size() != target_features_->size() || target_->empty()) {
 		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
 		PCL_ERROR("The target points and target feature points need to be in a one-to-one relationship! Current input cloud sizes: %ld vs %ld.\n", target_->size(),
 		        target_features_->size());
@@ -173,10 +173,11 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	}
 
 	// Initialize prerejector (similarity threshold already set to default value in constructor)
-	correspondence_rejector_poly_->setInputSource(input_);
+	/*correspondence_rejector_poly_->setInputSource(input_);
 	correspondence_rejector_poly_->setInputTarget(target_);
-	correspondence_rejector_poly_->setCardinality(nr_samples_);
-	setupCorrespondanceRejectors();
+	correspondence_rejector_poly_->setCardinality(nr_samples_);*/
+	pcl::Registration<PointSource, PointTarget>::clearCorrespondenceRejectors();
+	setupCorrespondanceRejectors(correspondence_rejectors_);
 	int num_rejections = 0; // For debugging
 
 	// Initialize results
@@ -185,18 +186,22 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	float lowest_error = std::numeric_limits<float>::max();
 	converged_ = false;
 
-	// Temporaries
-	std::vector<int> inliers;
-	float inlier_fraction;
-	float error;
 
 	// If guess is not the Identity matrix we check it
 	if (!guess.isApprox(Eigen::Matrix4f::Identity(), 0.01f)) {
+		std::vector<int> inliers;
+		float inlier_fraction;
+		float error;
+
 		PointCloudSource input_transformed;
 		input_transformed.resize(input_->size());
 		transformPointCloud(*input_, input_transformed, final_transformation_);
 		getFitness(input_transformed, inliers, error);
-		inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+		if (input_->empty()) {
+			inlier_fraction = 0.0;
+		} else {
+			inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+		}
 		error /= static_cast<float>(inliers.size());
 
 		if (inlier_fraction >= inlier_fraction_ && error < lowest_error) {
@@ -349,7 +354,10 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 #else //-----------------------------------------------------------------------------------------------------------------------------------
 
+	pcl::registration::TransformationEstimationSVD<PointSource, PointTarget> transformation_estimation;
+
 	// Start
+	#pragma omp parallel for firstprivate(transformation_estimation)
 	for (int i = 0; i < max_iterations_; ++i) {
 		// Temporary containers
 		std::vector<int> sample_indices, corresponding_indices;
@@ -379,38 +387,44 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 		// correspondence grouping
 		// TODO: aa
 
+		std::vector< typename pcl::registration::CorrespondenceRejector::Ptr > correspondence_rejectors;
+		setupCorrespondanceRejectors(correspondence_rejectors);
 
-		for (size_t i = 0; i < correspondence_rejectors_.size(); ++i) {
+		for (size_t i = 0; i < correspondence_rejectors.size(); ++i) {
 			filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
-			correspondence_rejectors_[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
-			if (filtered_corrs->size() < 3) break;
+
+//			#pragma omp critical
+			correspondence_rejectors[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
+
+//			if (filtered_corrs->size() < 3) break;
 			temp_corrs = filtered_corrs;
 		}
 
 		if (filtered_corrs->size() > 2) {
+			Matrix4 transformation;
+
 			// Estimate the transform from the correspondences, write to transformation_
 			//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
-			transformation_estimation_->estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation_);
-
-			// Take a backup of previous result
-			const Matrix4 final_transformation_prev = final_transformation_;
-
-			// Set final result to current transformation
-			final_transformation_ = transformation_;
+//			#pragma omp critical
+			transformation_estimation.estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation);
 
 			// Transform the input dataset using the final transformation
 			PointCloudSource input_transformed;
-			input_transformed.resize(input_->size());
-			transformPointCloud(*input_, input_transformed, final_transformation_);
+			pcl::transformPointCloud(*input_, input_transformed, transformation);
+
+			std::vector<int> inliers;
+			float inlier_fraction;
+			float error;
 
 			// Transform the input and compute the error (uses input_ and final_transformation_)
 			getFitness(input_transformed, inliers, error);
 
-			// Restore previous result
-			final_transformation_ = final_transformation_prev;
-
 			// If the new fit is better, update results
-			inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+			if (input_->empty()) {
+				inlier_fraction = 0.0;
+			} else {
+				inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+			}
 
 			if (update_visualizer_ != 0) {
 				std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
@@ -418,16 +432,18 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 					sample_indices_filtered.push_back((*filtered_corrs)[i].index_query);
 					corresponding_indices_filtered.push_back((*filtered_corrs)[i].index_match);
 				}
-
+				#pragma omp critical
 				update_visualizer_(input_transformed, sample_indices_filtered, *target_, corresponding_indices_filtered);
 			}
 
 			// Update result if pose hypothesis is better
+			#pragma omp critical
 			if (inlier_fraction >= inlier_fraction_ && error < lowest_error) {
 				inliers_ = inliers;
 				lowest_error = error;
 				converged_ = true;
-				final_transformation_ = transformation_;
+				final_transformation_ = transformation;
+				transformation_ = transformation;
 			}
 		}
 	}
@@ -436,7 +452,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 
 	// Apply the final transformation
-	if (converged_) transformPointCloud(*input_, output, final_transformation_);
+	if (converged_) pcl::transformPointCloud(*input_, output, final_transformation_);
 
 	// Debug output
 	PCL_DEBUG("[pcl::%s::computeTransformation] Rejected %i out of %i generated pose hypotheses.\n", getClassName().c_str(), num_rejections, max_iterations_);
@@ -478,12 +494,9 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 }
 
 template<typename PointSource, typename PointTarget, typename FeatureT>
-void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setupCorrespondanceRejectors() {
-	pcl::Registration<PointSource, PointTarget>::clearCorrespondenceRejectors();
-
-
+void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setupCorrespondanceRejectors(std::vector< typename pcl::registration::CorrespondenceRejector::Ptr >& correspondence_rejectors) {
 	typename pcl::registration::CorrespondenceRejectorOneToOne::Ptr corr_rej_o2o(new pcl::registration::CorrespondenceRejectorOneToOne());
-	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_o2o);
+	correspondence_rejectors.push_back(corr_rej_o2o);
 
 
 	/*typename pcl::registration::CorrespondenceRejectorMedianDistance::Ptr corr_rej_median (new pcl::registration::CorrespondenceRejectorMedianDistance);
@@ -508,7 +521,7 @@ void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setupCorre
 	corr_rej_sac->setInputTarget(target_);
 	corr_rej_sac->setInlierThreshold(0.25);
 	corr_rej_sac->setMaximumIterations(500);
-	pcl::Registration<PointSource, PointTarget>::addCorrespondenceRejector(corr_rej_sac);
+	correspondence_rejectors.push_back(corr_rej_sac);
 }
 
 } /* namespace dynamic_robot_localization */

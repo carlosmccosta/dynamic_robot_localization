@@ -61,6 +61,10 @@
 #include <pcl/common/distances.h>
 #include <pcl/common/point_tests.h>
 
+#ifdef _OPENMP
+   #include <omp.h>
+#endif
+
 namespace dynamic_robot_localization
 {
   /** \brief Pose estimation and alignment class using a prerejective RANSAC routine.
@@ -257,7 +261,7 @@ namespace dynamic_robot_localization
         return inliers_;
       }
 
-      void setupCorrespondanceRejectors();
+      void setupCorrespondanceRejectors(std::vector< typename pcl::registration::CorrespondenceRejector::Ptr >& correspondence_rejectors);
 
     protected:
       /** \brief Choose a random index between 0 and n-1

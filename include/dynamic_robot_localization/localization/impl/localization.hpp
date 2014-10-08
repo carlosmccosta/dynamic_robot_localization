@@ -462,15 +462,13 @@ template<typename PointT>
 bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
 	if (pointcloud_conversions::fromFile(reference_pointcloud_filename, *reference_pointcloud_)) {
 		if (!reference_pointcloud_->empty()) {
+			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points");
 			reference_pointcloud_->header.frame_id = map_frame_id_;
 
 			last_map_received_time_ = ros::Time::now();
 			reference_pointcloud_2d_ = false;
 			if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
-			if (updateLocalizationPipelineWithNewReferenceCloud()) {
-				ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points");
-				return true;
-			}
+			return updateLocalizationPipelineWithNewReferenceCloud();
 		}
 	}
 

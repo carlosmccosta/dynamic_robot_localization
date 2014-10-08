@@ -62,11 +62,11 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 
 	ROS_DEBUG_STREAM("NormalEstimationOMP computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
 
+	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
+
 	if (pointcloud_with_normals_out->size() != pointcloud_original_size) {
 		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
-
-	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimationOMP-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

@@ -59,11 +59,11 @@ void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCl
 		if (keypoint_descriptor_) // must be set previously
 			reference_descriptors = keypoint_descriptor_->computeKeypointsDescriptors(reference_cloud_final, reference_cloud, search_method);
 	} else {
-		ROS_DEBUG_STREAM("Loaded " << reference_descriptors->size() << " keypoint descriptors from file " << reference_pointcloud_descriptors_filename_);
+		ROS_INFO_STREAM("Loaded " << reference_descriptors->size() << " keypoint descriptors from file " << reference_pointcloud_descriptors_filename_);
 	}
 
 	if (!reference_pointcloud_descriptors_save_filename_.empty() && !reference_descriptors->empty()) {
-		ROS_DEBUG_STREAM("Saving " << reference_descriptors->size() << " reference pointcloud keypoint descriptors to file " << reference_pointcloud_descriptors_save_filename_);
+		ROS_INFO_STREAM("Saving " << reference_descriptors->size() << " reference pointcloud keypoint descriptors to file " << reference_pointcloud_descriptors_save_filename_);
 		pcl::io::savePCDFile<FeatureT>(reference_pointcloud_descriptors_save_filename_, *reference_descriptors, save_descriptors_in_binary_format_);
 	}
 

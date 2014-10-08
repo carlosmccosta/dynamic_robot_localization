@@ -89,12 +89,14 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	initializeKeypointProcessing();
 
 	if (match_only_keypoints_) {
+		ROS_DEBUG_STREAM("Registering cloud with " << pointcloud_keypoints->size() << " points");
 		typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
 		pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
 		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
 		cloud_matcher_->setInputSource(pointcloud_keypoints);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*pointcloud_keypoints); }
 	} else {
+		ROS_DEBUG_STREAM("Registering cloud with " << ambient_pointcloud->size() << " points");
 		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
 		cloud_matcher_->setInputSource(ambient_pointcloud);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*ambient_pointcloud); }
@@ -120,9 +122,12 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
 		}
 
+		ROS_DEBUG_STREAM("Cloud registration finished with " << cloud_matcher_->getFitnessScore() << " alignment fitness");
+
 		return true;
 	}
 
+	ROS_WARN_STREAM("Cloud registration failed with " << cloud_matcher_->getFitnessScore() << " alignment fitness");
 	return false;
 }
 
