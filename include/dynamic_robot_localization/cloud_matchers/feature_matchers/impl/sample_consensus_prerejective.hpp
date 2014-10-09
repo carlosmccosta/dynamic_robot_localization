@@ -48,7 +48,7 @@ namespace dynamic_robot_localization {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointSource, typename PointTarget, typename FeatureT> void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setSourceFeatures(
         const FeatureCloudConstPtr &features) {
-	if (features == NULL || features->empty()) {
+	if (!features || features->empty()) {
 		PCL_ERROR("[pcl::%s::setSourceFeatures] Invalid or empty point cloud dataset given!\n", getClassName().c_str());
 		return;
 	}
@@ -58,7 +58,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointSource, typename PointTarget, typename FeatureT> void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::setTargetFeatures(
         const FeatureCloudConstPtr &features) {
-	if (features == NULL || features->empty()) {
+	if (!features || features->empty()) {
 		PCL_ERROR("[pcl::%s::setTargetFeatures] Invalid or empty point cloud dataset given!\n", getClassName().c_str());
 		return;
 	}
@@ -128,12 +128,12 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 template<typename PointSource, typename PointTarget, typename FeatureT> void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::computeTransformation(
         PointCloudSource &output, const Eigen::Matrix4f& guess) {
 	// Some sanity checks first
-	if (!input_features_ || input_features_->empty()) {
+	if (!input_features_ || !input_ || input_features_->empty()) {
 		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
 		PCL_ERROR("No source features were given! Call setSourceFeatures before aligning.\n");
 		return;
 	}
-	if (!target_features_ || target_features_->empty()) {
+	if (!target_features_ || !target_ || target_features_->empty()) {
 		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
 		PCL_ERROR("No target features were given! Call setTargetFeatures before aligning.\n");
 		return;
@@ -172,6 +172,12 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 		return;
 	}
 
+	if (nr_samples_ < 3) {
+		PCL_ERROR("[pcl::%s::computeTransformation] ", getClassName().c_str());
+		PCL_ERROR("Illegal nr_samples %d, must be >= 3!\n", nr_samples_);
+		return;
+	}
+
 	// Initialize prerejector (similarity threshold already set to default value in constructor)
 	/*correspondence_rejector_poly_->setInputSource(input_);
 	correspondence_rejector_poly_->setInputTarget(target_);
@@ -190,19 +196,21 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	// If guess is not the Identity matrix we check it
 	if (!guess.isApprox(Eigen::Matrix4f::Identity(), 0.01f)) {
 		std::vector<int> inliers;
-		float inlier_fraction;
-		float error;
+		float inlier_fraction = 0.0;
+		float error = std::numeric_limits<float>::max();
 
 		PointCloudSource input_transformed;
 		input_transformed.resize(input_->size());
 		transformPointCloud(*input_, input_transformed, final_transformation_);
 		getFitness(input_transformed, inliers, error);
-		if (input_->empty()) {
-			inlier_fraction = 0.0;
-		} else {
-			inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+		if (!inliers.empty()){
+			error /= static_cast<float>(inliers.size());
+			if (input_->empty()) {
+				inlier_fraction = 0.0;
+			} else {
+				inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+			}
 		}
-		error /= static_cast<float>(inliers.size());
 
 		if (inlier_fraction >= inlier_fraction_ && error < lowest_error) {
 			inliers_ = inliers;
@@ -210,9 +218,6 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 			converged_ = true;
 		}
 	}
-
-	// Feature correspondence cache
-	std::vector<std::vector<int> > similar_features(input_->size());
 
 
 #ifdef USE_GROUPING
@@ -355,95 +360,100 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 #else //-----------------------------------------------------------------------------------------------------------------------------------
 
 	pcl::registration::TransformationEstimationSVD<PointSource, PointTarget> transformation_estimation;
+	float highest_inlier_fraction = 0.0;
 
-	// Start
 	#pragma omp parallel for firstprivate(transformation_estimation)
 	for (int i = 0; i < max_iterations_; ++i) {
-		// Temporary containers
-		std::vector<int> sample_indices, corresponding_indices;
+		if (highest_inlier_fraction < 0.99) {
+			std::vector<std::vector<int> > similar_features(input_->size());
+			std::vector<int> sample_indices, corresponding_indices;
 
-		// Draw nr_samples_ random samples
-		selectSamples(*input_, nr_samples_, sample_indices);
+			// Draw nr_samples_ random samples
+			selectSamples(*input_, nr_samples_, sample_indices);
 
-		// Find corresponding features in the target cloud
-		findSimilarFeatures(sample_indices, similar_features, corresponding_indices);
+			// Find corresponding features in the target cloud
+			findSimilarFeatures(sample_indices, similar_features, corresponding_indices);
 
-		// Apply prerejection
-		/*if (!correspondence_rejector_poly_->thresholdPolygon (sample_indices, corresponding_indices)) {
+			// Apply prerejection
+			/*if (!correspondence_rejector_poly_->thresholdPolygon (sample_indices, corresponding_indices)) {
 			++num_rejections;
 			continue;
-		}*/
+			}*/
 
-		pcl::CorrespondencesPtr temp_corrs(new pcl::Correspondences());
-		pcl::CorrespondencesPtr filtered_corrs(new pcl::Correspondences());
-		for (size_t i = 0; i < sample_indices.size(); ++i) {
-			float distance = pcl::euclideanDistance((*input_)[sample_indices[i]], (*target_)[corresponding_indices[i]]);
-			temp_corrs->push_back(pcl::Correspondence(sample_indices[i], corresponding_indices[i], distance));
-		}
-
-		if (temp_corrs->empty()) continue;
-
-
-		// correspondence grouping
-		// TODO: aa
-
-		std::vector< typename pcl::registration::CorrespondenceRejector::Ptr > correspondence_rejectors;
-		setupCorrespondanceRejectors(correspondence_rejectors);
-
-		for (size_t i = 0; i < correspondence_rejectors.size(); ++i) {
-			filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
-
-//			#pragma omp critical
-			correspondence_rejectors[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
-
-//			if (filtered_corrs->size() < 3) break;
-			temp_corrs = filtered_corrs;
-		}
-
-		if (filtered_corrs->size() > 2) {
-			Matrix4 transformation;
-
-			// Estimate the transform from the correspondences, write to transformation_
-			//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
-//			#pragma omp critical
-			transformation_estimation.estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation);
-
-			// Transform the input dataset using the final transformation
-			PointCloudSource input_transformed;
-			pcl::transformPointCloud(*input_, input_transformed, transformation);
-
-			std::vector<int> inliers;
-			float inlier_fraction;
-			float error;
-
-			// Transform the input and compute the error (uses input_ and final_transformation_)
-			getFitness(input_transformed, inliers, error);
-
-			// If the new fit is better, update results
-			if (input_->empty()) {
-				inlier_fraction = 0.0;
-			} else {
-				inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+			pcl::CorrespondencesPtr temp_corrs(new pcl::Correspondences());
+			pcl::CorrespondencesPtr filtered_corrs(new pcl::Correspondences());
+			for (size_t i = 0; i < sample_indices.size(); ++i) {
+				float distance = pcl::euclideanDistance((*input_)[sample_indices[i]], (*target_)[corresponding_indices[i]]);
+				temp_corrs->push_back(pcl::Correspondence(sample_indices[i], corresponding_indices[i], distance));
 			}
 
-			if (update_visualizer_ != 0) {
-				std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
-				for (size_t i = 0; i < filtered_corrs->size(); ++i) {
-					sample_indices_filtered.push_back((*filtered_corrs)[i].index_query);
-					corresponding_indices_filtered.push_back((*filtered_corrs)[i].index_match);
+			if (temp_corrs->empty()) continue;
+
+
+			// correspondence grouping
+			// TODO: aa
+
+			std::vector< typename pcl::registration::CorrespondenceRejector::Ptr > correspondence_rejectors;
+			setupCorrespondanceRejectors(correspondence_rejectors);
+
+			for (size_t i = 0; i < correspondence_rejectors.size(); ++i) {
+				filtered_corrs = pcl::CorrespondencesPtr(new pcl::Correspondences());
+
+				//			#pragma omp critical
+				correspondence_rejectors[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
+
+				//			if (filtered_corrs->size() < 3) break;
+				temp_corrs = filtered_corrs;
+			}
+
+			if (filtered_corrs->size() > 2) {
+				Matrix4 transformation;
+
+				// Estimate the transform from the correspondences, write to transformation_
+				//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
+				//			#pragma omp critical
+				transformation_estimation.estimateRigidTransformation(*input_, *target_, *filtered_corrs, transformation);
+
+				// Transform the input dataset using the final transformation
+				PointCloudSource input_transformed;
+				pcl::transformPointCloud(*input_, input_transformed, transformation);
+
+				std::vector<int> inliers;
+				float error;
+
+				// Transform the input and compute the error (uses input_ and final_transformation_)
+				getFitness(input_transformed, inliers, error);
+
+				if (inliers.size() > 2) {
+					float current_inlier_fraction;
+					// If the new fit is better, update results
+					if (input_->empty()) {
+						current_inlier_fraction = 0.0;
+					} else {
+						current_inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+					}
+
+					if (update_visualizer_ != 0) {
+						std::vector<int> sample_indices_filtered, corresponding_indices_filtered;
+						for (size_t i = 0; i < filtered_corrs->size(); ++i) {
+							sample_indices_filtered.push_back((*filtered_corrs)[i].index_query);
+							corresponding_indices_filtered.push_back((*filtered_corrs)[i].index_match);
+						}
+						#pragma omp critical
+						update_visualizer_(input_transformed, sample_indices_filtered, *target_, corresponding_indices_filtered);
+					}
+
+					// Update result if pose hypothesis is better
+					#pragma omp critical
+					if (current_inlier_fraction >= inlier_fraction_ && error < lowest_error) {
+						highest_inlier_fraction = current_inlier_fraction;
+						inliers_ = inliers;
+						lowest_error = error;
+						converged_ = true;
+						final_transformation_ = transformation;
+						transformation_ = transformation;
+					}
 				}
-				#pragma omp critical
-				update_visualizer_(input_transformed, sample_indices_filtered, *target_, corresponding_indices_filtered);
-			}
-
-			// Update result if pose hypothesis is better
-			#pragma omp critical
-			if (inlier_fraction >= inlier_fraction_ && error < lowest_error) {
-				inliers_ = inliers;
-				lowest_error = error;
-				converged_ = true;
-				final_transformation_ = transformation;
-				transformation_ = transformation;
 			}
 		}
 	}
