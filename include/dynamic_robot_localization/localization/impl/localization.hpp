@@ -623,7 +623,7 @@ void Localization<PointT>::startLocalization() {
 		if (publish_tf_map_odom_) {
 			ros::Rate publish_rate(pose_to_tf_publisher_.getPublishRate());
 			while (ros::ok()) {
-				pose_to_tf_publisher_.publishTFMapToOdom();
+				pose_to_tf_publisher_.sendTF();
 				publish_rate.sleep();
 				ros::spinOnce();
 			}
@@ -712,7 +712,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			}
 
 			if (publish_tf_map_odom_) {
-				pose_to_tf_publisher_.publishTFMapToOdom(pose_tf_corrected, ambient_cloud_msg->header.stamp);
+				pose_to_tf_publisher_.publishTF(pose_tf_corrected, ambient_cloud_msg->header.stamp);
 			}
 
 			if (!pose_with_covariance_stamped_publisher_.getTopic().empty()) {

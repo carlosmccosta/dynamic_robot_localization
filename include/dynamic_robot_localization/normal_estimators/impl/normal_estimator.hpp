@@ -74,7 +74,7 @@ void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::P
 	normals_visualizer.initCameraParameters ();
 	normals_visualizer.setCameraPosition(-6, 0, 0, 0, 0, 1);
 	normals_visualizer.addCoordinateSystem (0.5, 0);
-	normals_visualizer.addPointCloudNormals<PointT>(pointcloud_with_normals, 1, 0.01, VISUALIZER_NORMALS_ID);
+	normals_visualizer.addPointCloudNormals<PointT>(pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
 	pcl::visualization::PointCloudColorHandlerGenericField<PointT> color_handler(pointcloud_with_normals, "curvature");
 	normals_visualizer.addPointCloud(pointcloud_with_normals, color_handler, "Cloud points");
 	normals_visualizer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "Cloud points");
