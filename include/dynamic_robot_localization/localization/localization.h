@@ -230,6 +230,8 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
 		int minimum_number_of_points_in_ambient_pointcloud_;
+		bool localization_detailed_use_millimeters_in_translation_corrections_;
+		bool localization_detailed_use_degrees_in_rotation_corrections_;
 		bool save_reference_pointclouds_in_binary_format_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;

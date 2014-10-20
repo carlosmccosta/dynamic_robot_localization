@@ -1,8 +1,8 @@
 Header header
 geometry_msgs/PoseWithCovariance pose
 geometry_msgs/Vector3 translation_corrections
-geometry_msgs/Vector3 rotation_corrections
 float64 translation_correction
-float64 rotation_correction
+geometry_msgs/Vector3 rotation_correction_axis
+float64 rotation_correction_angle
 float64 outlier_percentage
 float64 aligment_fitness

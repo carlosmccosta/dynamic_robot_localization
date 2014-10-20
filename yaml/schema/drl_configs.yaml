@@ -91,6 +91,8 @@ message_management:
     min_seconds_between_reference_pointcloud_update: 5.0            # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
     minimum_number_of_points_in_ambient_pointcloud: 10
     maximum_number_points_ambient_pointcloud_circular_buffer: 0     # If != 0, the ambient pointcloud uses a circular buffer with the specified size of points
+    localization_detailed_use_millimeters_in_translation_corrections: true
+    localization_detailed_use_degrees_in_rotation_corrections: true
 
 
 # ===================================================================================================================================================

@@ -24,6 +24,8 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 Localization<PointT>::Localization() :
 	minimum_number_of_points_in_ambient_pointcloud_(10),
+	localization_detailed_use_millimeters_in_translation_corrections_(true),
+	localization_detailed_use_degrees_in_rotation_corrections_(true),
 	save_reference_pointclouds_in_binary_format_(true),
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
@@ -157,6 +159,9 @@ void Localization<PointT>::setupMessageManagement() {
 	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
 	}
+
+	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, true);
+	private_node_handle_->param("message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, true);
 }
 
 
@@ -737,33 +742,41 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			}
 
 			if (!localization_detailed_publisher_.getTopic().empty()) {
-				tf2::Quaternion pose_tf_initial_guess_q(pose_tf_initial_guess.getRotation().getX(), pose_tf_initial_guess.getRotation().getY(), pose_tf_initial_guess.getRotation().getZ(), pose_tf_initial_guess.getRotation().getW());
-				tf2::Matrix3x3 pose_initial_guess_matrix(pose_tf_initial_guess_q);
-				tf2Scalar roll_initial_guess, pitch_initial_guess, yaw_initial_guess;
-				pose_initial_guess_matrix.getRPY(roll_initial_guess, pitch_initial_guess, yaw_initial_guess);
-
-				tf2::Quaternion pose_tf_corrected_q(pose_tf_corrected.getRotation().getX(), pose_tf_corrected.getRotation().getY(), pose_tf_corrected.getRotation().getZ(), pose_tf_corrected.getRotation().getW());
-				tf2::Matrix3x3 pose_corrected_matrix(pose_tf_corrected_q);
-				tf2Scalar roll_corrected, pitch_corrected, yaw_corrected;
-				pose_corrected_matrix.getRPY(roll_corrected, pitch_corrected, yaw_corrected);
-
 				LocalizationDetailed localization_detailed_msg;
 				localization_detailed_msg.header.frame_id = map_frame_id_;
 				localization_detailed_msg.header.stamp = ambient_cloud_msg->header.stamp;
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, localization_detailed_msg.pose.pose);
-				localization_detailed_msg.translation_corrections.x = (pose_tf_corrected.getOrigin().getX() - pose_tf_initial_guess.getOrigin().getX()) * 1000.0; // mm
-				localization_detailed_msg.translation_corrections.y = (pose_tf_corrected.getOrigin().getY() - pose_tf_initial_guess.getOrigin().getY()) * 1000.0; // mm
-				localization_detailed_msg.translation_corrections.z = (pose_tf_corrected.getOrigin().getZ() - pose_tf_initial_guess.getOrigin().getZ()) * 1000.0; // mm
+				localization_detailed_msg.outlier_percentage = outlier_percentage_;
+				localization_detailed_msg.aligment_fitness = aligment_fitness_;
+
+				// translation corrections
+				localization_detailed_msg.translation_corrections.x = pose_tf_initial_guess.getOrigin().getX() - pose_tf_corrected.getOrigin().getX();
+				localization_detailed_msg.translation_corrections.y = pose_tf_initial_guess.getOrigin().getY() - pose_tf_corrected.getOrigin().getY();
+				localization_detailed_msg.translation_corrections.z = pose_tf_initial_guess.getOrigin().getZ() - pose_tf_corrected.getOrigin().getZ();
+				if (localization_detailed_use_millimeters_in_translation_corrections_) {
+					localization_detailed_msg.translation_corrections.x *= 1000.0;
+					localization_detailed_msg.translation_corrections.y *= 1000.0;
+					localization_detailed_msg.translation_corrections.z *= 1000.0;
+				}
 				localization_detailed_msg.translation_correction = std::sqrt(
 						localization_detailed_msg.translation_corrections.x * localization_detailed_msg.translation_corrections.x +
 						localization_detailed_msg.translation_corrections.y * localization_detailed_msg.translation_corrections.y +
 						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z);
-				localization_detailed_msg.rotation_corrections.x = angles::to_degrees(roll_corrected - roll_initial_guess);
-				localization_detailed_msg.rotation_corrections.y = angles::to_degrees(pitch_corrected - pitch_initial_guess);
-				localization_detailed_msg.rotation_corrections.z = angles::to_degrees(yaw_corrected - yaw_initial_guess);
-				localization_detailed_msg.rotation_correction = pose_tf_initial_guess_q.angleShortestPath(pose_tf_corrected_q);
-				localization_detailed_msg.outlier_percentage = outlier_percentage_;
-				localization_detailed_msg.aligment_fitness = aligment_fitness_;
+
+				// rotation corrections
+				tf2::Quaternion pose_tf_initial_guess_q(pose_tf_initial_guess.getRotation().getX(), pose_tf_initial_guess.getRotation().getY(), pose_tf_initial_guess.getRotation().getZ(), pose_tf_initial_guess.getRotation().getW());
+				tf2::Quaternion pose_tf_corrected_q(pose_tf_corrected.getRotation().getX(), pose_tf_corrected.getRotation().getY(), pose_tf_corrected.getRotation().getZ(), pose_tf_corrected.getRotation().getW());
+				tf2::Quaternion rotation_correction_q = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
+				rotation_correction_q.normalize();
+				tf2::Vector3 rotation_correction_axis = rotation_correction_q.getAxis();
+				localization_detailed_msg.rotation_correction_angle = pose_tf_initial_guess_q.angleShortestPath(pose_tf_corrected_q);
+				if (localization_detailed_use_degrees_in_rotation_corrections_) {
+					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
+				}
+				localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
+				localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
+				localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
+
 				localization_detailed_publisher_.publish(localization_detailed_msg);
 			}
 
