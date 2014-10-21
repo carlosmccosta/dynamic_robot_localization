@@ -89,6 +89,7 @@
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
 		<arg name="target_frame" default="$(arg map_frame_id)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
+		<arg name="interpolate_scans" default="true" />
 	</include>
 	
 

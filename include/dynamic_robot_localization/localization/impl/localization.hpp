@@ -770,12 +770,17 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				rotation_correction_q.normalize();
 				tf2::Vector3 rotation_correction_axis = rotation_correction_q.getAxis();
 				localization_detailed_msg.rotation_correction_angle = pose_tf_initial_guess_q.angleShortestPath(pose_tf_corrected_q);
-				if (localization_detailed_use_degrees_in_rotation_corrections_) {
-					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
-				}
 				localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
 				localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
 				localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
+				if (std::abs(rotation_correction_q.getAngleShortestPath() - localization_detailed_msg.rotation_correction_angle) > 0.025) {
+					localization_detailed_msg.rotation_correction_axis.x *= -1;
+					localization_detailed_msg.rotation_correction_axis.y *= -1;
+					localization_detailed_msg.rotation_correction_axis.z *= -1;
+				}
+				if (localization_detailed_use_degrees_in_rotation_corrections_) {
+					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
+				}
 
 				localization_detailed_publisher_.publish(localization_detailed_msg);
 			}
