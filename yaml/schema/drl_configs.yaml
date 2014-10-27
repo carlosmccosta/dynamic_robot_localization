@@ -356,5 +356,5 @@ transformation_validators_tracking_recovery:
         max_transformation_distance: 0.04                           # Pose corrections with a translation greater than this value will be rejected
         max_new_pose_diff_angle: 0.6                                # Pose recovery with a angle greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
         max_new_pose_diff_distance: 0.2                             # Pose recovery with a translation greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
-        max_alignment_fitness: 3.0                                  # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected
+        max_root_mean_square_error: 0.05                            # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected
         max_outliers_percentage: 0.7                                # Pose corrections which have a cloud registration outlier percentage [0-1] greater than this value will be rejected

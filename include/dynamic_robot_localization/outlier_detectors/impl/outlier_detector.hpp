@@ -33,23 +33,16 @@ void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 
 
 template<typename PointT>
-void OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
-	if (outliers->data.size() > 0 && !outliers_publisher_.getTopic().empty()) {
-		outliers_publisher_.publish(outliers);
-	}
+bool OutlierDetector<PointT>::isPublishingOutliers() {
+	return !outliers_publisher_.getTopic().empty();
 }
 
-template<typename PointT>
-sensor_msgs::PointCloud2Ptr OutlierDetector<PointT>::processAndPublishOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud) {
-	sensor_msgs::PointCloud2Ptr pointcloud_msg;
-	if (!outliers_publisher_.getTopic().empty()) {
-		pointcloud_msg = processOutliers(reference_pointcloud_search_method, ambient_pointcloud);
-		publishOutliers(pointcloud_msg);
-	} else {
-		pointcloud_msg = sensor_msgs::PointCloud2Ptr(new sensor_msgs::PointCloud2());
-	}
 
-	return pointcloud_msg;
+template<typename PointT>
+void OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
+	if (outliers->data.size() > 0 && isPublishingOutliers()) {
+		outliers_publisher_.publish(outliers);
+	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

@@ -28,11 +28,11 @@ transformation_validators:
         max_transformation_distance: 0.5
         max_new_pose_diff_angle: 1.0
         max_new_pose_diff_distance: 1.0
-        max_alignment_fitness: 0.5
+        max_root_mean_square_error: 0.15
         max_outliers_percentage: 0.1
 
 
 transformation_validators_tracking_recovery:
     euclidean_transformation_validator:
-        max_alignment_fitness: 2.0
+        max_root_mean_square_error: 0.15
         max_outliers_percentage: 0.15

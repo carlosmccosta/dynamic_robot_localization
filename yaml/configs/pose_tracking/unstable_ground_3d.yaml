@@ -27,5 +27,5 @@ transformation_validators:
         max_transformation_distance: 0.035
         max_new_pose_diff_angle: 0.6
         max_new_pose_diff_distance: 0.2
-        max_alignment_fitness: 0.05
+        max_root_mean_square_error: 0.05
         max_outliers_percentage: 0.2

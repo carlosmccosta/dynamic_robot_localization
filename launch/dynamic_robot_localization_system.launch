@@ -27,7 +27,7 @@
 	<arg name="map_frame_id" default="map" />
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
-	<arg name="publish_pose_tf_rate" default="100.0" />
+	<arg name="publish_pose_tf_rate" default="30.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="-1.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />

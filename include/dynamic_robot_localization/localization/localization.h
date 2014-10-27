@@ -291,7 +291,8 @@ class Localization : public ConfigurableObject {
 		std::vector< TransformationValidator::Ptr > transformation_validators_tracking_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		double outlier_percentage_;
-		double aligment_fitness_;
+		size_t number_inliers_;
+		double root_mean_square_error_;
 		std::vector< sensor_msgs::PointCloud2Ptr > detected_outliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;

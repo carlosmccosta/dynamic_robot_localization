@@ -21,7 +21,7 @@ EuclideanTransformationValidator::EuclideanTransformationValidator() :
 		max_transformation_distance_(0.1),
 		max_new_pose_diff_angle_(1.59),
 		max_new_pose_diff_distance_(0.2),
-		max_alignment_fitness_(0.1),
+		max_root_mean_square_error_(0.05),
 		max_outliers_percentage_(0.6) {}
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -32,18 +32,18 @@ void EuclideanTransformationValidator::setupConfigurationFromParameterServer(ros
 	private_node_handle->param(configuration_namespace + "max_transformation_distance", max_transformation_distance_, 0.1);
 	private_node_handle->param(configuration_namespace + "max_new_pose_diff_angle", max_new_pose_diff_angle_, 1.59);
 	private_node_handle->param(configuration_namespace + "max_new_pose_diff_distance", max_new_pose_diff_distance_, 0.2);
-	private_node_handle->param(configuration_namespace + "max_alignment_fitness", max_alignment_fitness_, 0.1);
+	private_node_handle->param(configuration_namespace + "max_root_mean_square_error", max_root_mean_square_error_, 0.05);
 	private_node_handle->param(configuration_namespace + "max_outliers_percentage", max_outliers_percentage_, 0.6);
 }
 
-bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose, double alignment_fitness, double outliers_percentage) {
+bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose, double root_mean_square_error, double outliers_percentage) {
 	double transform_distance = (new_pose.getOrigin() - initial_guess.getOrigin()).length();
 	double transform_angle = std::abs(new_pose.getRotation().angleShortestPath(initial_guess.getRotation()));
 
 	double new_pose_distance = (new_pose.getOrigin() - last_accepted_pose.getOrigin()).length();
 	double new_pose_angle = std::abs(new_pose.getRotation().angleShortestPath(last_accepted_pose.getRotation()));
 
-	if (alignment_fitness < max_alignment_fitness_
+	if (root_mean_square_error < max_root_mean_square_error_
 			&& outliers_percentage < max_outliers_percentage_
 			&& (max_transformation_distance_ < 0 || transform_distance < max_transformation_distance_)
 			&& (max_transformation_angle_ < 0 || transform_angle < max_transformation_angle_)
@@ -55,7 +55,7 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 					<< "\n\t correction rotation: " 			<< transform_angle \
 					<< "\n\t new pose diff translation: " 		<< new_pose_distance \
 					<< "\n\t new pose diff rotation: " 			<< new_pose_angle \
-					<< "\n\t alignment_fitness: " 				<< alignment_fitness \
+					<< "\n\t root_mean_square_error: " 			<< root_mean_square_error \
 					<< "\n\t outliers_percentage: "				<< outliers_percentage);
 		return true;
 	}
@@ -65,7 +65,7 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 			<< "\n\t correction rotation: " 			<< transform_angle \
 			<< "\n\t new pose diff translation: " 		<< new_pose_distance \
 			<< "\n\t new pose diff rotation: " 			<< new_pose_angle \
-			<< "\n\t alignment_fitness: " 				<< alignment_fitness \
+			<< "\n\t root_mean_square_error: " 			<< root_mean_square_error \
 			<< "\n\t outliers_percentage: "				<< outliers_percentage);
 	return false;
 }

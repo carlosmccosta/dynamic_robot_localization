@@ -122,12 +122,9 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
 		}
 
-		ROS_DEBUG_STREAM("Cloud registration finished with " << cloud_matcher_->getFitnessScore() << " alignment fitness");
-
 		return true;
 	}
 
-	ROS_WARN_STREAM("Cloud registration failed with " << cloud_matcher_->getFitnessScore() << " alignment fitness");
 	return false;
 }
 

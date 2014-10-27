@@ -28,22 +28,38 @@ void EuclideanOutlierDetector<PointT>::setupConfigurationFromParameterServer(ros
 }
 
 template<typename PointT>
-sensor_msgs::PointCloud2Ptr EuclideanOutlierDetector<PointT>::processOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud) {
-	std::vector<int> nn_indices(1);
-	std::vector<float> nn_distances(1);
+size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud,
+		sensor_msgs::PointCloud2Ptr& outliers_msg_out, double& root_mean_square_error_out) {
+	std::vector<int> k_indices(1);
+	std::vector<float> k_sqr_distances(1);
+
+	root_mean_square_error_out = 0.0;
+	size_t number_inliers = 0;
+	bool save_outliers = outliers_msg_out.get() != NULL;
 
 	PointCloud2Builder pointcloud_builder;
 	pointcloud_builder.createNewCloud(ambient_pointcloud.header.frame_id, ambient_pointcloud.size());
 
 	for (size_t i = 0; i < ambient_pointcloud.size(); ++i) {
 		PointT point = ambient_pointcloud.points[i];
-		reference_pointcloud_search_method->nearestKSearch(point, 1, nn_indices, nn_distances);
-		if (nn_distances[0] > max_inliers_distance_) {
-			pointcloud_builder.addNewPoint(point.x, point.y, point.z);
+		reference_pointcloud_search_method->nearestKSearch(point, 1, k_indices, k_sqr_distances);
+		if (k_sqr_distances[0] > max_inliers_distance_) {
+			if (save_outliers) { pointcloud_builder.addNewPoint(point.x, point.y, point.z); }
+		} else {
+			root_mean_square_error_out += k_sqr_distances[0];
+			++number_inliers;
 		}
 	}
 
-	return pointcloud_builder.getPointcloudMsg();
+	if (number_inliers == 0) {
+		root_mean_square_error_out = std::numeric_limits<double>::max();
+	} else {
+		root_mean_square_error_out /= number_inliers;
+		root_mean_square_error_out = std::sqrt(root_mean_square_error_out);
+	}
+
+	outliers_msg_out = pointcloud_builder.getPointcloudMsg();
+	return ambient_pointcloud.size() - number_inliers;
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanOutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
