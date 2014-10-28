@@ -26,8 +26,17 @@ void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 		private_node_handle->param(final_param_name, aligned_pointcloud_outliers_publish_topic, std::string(""));
 	}
 
+	std::string aligned_pointcloud_inliers_publish_topic;
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "aligned_pointcloud_inliers_publish_topic", final_param_name)) {
+		private_node_handle->param(final_param_name, aligned_pointcloud_inliers_publish_topic, std::string(""));
+	}
+
 	if (!aligned_pointcloud_outliers_publish_topic.empty()) {
-		outliers_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_outliers_publish_topic, 5, true);
+		outliers_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_outliers_publish_topic, 1, true);
+	}
+
+	if (!aligned_pointcloud_inliers_publish_topic.empty()) {
+		inliers_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_inliers_publish_topic, 1, true);
 	}
 }
 
@@ -39,9 +48,23 @@ bool OutlierDetector<PointT>::isPublishingOutliers() {
 
 
 template<typename PointT>
+bool OutlierDetector<PointT>::isPublishingInliers() {
+	return !inliers_publisher_.getTopic().empty();
+}
+
+
+template<typename PointT>
 void OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
 	if (outliers->data.size() > 0 && isPublishingOutliers()) {
 		outliers_publisher_.publish(outliers);
+	}
+}
+
+
+template<typename PointT>
+void OutlierDetector<PointT>::publishInliers(const sensor_msgs::PointCloud2Ptr& inliers) {
+	if (inliers->data.size() > 0 && isPublishingInliers()) {
+		inliers_publisher_.publish(inliers);
 	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

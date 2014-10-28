@@ -19,6 +19,7 @@ outlier_detectors:
     euclidean_outlier_detector:
         max_inliers_distance: 0.02
         aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
+        aligned_pointcloud_inliers_publish_topic: 'aligned_pointcloud_inliers'
 
 
 transformation_validators:

@@ -58,9 +58,11 @@ class OutlierDetector : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <OutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
 		virtual size_t detectOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud,
-				sensor_msgs::PointCloud2Ptr& outliers_msg_out, double& root_mean_square_error_out) = 0;
+				sensor_msgs::PointCloud2Ptr& outliers_msg_out, sensor_msgs::PointCloud2Ptr& inliers_msg_out, double& root_mean_square_error_out) = 0;
 		bool isPublishingOutliers();
+		bool isPublishingInliers();
 		void publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers);
+		void publishInliers(const sensor_msgs::PointCloud2Ptr& inliers);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -78,6 +80,7 @@ class OutlierDetector : public ConfigurableObject {
 	private:
 		// ros communication fields
 		ros::Publisher outliers_publisher_;
+		ros::Publisher inliers_publisher_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

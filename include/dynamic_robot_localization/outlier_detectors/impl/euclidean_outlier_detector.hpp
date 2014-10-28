@@ -29,23 +29,28 @@ void EuclideanOutlierDetector<PointT>::setupConfigurationFromParameterServer(ros
 
 template<typename PointT>
 size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud,
-		sensor_msgs::PointCloud2Ptr& outliers_msg_out, double& root_mean_square_error_out) {
+		sensor_msgs::PointCloud2Ptr& outliers_msg_out, sensor_msgs::PointCloud2Ptr& inliers_msg_out, double& root_mean_square_error_out) {
 	std::vector<int> k_indices(1);
 	std::vector<float> k_sqr_distances(1);
 
 	root_mean_square_error_out = 0.0;
 	size_t number_inliers = 0;
 	bool save_outliers = outliers_msg_out.get() != NULL;
+	bool save_inliers = inliers_msg_out.get() != NULL;
 
-	PointCloud2Builder pointcloud_builder;
-	pointcloud_builder.createNewCloud(ambient_pointcloud.header.frame_id, ambient_pointcloud.size());
+	PointCloud2Builder outliers_pointcloud_builder;
+	outliers_pointcloud_builder.createNewCloud(ambient_pointcloud.header.frame_id, ambient_pointcloud.size());
+
+	PointCloud2Builder inliers_pointcloud_builder;
+	inliers_pointcloud_builder.createNewCloud(ambient_pointcloud.header.frame_id, ambient_pointcloud.size());
 
 	for (size_t i = 0; i < ambient_pointcloud.size(); ++i) {
 		PointT point = ambient_pointcloud.points[i];
 		reference_pointcloud_search_method->nearestKSearch(point, 1, k_indices, k_sqr_distances);
 		if (k_sqr_distances[0] > max_inliers_distance_) {
-			if (save_outliers) { pointcloud_builder.addNewPoint(point.x, point.y, point.z); }
+			if (save_outliers) { outliers_pointcloud_builder.addNewPoint(point.x, point.y, point.z); }
 		} else {
+			if (save_inliers) { inliers_pointcloud_builder.addNewPoint(point.x, point.y, point.z); }
 			root_mean_square_error_out += k_sqr_distances[0];
 			++number_inliers;
 		}
@@ -58,7 +63,9 @@ size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::Kd
 		root_mean_square_error_out = std::sqrt(root_mean_square_error_out);
 	}
 
-	outliers_msg_out = pointcloud_builder.getPointcloudMsg();
+	if (save_outliers) { outliers_msg_out = outliers_pointcloud_builder.getPointcloudMsg(); }
+	if (save_inliers) { inliers_msg_out = inliers_pointcloud_builder.getPointcloudMsg(); }
+
 	return ambient_pointcloud.size() - number_inliers;
 }
 

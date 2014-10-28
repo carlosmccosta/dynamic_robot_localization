@@ -180,6 +180,7 @@ class Localization : public ConfigurableObject {
 
 		virtual double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
 		virtual void publishDetectedOutliers();
+		virtual void publishDetectedInliers();
 
 		virtual bool applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators,
 				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
@@ -243,6 +244,8 @@ class Localization : public ConfigurableObject {
 		bool compute_keypoints_when_tracking_pose_;
 		bool compute_keypoints_when_recovering_pose_tracking_;
 		bool compute_keypoints_when_estimating_initial_pose_;
+		bool compute_inliers_angular_distribution_;
+		bool compute_outliers_angular_distribution_;
 
 		// state fields
 		ros::Time last_scan_time_;
@@ -294,6 +297,7 @@ class Localization : public ConfigurableObject {
 		size_t number_inliers_;
 		double root_mean_square_error_;
 		std::vector< sensor_msgs::PointCloud2Ptr > detected_outliers_;
+		std::vector< sensor_msgs::PointCloud2Ptr > detected_inliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
 	// ========================================================================   </private-section>  ==========================================================================
