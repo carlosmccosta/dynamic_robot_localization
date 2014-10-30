@@ -75,6 +75,7 @@ catkin_package(
         drl_cloud_matchers
         drl_transformation_validators
         drl_outliers_detectors
+        drl_cloud_analyzers
         drl_localization
     CATKIN_DEPENDS
         ${${PROJECT_NAME}_CATKIN_COMPONENTS}
@@ -115,6 +116,7 @@ add_library(drl_common
     src/common/cloud_publisher.cpp
     src/common/math_utils.cpp
     src/common/pointcloud_conversions.cpp
+    src/common/pointcloud_utils.cpp
     src/common/pointcloud2_builder.cpp
     src/common/registration_visualizer.cpp
     src/common/time_utils.cpp
@@ -180,6 +182,11 @@ add_library(drl_transformation_validators
 add_library(drl_outliers_detectors
     src/outlier_detectors/outlier_detector.cpp
     src/outlier_detectors/euclidean_outlier_detector.cpp
+)
+
+add_library(drl_cloud_analyzers
+    src/cloud_analyzers/cloud_analyzer.cpp
+    src/cloud_analyzers/angular_distribution_analyzer.cpp
 )
 
 add_library(drl_localization
@@ -269,6 +276,12 @@ target_link_libraries(drl_outliers_detectors
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_cloud_analyzers
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_localization
     drl_common
     drl_cloud_filters
@@ -278,6 +291,7 @@ target_link_libraries(drl_localization
     drl_cloud_matchers
     drl_transformation_validators
     drl_outliers_detectors
+    drl_cloud_analyzers
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )

@@ -54,17 +54,21 @@ bool OutlierDetector<PointT>::isPublishingInliers() {
 
 
 template<typename PointT>
-void OutlierDetector<PointT>::publishOutliers(const sensor_msgs::PointCloud2Ptr& outliers) {
-	if (outliers->data.size() > 0 && isPublishingOutliers()) {
-		outliers_publisher_.publish(outliers);
+void OutlierDetector<PointT>::publishOutliers(typename pcl::PointCloud<PointT>::Ptr& outliers) {
+	if (!outliers->empty() && isPublishingOutliers()) {
+		sensor_msgs::PointCloud2Ptr outliers_msg(new sensor_msgs::PointCloud2());
+		pcl::toROSMsg(*outliers, *outliers_msg);
+		outliers_publisher_.publish(outliers_msg);
 	}
 }
 
 
 template<typename PointT>
-void OutlierDetector<PointT>::publishInliers(const sensor_msgs::PointCloud2Ptr& inliers) {
-	if (inliers->data.size() > 0 && isPublishingInliers()) {
-		inliers_publisher_.publish(inliers);
+void OutlierDetector<PointT>::publishInliers(typename pcl::PointCloud<PointT>::Ptr& inliers) {
+	if (!inliers->empty() && isPublishingInliers()) {
+		sensor_msgs::PointCloud2Ptr inliers_msg(new sensor_msgs::PointCloud2());
+		pcl::toROSMsg(*inliers, *inliers_msg);
+		inliers_publisher_.publish(inliers_msg);
 	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </OutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

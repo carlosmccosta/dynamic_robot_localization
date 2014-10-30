@@ -6,4 +6,5 @@ float64 keypoint_selection_time
 float64 initial_pose_estimation_time
 float64 pointcloud_registration_time
 float64 outlier_detection_time
+float64 registered_points_angular_distribution_analysis_time
 float64 transformation_validators_time

@@ -1,4 +1,4 @@
-/**\file euclidean_outlier_detector.hpp
+/**\file cloud_analyzer.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/outlier_detectors/euclidean_outlier_detector.h>
+#include <dynamic_robot_localization/cloud_analyzers/cloud_analyzer.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -16,51 +16,22 @@ namespace dynamic_robot_localization {
 
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-template<typename PointT>
-EuclideanOutlierDetector<PointT>::EuclideanOutlierDetector() : max_inliers_distance_(0.01) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanOutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudAnalyzer-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void EuclideanOutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	private_node_handle->param(configuration_namespace + "max_inliers_distance", max_inliers_distance_, 0.01);
-	OutlierDetector<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
-}
-
-template<typename PointT>
-size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud,
-		typename pcl::PointCloud<PointT>::Ptr& outliers_out, typename pcl::PointCloud<PointT>::Ptr& inliers_out, double& root_mean_square_error_out) {
-	std::vector<int> k_indices(1);
-	std::vector<float> k_sqr_distances(1);
-
-	root_mean_square_error_out = 0.0;
-	size_t number_inliers = 0;
-	bool save_outliers = outliers_out.get() != NULL;
-	bool save_inliers = inliers_out.get() != NULL;
-
-	for (size_t i = 0; i < ambient_pointcloud.size(); ++i) {
-		PointT point = ambient_pointcloud.points[i];
-		reference_pointcloud_search_method->nearestKSearch(point, 1, k_indices, k_sqr_distances);
-		if (k_sqr_distances[0] > max_inliers_distance_) {
-			if (save_outliers) { outliers_out->push_back(point); }
-		} else {
-			if (save_inliers) { inliers_out->push_back(point); }
-			root_mean_square_error_out += k_sqr_distances[0];
-			++number_inliers;
-		}
+double CloudAnalyzer<PointT>::analyzeCloud(const tf2::Transform& estimated_pose, const pcl::PointCloud<PointT>& pointcloud, std::vector<size_t>& analysis_histogram_out) {
+	if (pointcloud.empty()) {
+		return 0.0;
 	}
 
-	if (number_inliers == 0) {
-		root_mean_square_error_out = std::numeric_limits<double>::max();
+	if (computeAnalysisHistogram(estimated_pose, pointcloud, analysis_histogram_out)) {
+		return computeAnalysis(analysis_histogram_out);
 	} else {
-		root_mean_square_error_out /= number_inliers;
-		root_mean_square_error_out = std::sqrt(root_mean_square_error_out);
+		return -1.0;
 	}
-
-	return ambient_pointcloud.size() - number_inliers;
 }
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanOutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudAnalyzer-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================

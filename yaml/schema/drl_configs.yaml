@@ -338,12 +338,20 @@ initial_pose_estimators_matchers:   # Any of the feature / point matchers shown 
 #   Several outlier detectors can be used. This processing step is applied after cloud registration, and will only be used to validate the registration in the transformation_validators stage.
 #   It is also useful to perform dynamic map update, since the outliers pointcloud can be published and used in OctoMap.
 outlier_detectors:
-    compute_inliers_angular_distribution: true
-    compute_outliers_angular_distribution: true
     euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
         max_inliers_distance: 0.01                                  # A point in the ambient cloud will be considered outlier if it does't have a point in the reference cloud within a sphere with this radius
         aligned_pointcloud_outliers_publish_topic: ''               # Pointcloud topic for the registered outliers. OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched
         aligned_pointcloud_inliers_publish_topic: ''                # Pointcloud topic for the registered inliers. If empty, messages will not be dispatched
+
+
+# ===================================================================================================================================================
+#   The inliers and outliers angular point distribution can be computed using one of the supported methods.
+#   It is useful for supervisers to analyze the confidence of the localization estimate.
+cloud_analyzers:
+    compute_inliers_angular_distribution: true
+    compute_outliers_angular_distribution: true
+    angular_distribution_analyzer:
+        number_of_angular_bins: 180
 
 
 # ===================================================================================================================================================

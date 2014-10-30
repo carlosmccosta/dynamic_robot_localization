@@ -23,6 +23,13 @@ outlier_detectors:
         aligned_pointcloud_inliers_publish_topic: 'aligned_pointcloud_inliers'
 
 
+cloud_analyzers:
+    compute_inliers_angular_distribution: true
+    compute_outliers_angular_distribution: true
+    angular_distribution_analyzer:
+        number_of_angular_bins: 180
+
+
 transformation_validators:
     euclidean_transformation_validator:
         max_transformation_angle: 4
