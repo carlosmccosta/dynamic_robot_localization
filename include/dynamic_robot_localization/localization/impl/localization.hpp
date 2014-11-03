@@ -24,6 +24,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 Localization<PointT>::Localization() :
 	minimum_number_of_points_in_ambient_pointcloud_(10),
+	localization_detailed_use_millimeters_in_root_mean_square_error_(true),
 	localization_detailed_use_millimeters_in_translation_corrections_(true),
 	localization_detailed_use_degrees_in_rotation_corrections_(true),
 	save_reference_pointclouds_in_binary_format_(true),
@@ -166,6 +167,7 @@ void Localization<PointT>::setupMessageManagement() {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
 	}
 
+	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_root_mean_square_error", localization_detailed_use_millimeters_in_root_mean_square_error_, true);
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, true);
 	private_node_handle_->param("message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, true);
 }
@@ -776,6 +778,9 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, localization_detailed_msg.pose.pose);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
 				localization_detailed_msg.root_mean_square_error = root_mean_square_error_;
+				if (localization_detailed_use_millimeters_in_root_mean_square_error_) {
+					localization_detailed_msg.root_mean_square_error *= 1000.0;
+				}
 				localization_detailed_msg.number_inliers = number_inliers_;
 				localization_detailed_msg.number_points_registered = ambient_pointcloud->size();
 				localization_detailed_msg.inliers_angular_distribution = inliers_angular_distribution_;
