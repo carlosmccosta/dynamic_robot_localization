@@ -5,7 +5,7 @@ float64 translation_correction
 geometry_msgs/Vector3 rotation_correction_axis
 float64 rotation_correction_angle
 float64 outlier_percentage
-float64 root_mean_square_error
+float64 root_mean_square_error_inliers
 uint64 number_inliers
 uint64 number_points_registered
 float64 inliers_angular_distribution

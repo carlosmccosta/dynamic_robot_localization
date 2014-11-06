@@ -237,7 +237,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
 		int minimum_number_of_points_in_ambient_pointcloud_;
-		bool localization_detailed_use_millimeters_in_root_mean_square_error_;
+		bool localization_detailed_use_millimeters_in_root_mean_square_error_inliers_;
 		bool localization_detailed_use_millimeters_in_translation_corrections_;
 		bool localization_detailed_use_degrees_in_rotation_corrections_;
 		bool save_reference_pointclouds_in_binary_format_;
@@ -305,7 +305,7 @@ class Localization : public ConfigurableObject {
 		typename CloudAnalyzer<PointT>::Ptr cloud_analyzer_;
 		double outlier_percentage_;
 		size_t number_inliers_;
-		double root_mean_square_error_;
+		double root_mean_square_error_inliers_;
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_outliers_;
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_inliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;

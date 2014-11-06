@@ -24,7 +24,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 Localization<PointT>::Localization() :
 	minimum_number_of_points_in_ambient_pointcloud_(10),
-	localization_detailed_use_millimeters_in_root_mean_square_error_(true),
+	localization_detailed_use_millimeters_in_root_mean_square_error_inliers_(true),
 	localization_detailed_use_millimeters_in_translation_corrections_(true),
 	localization_detailed_use_degrees_in_rotation_corrections_(true),
 	save_reference_pointclouds_in_binary_format_(true),
@@ -57,7 +57,7 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
 	outlier_percentage_(0.0),
 	number_inliers_(0),
-	root_mean_square_error_(0.0) {}
+	root_mean_square_error_inliers_(0.0) {}
 
 template<typename PointT>
 Localization<PointT>::~Localization() {}
@@ -167,7 +167,7 @@ void Localization<PointT>::setupMessageManagement() {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
 	}
 
-	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_root_mean_square_error", localization_detailed_use_millimeters_in_root_mean_square_error_, true);
+	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_root_mean_square_error_inliers", localization_detailed_use_millimeters_in_root_mean_square_error_inliers_, true);
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, true);
 	private_node_handle_->param("message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, true);
 }
@@ -777,9 +777,9 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.header.stamp = ambient_cloud_msg->header.stamp;
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, localization_detailed_msg.pose.pose);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
-				localization_detailed_msg.root_mean_square_error = root_mean_square_error_;
-				if (localization_detailed_use_millimeters_in_root_mean_square_error_) {
-					localization_detailed_msg.root_mean_square_error *= 1000.0;
+				localization_detailed_msg.root_mean_square_error_inliers = root_mean_square_error_inliers_;
+				if (localization_detailed_use_millimeters_in_root_mean_square_error_inliers_) {
+					localization_detailed_msg.root_mean_square_error_inliers *= 1000.0;
 				}
 				localization_detailed_msg.number_inliers = number_inliers_;
 				localization_detailed_msg.number_points_registered = ambient_pointcloud->size();
@@ -963,7 +963,7 @@ template<typename PointT>
 double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
 	detected_outliers_.clear();
 	detected_inliers_.clear();
-	root_mean_square_error_ = -1.0;
+	root_mean_square_error_inliers_ = -1.0;
 	number_inliers_ = 0;
 	if (ambient_pointcloud->empty()) { return -1.0; }
 
@@ -981,7 +981,7 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 			inliers->header.frame_id = ambient_pointcloud->header.frame_id;
 		}
 
-		number_outliers += outlier_detectors_[i]->detectOutliers(reference_pointcloud_search_method_, *ambient_pointcloud, outliers, inliers, root_mean_square_error_);
+		number_outliers += outlier_detectors_[i]->detectOutliers(reference_pointcloud_search_method_, *ambient_pointcloud, outliers, inliers, root_mean_square_error_inliers_);
 		detected_outliers_.push_back(outliers);
 		detected_inliers_.push_back(inliers);
 	}
@@ -1058,12 +1058,12 @@ template<typename PointT>
 bool Localization<PointT>::applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators.size(); ++i) {
 		if (last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_ < pose_tracking_timeout_)) {
-			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_, max_outlier_percentage)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage)) {
 				return false;
 			}
 		} else {
 			// lost tracking -> ignore last pose filtering -> use only rmse and outlier percentage
-			if (!transformation_validators[i]->validateNewLocalizationPose(pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, root_mean_square_error_, max_outlier_percentage)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage)) {
 				return false;
 			}
 		}
@@ -1076,6 +1076,7 @@ bool Localization<PointT>::applyTransformationValidators(std::vector< Transforma
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_out) {
 	last_number_points_inserted_in_circular_buffer_ = 0;
+	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = 0;
 	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
 	if (ambient_pointcloud->empty()) {
 		return false;
