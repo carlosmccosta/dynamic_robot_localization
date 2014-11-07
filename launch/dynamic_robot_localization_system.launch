@@ -15,7 +15,7 @@
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" />
 	<arg name="pose_stamped_topic" default="localization_pose" />
-	<arg name="robot_initial_pose_in_map_to_base" default="true" />
+	<arg name="robot_initial_pose_in_base_to_map" default="false" /> <!-- recommendation: use false to allow direct publish of tf between odom -> map -->
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
 	<arg name="robot_initial_z" default="0.0" />
@@ -25,10 +25,11 @@
 	<arg name="use_laser_assembler" default="1" />
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
 	<arg name="map_frame_id" default="map" />
+	<arg name="odom_frame_id" default="odom" />
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="-1.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="1.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
@@ -44,6 +45,12 @@
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
 		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
+		<param name="initial_pose/position/x" type="double" value="$(arg robot_initial_x)" />
+		<param name="initial_pose/position/y" type="double" value="$(arg robot_initial_y)" />
+		<param name="initial_pose/position/z" type="double" value="$(arg robot_initial_z)" />
+		<param name="initial_pose/orientation_rpy/roll" type="double" value="$(arg robot_initial_roll)" />
+		<param name="initial_pose/orientation_rpy/pitch" type="double" value="$(arg robot_initial_pitch)" />
+		<param name="initial_pose/orientation_rpy/yaw" type="double" value="$(arg robot_initial_yaw)" />
 		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
 		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="" />
 		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_topic)" />
@@ -68,8 +75,10 @@
 		<arg name="pose_stamped_topic" default="$(arg pose_stamped_topic)" />
 		<arg name="odometry_topic" default="" />
 		<arg name="map_frame_id" default="$(arg map_frame_id)" />
+		<arg name="odom_frame_id" default="$(arg odom_frame_id)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
-		<arg name="initial_pose_in_map_to_base" default="$(arg robot_initial_pose_in_map_to_base)" />
+		<arg name="publish_initial_pose" default="false" />
+		<arg name="initial_pose_in_base_to_map" default="$(arg robot_initial_pose_in_base_to_map)" />
 		<arg name="initial_x" default="$(arg robot_initial_x)" />
 		<arg name="initial_y" default="$(arg robot_initial_y)" />
 		<arg name="initial_z" default="$(arg robot_initial_z)" />
@@ -87,9 +96,18 @@
 	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)" >
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
-		<arg name="target_frame" default="$(arg map_frame_id)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
+		<arg name="target_frame" default="$(arg map_frame_id)" />
 		<arg name="interpolate_scans" default="true" />
+		<arg name="recovery_frame" default="$(arg odom_frame_id)" />
+		<arg name="initial_recovery_transform_in_base_link_to_target" default="$(arg robot_initial_pose_in_base_to_map)" />
+		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
+		<arg name="recovery_to_target_frame_transform_initial_x" default="$(arg robot_initial_x)" />
+		<arg name="recovery_to_target_frame_transform_initial_y" default="$(arg robot_initial_y)" />
+		<arg name="recovery_to_target_frame_transform_initial_z" default="$(arg robot_initial_z)" />
+		<arg name="recovery_to_target_frame_transform_initial_roll" default="$(arg robot_initial_roll)" />
+		<arg name="recovery_to_target_frame_transform_initial_pitch" default="$(arg robot_initial_pitch)" />
+		<arg name="recovery_to_target_frame_transform_initial_yaw" default="$(arg robot_initial_yaw)" />
 	</include>
 	
 

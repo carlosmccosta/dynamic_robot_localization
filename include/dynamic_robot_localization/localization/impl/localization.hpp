@@ -52,6 +52,7 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_2d_(false),
 	ignore_height_corrections_(false),
 	last_accepted_pose_valid_(false),
+	last_accepted_pose_(tf2::Transform::getIdentity()),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
 	last_number_points_inserted_in_circular_buffer_(0),
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
@@ -79,6 +80,7 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupMessageManagement();
 
 	// localization pipeline configurations
+	setupInitialPose();
 	setupReferencePointCloud();
 	setupFiltersConfigurations();
 	setupNormalEstimatorsConfigurations();
@@ -146,9 +148,36 @@ void Localization<PointT>::setupFrameIds() {
 
 
 template<typename PointT>
+void Localization<PointT>::setupInitialPose() {
+	double x, y, z, roll, pitch ,yaw, qx, qy, qz, qw;
+	private_node_handle_->param("initial_pose/position/x", x, 0.0);
+	private_node_handle_->param("initial_pose/position/y", y, 0.0);
+	private_node_handle_->param("initial_pose/position/z", z, 0.0);
+	private_node_handle_->param("initial_pose/orientation_rpy/roll", roll, 0.0);
+	private_node_handle_->param("initial_pose/orientation_rpy/pitch", pitch, 0.0);
+	private_node_handle_->param("initial_pose/orientation_rpy/yaw", yaw, 0.0);
+	private_node_handle_->param("initial_pose/orientation_quaternion/x", qx, -1.0);
+	private_node_handle_->param("initial_pose/orientation_quaternion/y", qy, -1.0);
+	private_node_handle_->param("initial_pose/orientation_quaternion/z", qz, -1.0);
+	private_node_handle_->param("initial_pose/orientation_quaternion/w", qw, -1.0);
+
+	last_accepted_pose_.setOrigin(tf2::Vector3(x, y, z));
+
+	tf2::Quaternion orientation;
+	if ((qx + qy +qz + qw) < 0) {
+		orientation.setRPY(roll, pitch, yaw);
+	} else {
+		orientation.setValue(qx, qy, qz, qw);
+	}
+	orientation.normalize();
+	last_accepted_pose_.setRotation(orientation);
+}
+
+
+template<typename PointT>
 void Localization<PointT>::setupMessageManagement() {
 	double max_seconds_ambient_pointcloud_age;
-	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 1.0);
+	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 3.0);
 	max_seconds_ambient_pointcloud_age_.fromSec(max_seconds_ambient_pointcloud_age);
 
 	double min_seconds_between_scan_registration;
@@ -699,6 +728,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		}
 
 		if (ambient_pointcloud->header.frame_id != map_frame_id_) {
+			ROS_DEBUG_STREAM("Received cloud in " << ambient_pointcloud->header.frame_id << " (map_frame_id: " << map_frame_id_ << ")");
 			tf2::Transform pose_tf_cloud_to_map;
 			if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_map, map_frame_id_, ambient_pointcloud->header.frame_id, ambient_cloud_msg->header.stamp)) {
 				ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << map_frame_id_ << " isn't available");
@@ -723,8 +753,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 		tf2::Transform pose_tf_initial_guess;
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_initial_guess, map_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
-			ROS_WARN_STREAM("Dropping pointcloud because tf between " << map_frame_id_ << " and " << base_link_frame_id_ << " isn't available");
-			return;
+			pose_tf_initial_guess = last_accepted_pose_;
 		}
 
 		if (reference_pointcloud_2d_) {

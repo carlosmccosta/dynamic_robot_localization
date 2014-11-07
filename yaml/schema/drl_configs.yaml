@@ -84,9 +84,28 @@ frame_ids:
 
 
 # ===================================================================================================================================================
+#   Initial pose of the robot [ base_link_frame_id -> map_frame_id ]
+#   The orientation can be specified using RPY angles or a quaternion (if both are specified, the quaternion will be used)
+initial_pose:
+    position: # Robot position in meters
+        x: 0
+        y: 0
+        z: 0
+    orientation_quaternion:
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+    orientation_rpy: # RPY in radians
+        roll: 0
+        pitch: 0
+        yaw: 0
+
+
+# ===================================================================================================================================================
 #   Parameters to control the incoming message flow
 message_management:
-    max_seconds_ambient_pointcloud: 1.0                             # Ambient point clouds with age larger than this value will be discarded
+    max_seconds_ambient_pointcloud: 3.0                             # Ambient point clouds with age larger than this value will be discarded
     min_seconds_between_scan_registration: 0.0                      # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
     min_seconds_between_reference_pointcloud_update: 5.0            # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
     minimum_number_of_points_in_ambient_pointcloud: 10

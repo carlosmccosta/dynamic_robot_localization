@@ -135,6 +135,7 @@ class Localization : public ConfigurableObject {
 		void setupSubcriptionTopicNames();
 		void setupPublishTopicNames();
 		void setupFrameIds();
+		void setupInitialPose();
 		void setupMessageManagement();
 		void setupReferencePointCloud();
 
