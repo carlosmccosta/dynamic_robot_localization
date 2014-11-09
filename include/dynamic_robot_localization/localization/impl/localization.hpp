@@ -52,7 +52,8 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_2d_(false),
 	ignore_height_corrections_(false),
 	last_accepted_pose_valid_(false),
-	last_accepted_pose_(tf2::Transform::getIdentity()),
+	received_external_initial_pose_estimation_(false),
+	last_accepted_pose_base_link_to_map_(tf2::Transform::getIdentity()),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
 	last_number_points_inserted_in_circular_buffer_(0),
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
@@ -88,9 +89,10 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupKeypointDetectors();
 	setupCloudMatchersConfigurations();
 
-	initial_pose_estimators_matchers_.clear();
-	setupFeatureCloudMatchersConfigurations(initial_pose_estimators_matchers_, "initial_pose_estimators_matchers/feature_matchers/");
-	setupPointCloudMatchersConfigurations(initial_pose_estimators_matchers_, "initial_pose_estimators_matchers/point_matchers/");
+	initial_pose_estimators_feature_matchers_.clear();
+	initial_pose_estimators_point_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(initial_pose_estimators_feature_matchers_, "initial_pose_estimators_matchers/feature_matchers/");
+	setupPointCloudMatchersConfigurations(initial_pose_estimators_point_matchers_, "initial_pose_estimators_matchers/point_matchers/");
 
 	tracking_matchers_.clear();
 	setupFeatureCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/feature_matchers/");
@@ -106,6 +108,9 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupCloudAnalyzersConfigurations();
 
 	pose_to_tf_publisher_.setupConfigurationFromParameterServer(node_handle, private_node_handle, "");
+	pose_to_tf_publisher_.setBaseLinkFrameId(base_link_frame_id_);
+	pose_to_tf_publisher_.setOdomFrameId(odom_frame_id_);
+	pose_to_tf_publisher_.setMapFrameId(map_frame_id_);
 	if (publish_tf_map_odom_) {
 		pose_to_tf_publisher_.publishInitialPoseFromParameterServer();
 	}
@@ -142,6 +147,7 @@ void Localization<PointT>::setupPublishTopicNames() {
 template<typename PointT>
 void Localization<PointT>::setupFrameIds() {
 	private_node_handle_->param("frame_ids/map_frame_id", map_frame_id_, std::string("map"));
+	private_node_handle_->param("frame_ids/odom_frame_id", odom_frame_id_, std::string("odom"));
 	private_node_handle_->param("frame_ids/base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
 	private_node_handle_->param("frame_ids/sensor_frame_id", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
 }
@@ -161,7 +167,7 @@ void Localization<PointT>::setupInitialPose() {
 	private_node_handle_->param("initial_pose/orientation_quaternion/z", qz, -1.0);
 	private_node_handle_->param("initial_pose/orientation_quaternion/w", qw, -1.0);
 
-	last_accepted_pose_.setOrigin(tf2::Vector3(x, y, z));
+	last_accepted_pose_base_link_to_map_.setOrigin(tf2::Vector3(x, y, z));
 
 	tf2::Quaternion orientation;
 	if ((qx + qy +qz + qw) < 0) {
@@ -170,7 +176,17 @@ void Localization<PointT>::setupInitialPose() {
 		orientation.setValue(qx, qy, qz, qw);
 	}
 	orientation.normalize();
-	last_accepted_pose_.setRotation(orientation);
+	last_accepted_pose_base_link_to_map_.setRotation(orientation);
+
+	ros::Time::waitForValid();
+
+	tf2::Transform transform_odom_to_base_link;
+	if (pose_to_tf_publisher_.getTfCollector().lookForLatestTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Duration(10))) {
+		last_accepted_pose_odom_to_map_ = last_accepted_pose_base_link_to_map_ * transform_odom_to_base_link;
+	} else {
+		last_accepted_pose_odom_to_map_ = last_accepted_pose_base_link_to_map_;
+		ROS_WARN_STREAM("Failed to get tf from " << base_link_frame_id_ << " to " << odom_frame_id_ << " when setting localization initial pose");
+	}
 }
 
 
@@ -634,8 +650,12 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints->size();
 
 
-		for (size_t i = 0; i < initial_pose_estimators_matchers_.size(); ++i) {
-			initial_pose_estimators_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
+		for (size_t i = 0; i < initial_pose_estimators_feature_matchers_.size(); ++i) {
+			initial_pose_estimators_feature_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
+		}
+
+		for (size_t i = 0; i < initial_pose_estimators_point_matchers_.size(); ++i) {
+			initial_pose_estimators_point_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints, reference_pointcloud_search_method_);
 		}
 
 		for (size_t i = 0; i < tracking_matchers_.size(); ++i) {
@@ -707,7 +727,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 	ros::Duration scan_age = ros::Time::now() - ambient_cloud_msg->header.stamp;
 	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
 
-	ROS_DEBUG_STREAM("Received pointcloud in frame " << ambient_cloud_msg->header.frame_id << " with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_msg->header.stamp);
+	ROS_DEBUG_STREAM("Received pointcloud in frame " << ambient_cloud_msg->header.frame_id << " with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_msg->header.stamp << " (map_frame_id: " << map_frame_id_ << ")");
 
 	if (reference_pointcloud_received_
 			&& ambient_cloud_msg->data.size() > 0
@@ -727,12 +747,24 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			ROS_INFO_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud");
 		}
 
+		tf2::Transform transform_odom_to_base_link;
+		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ambient_cloud_msg->header.stamp)) {
+			ROS_WARN_STREAM("Dropping pointcloud because tf between " << odom_frame_id_ << " and " << base_link_frame_id_ << " isn't available");
+			return;
+		}
+
+		// get tf odom to map (allows set of initial pose in rviz)
+		pose_to_tf_publisher_.getTfCollector().lookForTransform(last_accepted_pose_odom_to_map_, map_frame_id_, odom_frame_id_, ros::Time(0));
+
 		if (ambient_pointcloud->header.frame_id != map_frame_id_) {
-			ROS_DEBUG_STREAM("Received cloud in " << ambient_pointcloud->header.frame_id << " (map_frame_id: " << map_frame_id_ << ")");
-			tf2::Transform pose_tf_cloud_to_map;
-			if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_map, map_frame_id_, ambient_pointcloud->header.frame_id, ambient_cloud_msg->header.stamp)) {
-				ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << map_frame_id_ << " isn't available");
-				return;
+			tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
+			if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
+				tf2::Transform pose_tf_cloud_to_odom;
+				if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, ambient_cloud_msg->header.stamp)) {
+					ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
+					return;
+				}
+				pose_tf_cloud_to_map *= pose_tf_cloud_to_odom;
 			}
 
 			Eigen::Vector3f offset(
@@ -752,8 +784,11 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		}
 
 		tf2::Transform pose_tf_initial_guess;
-		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_initial_guess, map_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
-			pose_tf_initial_guess = last_accepted_pose_;
+		if (pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_initial_guess, map_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
+			received_external_initial_pose_estimation_ = true;
+		} else {
+			pose_tf_initial_guess = last_accepted_pose_base_link_to_map_;
+			received_external_initial_pose_estimation_ = false;
 		}
 
 		if (reference_pointcloud_2d_) {
@@ -778,6 +813,8 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			if (publish_tf_map_odom_) {
 				pose_to_tf_publisher_.publishTF(pose_tf_corrected, ambient_cloud_msg->header.stamp);
 			}
+
+			last_accepted_pose_odom_to_map_ = pose_tf_corrected * transform_odom_to_base_link;
 
 			if (!pose_with_covariance_stamped_publisher_.getTopic().empty()) {
 				geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
@@ -981,6 +1018,7 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 		if (matchers[i]->registerCloud(ambient_pointcloud, surface_search_method, pointcloud_keypoints, pointcloud_pose_in_out, ambient_pointcloud_aligned, false)) {
 			registration_successful = true;
 			ambient_pointcloud = ambient_pointcloud_aligned; // switch pointers
+			surface_search_method->setInputCloud(ambient_pointcloud);
 		}
 	}
 
@@ -1087,7 +1125,7 @@ template<typename PointT>
 bool Localization<PointT>::applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators.size(); ++i) {
 		if (last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_ < pose_tracking_timeout_)) {
-			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_base_link_to_map_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage)) {
 				return false;
 			}
 		} else {
@@ -1166,7 +1204,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 	bool performed_recovery = false;
-	if (!initial_pose_estimators_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose
+	if (!initial_pose_estimators_feature_matchers_.empty() && lost_tracking) { // lost tracking -> try to find initial pose
 		ROS_INFO("Performing initial pose recovery");
 		if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
 			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
@@ -1178,7 +1216,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			computed_keypoints = true;
 		}
 
-		if (!applyCloudRegistration(initial_pose_estimators_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
+		if (!received_external_initial_pose_estimation_ &&!applyCloudRegistration(initial_pose_estimators_feature_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
+		if (!initial_pose_estimators_point_matchers_.empty() && !applyCloudRegistration(initial_pose_estimators_point_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints, pointcloud_pose_corrected_out)) { return false; }
 		localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 		ROS_INFO("Successfully performed initial pose estimation");
 	} else {
@@ -1262,7 +1301,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 	localization_times_msg_.transformation_validators_time += performance_timer.getElapsedTimeInMilliSec();
-	last_accepted_pose_ = pointcloud_pose_corrected_out;
+	last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
 	last_accepted_pose_time_ = ros::Time::now();
 	last_accepted_pose_valid_ = true;
 	pose_tracking_number_of_failed_registrations_since_last_valid_pose_ = 0;

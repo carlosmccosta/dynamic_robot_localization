@@ -121,10 +121,10 @@ initial_pose_estimators_matchers:
 #                feature_descriptor_radius_search: 0.25
         matchers:
             max_correspondence_distance: 1.0
-            max_number_of_registration_iterations: 15000
+            max_number_of_registration_iterations: 500
             sample_consensus_initial_alignment_prerejective:
                 similarity_threshold: 0.75
-                inlier_fraction: 0.75
+                inlier_fraction: 0.5
                 number_of_samples: 20
                 correspondence_randomness: 100
 #            sample_consensus_initial_alignment:

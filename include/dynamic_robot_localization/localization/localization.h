@@ -231,6 +231,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
 		std::string map_frame_id_;
+		std::string odom_frame_id_;
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;
 		ros::Duration max_seconds_ambient_pointcloud_age_;
@@ -268,7 +269,9 @@ class Localization : public ConfigurableObject {
 		bool reference_pointcloud_2d_;
 		bool ignore_height_corrections_;
 		bool last_accepted_pose_valid_;
-		tf2::Transform last_accepted_pose_;
+		bool received_external_initial_pose_estimation_; // from rviz / other localization system / operator
+		tf2::Transform last_accepted_pose_base_link_to_map_;
+		tf2::Transform last_accepted_pose_odom_to_map_;
 
 
 		// ros communication fields
@@ -297,7 +300,8 @@ class Localization : public ConfigurableObject {
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > ambient_cloud_keypoint_detectors_;
-		std::vector< typename CloudMatcher<PointT>::Ptr > initial_pose_estimators_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > initial_pose_estimators_feature_matchers_;
+		std::vector< typename CloudMatcher<PointT>::Ptr > initial_pose_estimators_point_matchers_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > tracking_matchers_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > tracking_recovery_matchers_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;

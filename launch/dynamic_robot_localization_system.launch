@@ -29,11 +29,12 @@
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="1.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="2.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
+	<arg name="interpolate_scans" default="true" />
 	<arg name="timeout_for_cloud_assembly" default="0.5" />
 	<arg name="use_dynamic_map_update" default="0" />
 	<arg name="octomap_file" default="" />
@@ -43,6 +44,7 @@
 <!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
+		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
 		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
 		<param name="initial_pose/position/x" type="double" value="$(arg robot_initial_x)" />
@@ -97,17 +99,10 @@
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
-		<arg name="target_frame" default="$(arg map_frame_id)" />
-		<arg name="interpolate_scans" default="true" />
-		<arg name="recovery_frame" default="$(arg odom_frame_id)" />
+		<arg name="target_frame" default="$(arg odom_frame_id)" />
+		<arg name="interpolate_scans" default="$(arg interpolate_scans)" />
+		<arg name="recovery_frame" default="" />
 		<arg name="initial_recovery_transform_in_base_link_to_target" default="$(arg robot_initial_pose_in_base_to_map)" />
-		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
-		<arg name="recovery_to_target_frame_transform_initial_x" default="$(arg robot_initial_x)" />
-		<arg name="recovery_to_target_frame_transform_initial_y" default="$(arg robot_initial_y)" />
-		<arg name="recovery_to_target_frame_transform_initial_z" default="$(arg robot_initial_z)" />
-		<arg name="recovery_to_target_frame_transform_initial_roll" default="$(arg robot_initial_roll)" />
-		<arg name="recovery_to_target_frame_transform_initial_pitch" default="$(arg robot_initial_pitch)" />
-		<arg name="recovery_to_target_frame_transform_initial_yaw" default="$(arg robot_initial_yaw)" />
 	</include>
 	
 

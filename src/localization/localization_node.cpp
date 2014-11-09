@@ -23,9 +23,9 @@
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "drl_localization_node");
 
-	if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info)) {
+	/*if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info)) {
 		ros::console::notifyLoggerLevelsChanged();
-	}
+	}*/
 
 	pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
 
