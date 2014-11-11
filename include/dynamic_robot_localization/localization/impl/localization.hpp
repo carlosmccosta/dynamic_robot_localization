@@ -784,20 +784,22 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					pose_tf_cloud_to_map.getOrigin().getY(),
 					pose_tf_cloud_to_map.getOrigin().getZ());
 
+			tf2::Quaternion pose_tf_cloud_to_map_q = pose_tf_cloud_to_map.getRotation().normalize();
 			Eigen::Quaternionf rotation(
-					pose_tf_cloud_to_map.getRotation().getW(),
-					pose_tf_cloud_to_map.getRotation().getX(),
-					pose_tf_cloud_to_map.getRotation().getY(),
-					pose_tf_cloud_to_map.getRotation().getZ());
+					pose_tf_cloud_to_map_q.getW(),
+					pose_tf_cloud_to_map_q.getX(),
+					pose_tf_cloud_to_map_q.getY(),
+					pose_tf_cloud_to_map_q.getZ());
 
 			pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, offset, rotation);
 			ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
 			ambient_pointcloud->header.frame_id = map_frame_id_;
 		}
 
+		tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();
 		ROS_DEBUG_STREAM("Initial pose:" \
-				<< "\n\tTF position -> [ x: " << pose_tf_initial_guess.getOrigin().getX() << " | y: " << pose_tf_initial_guess.getOrigin().getY() << " | z: " << pose_tf_initial_guess.getOrigin().getZ() << " ]" \
-				<< "\n\tTF orientation -> [ qx: " << pose_tf_initial_guess.getRotation().getX() << " | qy: " << pose_tf_initial_guess.getRotation().getY() << " | qz: " << pose_tf_initial_guess.getRotation().getZ() << " | qw: " << pose_tf_initial_guess.getRotation().getW() << " ]");
+				<< "\tTF position -> [ x: " << pose_tf_initial_guess.getOrigin().getX() << " | y: " << pose_tf_initial_guess.getOrigin().getY() << " | z: " << pose_tf_initial_guess.getOrigin().getZ() << " ]" \
+				<< "\tTF orientation -> [ qx: " << pose_tf_initial_guess_q.getX() << " | qy: " << pose_tf_initial_guess_q.getY() << " | qz: " << pose_tf_initial_guess_q.getZ() << " | qw: " << pose_tf_initial_guess_q.getW() << " ]");
 
 		if (reference_pointcloud_2d_) {
 			resetPointCloudHeight(*ambient_pointcloud);
@@ -821,15 +823,23 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				pose_time = ambient_cloud_msg->header.stamp;
 			}
 
+			if (!localization_times_publisher_.getTopic().empty()) {
+				localization_times_msg_.header.frame_id = map_frame_id_;
+				localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
+				localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
+				localization_times_publisher_.publish(localization_times_msg_);
+			}
+
 			if (publish_tf_map_odom_) {
 				pose_to_tf_publisher_.publishTF(pose_tf_corrected, ambient_cloud_msg->header.stamp);
 			}
 
 			last_accepted_pose_odom_to_map_ = pose_tf_corrected * transform_base_link_to_odom.inverse();
 
+			tf2::Quaternion pose_tf_corrected_q = pose_tf_corrected.getRotation().normalize();
 			ROS_DEBUG_STREAM("Corrected pose:" \
-					<< "\n\tTF position -> [ x: " << pose_tf_corrected.getOrigin().getX() << " | y: " << pose_tf_corrected.getOrigin().getY() << " | z: " << pose_tf_corrected.getOrigin().getZ() << " ]" \
-					<< "\n\tTF orientation -> [ qx: " << pose_tf_corrected.getRotation().getX() << " | qy: " << pose_tf_corrected.getRotation().getY() << " | qz: " << pose_tf_corrected.getRotation().getZ() << " | qw: " << pose_tf_corrected.getRotation().getW() << " ]");
+					<< "\tTF position -> [ x: " << pose_tf_corrected.getOrigin().getX() << " | y: " << pose_tf_corrected.getOrigin().getY() << " | z: " << pose_tf_corrected.getOrigin().getZ() << " ]" \
+					<< "\tTF orientation -> [ qx: " << pose_tf_corrected_q.getX() << " | qy: " << pose_tf_corrected_q.getY() << " | qz: " << pose_tf_corrected_q.getZ() << " | qw: " << pose_tf_corrected_q.getW() << " ]");
 
 			if (!pose_with_covariance_stamped_publisher_.getTopic().empty()) {
 				geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
@@ -882,8 +892,6 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z));
 
 				// rotation corrections
-				tf2::Quaternion pose_tf_initial_guess_q(pose_tf_initial_guess.getRotation().getX(), pose_tf_initial_guess.getRotation().getY(), pose_tf_initial_guess.getRotation().getZ(), pose_tf_initial_guess.getRotation().getW());
-				tf2::Quaternion pose_tf_corrected_q(pose_tf_corrected.getRotation().getX(), pose_tf_corrected.getRotation().getY(), pose_tf_corrected.getRotation().getZ(), pose_tf_corrected.getRotation().getW());
 				tf2::Quaternion rotation_correction_q = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
 				rotation_correction_q.normalize();
 				tf2::Vector3 rotation_correction_axis = rotation_correction_q.getAxis();
@@ -901,13 +909,6 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				}
 
 				localization_detailed_publisher_.publish(localization_detailed_msg);
-			}
-
-			if (!localization_times_publisher_.getTopic().empty()) {
-				localization_times_msg_.header.frame_id = map_frame_id_;
-				localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
-				localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
-				localization_times_publisher_.publish(localization_times_msg_);
 			}
 
 			if (!localization_diagnostics_publisher_.getTopic().empty()) {
@@ -1047,9 +1048,9 @@ template<typename PointT>
 double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
 	detected_outliers_.clear();
 	detected_inliers_.clear();
-	root_mean_square_error_inliers_ = -1.0;
+	root_mean_square_error_inliers_ = std::numeric_limits<double>::max();
 	number_inliers_ = 0;
-	if (ambient_pointcloud->empty()) { return -1.0; }
+	if (ambient_pointcloud->empty()) { return 1.0; }
 
 	size_t number_outliers = 0;
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {

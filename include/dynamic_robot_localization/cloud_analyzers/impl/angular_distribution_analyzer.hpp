@@ -46,7 +46,7 @@ bool AngularDistributionAnalyzer<PointT>::computeAnalysisHistogram(const tf2::Tr
 
 	double analysis_histogram_out_size = analysis_histogram_out.size();
 	tf2::Vector3 estimated_pose_position = estimated_pose.getOrigin();
-	tf2::Vector3 estimated_pose_orientation = tf2::quatRotate(estimated_pose.getRotation(), tf2::Vector3(1,0,0)).normalize();
+	tf2::Vector3 estimated_pose_orientation = tf2::quatRotate(estimated_pose.getRotation().normalize(), tf2::Vector3(1,0,0)).normalize();
 	tf2::Vector3 reference_normal_vector = estimated_pose_orientation.cross(tf2::Vector3(pointcloud[0].x - estimated_pose_position.x(), pointcloud[0].y - estimated_pose_position.y(), pointcloud[0].z - estimated_pose_position.z())).normalize();
 
 	for (size_t i = 0; i < pointcloud.size(); ++i) {

@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <utility>
 #include <cmath>
+#include <limits>
 
 
 // ROS includes

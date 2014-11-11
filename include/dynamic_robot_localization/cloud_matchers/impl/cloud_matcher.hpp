@@ -115,6 +115,8 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
 		}
 
+		pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_keypoints, cloud_matcher_->getFinalTransformation());
+
 		// if publisher available, send aligned cloud
 		if (cloud_publisher_) {
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
