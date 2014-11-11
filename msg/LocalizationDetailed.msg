@@ -1,5 +1,5 @@
 Header header
-geometry_msgs/PoseWithCovariance pose
+geometry_msgs/Pose pose
 geometry_msgs/Vector3 translation_corrections
 float64 translation_correction
 geometry_msgs/Vector3 rotation_correction_axis

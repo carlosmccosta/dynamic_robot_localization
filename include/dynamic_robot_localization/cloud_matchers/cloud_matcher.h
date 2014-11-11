@@ -67,7 +67,7 @@ class CloudMatcher : public ConfigurableObject {
 		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
 		        typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 		        typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-		        tf2::Transform& pointcloud_pose_in_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
+		        tf2::Transform& pose_correction_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
 
 		virtual void initializeKeypointProcessing() {}
 		virtual void processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,

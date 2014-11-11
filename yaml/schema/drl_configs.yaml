@@ -88,6 +88,7 @@ frame_ids:
 #   Initial pose of the robot [ base_link_frame_id -> map_frame_id ]
 #   The orientation can be specified using RPY angles or a quaternion (if both are specified, the quaternion will be used)
 initial_pose:
+    robot_initial_pose_in_base_to_map: false
     position: # Robot position in meters
         x: 0
         y: 0

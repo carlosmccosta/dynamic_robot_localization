@@ -47,6 +47,7 @@
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
 		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
+		<param name="initial_pose/robot_initial_pose_in_base_to_map" type="bool" value="$(arg robot_initial_pose_in_base_to_map)" />
 		<param name="initial_pose/position/x" type="double" value="$(arg robot_initial_x)" />
 		<param name="initial_pose/position/y" type="double" value="$(arg robot_initial_y)" />
 		<param name="initial_pose/position/z" type="double" value="$(arg robot_initial_z)" />

@@ -79,7 +79,7 @@ template<typename PointT>
 bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
 		typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-		tf2::Transform& pointcloud_pose_in_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
+		tf2::Transform& pose_correction_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
 
 	// subclass must set cloud_matcher_ ptr
 	if (!cloud_matcher_) {
@@ -107,9 +107,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	cloud_matcher_->align(*pointcloud_registered_out);
 
 	if (cloud_matcher_->hasConverged()) {
-		tf2::Transform pose_correction;
-		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), pose_correction);
-		pointcloud_pose_in_out = pose_correction * pointcloud_pose_in_out;
+		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), pose_correction_out);
 
 		if (return_aligned_keypoints && !match_only_keypoints_) {
 			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
