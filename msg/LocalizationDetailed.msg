@@ -10,3 +10,4 @@ uint64 number_inliers
 uint64 number_points_registered
 float64 inliers_angular_distribution
 float64 outliers_angular_distribution
+geometry_msgs/PoseArray initial_pose_estimation_poses

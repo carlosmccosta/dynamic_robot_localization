@@ -72,7 +72,7 @@ size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occ
 		if (show_occupancy_grid_pointcloud) {
 			pcl::visualization::CloudViewer viewer("Cloud viewer");
 			typename pcl::PointCloud<pcl::PointXYZI>::Ptr map_pointcloud_xyzi(new pcl::PointCloud<pcl::PointXYZI>());
-			for (int i = 0; i < map_pointcloud->size(); ++i) {
+			for (size_t i = 0; i < map_pointcloud->size(); ++i) {
 				pcl::PointXYZI point;
 				point.x = (*map_pointcloud)[i].x;
 				point.y = (*map_pointcloud)[i].y;
@@ -88,7 +88,7 @@ size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occ
 		map_pointcloud_search_method->setInputCloud(map_pointcloud);
 		size_t number_of_flipped_normals = 0;
 
-		for (int i = 0; i < pointcloud.size(); ++i) {
+		for (size_t i = 0; i < pointcloud.size(); ++i) {
 			PointT& current_point = pointcloud[i];
 			pcl::PointXY current_point_xy;
 			current_point_xy.x = current_point.x;
@@ -110,7 +110,7 @@ size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occ
 				map_pointcloud_search_method->radiusSearch(current_point_xy, search_radius, *nn_indices, nn_distances);
 			}
 
-			for (int nn_index = 0; nn_index < nn_indices->size(); ++nn_index) {
+			for (size_t nn_index = 0; nn_index < nn_indices->size(); ++nn_index) {
 				pcl::PointXY& current_nn_point_xy = (*map_pointcloud)[(*nn_indices)[nn_index]];
 				if ((*occupancy_grid_values)[(*nn_indices)[nn_index]] == 0) { // empty space in map
 					math_utils::PointPosition point_side = math_utils::computePointPositionInRelationToLine(

@@ -65,14 +65,16 @@ class CloudMatcher : public ConfigurableObject {
 				typename pcl::search::KdTree<PointT>::Ptr& search_method);
 
 		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
-		        typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
-		        typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-		        tf2::Transform& pose_correction_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
+				typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
+				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+				tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
 
 		virtual void initializeKeypointProcessing() {}
 		virtual void processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				typename pcl::PointCloud<PointT>::Ptr& surface,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {}
+
+		virtual boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> > getAcceptedTransformations() { return boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> >(new std::vector< typename pcl::Registration<PointT, PointT>::Matrix4>()); }
 
 		void setupRegistrationVisualizer();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -80,9 +82,9 @@ class CloudMatcher : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline const typename pcl::Registration<PointT, PointT>::Ptr& getCloudMatcher() const { return cloud_matcher_; }
 		inline bool getMatchOnlyKeypoints() const { return match_only_keypoints_; }
-		typename CloudPublisher<PointT>::Ptr& getCloudPublisher() { return cloud_publisher_; }
-		bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
-		const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
+		inline typename CloudPublisher<PointT>::Ptr& getCloudPublisher() { return cloud_publisher_; }
+		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
+		inline const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

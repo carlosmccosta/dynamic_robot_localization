@@ -38,6 +38,10 @@ void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigu
 	private_node_handle->param(configuration_namespace + "inlier_fraction", inlier_fraction, 0.25);
 	matcher_scia_->setInlierFraction(inlier_fraction);
 
+	double inlier_rmse;
+	private_node_handle->param(configuration_namespace + "inlier_rmse", inlier_rmse, 0.2);
+	matcher_scia_->setInlierRMSE(inlier_rmse);
+
 	private_node_handle->param(configuration_namespace + "number_of_samples", number_of_samples_, 3);
 	matcher_scia_->setNumberOfSamples(number_of_samples_);
 

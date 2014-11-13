@@ -29,6 +29,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <dynamic_reconfigure/server.h>
 #include <angles/angles.h>
@@ -220,6 +221,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_stamped_publish_topic_;
+		std::string pose_array_publish_topic_;
 		std::string pose_with_covariance_stamped_publish_topic_;
 		std::string localization_detailed_publish_topic_;
 		std::string localization_diagnostics_publish_topic_;
@@ -273,6 +275,7 @@ class Localization : public ConfigurableObject {
 		bool received_external_initial_pose_estimation_; // from rviz / other localization system / operator
 		tf2::Transform last_accepted_pose_base_link_to_map_;
 		tf2::Transform last_accepted_pose_odom_to_map_;
+		std::vector< tf2::Transform > accepted_pose_corrections_;
 
 
 		// ros communication fields
@@ -286,6 +289,7 @@ class Localization : public ConfigurableObject {
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_with_covariance_stamped_publisher_;
 		ros::Publisher pose_stamped_publisher_;
+		ros::Publisher pose_array_publisher_;
 		ros::Publisher localization_detailed_publisher_;
 		ros::Publisher localization_diagnostics_publisher_;
 		ros::Publisher localization_times_publisher_;

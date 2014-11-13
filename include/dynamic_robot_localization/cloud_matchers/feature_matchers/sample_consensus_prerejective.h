@@ -60,6 +60,8 @@
 #include <pcl/registration/correspondence_rejection_var_trimmed.h>
 #include <pcl/common/distances.h>
 #include <pcl/common/point_tests.h>
+#include <boost/smart_ptr/shared_ptr.hpp>
+
 
 #ifdef _OPENMP
    #include <omp.h>
@@ -144,6 +146,8 @@ namespace dynamic_robot_localization
         , feature_tree_ (new pcl::KdTreeFLANN<FeatureT>)
         , correspondence_rejector_poly_ (new CorrespondenceRejectorPoly)
         , inlier_fraction_ (0.0f)
+        , inlier_rmse_(0.0f)
+        , accepted_transformations_(new std::vector<Matrix4>())
       {
         reg_name_ = "SampleConsensusPrerejective";
         correspondence_rejector_poly_->setSimilarityThreshold (0.6f);
@@ -243,6 +247,12 @@ namespace dynamic_robot_localization
         inlier_fraction_ = inlier_fraction;
       }
       
+      inline void
+      setInlierRMSE (float inlier_rmse)
+      {
+    	  inlier_rmse_ = inlier_rmse;
+      }
+
       /** \brief Get the required inlier fraction
        * \return required inlier fraction in [0,1]
        */
@@ -262,6 +272,9 @@ namespace dynamic_robot_localization
       }
 
       void setupCorrespondanceRejectors(std::vector< typename pcl::registration::CorrespondenceRejector::Ptr >& correspondence_rejectors);
+
+      boost::shared_ptr< std::vector<Matrix4> > getAcceptedTransformations() { return accepted_transformations_; }
+
 
     protected:
       /** \brief Choose a random index between 0 and n-1
@@ -310,7 +323,7 @@ namespace dynamic_robot_localization
         * \param fitness_score output fitness score as RMSE 
         */
       void 
-      getFitness (PointCloudSource& input_transformed, std::vector<int>& inliers, float& fitness_score);
+      getFitness (PointCloudSource& input_transformed, std::vector<int>& inliers, double& fitness_score);
 
       /** \brief The source point cloud's feature descriptors. */
       FeatureCloudConstPtr input_features_;
@@ -333,8 +346,12 @@ namespace dynamic_robot_localization
       /** \brief The fraction [0,1] of inlier points required for accepting a transformation */
       float inlier_fraction_;
       
+      float inlier_rmse_;
+
       /** \brief Inlier points of final transformation as indices into source */
       std::vector<int> inliers_;
+
+      boost::shared_ptr< std::vector<Matrix4> > accepted_transformations_;
   };
 
 } /* namespace dynamic_robot_localization */

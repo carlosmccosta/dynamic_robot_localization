@@ -68,6 +68,7 @@ publish_topic_names:
     aligned_pointcloud_publish_topic: 'aligned_pointcloud'          # sensor_msgs::PointCloud2 | Point cloud coming from the ambient_pointcloud_topic after applying the registration correction
     pose_stamped_publish_topic: 'localization_pose'                 # geometry_msgs::PoseStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages or to visualize in rviz)
     pose_with_covariance_stamped_publish_topic: '/initialpose'      # geometry_msgs::PoseWithCovarianceStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages, such as amcl)
+    pose_array_publish_topic: 'localization_initial_pose_estimations' # geometry_msgs::PoseArray | Array with the initial pose estimations. When performing tracking, it will have 0 poses. When tracking is lost, and the initial pose estimation using features succeeds, it will have the accepted poses (of the last initial pose estimation). The next successful traking registrations will not publish a empty message. For that there is the LocalizationDetailed msg
     localization_detailed_publish_topic: 'localization_detailed'    # dynamic_robot_localization::LocalizationDetailed | Provides detailed information of the current pose computed by the localization system (pose + pose_corrections + outlier_percentage + aligmenet_fitness)
     localization_diagnostics_publish_topic: 'diagnostics'           # dynamic_robot_localization::LocalizationDiagnostics | Provides information about the number of points / keypoints in the reference / ambient cloud (before and after filtering) 
     localization_times_publish_topic: 'localization_times'          # dynamic_robot_localization::LocalizationTimes | Provides information about the wall clock times (in milliseconds) of the main localization steps (as well as the global time)
@@ -305,6 +306,7 @@ tracking_matchers:
             sample_consensus_initial_alignment_prerejective:        # Allows prefix and postfix of letters to ensure parsing order
                 similarity_threshold: 0.8                           # The similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object, where 1 is a perfect match
                 inlier_fraction: 0.25                               # Required inlier fraction, must be in [0,1]
+                inlier_rmse: 0.2                                    # Maximum inlier root mean square error
                 number_of_samples: 3                                # Set the number of samples to use during each iteration
                 correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence. A higher value will add more randomness to the feature matching
             sample_consensus_initial_alignment:                     # Allows prefix and postfix of letters to ensure parsing order

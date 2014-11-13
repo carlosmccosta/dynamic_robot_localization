@@ -39,13 +39,13 @@ curvature_estimators:
     reference_pointcloud:
         principal_curvatures_estimation:
             search_k: 0
-            search_radius: 0.15
+            search_radius: 0.2
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
     ambient_pointcloud:
         principal_curvatures_estimation:
             search_k: 0
-            search_radius: 0.15
+            search_radius: 0.2
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
 
@@ -100,7 +100,7 @@ initial_pose_estimators_matchers:
         save_descriptors_in_binary_format : true
         keypoint_descriptors:
             feature_descriptor_k_search: 0
-            feature_descriptor_radius_search: 0.2
+            feature_descriptor_radius_search: 0.25
             fpfh:
                 number_subdivisions_f1: 11
                 number_subdivisions_f2: 11
@@ -120,13 +120,14 @@ initial_pose_estimators_matchers:
 #            esf:
 #                feature_descriptor_radius_search: 0.25
         matchers:
-            max_correspondence_distance: 1.0
-            max_number_of_registration_iterations: 750
+            max_correspondence_distance: 0.5
+            max_number_of_registration_iterations: 2500
             sample_consensus_initial_alignment_prerejective:
-                similarity_threshold: 0.75
-                inlier_fraction: 0.5
-                number_of_samples: 20
-                correspondence_randomness: 100
+                similarity_threshold: 0.6
+                inlier_fraction: 0.6
+                inlier_rmse: 0.3
+                number_of_samples: 32
+                correspondence_randomness: 7
 #            sample_consensus_initial_alignment:
 #                min_sample_distance: 0.5
 #                number_of_samples: 3

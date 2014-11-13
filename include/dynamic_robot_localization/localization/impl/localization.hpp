@@ -138,6 +138,7 @@ void Localization<PointT>::setupPublishTopicNames() {
 	private_node_handle_->param("publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("publish_topic_names/pose_with_covariance_stamped_publish_topic", pose_with_covariance_stamped_publish_topic_, std::string("/initialpose"));
 	private_node_handle_->param("publish_topic_names/pose_stamped_publish_topic", pose_stamped_publish_topic_, std::string("localization_pose"));
+	private_node_handle_->param("publish_topic_names/pose_array_publish_topic", pose_array_publish_topic_, std::string("localization_initial_pose_estimations"));
 	private_node_handle_->param("publish_topic_names/localization_detailed_publish_topic", localization_detailed_publish_topic_, std::string("localization_detailed"));
 	private_node_handle_->param("publish_topic_names/localization_diagnostics_publish_topic", localization_diagnostics_publish_topic_, std::string("diagnostics"));
 	private_node_handle_->param("publish_topic_names/localization_times_publish_topic", localization_times_publish_topic_, std::string("localization_times"));
@@ -692,6 +693,7 @@ void Localization<PointT>::startLocalization() {
 		if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 1, true);
 		if (!pose_with_covariance_stamped_publish_topic_.empty()) pose_with_covariance_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_publish_topic_, 5, true);
 		if (!pose_stamped_publish_topic_.empty()) pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 5, true);
+		if (!pose_array_publish_topic_.empty()) pose_array_publisher_ = node_handle_->advertise<geometry_msgs::PoseArray>(pose_array_publish_topic_, 1, true);
 		if (!localization_detailed_publish_topic_.empty()) localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_publish_topic_, 5, true);
 		if (!localization_diagnostics_publish_topic_.empty()) localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_publish_topic_, 5, true);
 		if (!localization_times_publish_topic_.empty()) localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 5, true);
@@ -862,6 +864,21 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				pose_stamped_publisher_.publish(pose_corrected_msg);
 			}
 
+			geometry_msgs::PoseArrayPtr accepted_poses(new geometry_msgs::PoseArray());
+			accepted_poses->header.frame_id = map_frame_id_;
+			accepted_poses->header.stamp = pose_time;
+			for (size_t i = 0; i < accepted_pose_corrections_.size(); ++i) {
+				geometry_msgs::Pose accepted_pose;
+				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(accepted_pose_corrections_[i] * pose_tf_initial_guess, accepted_pose);
+				accepted_poses->poses.push_back(accepted_pose);
+			}
+
+			if (!pose_array_publisher_.getTopic().empty() && !accepted_poses->poses.empty()) {
+				pose_array_publisher_.publish(accepted_poses);
+				ROS_INFO_STREAM("Publishing " << accepted_pose_corrections_.size() << " accepted poses");
+			}
+			accepted_pose_corrections_.clear();
+
 			if (!localization_detailed_publisher_.getTopic().empty()) {
 				LocalizationDetailed localization_detailed_msg;
 				localization_detailed_msg.header.frame_id = map_frame_id_;
@@ -908,6 +925,8 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
 				}
 
+				localization_detailed_msg.initial_pose_estimation_poses = *accepted_poses;
+
 				localization_detailed_publisher_.publish(localization_detailed_msg);
 			}
 
@@ -927,6 +946,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			if (ambient_pointcloud_with_circular_buffer_) {
 				ambient_pointcloud_with_circular_buffer_->eraseNewest(last_number_points_inserted_in_circular_buffer_);
 			}
+			accepted_pose_corrections_.clear();
 			++pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
 			ROS_WARN_STREAM("Discarded cloud because localization couldn't be calculated");
 		}
@@ -1032,7 +1052,7 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 	for (size_t i = 0; i < matchers.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_aligned(new pcl::PointCloud<PointT>());
 		tf2::Transform pose_correction;
-		if (matchers[i]->registerCloud(ambient_pointcloud, surface_search_method, pointcloud_keypoints, pose_correction, ambient_pointcloud_aligned, false)) {
+		if (matchers[i]->registerCloud(ambient_pointcloud, surface_search_method, pointcloud_keypoints, pose_correction, accepted_pose_corrections_, ambient_pointcloud_aligned, false)) {
 			pose_corrections_in_out = pose_correction * pose_corrections_in_out;
 			registration_successful = true;
 			ambient_pointcloud = ambient_pointcloud_aligned; // switch pointers
@@ -1163,6 +1183,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_number_points_inserted_in_circular_buffer_ = 0;
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = 0;
 	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
+	accepted_pose_corrections_.clear();
 	if (ambient_pointcloud->empty()) {
 		return false;
 	}

@@ -189,7 +189,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	// Initialize results
 	final_transformation_ = guess;
 	inliers_.clear();
-	float lowest_error = std::numeric_limits<float>::max();
+	double lowest_error = std::numeric_limits<double>::max();
 	converged_ = false;
 
 
@@ -197,18 +197,18 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	if (!guess.isApprox(Eigen::Matrix4f::Identity(), 0.01f)) {
 		std::vector<int> inliers;
 		float inlier_fraction = 0.0;
-		float error = std::numeric_limits<float>::max();
+		double error = std::numeric_limits<double>::max();
 
 		PointCloudSource input_transformed;
 		input_transformed.resize(input_->size());
 		transformPointCloud(*input_, input_transformed, final_transformation_);
 		getFitness(input_transformed, inliers, error);
 		if (!inliers.empty()){
-			error /= static_cast<float>(inliers.size());
+			error /= static_cast<double>(inliers.size());
 			if (input_->empty()) {
 				inlier_fraction = 0.0;
 			} else {
-				inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+				inlier_fraction = static_cast<double>(inliers.size()) / static_cast<double>(input_->size());
 			}
 		}
 
@@ -359,12 +359,12 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 #else //-----------------------------------------------------------------------------------------------------------------------------------
 
-	pcl::registration::TransformationEstimationSVD<PointSource, PointTarget> transformation_estimation;
-	float highest_inlier_fraction = 0.0;
+	double highest_inlier_fraction = 0.0;
+	accepted_transformations_->clear();
 
-	#pragma omp parallel for firstprivate(transformation_estimation)
+	#pragma omp parallel for
 	for (int i = 0; i < max_iterations_; ++i) {
-		if (highest_inlier_fraction < 0.99) {
+//		if (highest_inlier_fraction < 0.99) {
 			std::vector<std::vector<int> > similar_features(input_->size());
 			std::vector<int> sample_indices, corresponding_indices;
 
@@ -402,12 +402,13 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 				//			#pragma omp critical
 				correspondence_rejectors[i]->getRemainingCorrespondences(*temp_corrs, *filtered_corrs);
 
-				//			if (filtered_corrs->size() < 3) break;
+				if (filtered_corrs->size() < 3) break;
 				temp_corrs = filtered_corrs;
 			}
 
 			if (filtered_corrs->size() > 2) {
 				Matrix4 transformation;
+				pcl::registration::TransformationEstimationSVD<PointSource, PointTarget> transformation_estimation;
 
 				// Estimate the transform from the correspondences, write to transformation_
 				//    transformation_estimation_->estimateRigidTransformation(*input_, sample_indices, *target_, corresponding_indices, transformation_);
@@ -419,18 +420,15 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 				pcl::transformPointCloud(*input_, input_transformed, transformation);
 
 				std::vector<int> inliers;
-				float error;
+				double error;
 
 				// Transform the input and compute the error (uses input_ and final_transformation_)
 				getFitness(input_transformed, inliers, error);
 
 				if (inliers.size() > 2) {
-					float current_inlier_fraction;
-					// If the new fit is better, update results
-					if (input_->empty()) {
-						current_inlier_fraction = 0.0;
-					} else {
-						current_inlier_fraction = static_cast<float>(inliers.size()) / static_cast<float>(input_->size());
+					double current_inlier_fraction = 0.0;
+					if (!input_->empty()) {
+						current_inlier_fraction = static_cast<double>(inliers.size()) / static_cast<double>(input_->size());
 					}
 
 					if (update_visualizer_ != 0) {
@@ -445,17 +443,20 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 					// Update result if pose hypothesis is better
 					#pragma omp critical
-					if (current_inlier_fraction >= inlier_fraction_ && error < lowest_error) {
-						highest_inlier_fraction = current_inlier_fraction;
-						inliers_ = inliers;
-						lowest_error = error;
-						converged_ = true;
-						final_transformation_ = transformation;
-						transformation_ = transformation;
+					if (current_inlier_fraction >= inlier_fraction_ && error < inlier_rmse_) {
+						accepted_transformations_->push_back(transformation);
+						if (error < lowest_error) {
+							highest_inlier_fraction = current_inlier_fraction;
+							inliers_ = inliers;
+							lowest_error = error;
+							converged_ = true;
+							final_transformation_ = transformation;
+							transformation_ = transformation;
+						}
 					}
 				}
 			}
-		}
+//		}
 	}
 #endif //--------------------------------------------------------------------------------------------------------------------------------
 
@@ -470,7 +471,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointSource, typename PointTarget, typename FeatureT> void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::getFitness(
-		PointCloudSource& input_transformed, std::vector<int>& inliers, float& fitness_score) {
+		PointCloudSource& input_transformed, std::vector<int>& inliers, double& fitness_score) {
 	// Initialize variables
 	inliers.clear();
 	inliers.reserve(input_->size());
@@ -497,10 +498,12 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	}
 
 	// Calculate MSE
-	if (inliers.size() > 0)
-		fitness_score /= static_cast<float>(inliers.size());
-	else
-		fitness_score = std::numeric_limits<float>::max();
+	if (inliers.size() > 0) {
+		fitness_score /= static_cast<double>(inliers.size());
+		fitness_score = std::sqrt(fitness_score);
+	} else {
+		fitness_score = std::numeric_limits<double>::max();
+	}
 }
 
 template<typename PointSource, typename PointTarget, typename FeatureT>

@@ -79,7 +79,7 @@ template<typename PointT>
 bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
 		typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-		tf2::Transform& pose_correction_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
+		tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
 
 	// subclass must set cloud_matcher_ ptr
 	if (!cloud_matcher_) {
@@ -105,9 +105,21 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
 
 	cloud_matcher_->align(*pointcloud_registered_out);
+	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), best_pose_correction_out);
 
 	if (cloud_matcher_->hasConverged()) {
-		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), pose_correction_out);
+		boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4 > > acceptedTransformations = getAcceptedTransformations();
+
+		if (!acceptedTransformations->empty()) {
+			for (size_t i = 0; i < acceptedTransformations->size(); ++i) {
+				tf2::Transform transform;
+				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2((*acceptedTransformations)[i], transform);
+				accepted_pose_corrections_out.push_back(transform);
+			}
+
+			ROS_INFO_STREAM("Initial pose estimation found " << acceptedTransformations->size() << " acceptable poses");
+			acceptedTransformations->clear();
+		}
 
 		if (return_aligned_keypoints && !match_only_keypoints_) {
 			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
