@@ -989,7 +989,9 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 	performance_timer.start();
 
 	tf2::Transform sensor_pose_tf_guess;
-	if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
+	if (pose_to_tf_publisher_.getTfCollector().lookForTransform(sensor_pose_tf_guess, odom_frame_id_, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp)) {
+		sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
+	} else {
 		sensor_pose_tf_guess.setIdentity();
 	}
 
