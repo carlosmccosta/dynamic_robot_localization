@@ -42,7 +42,7 @@
 
 	<!-- ==================================================== localization system ============================================= -->
 <!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
-	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen">
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
