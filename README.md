@@ -1,3 +1,6 @@
+[![DOI](https://zenodo.org/badge/7410/carlosmccosta/dynamic_robot_localization.png)](http://dx.doi.org/10.5281/zenodo.12907)
+
+
 Dynamic Robot Localization
 ==================
 
