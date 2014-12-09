@@ -23,6 +23,7 @@
 	<arg name="robot_initial_pitch" default="0.0" />
 	<arg name="robot_initial_yaw" default="0.0" />
 	<arg name="use_laser_assembler" default="1" />
+	<arg name="assemble_lasers_on_map_frame" default="0" /> <!-- if false -> uses odom frame -->
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
 	<arg name="map_frame_id" default="map" />
 	<arg name="odom_frame_id" default="odom" />
@@ -100,10 +101,19 @@
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
-		<arg name="target_frame" default="$(arg odom_frame_id)" />
 		<arg name="interpolate_scans" default="$(arg interpolate_scans)" />
-		<arg name="recovery_frame" default="" />
+		<arg name="target_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
+		<arg name="target_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
+		<arg name="recovery_frame" default="$(arg odom_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
+		<arg name="recovery_frame" default="" unless="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="initial_recovery_transform_in_base_link_to_target" default="$(arg robot_initial_pose_in_base_to_map)" />
+		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
+-		<arg name="recovery_to_target_frame_transform_initial_x" default="$(arg robot_initial_x)" />
+-		<arg name="recovery_to_target_frame_transform_initial_y" default="$(arg robot_initial_y)" />
+-		<arg name="recovery_to_target_frame_transform_initial_z" default="$(arg robot_initial_z)" />
+-		<arg name="recovery_to_target_frame_transform_initial_roll" default="$(arg robot_initial_roll)" />
+-		<arg name="recovery_to_target_frame_transform_initial_pitch" default="$(arg robot_initial_pitch)" />
+-		<arg name="recovery_to_target_frame_transform_initial_yaw" default="$(arg robot_initial_yaw)" />
 	</include>
 	
 

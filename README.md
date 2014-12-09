@@ -5,21 +5,22 @@ Dynamic Robot Localization
 ==================
 
 
-# Overview
+## Overview
 
 The dynamic_robot_localization is a ROS package that offers 3 DOF and 6 DOF localization using PCL and allows dynamic map update using OctoMap.
 It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](https://github.com/carlosmccosta/dynamic_robot_localization/blob/hydro-devel/yaml/schema/drl_configs.yaml))
 
+[![Localization system tests with Guardian platform in CROB lab](http://img.youtube.com/vi/Rl6utteku8k/maxresdefault.jpg)](http://www.youtube.com/watch?v=Rl6utteku8k)
 
 
-# Data sources
+## Data sources
 
 The localization system can operate with any type of sensors that provide point clouds.
 As such, it can use any number of laser sensors (by using the [laserscan_to_pointcloud](https://github.com/carlosmccosta/laserscan_to_pointcloud) package) or RGB-D / ToF cameras.
 
 
 
-# Reference map
+## Reference map
 
 The reference map can be provided to the localization system from CAD ( .ply | .stl | .obj | .vtk ), pointcloud file (.pcd) / topic (sensor_msgs::PointCloud2) or using a 2D costmap (nav_msgs::OccupancyGrid).
 To avoid unnecessary overhead it should be provided has pointcloud (.pcd).
@@ -33,7 +34,7 @@ To convert CAD files to .pcd there are two options:
 
 
 
-# Localization methods
+## Localization methods
 
 The localization system has two different localization methods to tackle different scenarios.
 For initial pose estimation and pose recovery it can use feature matching with several keypoint detectors (such as Scale Invariant Feature Transform (SIFT) and Intrinsic Shape Signatures (ISS3D)) and several keypoint descriptors (such as Point Feature Histogram (PFH), Fast Point Feature Histogram (FPFH), Signature of Histograms of Orientations (SHOT), Shape Context 3D (SC3D), Unique Shape Context (USC) and Ensemble of Shape Functions (ESF)).
@@ -44,7 +45,7 @@ Examples of the localization pipeline are available at [dynamic_robot_localizati
 
 
 
-# Localization reliability
+## Localization reliability
 
 The localization pipeline allows the attachment of transformation validators before publishing pose estimations.
 They can be used to suppress estimations that are not plausible for a given robot operation conditions.
@@ -53,14 +54,14 @@ If the tracking methods can't recover after a given amount of sensor updates / t
 
 
 
-# Dynamic map update
+## Dynamic map update
 
 Dynamic map update can be performed with the [OctoMap package](http://octomap.github.io/)
 This can be [achieved](https://github.com/carlosmccosta/dynamic_robot_localization/blob/hydro-devel/launch/octo_map.launch) by configuring either the registered cloud or the outlier cloud as input for OctoMap and the output of OctoMap as the reference cloud for the localization system.
 
 
 
-# Usage
+## Usage
 
 The localization system can be started with [dynamic_robot_localization_system.launch](https://github.com/carlosmccosta/dynamic_robot_localization/blob/hydro-devel/launch/dynamic_robot_localization_system.launch)
 
@@ -91,7 +92,7 @@ The dynamic_robot_localization node publishes in latched topics (if required, as
 
 
 
-# Dynamic robot localization tests
+## Dynamic robot localization tests
 
 The localization system is being tested using two different robot platforms (Guardian and Jarvis), both in simulation and with the real robots in the INESC CROB lab.
 
@@ -119,18 +120,19 @@ Installation scripts can be found in this [shared folder.](https://www.dropbox.c
 
 
 
-# List of related git repositories:
+## List of related git repositories:
 
 * [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests)
 * [pose_to_tf_publisher](https://github.com/carlosmccosta/pose_to_tf_publisher)
 * [laserscan_to_pointcloud](https://github.com/carlosmccosta/laserscan_to_pointcloud)
 * [mesh_to_pointcloud](https://github.com/carlosmccosta/mesh_to_pointcloud)
 * [robot_localization_tools](https://github.com/carlosmccosta/robot_localization_tools)
+* [crob_gazebo_models](https://github.com/carlosmccosta/crob_gazebo_models)
 * [octomap_mapping](https://github.com/carlosmccosta/octomap_mapping)
 
 
 
-# More info
+## More info
 
 * [ICIT 2015 paper](https://www.dropbox.com/sh/yizj93xtvsapl9e/AABdCPKrMX2V58vzpzECKiExa?dl=0)
 * [Results folder](https://www.dropbox.com/sh/nwb6gezj2dan187/AABM2u4BGd12lN__nYFwSktLa?dl=0)
