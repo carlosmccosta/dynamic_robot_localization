@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<!-- ======================================================= arguments ==================================================== -->
+	<!-- sensor data from point cloud topic -->
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
+	
+	<!-- rviz initial pose topic -->
+	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" />
+	
+	<!-- published pose -->
+	<arg name="pose_stamped_topic" default="localization_pose" />
+	
+	<!-- main configurations -->
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
 	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_2d.yaml" />
 	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_2d.yaml" />
 	<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_2d.yaml" />
+	
+	<!-- reference map data -->
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
-	<arg name="publish_tf_map_odom" default="1" />
-	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" />
-	<arg name="pose_stamped_topic" default="localization_pose" />
+	
+	<!-- intial pose setup -->
 	<arg name="robot_initial_pose_in_base_to_map" default="false" /> <!-- recommendation: use false to allow direct publish of tf between odom -> map -->
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
@@ -22,27 +32,45 @@
 	<arg name="robot_initial_roll" default="0.0" />
 	<arg name="robot_initial_pitch" default="0.0" />
 	<arg name="robot_initial_yaw" default="0.0" />
+	
+	<!-- laser scan assembler -->
 	<arg name="use_laser_assembler" default="1" />
-	<arg name="assemble_lasers_on_map_frame" default="0" /> <!-- if false -> uses odom frame -->
+	<arg name="assemble_lasers_on_map_frame" default="0" /> <!-- if false -> assembles lasers on odom frame -->
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
+	<arg name="use_spherical_interpolation" default="false" />
+	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
+	<arg name="timeout_for_cloud_assembly" default="0.5" />
+	<arg name="dynamic_update_of_assembly_configuration_from_twist_topic" default="" />
+	<arg name="dynamic_update_of_assembly_configuration_from_odometry_topic" default="odom" />
+	<arg name="dynamic_update_of_assembly_configuration_from_imu_topic" default="" />
+	<arg name="min_number_of_scans_to_assemble_per_cloud" default="2" />
+	<arg name="max_number_of_scans_to_assemble_per_cloud" default="10" />
+	<arg name="min_timeout_seconds_for_cloud_assembly" default="0.3" />
+	<arg name="max_timeout_seconds_for_cloud_assembly" default="1.3" />
+	<arg name="max_linear_velocity" default="0.5" /> <!-- when the linear velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
+	<arg name="max_angular_velocity" default="0.174532925" /> <!-- when the angular velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
+	
+	<!-- frame ids -->
 	<arg name="map_frame_id" default="map" />
 	<arg name="odom_frame_id" default="odom" />
 	<arg name="base_link_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
+	
+	<!-- tf configurations -->
+	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="2.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
-	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
-	<arg name="interpolate_scans" default="true" />
-	<arg name="timeout_for_cloud_assembly" default="0.5" />
+	
+	<!-- map update -->
 	<arg name="use_dynamic_map_update" default="0" />
 	<arg name="octomap_file" default="" />
 
 
 	<!-- ==================================================== localization system ============================================= -->
-<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
@@ -99,9 +127,18 @@
 	<!-- laser assembler -->
 	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)" >
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
+		<arg name="use_spherical_interpolation" default="$(arg use_spherical_interpolation)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
-		<arg name="interpolate_scans" default="$(arg interpolate_scans)" />
+		<arg name="dynamic_update_of_assembly_configuration_from_twist_topic" default="$(arg dynamic_update_of_assembly_configuration_from_twist_topic)" />
+		<arg name="dynamic_update_of_assembly_configuration_from_odometry_topic" default="$(arg dynamic_update_of_assembly_configuration_from_odometry_topic)" />
+		<arg name="dynamic_update_of_assembly_configuration_from_imu_topic" default="$(arg dynamic_update_of_assembly_configuration_from_imu_topic)" />
+		<arg name="min_number_of_scans_to_assemble_per_cloud" default="$(arg min_number_of_scans_to_assemble_per_cloud)" />
+		<arg name="max_number_of_scans_to_assemble_per_cloud" default="$(arg max_number_of_scans_to_assemble_per_cloud)" />
+		<arg name="min_timeout_seconds_for_cloud_assembly" default="$(arg min_timeout_seconds_for_cloud_assembly)" />
+		<arg name="max_timeout_seconds_for_cloud_assembly" default="$(arg max_timeout_seconds_for_cloud_assembly)" />
+		<arg name="max_linear_velocity" default="$(arg max_linear_velocity)" />
+		<arg name="max_angular_velocity" default="$(arg max_angular_velocity)" />
 		<arg name="target_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="target_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="recovery_frame" default="$(arg odom_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
