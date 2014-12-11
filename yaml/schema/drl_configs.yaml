@@ -55,9 +55,12 @@
 # ===================================================================================================================================================
 #   These are the topics from which the localization system will receive the reference and ambient point clouds
 subscribe_topic_names:
-    ambient_pointcloud_topic: 'ambient_pointcloud'                  # sensor_msgs::PointCloud2 | Cloud with points coming from sensing devices that will be used to update the localization pose
-    reference_costmap_topic: '/map'                                 # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
-    reference_pointcloud_topic: ''                                  # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'octomap_point_cloud_centers'
+    pose_topic: 'initial_pose'                                                  # geometry_msgs::Pose | Topic to reset localization pose
+    pose_stamped_topic: 'initial_pose_stamped'                                  # geometry_msgs::PoseStamped | Topic to reset localization pose
+    pose_with_covariance_stamped_topic: 'initial_pose_with_covariance_stamped'  # geometry_msgs::PoseWithCovarianceStamped | Topic to reset localization pose
+    ambient_pointcloud_topic: 'ambient_pointcloud'                              # sensor_msgs::PointCloud2 | Cloud with points coming from sensing devices that will be used to update the localization pose
+    reference_costmap_topic: '/map'                                             # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
+    reference_pointcloud_topic: ''                                              # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'octomap_point_cloud_centers'
 
 
 # ===================================================================================================================================================

@@ -27,6 +27,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseArray.h>
@@ -165,6 +166,11 @@ class Localization : public ConfigurableObject {
 		void publishReferencePointCloud();
 		bool updateLocalizationPipelineWithNewReferenceCloud();
 
+		void setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
+		void setInitialPoseFromPose(const geometry_msgs::PoseConstPtr& pose);
+		void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
+		void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
+
 		void startLocalization();
 
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
@@ -196,7 +202,7 @@ class Localization : public ConfigurableObject {
 
 		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				const tf2::Transform& pointcloud_pose_initial_guess,
-				tf2::Transform& pointcloud_pose_corrected_out);
+				tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform pose_corrections_out);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </Localization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -213,6 +219,9 @@ class Localization : public ConfigurableObject {
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
 		// subscription topic names
+		std::string pose_topic_;
+		std::string pose_stamped_topic_;
+		std::string pose_with_covariance_stamped_topic_;
 		std::string ambient_pointcloud_topic_;
 		std::string reference_pointcloud_topic_;
 		std::string reference_costmap_topic_;
@@ -282,6 +291,9 @@ class Localization : public ConfigurableObject {
 		pose_to_tf_publisher::PoseToTFPublisher pose_to_tf_publisher_;
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
+		ros::Subscriber pose_subscriber_;
+		ros::Subscriber pose_stamped_subscriber_;
+		ros::Subscriber pose_with_covariance_stamped_subscriber_;
 		ros::Subscriber ambient_pointcloud_subscriber_;
 		ros::Subscriber costmap_subscriber_;
 		ros::Subscriber reference_pointcloud_subscriber_;

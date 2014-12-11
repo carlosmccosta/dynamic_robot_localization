@@ -4,11 +4,13 @@
 	<!-- sensor data from point cloud topic -->
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
 	
-	<!-- rviz initial pose topic -->
-	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" />
+	<!-- initial pose topics -->
+	<arg name="pose_topic" default="initial_pose" />
+	<arg name="pose_stamped_topic" default="initial_pose_stamped" />
+	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" /> <!-- rviz topic -->
 	
 	<!-- published pose -->
-	<arg name="pose_stamped_topic" default="localization_pose" />
+	<arg name="pose_stamped_publish_topic" default="localization_pose" />
 	
 	<!-- main configurations -->
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
@@ -59,7 +61,7 @@
 	<!-- tf configurations -->
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="2.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
@@ -83,9 +85,12 @@
 		<param name="initial_pose/orientation_rpy/roll" type="double" value="$(arg robot_initial_roll)" />
 		<param name="initial_pose/orientation_rpy/pitch" type="double" value="$(arg robot_initial_pitch)" />
 		<param name="initial_pose/orientation_rpy/yaw" type="double" value="$(arg robot_initial_yaw)" />
+		<param name="subscribe_topic_names/pose_topic" type="str" value="$(arg pose_topic)" />
+		<param name="subscribe_topic_names/pose_stamped_topic" type="str" value="$(arg pose_stamped_topic)" />
+		<param name="subscribe_topic_names/pose_with_covariance_stamped_topic" type="str" value="$(arg pose_with_covariance_stamped_topic)" />
 		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
 		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="" />
-		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_topic)" />
+		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_publish_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
@@ -103,8 +108,8 @@
 	<include file="$(find pose_to_tf_publisher)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
 		<arg name="publish_rate" default="$(arg publish_pose_tf_rate)" />
 		<arg name="publish_last_pose_tf_timeout_seconds" default="$(arg publish_last_pose_tf_timeout_seconds)" />
-		<arg name="pose_with_covariance_stamped_topic" default="$(arg pose_with_covariance_stamped_topic)" />
-		<arg name="pose_stamped_topic" default="$(arg pose_stamped_topic)" />
+		<arg name="pose_with_covariance_stamped_topic" default="$(arg pose_with_covariance_stamped_topic)" /> <!-- rviz topic -->
+		<arg name="pose_stamped_topic" default="$(arg pose_stamped_publish_topic)" />
 		<arg name="odometry_topic" default="" />
 		<arg name="map_frame_id" default="$(arg map_frame_id)" />
 		<arg name="odom_frame_id" default="$(arg odom_frame_id)" />
@@ -145,12 +150,12 @@
 		<arg name="recovery_frame" default="" unless="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="initial_recovery_transform_in_base_link_to_target" default="$(arg robot_initial_pose_in_base_to_map)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
--		<arg name="recovery_to_target_frame_transform_initial_x" default="$(arg robot_initial_x)" />
--		<arg name="recovery_to_target_frame_transform_initial_y" default="$(arg robot_initial_y)" />
--		<arg name="recovery_to_target_frame_transform_initial_z" default="$(arg robot_initial_z)" />
--		<arg name="recovery_to_target_frame_transform_initial_roll" default="$(arg robot_initial_roll)" />
--		<arg name="recovery_to_target_frame_transform_initial_pitch" default="$(arg robot_initial_pitch)" />
--		<arg name="recovery_to_target_frame_transform_initial_yaw" default="$(arg robot_initial_yaw)" />
+		<arg name="recovery_to_target_frame_transform_initial_x" default="$(arg robot_initial_x)" />
+		<arg name="recovery_to_target_frame_transform_initial_y" default="$(arg robot_initial_y)" />
+		<arg name="recovery_to_target_frame_transform_initial_z" default="$(arg robot_initial_z)" />
+		<arg name="recovery_to_target_frame_transform_initial_roll" default="$(arg robot_initial_roll)" />
+		<arg name="recovery_to_target_frame_transform_initial_pitch" default="$(arg robot_initial_pitch)" />
+		<arg name="recovery_to_target_frame_transform_initial_yaw" default="$(arg robot_initial_yaw)" />
 	</include>
 	
 
