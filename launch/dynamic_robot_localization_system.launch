@@ -46,10 +46,10 @@
 	<arg name="dynamic_update_of_assembly_configuration_from_odometry_topic" default="odom" />
 	<arg name="dynamic_update_of_assembly_configuration_from_imu_topic" default="" />
 	<arg name="min_number_of_scans_to_assemble_per_cloud" default="2" />
-	<arg name="max_number_of_scans_to_assemble_per_cloud" default="10" />
-	<arg name="min_timeout_seconds_for_cloud_assembly" default="0.3" />
-	<arg name="max_timeout_seconds_for_cloud_assembly" default="1.3" />
-	<arg name="max_linear_velocity" default="0.5" /> <!-- when the linear velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
+	<arg name="max_number_of_scans_to_assemble_per_cloud" default="20" />
+	<arg name="min_timeout_seconds_for_cloud_assembly" default="0.15" />
+	<arg name="max_timeout_seconds_for_cloud_assembly" default="1.1" />
+	<arg name="max_linear_velocity" default="0.025" /> <!-- when the linear velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
 	<arg name="max_angular_velocity" default="0.174532925" /> <!-- when the angular velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
 	
 	<!-- frame ids -->

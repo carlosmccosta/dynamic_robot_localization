@@ -32,6 +32,7 @@ size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::Kd
 		typename pcl::PointCloud<PointT>::Ptr& outliers_out, typename pcl::PointCloud<PointT>::Ptr& inliers_out, double& root_mean_square_error_out) {
 	std::vector<int> k_indices(1);
 	std::vector<float> k_sqr_distances(1);
+	float max_inliers_distance_squared = max_inliers_distance_ * max_inliers_distance_;
 
 	root_mean_square_error_out = 0.0;
 	size_t number_inliers = 0;
@@ -41,7 +42,7 @@ size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::Kd
 	for (size_t i = 0; i < ambient_pointcloud.size(); ++i) {
 		PointT point = ambient_pointcloud.points[i];
 		reference_pointcloud_search_method->nearestKSearch(point, 1, k_indices, k_sqr_distances);
-		if (k_sqr_distances[0] > max_inliers_distance_) {
+		if (k_sqr_distances[0] > max_inliers_distance_squared) {
 			if (save_outliers) { outliers_out->push_back(point); }
 		} else {
 			if (save_inliers) { inliers_out->push_back(point); }
@@ -53,8 +54,7 @@ size_t EuclideanOutlierDetector<PointT>::detectOutliers(typename pcl::search::Kd
 	if (number_inliers == 0) {
 		root_mean_square_error_out = std::numeric_limits<double>::max();
 	} else {
-		root_mean_square_error_out /= number_inliers;
-		root_mean_square_error_out = std::sqrt(root_mean_square_error_out);
+		root_mean_square_error_out = std::sqrt(root_mean_square_error_out / (double)number_inliers);
 	}
 
 	return ambient_pointcloud.size() - number_inliers;

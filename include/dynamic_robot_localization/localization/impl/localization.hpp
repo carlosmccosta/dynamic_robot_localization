@@ -801,8 +801,6 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			&& elapsed_time_since_last_scan > min_seconds_between_scan_registration_
 			&& scan_age < max_seconds_ambient_pointcloud_age_) {
 
-		last_scan_time_ = ros::Time::now();
-
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
 		pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
 		size_t ambient_pointcloud_size = ambient_pointcloud->size();
@@ -877,6 +875,8 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			} else {
 				pose_time = ambient_cloud_msg->header.stamp;
 			}
+
+			last_scan_time_ = pose_time;
 
 			if (!localization_times_publisher_.getTopic().empty()) {
 				localization_times_msg_.header.frame_id = map_frame_id_;
