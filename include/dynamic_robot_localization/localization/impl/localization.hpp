@@ -649,7 +649,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 
 		if (!reference_cloud_keypoint_detectors_.empty()) {
 			if (reference_pointcloud_keypoints_filename_.empty() || !pointcloud_conversions::fromFile(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints)) {
-				if (!applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints)) { return false; }
+				applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints);
 
 				if (!reference_pointcloud_keypoints_save_filename_.empty()) {
 					ROS_INFO_STREAM("Saving reference pointcloud keypoints with " << reference_pointcloud_keypoints->size() << " points to file " << reference_pointcloud_keypoints_save_filename_);
@@ -798,7 +798,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 	if (reference_pointcloud_received_
 			&& ambient_cloud_msg->data.size() > 0
-			&& elapsed_time_since_last_scan > min_seconds_between_scan_registration_
+			&& (elapsed_time_since_last_scan.toSec() < 0 || elapsed_time_since_last_scan > min_seconds_between_scan_registration_)
 			&& scan_age < max_seconds_ambient_pointcloud_age_) {
 
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
