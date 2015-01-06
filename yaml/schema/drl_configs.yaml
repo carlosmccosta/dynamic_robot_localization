@@ -122,11 +122,22 @@ message_management:
 
 
 # ===================================================================================================================================================
-#   Full path to the reference clouds.
-#   It is recommend to set these values in the launch file using the ROS $(find package_name)/file_name
+#   Full path to the reference clouds
+#       -> It is recommend to set these values in the launch file using the ROS $(find package_name)/file_name
+#   The reference pointcloud can be updated after each successful scan registration using the full cloud or only the inliers / outliers
+#       Integration modes:
+#           NoIntegration           -> performs localization only (map can still be updated externally by OctoMap using the map update topic)
+#           FullIntegration         -> the full registered cloud is integrated in the reference map
+#           InliersIntegration      -> the inliers of the registered cloud are integrated in the reference map
+#           OutliersIntegration     -> the outliers of the registered cloud are integrated in the reference map
+#   If there are dynamic objects in the scene, OctoMap can be used to performed cloud integration (much more computation intensive)
+#       -> The rate of map update from the point cloud topic can be configured with the parameter [message_management/min_seconds_between_reference_pointcloud_update]
+#       -> The dynamic objects won't stay in the map due to the raytracing operations marking the cells between the sensor pose and cloud points as free
 reference_pointclouds:
     reference_pointcloud_filename: ''
     reference_pointcloud_preprocessed_save_filename: ''
+    reference_pointcloud_type: '3D'                                 # Supported modes: [ 2D | 3D ]
+    reference_pointcloud_update_mode: 'NoIntegration'               # Supported modes: [ NoIntegration | FullIntegration | InliersIntegration | OutliersIntegration ]
     save_reference_pointclouds_in_binary_format: true
 
 

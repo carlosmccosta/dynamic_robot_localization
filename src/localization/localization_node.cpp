@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
 
 	std::string localization_point_type;
-	private_node_handle->param("localization_point_type", localization_point_type, std::string("PointXYZINormal"));
+	private_node_handle->param("localization_point_type", localization_point_type, std::string("PointXYZRGBNormal"));
 
 	if (localization_point_type == "PointXYZRGBNormal") {
 		dynamic_robot_localization::Localization<pcl::PointXYZRGBNormal> localization;

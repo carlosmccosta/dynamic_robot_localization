@@ -116,12 +116,17 @@ class Localization : public ConfigurableObject {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-//		typedef pcl::PointNormal PointT;
 		typedef boost::shared_ptr< Localization<PointT> > Ptr;
 		typedef boost::shared_ptr< const Localization<PointT> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		enum MapUpdateMode {
+			NoIntegration, 			// performs localization only (map can still be updated externally by OctoMap using the map update topic)
+			FullIntegration, 		// the full registered cloud is integrated in the reference map
+			InliersIntegration, 	// the inliers of the registered cloud are integrated in the reference map
+			OutliersIntegration 	// the outliers of the registered cloud are integrated in the reference map
+		};
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -165,6 +170,7 @@ class Localization : public ConfigurableObject {
 		void loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg);
 		void publishReferencePointCloud();
 		bool updateLocalizationPipelineWithNewReferenceCloud();
+		void updateMatchersReferenceCloud();
 
 		void setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
 		void setInitialPoseFromPose(const geometry_msgs::PoseConstPtr& pose);
@@ -202,7 +208,8 @@ class Localization : public ConfigurableObject {
 
 		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				const tf2::Transform& pointcloud_pose_initial_guess,
-				tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform pose_corrections_out);
+				tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out);
+		virtual bool updateReferencePointCloudWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr pointcloud_keypoints);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </Localization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -242,6 +249,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_preprocessed_save_filename_;
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
+		MapUpdateMode map_update_mode_;
 		std::string map_frame_id_;
 		std::string odom_frame_id_;
 		std::string base_link_frame_id_;
@@ -308,6 +316,7 @@ class Localization : public ConfigurableObject {
 
 		// localization fields
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
+		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints_;
 		typename CircularBufferPointCloud<PointT>::Ptr ambient_pointcloud_with_circular_buffer_;
 		size_t last_number_points_inserted_in_circular_buffer_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
@@ -325,6 +334,8 @@ class Localization : public ConfigurableObject {
 		std::vector< TransformationValidator::Ptr > transformation_validators_tracking_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		typename CloudAnalyzer<PointT>::Ptr cloud_analyzer_;
+		typename pcl::PointCloud<PointT>::Ptr registered_inliers_;
+		typename pcl::PointCloud<PointT>::Ptr registered_outliers_;
 		double outlier_percentage_;
 		size_t number_inliers_;
 		double root_mean_square_error_inliers_;

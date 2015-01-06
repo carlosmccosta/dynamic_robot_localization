@@ -21,6 +21,8 @@
 	<!-- reference map data -->
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
+	<arg name="reference_pointcloud_type" default="3D" />
+	<arg name="reference_pointcloud_update_mode" default="NoIntegration" />
 	<arg name="reference_pointcloud_keypoints_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
@@ -39,7 +41,7 @@
 	<arg name="use_laser_assembler" default="1" />
 	<arg name="assemble_lasers_on_map_frame" default="0" /> <!-- if false -> assembles lasers on odom frame -->
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
-	<arg name="use_spherical_interpolation" default="false" />
+	<arg name="use_spherical_interpolation" default="true" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
 	<arg name="timeout_for_cloud_assembly" default="0.5" />
 	<arg name="dynamic_update_of_assembly_configuration_from_twist_topic" default="" />
@@ -61,7 +63,7 @@
 	<!-- tf configurations -->
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="2.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
@@ -93,6 +95,8 @@
 		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_publish_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
+		<param name="reference_pointclouds/reference_pointcloud_type" type="str" value="$(arg reference_pointcloud_type)" />
+		<param name="reference_pointclouds/reference_pointcloud_update_mode" type="str" value="$(arg reference_pointcloud_update_mode)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
 		<param name="initial_pose_estimators_matchers/feature_matchers/reference_pointcloud_descriptors_filename" type="str" value="$(arg reference_pointcloud_descriptors_filename)" />
