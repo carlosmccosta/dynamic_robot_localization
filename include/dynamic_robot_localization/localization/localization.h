@@ -179,6 +179,7 @@ class Localization : public ConfigurableObject {
 
 		void startLocalization();
 
+		void transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp);
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 

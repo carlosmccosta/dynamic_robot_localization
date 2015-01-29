@@ -592,18 +592,25 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 template<typename PointT>
 void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg) {
 	if (!reference_pointcloud_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_reference_pointcloud_update_) {
-		last_map_received_time_ = ros::Time::now();
 
 		if (reference_pointcloud_msg->width > 0 && reference_pointcloud_msg->data.size() > 0 && reference_pointcloud_msg->fields.size() >= 3) {
 			pcl::fromROSMsg(*reference_pointcloud_msg, *reference_pointcloud_);
+			size_t pointcloud_size = reference_pointcloud_->size();
 
 			std::vector<int> indexes;
 			pcl::removeNaNFromPointCloud(*reference_pointcloud_, *reference_pointcloud_, indexes);
 			indexes.clear();
 
+			size_t number_of_nans_in_reference_pointcloud = pointcloud_size - reference_pointcloud_->size();
+			if (number_of_nans_in_reference_pointcloud > 0) {
+				ROS_INFO_STREAM("Removed " << number_of_nans_in_reference_pointcloud << " NaNs from reference cloud with " << pointcloud_size << " points");
+			}
+
 			if (!reference_pointcloud_->empty()) {
+				transformCloudToMapFrame(reference_pointcloud_, reference_pointcloud_msg->header.stamp);
 				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
+					last_map_received_time_ = ros::Time::now();
 					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->size() << " points");
 				}
 			}
@@ -615,7 +622,6 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 template<typename PointT>
 void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg) {
 	if (!reference_pointcloud_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_reference_pointcloud_update_) {
-		last_map_received_time_ = ros::Time::now();
 
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_)) {
 			if (!reference_pointcloud_->empty()) {
@@ -624,6 +630,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 				private_node_handle_->param("normal_estimators/reference_pointcloud/flip_normals_using_occupancy_grid_analysis", flip_normals_using_occupancy_grid_analysis, true);
 				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
+					last_map_received_time_ = ros::Time::now();
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points");
 				}
 			}
@@ -816,6 +823,28 @@ void Localization<PointT>::startLocalization() {
 
 
 template<typename PointT>
+void Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp) {
+	if (ambient_pointcloud->header.frame_id != map_frame_id_) {
+		tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
+		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
+			tf2::Transform pose_tf_cloud_to_odom;
+			if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
+				ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
+				return;
+			}
+			pose_tf_cloud_to_map *= pose_tf_cloud_to_odom;
+		}
+
+		Eigen::Transform<double, 3, Eigen::Affine> matrix_transform;
+		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform(pose_tf_cloud_to_map, matrix_transform);
+		pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, matrix_transform);
+		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
+		ambient_pointcloud->header.frame_id = map_frame_id_;
+	}
+}
+
+
+template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
 	localization_times_msg_ = LocalizationTimes();
 
@@ -824,23 +853,17 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 	ROS_DEBUG_STREAM("Received pointcloud in frame " << ambient_cloud_msg->header.frame_id << " with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_msg->header.stamp << " (map_frame_id: " << map_frame_id_ << ")");
 
+	int number_points_ambient_pointcloud = ambient_cloud_msg->width * ambient_cloud_msg->height;
+	if (number_points_ambient_pointcloud < minimum_number_of_points_in_ambient_pointcloud_) {
+		ROS_DEBUG_STREAM("Discarded ambient cloud [ minimum number of points required: " << minimum_number_of_points_in_ambient_pointcloud_ << " | point cloud size: " << number_points_ambient_pointcloud << " ]");
+		return;
+	}
+
 	if (!reference_pointcloud_received_ && map_update_mode_ != NoIntegration) {
 		loadReferencePointCloudFromROSPointCloud(ambient_cloud_msg);
 	} else if (reference_pointcloud_received_
-			&& ambient_cloud_msg->data.size() > 0
 			&& (elapsed_time_since_last_scan.toSec() < 0 || elapsed_time_since_last_scan > min_seconds_between_scan_registration_)
 			&& scan_age < max_seconds_ambient_pointcloud_age_) {
-
-		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
-		pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
-		size_t ambient_pointcloud_size = ambient_pointcloud->size();
-		std::vector<int> indexes;
-		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
-		indexes.clear();
-		size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
-		if (number_of_nans_in_ambient_pointcloud > 0) {
-			ROS_INFO_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud");
-		}
 
 		tf2::Transform transform_base_link_to_odom;
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
@@ -850,33 +873,19 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 		tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
 
-		if (ambient_pointcloud->header.frame_id != map_frame_id_) {
-			tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
-			if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
-				tf2::Transform pose_tf_cloud_to_odom;
-				if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, ambient_cloud_msg->header.stamp)) {
-					ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
-					return;
-				}
-				pose_tf_cloud_to_map *= pose_tf_cloud_to_odom;
-			}
 
-			Eigen::Vector3f offset(
-					pose_tf_cloud_to_map.getOrigin().getX(),
-					pose_tf_cloud_to_map.getOrigin().getY(),
-					pose_tf_cloud_to_map.getOrigin().getZ());
-
-			tf2::Quaternion pose_tf_cloud_to_map_q = pose_tf_cloud_to_map.getRotation().normalize();
-			Eigen::Quaternionf rotation(
-					pose_tf_cloud_to_map_q.getW(),
-					pose_tf_cloud_to_map_q.getX(),
-					pose_tf_cloud_to_map_q.getY(),
-					pose_tf_cloud_to_map_q.getZ());
-
-			pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, offset, rotation);
-			ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
-			ambient_pointcloud->header.frame_id = map_frame_id_;
+		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
+		pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
+		size_t ambient_pointcloud_size = ambient_pointcloud->size();
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+		indexes.clear();
+		size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
+		if (number_of_nans_in_ambient_pointcloud > 0) {
+			ROS_INFO_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
 		}
+
+		transformCloudToMapFrame(ambient_pointcloud, ambient_cloud_msg->header.stamp);
 
 		tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();
 		ROS_DEBUG_STREAM("Initial pose:" \

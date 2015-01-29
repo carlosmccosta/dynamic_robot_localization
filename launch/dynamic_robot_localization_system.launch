@@ -164,8 +164,10 @@
 	
 
 	<!-- OctoMap for dynamic map update -->
-	<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" if="$(arg use_dynamic_map_update)" >
+	<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" ns="dynamic_robot_localization" if="$(arg use_dynamic_map_update)" >
 		<arg name="octomap_file" default="$(arg octomap_file)" />
+		<arg name="base_frame_id" default="$(arg base_link_frame_id)" />
+		<arg name="sensor_frame_id" default="$(arg sensor_frame_id)" />
 	</include>
 </launch>
  
