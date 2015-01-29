@@ -4,10 +4,11 @@
 	<arg name="base_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 	<arg name="cloud_in" default="aligned_pointcloud" />
+	<arg name="resolution" default="0.02" />
 
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg octomap_file)" respawn="true" output="screen">
 		<param name="frame_id" type="string" value="map" />
-		<param name="resolution" type="double" value="0.01" />
+		<param name="resolution" type="double" value="$(arg resolution)" />
 		<param name="base_frame_id" type="string" value="$(arg base_frame_id" />
 		<param name="sensor_frame_id" type="string" value="$(arg sensor_frame_id)" />
 		<param name="height_map" type="bool" value="true" />
@@ -21,10 +22,10 @@
 		<param name="ground_filter/distance" type="double" value="0.02" />
 		<param name="ground_filter/angle" type="double" value="0.15" />
 		<param name="ground_filter/plane_distance" type="double" value="0.05" />
-		<param name="pointcloud_min_z" type="double" value="0.0" />
-		<param name="pointcloud_max_z" type="double" value="2.6" />
-		<param name="occupancy_min_z" type="double" value="-0.01" />
-		<param name="occupancy_max_z" type="double" value="2.60" />
+		<param name="pointcloud_min_z" type="double" value="-1.0" />
+		<param name="pointcloud_max_z" type="double" value="2.5" />
+		<param name="occupancy_min_z" type="double" value="-1.0" />
+		<param name="occupancy_max_z" type="double" value="2.5" />
 		<param name="occupancy_grid_2d_min_z" type="double" value="-0.43" />
 		<param name="occupancy_grid_2d_max_z" type="double" value="0.435" />
 		<param name="occupancy_grid_2d_initialized_as_free" type="bool" value="false" />

@@ -24,6 +24,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 Localization<PointT>::Localization() :
 	map_update_mode_(NoIntegration),
+	use_incremental_map_update_(false),
 	minimum_number_of_points_in_ambient_pointcloud_(10),
 	localization_detailed_use_millimeters_in_root_mean_square_error_inliers_(true),
 	localization_detailed_use_millimeters_in_translation_corrections_(true),
@@ -257,6 +258,8 @@ void Localization<PointT>::setupReferencePointCloud() {
 	} else if (reference_pointcloud_update_mode == "OutliersIntegration") {
 		map_update_mode_ = OutliersIntegration;
 	}
+
+	private_node_handle_->param("reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
 }
 
 
@@ -692,7 +695,6 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints_->size();
 
 		updateMatchersReferenceCloud();
-
 		publishReferencePointCloud();
 		return true;
 	}
@@ -835,9 +837,7 @@ void Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 			pose_tf_cloud_to_map *= pose_tf_cloud_to_odom;
 		}
 
-		Eigen::Transform<double, 3, Eigen::Affine> matrix_transform;
-		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform(pose_tf_cloud_to_map, matrix_transform);
-		pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, matrix_transform);
+		pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
 		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
 		ambient_pointcloud->header.frame_id = map_frame_id_;
 	}
@@ -1473,15 +1473,20 @@ bool Localization<PointT>::updateReferencePointCloudWithAmbientPointCloud(typena
 
 		*reference_pointcloud_ += *pointcloud;
 		*reference_pointcloud_keypoints_ += *pointcloud_keypoints;
-		localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
-		localization_diagnostics_msg_.number_points_reference_pointcloud_after_filtering = reference_pointcloud_->size();
-		localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints_->size();
-		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 
-		updateMatchersReferenceCloud();
-		publishReferencePointCloud();
+		if (use_incremental_map_update_) {
+			localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
+			localization_diagnostics_msg_.number_points_reference_pointcloud_after_filtering = reference_pointcloud_->size();
+			localization_diagnostics_msg_.number_keypoints_reference_pointcloud = reference_pointcloud_keypoints_->size();
+			reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 
-		return true;
+			updateMatchersReferenceCloud();
+			publishReferencePointCloud();
+
+			return true;
+		} else {
+			return updateLocalizationPipelineWithNewReferenceCloud();
+		}
 	}
 
 	return false;

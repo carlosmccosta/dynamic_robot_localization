@@ -251,6 +251,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
 		MapUpdateMode map_update_mode_;
+		bool use_incremental_map_update_;
 		std::string map_frame_id_;
 		std::string odom_frame_id_;
 		std::string base_link_frame_id_;
