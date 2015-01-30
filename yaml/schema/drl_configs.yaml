@@ -60,7 +60,7 @@ subscribe_topic_names:
     pose_with_covariance_stamped_topic: 'initial_pose_with_covariance_stamped'  # geometry_msgs::PoseWithCovarianceStamped | Topic to reset localization pose
     ambient_pointcloud_topic: 'ambient_pointcloud'                              # sensor_msgs::PointCloud2 | Cloud with points coming from sensing devices that will be used to update the localization pose
     reference_costmap_topic: '/map'                                             # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
-    reference_pointcloud_topic: ''                                              # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'octomap_point_cloud_centers'
+    reference_pointcloud_topic: 'reference_pointcloud_update'                   # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'octomap_point_cloud_centers'
 
 
 # ===================================================================================================================================================

@@ -40,6 +40,8 @@
 	<!-- laser scan assembler -->
 	<arg name="use_laser_assembler" default="1" />
 	<arg name="assemble_lasers_on_map_frame" default="0" /> <!-- if false -> assembles lasers on odom frame -->
+	<arg name="laser_assembly_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
+	<arg name="laser_assembly_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
 	<arg name="use_spherical_interpolation" default="true" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
@@ -148,8 +150,7 @@
 		<arg name="max_timeout_seconds_for_cloud_assembly" default="$(arg max_timeout_seconds_for_cloud_assembly)" />
 		<arg name="max_linear_velocity" default="$(arg max_linear_velocity)" />
 		<arg name="max_angular_velocity" default="$(arg max_angular_velocity)" />
-		<arg name="target_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
-		<arg name="target_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
+		<arg name="target_frame" default="$(arg laser_assembly_frame)" />
 		<arg name="recovery_frame" default="$(arg odom_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="recovery_frame" default="" unless="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="initial_recovery_transform_in_base_link_to_target" default="$(arg robot_initial_pose_in_base_to_map)" />
@@ -166,6 +167,7 @@
 	<!-- OctoMap for dynamic map update -->
 	<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" ns="dynamic_robot_localization" if="$(arg use_dynamic_map_update)" >
 		<arg name="octomap_file" default="$(arg octomap_file)" />
+		<arg name="map_frame_id" default="$(arg map_frame_id)" />
 		<arg name="base_frame_id" default="$(arg base_link_frame_id)" />
 		<arg name="sensor_frame_id" default="$(arg sensor_frame_id)" />
 	</include>

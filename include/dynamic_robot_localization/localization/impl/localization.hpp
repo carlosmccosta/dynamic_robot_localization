@@ -134,7 +134,7 @@ void Localization<PointT>::setupSubcriptionTopicNames() {
 	private_node_handle_->param("subscribe_topic_names/pose_with_covariance_stamped_topic", pose_with_covariance_stamped_topic_, std::string("initial_pose_with_covariance_stamped"));
 	private_node_handle_->param("subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topic_, std::string("ambient_pointcloud"));
 	private_node_handle_->param("subscribe_topic_names/reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
-	private_node_handle_->param("subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
+	private_node_handle_->param("subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string("reference_pointcloud_update"));
 }
 
 
