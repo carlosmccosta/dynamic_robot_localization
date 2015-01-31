@@ -21,6 +21,9 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PassThrough-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::PassThrough<PointT>());
+	typename pcl::PassThrough<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::PassThrough<PointT> >(filter_base);
+
 	double min_value, max_value;
 	private_node_handle->param(configuration_namespace + "min_value", min_value, -5.0);
 	private_node_handle->param(configuration_namespace + "max_value", max_value, 5.0);
@@ -28,24 +31,11 @@ void PassThrough<PointT>::setupConfigurationFromParameterServer(ros::NodeHandleP
 	std::string field_name;
 	private_node_handle->param(configuration_namespace + "field_name", field_name, std::string("z"));
 
-	filter_.setFilterFieldName(field_name);
-	filter_.setFilterLimits(min_value, max_value);
+	filter->setFilterFieldName(field_name);
+	filter->setFilterLimits(min_value, max_value);
 
-	typename CloudPublisher<PointT>::Ptr cloud_publisher(new CloudPublisher<PointT>());
-	cloud_publisher->setParameterServerArgumentToLoadTopicName(configuration_namespace + "pass_through_filtered_cloud_publish_topic");
-	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
-	CloudFilter<PointT>::setCloudPublisher(cloud_publisher);
-}
-
-
-template<typename PointT>
-void PassThrough<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
-	size_t number_of_points_in_input_cloud = input_cloud->size();
-	filter_.setInputCloud(input_cloud);
-	filter_.filter(*output_cloud);
-
-	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
-	ROS_DEBUG_STREAM("PassThrough reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->size() << " points");
+	CloudFilter<PointT>::setFilter(filter_base);
+	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PassThrough-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

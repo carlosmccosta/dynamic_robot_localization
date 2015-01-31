@@ -57,7 +57,10 @@
 
 #include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
 #include <dynamic_robot_localization/cloud_filters/voxel_grid.h>
+#include <dynamic_robot_localization/cloud_filters/approximate_voxel_grid.h>
 #include <dynamic_robot_localization/cloud_filters/pass_through.h>
+#include <dynamic_robot_localization/cloud_filters/radius_outlier_removal.h>
+#include <dynamic_robot_localization/cloud_filters/crop_box.h>
 
 #include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
 #include <dynamic_robot_localization/curvature_estimators/principal_curvatures_estimation.h>
@@ -179,7 +182,7 @@ class Localization : public ConfigurableObject {
 
 		void startLocalization();
 
-		void transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp);
+		bool transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp);
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
@@ -207,7 +210,7 @@ class Localization : public ConfigurableObject {
 		virtual bool applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators,
 				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
 
-		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, ros::Time pointcloud_time,
 				const tf2::Transform& pointcloud_pose_initial_guess,
 				tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out);
 		virtual bool updateReferencePointCloudWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr pointcloud_keypoints);
@@ -269,6 +272,7 @@ class Localization : public ConfigurableObject {
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
 		bool use_filtered_cloud_as_normal_estimation_surface_;
+		bool filter_ambient_cloud_in_map_frame_;
 		bool compute_normals_when_tracking_pose_;
 		bool compute_normals_when_recovering_pose_tracking_;
 		bool compute_normals_when_estimating_initial_pose_;

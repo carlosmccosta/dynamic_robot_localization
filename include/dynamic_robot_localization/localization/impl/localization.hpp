@@ -34,6 +34,7 @@ Localization<PointT>::Localization() :
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
 	use_filtered_cloud_as_normal_estimation_surface_(true),
+	filter_ambient_cloud_in_map_frame_(false),
 	compute_normals_when_tracking_pose_(false),
 	compute_normals_when_recovering_pose_tracking_(false),
 	compute_normals_when_estimating_initial_pose_(true),
@@ -275,15 +276,23 @@ void Localization<PointT>::setupFiltersConfigurations() {
 
 template<typename PointT>
 void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace) {
+	private_node_handle_->param("filters/ambient_pointcloud/filter_ambient_cloud_in_map_frame", filter_ambient_cloud_in_map_frame_, false);
+
 	XmlRpc::XmlRpcValue filters;
 	if (private_node_handle_->getParam(configuration_namespace, filters) && filters.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
 		for (XmlRpc::XmlRpcValue::iterator it = filters.begin(); it != filters.end(); ++it) {
 			std::string filter_name = it->first;
 			typename CloudFilter<PointT>::Ptr cloud_filter;
-			if (filter_name.find("voxel_grid") != std::string::npos) {
+			if (filter_name.find("approximate_voxel_grid") != std::string::npos) {
+				cloud_filter.reset(new ApproximateVoxelGrid<PointT>());
+			} else if (filter_name.find("voxel_grid") != std::string::npos) {
 				cloud_filter.reset(new VoxelGrid<PointT>());
 			} else if (filter_name.find("pass_through") != std::string::npos) {
 				cloud_filter.reset(new PassThrough<PointT>());
+			} else if (filter_name.find("radius_outlier_removal") != std::string::npos) {
+				cloud_filter.reset(new RadiusOutlierRemoval<PointT>());
+			} else if (filter_name.find("crop_box") != std::string::npos) {
+				cloud_filter.reset(new CropBox<PointT>());
 			}
 
 			if (cloud_filter) {
@@ -825,14 +834,14 @@ void Localization<PointT>::startLocalization() {
 
 
 template<typename PointT>
-void Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp) {
+bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp) {
 	if (ambient_pointcloud->header.frame_id != map_frame_id_) {
 		tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
 		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
 			tf2::Transform pose_tf_cloud_to_odom;
 			if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
 				ROS_WARN_STREAM("Dropping pointcloud because tf between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
-				return;
+				return false;
 			}
 			pose_tf_cloud_to_map *= pose_tf_cloud_to_odom;
 		}
@@ -841,6 +850,8 @@ void Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
 		ambient_pointcloud->header.frame_id = map_frame_id_;
 	}
+
+	return true;
 }
 
 
@@ -885,16 +896,10 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			ROS_INFO_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
 		}
 
-		transformCloudToMapFrame(ambient_pointcloud, ambient_cloud_msg->header.stamp);
-
 		tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();
 		ROS_DEBUG_STREAM("Initial pose:" \
 				<< "\tTF position -> [ x: " << pose_tf_initial_guess.getOrigin().getX() << " | y: " << pose_tf_initial_guess.getOrigin().getY() << " | z: " << pose_tf_initial_guess.getOrigin().getZ() << " ]" \
 				<< "\tTF orientation -> [ qx: " << pose_tf_initial_guess_q.getX() << " | qy: " << pose_tf_initial_guess_q.getY() << " | qz: " << pose_tf_initial_guess_q.getZ() << " | qw: " << pose_tf_initial_guess_q.getW() << " ]");
-
-		if (reference_pointcloud_2d_) {
-			resetPointCloudHeight(*ambient_pointcloud);
-		}
 
 		PerformanceTimer performance_timer;
 		performance_timer.start();
@@ -903,7 +908,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		tf2::Transform pose_tf_corrected;
 		tf2::Transform pose_corrections;
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
-		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, pose_tf_initial_guess, pose_tf_corrected, pose_corrections, ambient_pointcloud_keypoints)) {
+		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_msg->header.stamp, pose_tf_initial_guess, pose_tf_corrected, pose_corrections, ambient_pointcloud_keypoints)) {
 			if (ignore_height_corrections_) {
 				pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
 			}
@@ -1285,7 +1290,7 @@ bool Localization<PointT>::applyTransformationValidators(std::vector< Transforma
 
 
 template<typename PointT>
-bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const tf2::Transform& pointcloud_pose_initial_guess,
+bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, ros::Time pointcloud_time, const tf2::Transform& pointcloud_pose_initial_guess,
 		tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out) {
 	last_number_points_inserted_in_circular_buffer_ = 0;
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = 0;
@@ -1295,9 +1300,18 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false;
 	}
 
+	if (filter_ambient_cloud_in_map_frame_) {
+		transformCloudToMapFrame(ambient_pointcloud, pointcloud_time);
+		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
+	}
+
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
 	if (!use_filtered_cloud_as_normal_estimation_surface_) {
 		ambient_pointcloud_raw = ambient_pointcloud;
+		if (!filter_ambient_cloud_in_map_frame_) {
+			transformCloudToMapFrame(ambient_pointcloud_raw, pointcloud_time);
+			if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
+		}
 	}
 
 	PerformanceTimer performance_timer;
@@ -1316,6 +1330,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		ROS_DEBUG_STREAM("Ambient pointcloud with circular buffer has " << ambient_pointcloud->size() << " points");
 	}
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
+
+
+	if (!filter_ambient_cloud_in_map_frame_) {
+		transformCloudToMapFrame(ambient_pointcloud, pointcloud_time);
+		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
+	}
 
 
 	// ==============================================================  normal estimation

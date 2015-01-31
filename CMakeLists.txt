@@ -126,7 +126,10 @@ add_library(drl_common
 add_library(drl_cloud_filters
     src/cloud_filters/cloud_filter.cpp
     src/cloud_filters/voxel_grid.cpp
+    src/cloud_filters/approximate_voxel_grid.cpp
     src/cloud_filters/pass_through.cpp
+    src/cloud_filters/radius_outlier_removal.cpp
+    src/cloud_filters/crop_box.cpp
 )
 
 add_library(drl_curvature_estimators

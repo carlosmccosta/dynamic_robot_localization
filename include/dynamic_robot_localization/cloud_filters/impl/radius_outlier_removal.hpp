@@ -1,4 +1,4 @@
-/**\file cloud_filter.hpp
+/**\file radius_outlier_removal.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,9 +6,8 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
+#include <dynamic_robot_localization/cloud_filters/radius_outlier_removal.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 namespace dynamic_robot_localization {
 
@@ -19,24 +18,28 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RadiusOutlierRemoval-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudFilter<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
-	cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "filtered_cloud_publish_topic");
-	cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
-}
+void RadiusOutlierRemoval<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::RadiusOutlierRemoval<PointT>());
+	typename pcl::RadiusOutlierRemoval<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::RadiusOutlierRemoval<PointT> >(filter_base);
 
-template<typename PointT>
-void CloudFilter<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
-	size_t number_of_points_in_input_cloud = input_cloud->size();
-	filter_->setInputCloud(input_cloud);
-	filter_->filter(*output_cloud);
+	double radius_search;
+	int min_neighbors_in_radius;
+	private_node_handle->param(configuration_namespace + "radius_search", radius_search, 0.5);
+	private_node_handle->param(configuration_namespace + "min_neighbors_in_radius", min_neighbors_in_radius, 1);
 
-	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
-	ROS_DEBUG_STREAM(filter_name_ << " filter reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->size() << " points");
+	bool invert_removal;
+	private_node_handle->param(configuration_namespace + "invert_removal", invert_removal, false);
+
+	filter->setRadiusSearch(radius_search);
+	filter->setMinNeighborsInRadius(min_neighbors_in_radius);
+	filter->setNegative(invert_removal);
+
+	CloudFilter<PointT>::setFilter(filter_base);
+	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RadiusOutlierRemoval-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================

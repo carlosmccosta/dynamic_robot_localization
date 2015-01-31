@@ -7,7 +7,7 @@ filters:
             filter_limit_field_name: 'z'
             filter_limit_min: -0.001
             filter_limit_max: 1.8
-            voxel_grid_filtered_cloud_publish_topic: ''
+            filtered_cloud_publish_topic: ''
             downsample_all_data: false
             save_leaf_layout: false
     ambient_pointcloud:
@@ -18,6 +18,6 @@ filters:
             filter_limit_field_name: 'z'
             filter_limit_min: -1.001
             filter_limit_max: 1.8
-            voxel_grid_filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
+            filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
             downsample_all_data: false
             save_leaf_layout: false

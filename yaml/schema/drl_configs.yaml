@@ -149,11 +149,12 @@ reference_pointclouds:
 filters:
     reference_pointcloud:
     ambient_pointcloud:
+        filter_ambient_cloud_in_map_frame: false                    # The ambient cloud can be filtered in the original frame or after being transformed into the map_frame_id (useful for pass through filters)
         pass_through:                                               # Allows prefix and postfix of letters to ensure parsing order
             field_name: 'z'                                         # Field name -> [ x | y | z ]
             min_value: -5.0
             max_value: 5.0
-            pass_through_filtered_cloud_publish_topic: ''
+            filtered_cloud_publish_topic: ''
         voxel_grid:                                                 # Allows prefix and postfix of letters to ensure parsing order
             leaf_size_x: 0.01
             leaf_size_y: 0.01
@@ -161,9 +162,34 @@ filters:
             filter_limit_field_name: 'z'                            # Field name -> [ x | y | z ]
             filter_limit_min: -5.0
             filter_limit_max: 5.0
-            voxel_grid_filtered_cloud_publish_topic: ''
             downsample_all_data: false                              # Set to true if all fields need to be downsampled, or false if just XYZ
             save_leaf_layout: false                                 # Set to true if leaf layout information needs to be saved for later access
+            filtered_cloud_publish_topic: ''
+        approximate_voxel_grid:                                     # Allows prefix and postfix of letters to ensure parsing order
+            leaf_size_x: 0.01
+            leaf_size_y: 0.01
+            leaf_size_z: 0.01
+            filtered_cloud_publish_topic: ''
+            downsample_all_data: false                              # Set to true if all fields need to be downsampled, or false if just XYZ
+        radius_outlier_removal:                                     # Allows prefix and postfix of letters to ensure parsing order
+            radius_search: 0.5
+            min_neighbors_in_radius: 1
+            invert_removal: false
+            filtered_cloud_publish_topic: ''
+        crop_box:                                                   # Allows prefix and postfix of letters to ensure parsing order
+            box_min_x: -10.0
+            box_min_y: -10.0
+            box_min_z: -10.0
+            box_max_x: 10.0
+            box_max_y: 10.0
+            box_max_z: 10.0
+            box_translation_x: 0.0
+            box_translation_y: 0.0
+            box_translation_z: 0.0
+            box_rotation_roll: 0.0
+            box_rotation_pitch: 0.0
+            box_rotation_yaw: 0.0
+            filtered_cloud_publish_topic: ''
 
 
 # ===================================================================================================================================================

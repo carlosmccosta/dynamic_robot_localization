@@ -7,31 +7,31 @@ normal_estimators:
         normal_estimator_sac:
             model_type: 'SACMODEL_LINE'
             method_type: 'SAC_RANSAC'
-            inlier_distance_threshold: 0.25
+            inlier_distance_threshold: 0.75
             max_iterations: 50
             sac_termination_probability: 0.99
             optimize_coefficients: true
             min_model_radius: -1.0
             max_model_radius: -1.0
             random_samples_max_k: 0
-            random_samples_max_radius: 0.25
+            random_samples_max_radius: 0.75
             minimum_inliers_percentage: 0.5
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false
         compute_normals_when_recovering_pose_tracking: false
-        compute_normals_when_estimating_initial_pose: true
+        compute_normals_when_estimating_initial_pose: false
         display_normals: false
         normal_estimator_sac:
             model_type: 'SACMODEL_LINE'
             method_type: 'SAC_RANSAC'
-            inlier_distance_threshold: 0.25
+            inlier_distance_threshold: 0.75
             max_iterations: 50
             sac_termination_probability: 0.99
             optimize_coefficients: true
             min_model_radius: -1.0
             max_model_radius: -1.0
             random_samples_max_k: 0
-            random_samples_max_radius: 0.15
+            random_samples_max_radius: 0.75
             minimum_inliers_percentage: 0.5
 
 
@@ -39,13 +39,13 @@ curvature_estimators:
     reference_pointcloud:
         principal_curvatures_estimation:
             search_k: 0
-            search_radius: 0.25
+            search_radius: 0.75
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
     ambient_pointcloud:
         principal_curvatures_estimation:
             search_k: 0
-            search_radius: 0.25
+            search_radius: 0.75
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
 
@@ -55,15 +55,15 @@ tracking_matchers:
     pose_tracking_timeout: 2.0
     point_matchers:
 #        iterative_closest_point:
-#        iterative_closest_point_non_linear:
+        iterative_closest_point_non_linear:
 #        iterative_closest_point_with_normals:
-        iterative_closest_point_generalized:
-            max_correspondence_distance: 0.4
+#        iterative_closest_point_generalized:
+            max_correspondence_distance: 0.5
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
-            max_number_of_registration_iterations: 250
-            max_number_of_ransac_iterations: 250
-            ransac_outlier_rejection_threshold: 0.03
+            max_number_of_registration_iterations: 350
+            max_number_of_ransac_iterations: 350
+            ransac_outlier_rejection_threshold: 0.035
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
@@ -94,7 +94,7 @@ transformation_validators:
         max_new_pose_diff_angle: 1.1
         max_new_pose_diff_distance: 0.5
         max_root_mean_square_error: 0.025
-        max_outliers_percentage: 0.15
+        max_outliers_percentage: 0.2
 
 
 transformation_validators_tracking_recovery:

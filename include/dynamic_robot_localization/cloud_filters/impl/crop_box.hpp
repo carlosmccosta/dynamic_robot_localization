@@ -1,4 +1,4 @@
-/**\file voxel_filter.hpp
+/**\file crop_box.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,7 +6,7 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/cloud_filters/voxel_grid.h>
+#include <dynamic_robot_localization/cloud_filters/crop_box.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -18,44 +18,40 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <VoxelFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RadiusOutlierRemoval-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void VoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::VoxelGrid<PointT>());
-	typename boost::shared_ptr< pcl::VoxelGrid<PointT> > filter = boost::static_pointer_cast< typename pcl::VoxelGrid<PointT> >(filter_base);
+void CropBox<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::CropBox<PointT>());
+	typename pcl::CropBox<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::CropBox<PointT> >(filter_base);
 
-	double leaf_size_x, leaf_size_y, leaf_size_z;
-	private_node_handle->param(configuration_namespace + "leaf_size_x", leaf_size_x, 0.01);
-	private_node_handle->param(configuration_namespace + "leaf_size_y", leaf_size_y, 0.01);
-	private_node_handle->param(configuration_namespace + "leaf_size_z", leaf_size_z, 0.01);
-	filter->setLeafSize(leaf_size_x, leaf_size_y, leaf_size_z);
+	double box_min_x, box_min_y, box_min_z;
+	private_node_handle->param(configuration_namespace + "box_min_x", box_min_x, -10.0);
+	private_node_handle->param(configuration_namespace + "box_min_y", box_min_y, -10.0);
+	private_node_handle->param(configuration_namespace + "box_min_z", box_min_z, -10.0);
+	filter->setMin(Eigen::Vector4f(box_min_x, box_min_y, box_min_z, 1));
 
-	bool downsample_all_data;
-	private_node_handle->param(configuration_namespace + "downsample_all_data", downsample_all_data, false);
-	filter->setDownsampleAllData(downsample_all_data);
+	double box_max_x, box_max_y, box_max_z;
+	private_node_handle->param(configuration_namespace + "box_max_x", box_max_x, 10.0);
+	private_node_handle->param(configuration_namespace + "box_max_y", box_max_y, 10.0);
+	private_node_handle->param(configuration_namespace + "box_max_z", box_max_z, 10.0);
+	filter->setMax(Eigen::Vector4f(box_max_x, box_max_y, box_max_z, 1));
 
-	bool save_leaf_layout;
-	private_node_handle->param(configuration_namespace + "save_leaf_layout", save_leaf_layout, false);
-	filter->setSaveLeafLayout(save_leaf_layout);
+	double box_translation_x, box_translation_y, box_translation_z;
+	private_node_handle->param(configuration_namespace + "box_translation_x", box_translation_x, 0.0);
+	private_node_handle->param(configuration_namespace + "box_translation_y", box_translation_y, 0.0);
+	private_node_handle->param(configuration_namespace + "box_translation_z", box_translation_z, 0.0);
+	filter->setTranslation(Eigen::Vector3f(box_translation_x, box_translation_y, box_translation_z));
 
-	// only in latest pcl devel branch
-	/*int min_points_per_voxel;
-	private_node_handle->param("min_points_per_voxel", min_points_per_voxel, 3);
-	filter_.setMinimumPointsNumberPerVoxel((unsigned int)min_points_per_voxel);*/
-
-	std::string filter_limit_field_name;
-	private_node_handle->param(configuration_namespace + "filter_limit_field_name", filter_limit_field_name, std::string("z"));
-	filter->setFilterFieldName(filter_limit_field_name);
-
-	double filter_limit_min, filter_limit_max;
-	private_node_handle->param(configuration_namespace + "filter_limit_min", filter_limit_min, -5.0);
-	private_node_handle->param(configuration_namespace + "filter_limit_max", filter_limit_max, 5.0);
-	filter->setFilterLimits(filter_limit_min, filter_limit_max);
+	double box_rotation_roll, box_rotation_pitch, box_rotation_yaw;
+	private_node_handle->param(configuration_namespace + "box_rotation_roll", box_rotation_roll, 0.0);
+	private_node_handle->param(configuration_namespace + "box_rotation_pitch", box_rotation_pitch, 0.0);
+	private_node_handle->param(configuration_namespace + "box_rotation_yaw", box_rotation_yaw, 0.0);
+	filter->setRotation(Eigen::Vector3f(box_rotation_roll, box_rotation_pitch, box_rotation_yaw));
 
 	CloudFilter<PointT>::setFilter(filter_base);
 	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </VoxelFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RadiusOutlierRemoval-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================

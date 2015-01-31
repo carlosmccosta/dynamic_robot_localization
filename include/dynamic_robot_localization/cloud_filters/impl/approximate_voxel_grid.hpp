@@ -1,4 +1,4 @@
-/**\file cloud_filter.hpp
+/**\file approximate_voxel_grid.hpp
  * \brief Description...
  *
  * @version 1.0
@@ -6,9 +6,8 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
+#include <dynamic_robot_localization/cloud_filters/approximate_voxel_grid.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 namespace dynamic_robot_localization {
 
@@ -19,24 +18,29 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <ApproximateVoxelGrid-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudFilter<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
-	cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "filtered_cloud_publish_topic");
-	cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+void ApproximateVoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::ApproximateVoxelGrid<PointT>());
+	typename pcl::ApproximateVoxelGrid<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::ApproximateVoxelGrid<PointT> >(filter_base);
+
+	double leaf_size_x, leaf_size_y, leaf_size_z;
+	private_node_handle->param(configuration_namespace + "leaf_size_x", leaf_size_x, 0.01);
+	private_node_handle->param(configuration_namespace + "leaf_size_y", leaf_size_y, 0.01);
+	private_node_handle->param(configuration_namespace + "leaf_size_z", leaf_size_z, 0.01);
+	filter->setLeafSize(leaf_size_x, leaf_size_y, leaf_size_z);
+
+	bool downsample_all_data;
+	private_node_handle->param(configuration_namespace + "downsample_all_data", downsample_all_data, false);
+	filter->setDownsampleAllData(downsample_all_data);
+
+
+	CloudFilter<PointT>::setFilter(filter_base);
+	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
-template<typename PointT>
-void CloudFilter<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
-	size_t number_of_points_in_input_cloud = input_cloud->size();
-	filter_->setInputCloud(input_cloud);
-	filter_->filter(*output_cloud);
 
-	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
-	ROS_DEBUG_STREAM(filter_name_ << " filter reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->size() << " points");
-}
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </ApproximateVoxelGrid-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 
 // =============================================================================   <protected-section>   =======================================================================

@@ -7,9 +7,9 @@ tracking_recovery_matchers:
             max_correspondence_distance: 0.75
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
-            max_number_of_registration_iterations: 300
-            max_number_of_ransac_iterations: 300
-            ransac_outlier_rejection_threshold: 0.05
+            max_number_of_registration_iterations: 350
+            max_number_of_ransac_iterations: 350
+            ransac_outlier_rejection_threshold: 0.04
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
@@ -26,4 +26,4 @@ transformation_validators_tracking_recovery:
         max_new_pose_diff_angle: 3.14
         max_new_pose_diff_distance: 2.5
         max_root_mean_square_error: 0.025
-        max_outliers_percentage: 0.4
+        max_outliers_percentage: 0.25

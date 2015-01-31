@@ -1,6 +1,6 @@
 #pragma once
 
-/**\file voxel_grid.h
+/**\file crop_box.h
  * \brief Description...
  *
  * @version 1.0
@@ -18,7 +18,7 @@
 #include <ros/ros.h>
 
 // PCL includes
-#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/crop_box.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -30,17 +30,17 @@
 
 
 namespace dynamic_robot_localization {
-// ##############################################################################   voxel_filter   #############################################################################
+// ################################################################################   crop_box   ################################################################################
 /**
  * \brief Description...
  */
 template <typename PointT>
-class VoxelGrid : public CloudFilter<PointT> {
+class CropBox : public CloudFilter<PointT> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< VoxelGrid<PointT> > Ptr;
-		typedef boost::shared_ptr< const VoxelGrid<PointT> > ConstPtr;
+		typedef boost::shared_ptr< CropBox<PointT> > Ptr;
+		typedef boost::shared_ptr< const CropBox<PointT> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -50,8 +50,8 @@ class VoxelGrid : public CloudFilter<PointT> {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		VoxelGrid() : CloudFilter<PointT>("VoxelGrid") {}
-		virtual ~VoxelGrid() {}
+		CropBox() : CloudFilter<PointT>("CropBox") {}
+		virtual ~CropBox() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <VoxelFilter-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -77,5 +77,5 @@ class VoxelGrid : public CloudFilter<PointT> {
 } /* namespace dynamic_robot_localization */
 
 #ifdef DRL_NO_PRECOMPILE
-#include <dynamic_robot_localization/cloud_filters/impl/voxel_grid.hpp>
+#include <dynamic_robot_localization/cloud_filters/impl/crop_box.hpp>
 #endif
