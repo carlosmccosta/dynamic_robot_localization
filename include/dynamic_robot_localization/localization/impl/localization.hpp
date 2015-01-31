@@ -135,7 +135,7 @@ void Localization<PointT>::setupSubcriptionTopicNames() {
 	private_node_handle_->param("subscribe_topic_names/pose_with_covariance_stamped_topic", pose_with_covariance_stamped_topic_, std::string("initial_pose_with_covariance_stamped"));
 	private_node_handle_->param("subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topic_, std::string("ambient_pointcloud"));
 	private_node_handle_->param("subscribe_topic_names/reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
-	private_node_handle_->param("subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string("reference_pointcloud_update"));
+	private_node_handle_->param("subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
 }
 
 
@@ -293,6 +293,10 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 				cloud_filter.reset(new RadiusOutlierRemoval<PointT>());
 			} else if (filter_name.find("crop_box") != std::string::npos) {
 				cloud_filter.reset(new CropBox<PointT>());
+			} else if (filter_name.find("random_sample") != std::string::npos) {
+				cloud_filter.reset(new RandomSample<PointT>());
+			} else if (filter_name.find("statistical_outlier_removal") != std::string::npos) {
+				cloud_filter.reset(new StatisticalOutlierRemoval<PointT>());
 			}
 
 			if (cloud_filter) {
@@ -620,6 +624,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 
 			if (!reference_pointcloud_->empty()) {
 				transformCloudToMapFrame(reference_pointcloud_, reference_pointcloud_msg->header.stamp);
+				if (reference_pointcloud_2d_) { resetPointCloudHeight(*reference_pointcloud_); }
 				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
 					last_map_received_time_ = ros::Time::now();

@@ -3,6 +3,8 @@
 	<!-- ======================================================= arguments ==================================================== -->
 	<!-- sensor data from point cloud topic -->
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
+	<arg name="reference_costmap_topic" default="/map" />
+	<arg name="reference_pointcloud_topic" default="" /> <!-- OctoMap is configured to use topic 'reference_pointcloud_update' -->
 	
 	<!-- initial pose topics -->
 	<arg name="pose_topic" default="initial_pose" />
@@ -93,6 +95,8 @@
 		<param name="subscribe_topic_names/pose_stamped_topic" type="str" value="$(arg pose_stamped_topic)" />
 		<param name="subscribe_topic_names/pose_with_covariance_stamped_topic" type="str" value="$(arg pose_with_covariance_stamped_topic)" />
 		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
+		<param name="subscribe_topic_names/reference_costmap_topic" type="str" value="$(arg reference_costmap_topic)" />
+		<param name="subscribe_topic_names/reference_pointcloud_topic" type="str" value="$(arg reference_pointcloud_topic)" />
 		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="" />
 		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_publish_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />

@@ -60,7 +60,7 @@ subscribe_topic_names:
     pose_with_covariance_stamped_topic: 'initial_pose_with_covariance_stamped'  # geometry_msgs::PoseWithCovarianceStamped | Topic to reset localization pose
     ambient_pointcloud_topic: 'ambient_pointcloud'                              # sensor_msgs::PointCloud2 | Cloud with points coming from sensing devices that will be used to update the localization pose
     reference_costmap_topic: '/map'                                             # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
-    reference_pointcloud_topic: 'reference_pointcloud_update'                   # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'octomap_point_cloud_centers'
+    reference_pointcloud_topic: ''                                              # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'reference_pointcloud_update'
 
 
 # ===================================================================================================================================================
@@ -189,7 +189,15 @@ filters:
             box_rotation_roll: 0.0
             box_rotation_pitch: 0.0
             box_rotation_yaw: 0.0
+            invert_selection: false                                 # If false -> selects points outside the box
             filtered_cloud_publish_topic: ''
+        random_sample:                                              # Allows prefix and postfix of letters to ensure parsing order
+            number_of_random_samples: 250
+            invert_sampling: false                                  # If false = cloud_size - number_of_random_samples
+        statistical_outlier_removal:
+            number_of_neighbors_for_mean_distance_estimation: 4     # The number of points to use for mean distance estimation
+            standard_deviation_multiplier: 1.0                      # The distance threshold will be equal to: mean + stddev_mult * stddev. Points will be classified as inlier or outlier if their average neighbor distance is below or above this threshold respectively.
+            invert_selection: false                                 # Selects outliers instead
 
 
 # ===================================================================================================================================================

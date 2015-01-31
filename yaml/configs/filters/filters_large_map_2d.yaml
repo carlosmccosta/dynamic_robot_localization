@@ -28,22 +28,30 @@ filters:
 #            leaf_size_z: 0.025
 #            filtered_cloud_publish_topic: ''
 #            downsample_all_data: false
-        3_radius_outlier_removal:
-            radius_search: 0.75
-            min_neighbors_in_radius: 1
-            invert_removal: false
-            filtered_cloud_publish_topic: ''
+#        3_radius_outlier_removal:
+#            radius_search: 0.35
+#            min_neighbors_in_radius: 2
+#            invert_removal: false
+#            filtered_cloud_publish_topic: ''
 #        4_crop_box:
-#            box_min_x: -5.0
-#            box_min_y: -5.0
-#            box_min_z: -5.0
-#            box_max_x: 5.0
-#            box_max_y: 5.0
-#            box_max_z: 5.0
+#            box_min_x: -20.0
+#            box_min_y: -20.0
+#            box_min_z: -20.0
+#            box_max_x: 20.0
+#            box_max_y: 20.0
+#            box_max_z: 20.0
 #            box_translation_x: 0.0
 #            box_translation_y: 0.0
 #            box_translation_z: 0.0
 #            box_rotation_roll: 0.0
 #            box_rotation_pitch: 0.0
 #            box_rotation_yaw: 0.0
+#            invert_selection: false
 #            filtered_cloud_publish_topic: ''
+#        5_random_sample:
+#            number_of_random_samples: 150
+#            invert_sampling: false
+#        6_statistical_outlier_removal:
+#            number_of_neighbors_for_mean_distance_estimation: 4
+#            standard_deviation_multiplier: 1.0
+#            invert_selection: false

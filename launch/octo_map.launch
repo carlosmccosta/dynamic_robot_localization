@@ -2,6 +2,8 @@
 <launch>
 	<arg name="octomap_file" default="" />
 	<arg name="map_frame_id" default="map" />
+	<arg name="map_out_topic" default="/map" />
+	<arg name="cloud_out_topic" default="reference_pointcloud_update" />
 	<arg name="base_frame_id" default="base_footprint" />
 	<arg name="sensor_frame_id" default="laser" />
 	<arg name="cloud_in" default="aligned_pointcloud" /> <!-- ambient_pointcloud | aligned_pointcloud | aligned_pointcloud_outliers | aligned_pointcloud_inliers -->
@@ -31,7 +33,7 @@
 		<param name="occupancy_grid_2d_max_z" type="double" value="2.5" />
 		<param name="occupancy_grid_2d_initialized_as_free" type="bool" value="false" />
 		<remap from="cloud_in" to="$(arg cloud_in)" />
-		<remap from="projected_map" to="/map_projected" />
-		<remap from="octomap_point_cloud_centers" to="reference_pointcloud_update" />
+		<remap from="projected_map" to="$(arg map_out_topic)" />
+		<remap from="octomap_point_cloud_centers" to="$(arg cloud_out_topic)" />
 	</node>
 </launch>
