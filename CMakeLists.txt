@@ -132,6 +132,7 @@ add_library(drl_cloud_filters
     src/cloud_filters/crop_box.cpp
     src/cloud_filters/random_sample.cpp
     src/cloud_filters/statistical_outlier_removal.cpp
+    src/cloud_filters/covariance_sampling.cpp
 )
 
 add_library(drl_curvature_estimators

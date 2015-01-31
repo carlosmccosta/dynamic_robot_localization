@@ -49,9 +49,14 @@ filters:
 #            invert_selection: false
 #            filtered_cloud_publish_topic: ''
 #        5_random_sample:
-#            number_of_random_samples: 150
+#            number_of_random_samples: 100
 #            invert_sampling: false
+#            filtered_cloud_publish_topic: ''
 #        6_statistical_outlier_removal:
 #            number_of_neighbors_for_mean_distance_estimation: 4
 #            standard_deviation_multiplier: 1.0
 #            invert_selection: false
+#            filtered_cloud_publish_topic: ''
+#        7_covariance_sampling:
+#            number_of_samples: 100
+#            filtered_cloud_publish_topic: ''

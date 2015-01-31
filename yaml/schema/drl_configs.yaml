@@ -194,10 +194,15 @@ filters:
         random_sample:                                              # Allows prefix and postfix of letters to ensure parsing order
             number_of_random_samples: 250
             invert_sampling: false                                  # If false = cloud_size - number_of_random_samples
+            filtered_cloud_publish_topic: ''
         statistical_outlier_removal:
             number_of_neighbors_for_mean_distance_estimation: 4     # The number of points to use for mean distance estimation
             standard_deviation_multiplier: 1.0                      # The distance threshold will be equal to: mean + stddev_mult * stddev. Points will be classified as inlier or outlier if their average neighbor distance is below or above this threshold respectively.
             invert_selection: false                                 # Selects outliers instead
+            filtered_cloud_publish_topic: ''
+        covariance_sampling:
+            number_of_samples: 250
+            filtered_cloud_publish_topic: ''
 
 
 # ===================================================================================================================================================

@@ -297,6 +297,8 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 				cloud_filter.reset(new RandomSample<PointT>());
 			} else if (filter_name.find("statistical_outlier_removal") != std::string::npos) {
 				cloud_filter.reset(new StatisticalOutlierRemoval<PointT>());
+			} else if (filter_name.find("covariance_sampling") != std::string::npos) {
+				cloud_filter.reset(new CovarianceSampling<PointT>());
 			}
 
 			if (cloud_filter) {

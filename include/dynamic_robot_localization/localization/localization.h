@@ -63,6 +63,7 @@
 #include <dynamic_robot_localization/cloud_filters/crop_box.h>
 #include <dynamic_robot_localization/cloud_filters/random_sample.h>
 #include <dynamic_robot_localization/cloud_filters/statistical_outlier_removal.h>
+#include <dynamic_robot_localization/cloud_filters/covariance_sampling.h>
 
 #include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
 #include <dynamic_robot_localization/curvature_estimators/principal_curvatures_estimation.h>
