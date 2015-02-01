@@ -307,6 +307,7 @@ keypoint_detectors:
 # in order to allow the point matchers to perform tracking.
 tracking_matchers:
     ignore_height_corrections: false                                # When activated, the pose corrections in the z axis will be ignored
+    use_internal_tracking: true                                     # If true it will store the transform [map_frame_id -> odom_frame_id] internally, otherwise it will query TF
     pose_tracking_timeout: 2.0                                      # When point cloud registration has failed during this amount of time, the initial pose recovery algorithms will be activated
     pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 3  # Initial pose estimation will be activated if the registration has failed at least [this number] and the pose_tracking_timeout has been reached
     pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 20 # When cloud registration fails for more than [this number], the initial pose recovery algorithms will be activated

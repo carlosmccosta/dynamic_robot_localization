@@ -52,6 +52,7 @@ curvature_estimators:
 
 tracking_matchers:
     ignore_height_corrections: false
+    use_internal_tracking: true
     pose_tracking_timeout: 2.0
     point_matchers:
 #        iterative_closest_point:

@@ -299,6 +299,7 @@ class Localization : public ConfigurableObject {
 		bool ignore_height_corrections_;
 		bool last_accepted_pose_valid_;
 		bool received_external_initial_pose_estimation_; // from rviz / other localization system / operator
+		bool use_internal_tracking_;
 		tf2::Transform last_accepted_pose_base_link_to_map_;
 		tf2::Transform last_accepted_pose_odom_to_map_;
 		std::vector< tf2::Transform > accepted_pose_corrections_;

@@ -56,6 +56,7 @@ Localization<PointT>::Localization() :
 	ignore_height_corrections_(false),
 	last_accepted_pose_valid_(false),
 	received_external_initial_pose_estimation_(false),
+	use_internal_tracking_(true),
 	last_accepted_pose_base_link_to_map_(tf2::Transform::getIdentity()),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
 	reference_pointcloud_keypoints_(new pcl::PointCloud<PointT>()),
@@ -416,6 +417,7 @@ void Localization<PointT>::loadKeypointDetectorsFromParameterServer(std::vector<
 template<typename PointT>
 void Localization<PointT>::setupCloudMatchersConfigurations() {
 	private_node_handle_->param("tracking_matchers/ignore_height_corrections", ignore_height_corrections_, false);
+	private_node_handle_->param("tracking_matchers/use_internal_tracking", use_internal_tracking_, true);
 
 	double pose_tracking_timeout;
 	private_node_handle_->param("tracking_matchers/pose_tracking_timeout", pose_tracking_timeout, 2.0);
@@ -887,6 +889,12 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
 			ROS_WARN_STREAM("Dropping pointcloud because tf between " << base_link_frame_id_ << " and " << odom_frame_id_ << " isn't available");
 			return;
+		}
+
+		if (!use_internal_tracking_) {
+			if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(last_accepted_pose_odom_to_map_, map_frame_id_, odom_frame_id_, ambient_cloud_msg->header.stamp)) {
+				ROS_WARN_STREAM("Using internal tracking transform because tf between " << odom_frame_id_ << " and " << map_frame_id_ << " isn't available");
+			}
 		}
 
 		tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
