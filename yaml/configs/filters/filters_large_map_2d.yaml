@@ -1,3 +1,5 @@
+localization_point_type: 'PointXYZINormal'
+
 filters:
     reference_pointcloud:
         1_voxel_grid:
@@ -28,11 +30,11 @@ filters:
 #            leaf_size_z: 0.025
 #            filtered_cloud_publish_topic: ''
 #            downsample_all_data: false
-#        3_radius_outlier_removal:
-#            radius_search: 0.35
-#            min_neighbors_in_radius: 2
-#            invert_removal: false
-#            filtered_cloud_publish_topic: ''
+        3_radius_outlier_removal:
+            radius_search: 2.0
+            min_neighbors_in_radius: 6
+            invert_removal: false
+            filtered_cloud_publish_topic: ''
 #        4_crop_box:
 #            box_min_x: -20.0
 #            box_min_y: -20.0
@@ -52,11 +54,11 @@ filters:
 #            number_of_random_samples: 100
 #            invert_sampling: false
 #            filtered_cloud_publish_topic: ''
-#        6_statistical_outlier_removal:
-#            number_of_neighbors_for_mean_distance_estimation: 4
-#            standard_deviation_multiplier: 1.0
-#            invert_selection: false
-#            filtered_cloud_publish_topic: ''
+        6_statistical_outlier_removal:
+            number_of_neighbors_for_mean_distance_estimation: 6
+            standard_deviation_multiplier: 2.0
+            invert_selection: false
+            filtered_cloud_publish_topic: ''
 #        7_covariance_sampling:
 #            number_of_samples: 100
 #            filtered_cloud_publish_topic: ''

@@ -691,8 +691,6 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 	}
 
 	if (reference_pointcloud_->size() > minimum_number_of_points_in_ambient_pointcloud_) {
-		reference_pointcloud_received_ = true;
-
 		if (!reference_pointcloud_preprocessed_save_filename_.empty()) {
 			ROS_INFO_STREAM("Saving reference pointcloud preprocessed with " << reference_pointcloud_->size() << " points to file " << reference_pointcloud_preprocessed_save_filename_);
 			pcl::io::savePCDFile<PointT>(reference_pointcloud_preprocessed_save_filename_, *reference_pointcloud_, save_reference_pointclouds_in_binary_format_);
@@ -714,6 +712,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 
 		updateMatchersReferenceCloud();
 		publishReferencePointCloud();
+		reference_pointcloud_received_ = true;
 		return true;
 	}
 

@@ -51,6 +51,10 @@
 #   Bellow is the configuration and default values currently supported by the dynamic_robot_localization system.
 
 
+# ===================================================================================================================================================
+#   PCL point types supported by the localization system pipeline
+localization_point_type: 'PointXYZRGBNormal'                                    # PointNormal | PointXYZINormal | PointXYZRGBNormal
+
 
 # ===================================================================================================================================================
 #   These are the topics from which the localization system will receive the reference and ambient point clouds

@@ -36,14 +36,17 @@ int main(int argc, char** argv) {
 	private_node_handle->param("localization_point_type", localization_point_type, std::string("PointXYZRGBNormal"));
 
 	if (localization_point_type == "PointXYZRGBNormal") {
+		ROS_INFO("Localization system using PointXYZRGBNormal point type");
 		dynamic_robot_localization::Localization<pcl::PointXYZRGBNormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 		localization.startLocalization();
 	} else if (localization_point_type == "PointXYZINormal") {
+		ROS_INFO("Localization system using PointXYZINormal point type");
 		dynamic_robot_localization::Localization<pcl::PointXYZINormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 		localization.startLocalization();
 	} else {
+		ROS_INFO("Localization system using PointNormal point type");
 		dynamic_robot_localization::Localization<pcl::PointNormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);
 		localization.startLocalization();

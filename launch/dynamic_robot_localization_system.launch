@@ -45,7 +45,9 @@
 	<arg name="laser_assembly_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
 	<arg name="laser_assembly_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
-	<arg name="use_spherical_interpolation" default="true" />
+	<arg name="min_range_cutoff_percentage_offset" default="2.00" />
+	<arg name="max_range_cutoff_percentage_offset" default="0.95" />
+	<arg name="use_spherical_interpolation" default="0" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
 	<arg name="timeout_for_cloud_assembly" default="0.5" />
 	<arg name="dynamic_update_of_assembly_configuration_from_twist_topic" default="" />
@@ -67,7 +69,7 @@
 	<!-- tf configurations -->
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="-3.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
@@ -148,6 +150,8 @@
 		<arg name="dynamic_update_of_assembly_configuration_from_twist_topic" default="$(arg dynamic_update_of_assembly_configuration_from_twist_topic)" />
 		<arg name="dynamic_update_of_assembly_configuration_from_odometry_topic" default="$(arg dynamic_update_of_assembly_configuration_from_odometry_topic)" />
 		<arg name="dynamic_update_of_assembly_configuration_from_imu_topic" default="$(arg dynamic_update_of_assembly_configuration_from_imu_topic)" />
+		<arg name="min_range_cutoff_percentage_offset" default="$(arg min_range_cutoff_percentage_offset)" />
+		<arg name="max_range_cutoff_percentage_offset" default="$(arg max_range_cutoff_percentage_offset)" />
 		<arg name="min_number_of_scans_to_assemble_per_cloud" default="$(arg min_number_of_scans_to_assemble_per_cloud)" />
 		<arg name="max_number_of_scans_to_assemble_per_cloud" default="$(arg max_number_of_scans_to_assemble_per_cloud)" />
 		<arg name="min_timeout_seconds_for_cloud_assembly" default="$(arg min_timeout_seconds_for_cloud_assembly)" />
