@@ -5,8 +5,8 @@ tracking_recovery_matchers:
         iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
             max_correspondence_distance: 0.75
-            transformation_epsilon: 1e-4
-            euclidean_fitness_epsilon: 1e-4
+            transformation_epsilon: 1e-6
+            euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 300
             max_number_of_ransac_iterations: 300
             ransac_outlier_rejection_threshold: 0.05
@@ -25,5 +25,5 @@ transformation_validators_tracking_recovery:
         max_transformation_distance: 1.0
         max_new_pose_diff_angle: 3.14
         max_new_pose_diff_distance: 2.5
-        max_root_mean_square_error: 0.3
+        max_root_mean_square_error: 0.05
         max_outliers_percentage: 0.4

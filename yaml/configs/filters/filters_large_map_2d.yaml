@@ -62,3 +62,8 @@ filters:
 #        7_covariance_sampling:
 #            number_of_samples: 100
 #            filtered_cloud_publish_topic: ''
+        8_radius_outlier_removal:
+            radius_search: 1.0
+            min_neighbors_in_radius: 2
+            invert_removal: false
+            filtered_cloud_publish_topic: ''
