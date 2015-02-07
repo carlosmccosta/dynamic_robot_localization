@@ -17,7 +17,7 @@ normal_estimators:
             random_samples_max_radius: 0.2
             minimum_inliers_percentage: 0.5
     ambient_pointcloud:
-        compute_normals_when_tracking_pose: true
+        compute_normals_when_tracking_pose: false
         compute_normals_when_recovering_pose_tracking: true
         compute_normals_when_estimating_initial_pose: true
         display_normals: false
@@ -59,7 +59,7 @@ tracking_matchers:
 #        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_2d:
-            max_correspondence_distance: 0.35
+            max_correspondence_distance: 0.5
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 350
@@ -87,7 +87,7 @@ tracking_matchers:
 
 outlier_detectors:
     euclidean_outlier_detector:
-        max_inliers_distance: 0.1
+        max_inliers_distance: 0.07
         aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
         aligned_pointcloud_inliers_publish_topic: 'aligned_pointcloud_inliers'
 
@@ -102,14 +102,8 @@ cloud_analyzers:
 transformation_validators:
     euclidean_transformation_validator:
         max_transformation_angle: 0.7
-        max_transformation_distance: 0.35
+        max_transformation_distance: 0.5
         max_new_pose_diff_angle: 1.1
-        max_new_pose_diff_distance: 0.5
-        max_root_mean_square_error: 0.045
-        max_outliers_percentage: 0.35
-
-
-transformation_validators_tracking_recovery:
-    euclidean_transformation_validator:
-        max_root_mean_square_error: 0.15
+        max_new_pose_diff_distance: 0.7
+        max_root_mean_square_error: 0.04
         max_outliers_percentage: 0.4

@@ -15,9 +15,9 @@ filters:
     ambient_pointcloud:
         filter_ambient_cloud_in_map_frame: false
         1_voxel_grid:
-            leaf_size_x: 0.025
-            leaf_size_y: 0.025
-            leaf_size_z: 0.025
+            leaf_size_x: 0.05
+            leaf_size_y: 0.05
+            leaf_size_z: 0.05
             filter_limit_field_name: 'z'
             filter_limit_min: -1.0
             filter_limit_max: 2.0
