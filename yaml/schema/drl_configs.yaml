@@ -434,7 +434,7 @@ cloud_analyzers:
     compute_inliers_angular_distribution: true
     compute_outliers_angular_distribution: true
     angular_distribution_analyzer:
-        number_of_angular_bins: 180
+        number_of_angular_bins: 180                                 # Angular bins all around the robot (360º)
 
 
 # ===================================================================================================================================================
@@ -452,3 +452,5 @@ transformation_validators_tracking_recovery:
         max_new_pose_diff_distance: 0.2                             # Pose recovery with a translation greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
         max_root_mean_square_error: 0.05                            # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected
         max_outliers_percentage: 0.7                                # Pose corrections which have a cloud registration outlier percentage [0-1] greater than this value will be rejected
+        min_inliers_angular_distribution: 0.125                     # Minimum angular distribution [0-1] that the inliers must occupy around the robot (0 -> 0º | 360º -> 1)
+        max_outliers_angular_distribution: 0.875                    # Maximum angular distribution [0-1] that the outliers are allowed to occupy around the robot (0 -> 0º | 360º -> 1)

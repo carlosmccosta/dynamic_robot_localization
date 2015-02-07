@@ -13,6 +13,7 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <sstream>
 #include <cmath>
 
 // ROS includes
@@ -53,7 +54,8 @@ class EuclideanTransformationValidator : public TransformationValidator {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanTransformationValidator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
-		virtual bool validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose, double root_mean_square_error = 0.0, double outliers_percentage = 0.0);
+		virtual bool validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose,
+				double root_mean_square_error = 0.05, double outliers_percentage = 0.6, double inliers_angular_distribution = 0.125, double outliers_angular_distribution = 0.875);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanTransformationValidator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -75,6 +77,8 @@ class EuclideanTransformationValidator : public TransformationValidator {
 		double max_new_pose_diff_distance_;
 		double max_root_mean_square_error_;
 		double max_outliers_percentage_;
+		double min_inliers_angular_distribution_;
+		double max_outliers_angular_distribution_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

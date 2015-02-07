@@ -1227,8 +1227,8 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 template<typename PointT>
 bool Localization<PointT>::applyCloudAnalysis(const tf2::Transform& estimated_pose) {
 	bool performed_analysis = false;
-	inliers_angular_distribution_ = -1.0;
-	outliers_angular_distribution_ = -1.0;
+	inliers_angular_distribution_ = -2.0;
+	outliers_angular_distribution_ = 2.0;
 
 	if (cloud_analyzer_) {
 		if (compute_outliers_angular_distribution_ && !detected_outliers_.empty()) {
@@ -1288,12 +1288,12 @@ template<typename PointT>
 bool Localization<PointT>::applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
 	for (size_t i = 0; i < transformation_validators.size(); ++i) {
 		if (last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_ < pose_tracking_timeout_)) {
-			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_base_link_to_map_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_base_link_to_map_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage, inliers_angular_distribution_, outliers_angular_distribution_)) {
 				return false;
 			}
 		} else {
 			// lost tracking -> ignore last pose filtering -> use only rmse and outlier percentage
-			if (!transformation_validators[i]->validateNewLocalizationPose(pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage, inliers_angular_distribution_, outliers_angular_distribution_)) {
 				return false;
 			}
 		}
@@ -1444,6 +1444,10 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  localization post processors with registration recovery
 	performance_timer.restart();
+	applyCloudAnalysis(pointcloud_pose_corrected_out);
+	localization_times_msg_.registered_points_angular_distribution_analysis_time = performance_timer.getElapsedTimeInMilliSec();
+
+	performance_timer.restart();
 	localization_times_msg_.transformation_validators_time = 0.0;
 	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 	if (performed_recovery && !transformation_validators_tracking_recovery_.empty()) {
@@ -1464,6 +1468,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 				}
 
 				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->empty() ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
+					pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 					ROS_INFO("Successfully applied registration recovery");
 					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 
@@ -1472,7 +1477,10 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					localization_times_msg_.outlier_detection_time += performance_timer.getElapsedTimeInMilliSec();
 
 					performance_timer.restart();
-					pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
+					applyCloudAnalysis(pointcloud_pose_corrected_out);
+					localization_times_msg_.registered_points_angular_distribution_analysis_time += performance_timer.getElapsedTimeInMilliSec();
+
+					performance_timer.restart();
 					if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
 				} else {
 					return false;
@@ -1488,10 +1496,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_accepted_pose_time_ = ros::Time::now();
 	last_accepted_pose_valid_ = true;
 	pose_tracking_number_of_failed_registrations_since_last_valid_pose_ = 0;
-
-	performance_timer.restart();
-	applyCloudAnalysis(pointcloud_pose_corrected_out);
-	localization_times_msg_.registered_points_angular_distribution_analysis_time = performance_timer.getElapsedTimeInMilliSec();
 
 	publishDetectedOutliers();
 	publishDetectedInliers();
