@@ -1009,9 +1009,9 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.outliers_angular_distribution = outliers_angular_distribution_;
 
 				// translation corrections
-				localization_detailed_msg.translation_corrections.x = pose_corrections.getOrigin().getX();
-				localization_detailed_msg.translation_corrections.y = pose_corrections.getOrigin().getY();
-				localization_detailed_msg.translation_corrections.z = pose_corrections.getOrigin().getZ();
+				localization_detailed_msg.translation_corrections.x = pose_tf_initial_guess.getOrigin().getX() - pose_tf_corrected.getOrigin().getX();
+				localization_detailed_msg.translation_corrections.y = pose_tf_initial_guess.getOrigin().getY() - pose_tf_corrected.getOrigin().getY();
+				localization_detailed_msg.translation_corrections.z = pose_tf_initial_guess.getOrigin().getZ() - pose_tf_corrected.getOrigin().getZ();
 				if (localization_detailed_use_millimeters_in_translation_corrections_) {
 					localization_detailed_msg.translation_corrections.x *= 1000.0;
 					localization_detailed_msg.translation_corrections.y *= 1000.0;
@@ -1023,11 +1023,18 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z));
 
 				// rotation corrections
-				localization_detailed_msg.rotation_correction_angle = pose_corrections.getRotation().getAngleShortestPath();
-				localization_detailed_msg.rotation_correction_axis.x = pose_corrections.getRotation().getAxis().getX();
-				localization_detailed_msg.rotation_correction_axis.y = pose_corrections.getRotation().getAxis().getY();
-				localization_detailed_msg.rotation_correction_axis.z = pose_corrections.getRotation().getAxis().getZ();
-
+				tf2::Quaternion rotation_correction_q = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
+				rotation_correction_q.normalize();
+				tf2::Vector3 rotation_correction_axis = rotation_correction_q.getAxis();
+				localization_detailed_msg.rotation_correction_angle = pose_tf_initial_guess_q.angleShortestPath(pose_tf_corrected_q);
+				localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
+				localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
+				localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
+				if (std::abs(rotation_correction_q.getAngleShortestPath() - localization_detailed_msg.rotation_correction_angle) > 0.025) {
+					localization_detailed_msg.rotation_correction_axis.x *= -1;
+					localization_detailed_msg.rotation_correction_axis.y *= -1;
+					localization_detailed_msg.rotation_correction_axis.z *= -1;
+				}
 				if (localization_detailed_use_degrees_in_rotation_corrections_) {
 					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
 				}
@@ -1308,7 +1315,7 @@ bool Localization<PointT>::applyTransformationValidators(std::vector< Transforma
 
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, ros::Time pointcloud_time, const tf2::Transform& pointcloud_pose_initial_guess,
-		tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out) {
+		tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform& pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out) {
 	last_number_points_inserted_in_circular_buffer_ = 0;
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = 0;
 	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
@@ -1494,7 +1501,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
+
 	localization_times_msg_.transformation_validators_time += performance_timer.getElapsedTimeInMilliSec();
+
+	pointcloud_pose_corrected_out.getRotation().normalize();
+	pose_corrections_out.getRotation().normalize();
+
 	last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
 	last_accepted_pose_time_ = ros::Time::now();
 	last_accepted_pose_valid_ = true;
