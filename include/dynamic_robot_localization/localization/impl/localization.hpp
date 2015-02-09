@@ -922,6 +922,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		tf2::Transform pose_tf_corrected;
 		tf2::Transform pose_corrections;
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
+		ambient_pointcloud_keypoints->header = ambient_pointcloud->header;
 		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_msg->header.stamp, pose_tf_initial_guess, pose_tf_corrected, pose_corrections, ambient_pointcloud_keypoints)) {
 			if (ignore_height_corrections_) {
 				pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
@@ -1097,6 +1098,7 @@ template<typename PointT>
 bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
 	for (size_t i = 0; i < cloud_filters.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
+		filtered_ambient_pointcloud->header = pointcloud->header;
 		cloud_filters[i]->filter(pointcloud, filtered_ambient_pointcloud);
 		pointcloud = filtered_ambient_pointcloud; // switch pointers
 	}
@@ -1203,14 +1205,15 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr outliers;
 		typename pcl::PointCloud<PointT>::Ptr inliers;
+
 		if (outlier_detectors_[i]->isPublishingOutliers() || compute_outliers_angular_distribution_) {
 			outliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-			outliers->header.frame_id = ambient_pointcloud->header.frame_id;
+			outliers->header = ambient_pointcloud->header;
 		}
 
 		if (outlier_detectors_[i]->isPublishingInliers() || compute_inliers_angular_distribution_) {
 			inliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-			inliers->header.frame_id = ambient_pointcloud->header.frame_id;
+			inliers->header = ambient_pointcloud->header;
 		}
 
 		number_outliers += outlier_detectors_[i]->detectOutliers(reference_pointcloud_search_method_, *ambient_pointcloud, outliers, inliers, root_mean_square_error_inliers_);
