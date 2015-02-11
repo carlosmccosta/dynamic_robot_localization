@@ -123,6 +123,7 @@ message_management:
     localization_detailed_use_millimeters_in_root_mean_square_error_inliers: true
     localization_detailed_use_millimeters_in_translation_corrections: true
     localization_detailed_use_degrees_in_rotation_corrections: true
+    localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrixes
 
 
 # ===================================================================================================================================================

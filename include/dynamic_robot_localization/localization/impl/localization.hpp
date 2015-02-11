@@ -29,6 +29,7 @@ Localization<PointT>::Localization() :
 	localization_detailed_use_millimeters_in_root_mean_square_error_inliers_(true),
 	localization_detailed_use_millimeters_in_translation_corrections_(true),
 	localization_detailed_use_degrees_in_rotation_corrections_(true),
+	localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_(true),
 	save_reference_pointclouds_in_binary_format_(true),
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
@@ -232,6 +233,7 @@ void Localization<PointT>::setupMessageManagement() {
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_root_mean_square_error_inliers", localization_detailed_use_millimeters_in_root_mean_square_error_inliers_, true);
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, true);
 	private_node_handle_->param("message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, true);
+	private_node_handle_->param("message_management/localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs", localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_, true);
 }
 
 
@@ -865,8 +867,6 @@ bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 
 template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
-	localization_times_msg_ = LocalizationTimes();
-
 	ros::Duration scan_age = ros::Time::now() - ambient_cloud_msg->header.stamp;
 	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
 
@@ -874,9 +874,17 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 	int number_points_ambient_pointcloud = ambient_cloud_msg->width * ambient_cloud_msg->height;
 	if (number_points_ambient_pointcloud < minimum_number_of_points_in_ambient_pointcloud_) {
-		ROS_DEBUG_STREAM("Discarded ambient cloud [ minimum number of points required: " << minimum_number_of_points_in_ambient_pointcloud_ << " | point cloud size: " << number_points_ambient_pointcloud << " ]");
+		ROS_WARN_STREAM("Discarded ambient cloud [ minimum number of points required: " << minimum_number_of_points_in_ambient_pointcloud_ << " | point cloud size: " << number_points_ambient_pointcloud << " ]");
 		return;
 	}
+
+	if (ambient_cloud_msg->header.stamp < last_scan_time_) {
+		ros::Duration time_offset = last_scan_time_ - ambient_cloud_msg->header.stamp;
+		ROS_WARN_STREAM("Discarded ambient cloud because it's timestamp (" << ambient_cloud_msg->header.stamp << ") is " << time_offset.toSec() << " seconds older than an already processed ambient cloud");
+		return;
+	}
+
+	localization_times_msg_ = LocalizationTimes();
 
 	if (!reference_pointcloud_received_ && map_update_mode_ != NoIntegration) {
 		loadReferencePointCloudFromROSPointCloud(ambient_cloud_msg);
@@ -1009,9 +1017,16 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				localization_detailed_msg.outliers_angular_distribution = outliers_angular_distribution_;
 
 				// translation corrections
-				localization_detailed_msg.translation_corrections.x = pose_tf_initial_guess.getOrigin().getX() - pose_tf_corrected.getOrigin().getX();
-				localization_detailed_msg.translation_corrections.y = pose_tf_initial_guess.getOrigin().getY() - pose_tf_corrected.getOrigin().getY();
-				localization_detailed_msg.translation_corrections.z = pose_tf_initial_guess.getOrigin().getZ() - pose_tf_corrected.getOrigin().getZ();
+				if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
+					localization_detailed_msg.translation_corrections.x = pose_tf_initial_guess.getOrigin().getX() - pose_tf_corrected.getOrigin().getX();
+					localization_detailed_msg.translation_corrections.y = pose_tf_initial_guess.getOrigin().getY() - pose_tf_corrected.getOrigin().getY();
+					localization_detailed_msg.translation_corrections.z = pose_tf_initial_guess.getOrigin().getZ() - pose_tf_corrected.getOrigin().getZ();
+				} else {
+					localization_detailed_msg.translation_corrections.x = pose_corrections.getOrigin().getX();
+					localization_detailed_msg.translation_corrections.y = pose_corrections.getOrigin().getY();
+					localization_detailed_msg.translation_corrections.z = pose_corrections.getOrigin().getZ();
+				}
+				
 				if (localization_detailed_use_millimeters_in_translation_corrections_) {
 					localization_detailed_msg.translation_corrections.x *= 1000.0;
 					localization_detailed_msg.translation_corrections.y *= 1000.0;
@@ -1023,18 +1038,24 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z));
 
 				// rotation corrections
-				tf2::Quaternion rotation_correction_q = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
-				rotation_correction_q.normalize();
-				tf2::Vector3 rotation_correction_axis = rotation_correction_q.getAxis();
-				localization_detailed_msg.rotation_correction_angle = pose_tf_initial_guess_q.angleShortestPath(pose_tf_corrected_q);
+				tf2::Quaternion rotation_corrections;
+
+				if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
+					tf2::Quaternion rotation_correction_q = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
+				} else {
+					tf2::Quaternion orientation_corrections = pose_corrections.getRotation();
+				}
+
+				rotation_corrections.normalize();
+				if (rotation_corrections.getW() < 0.0) { rotation_corrections *= -1.0; } // shortest path angle
+
+				tf2::Vector3 rotation_correction_axis = rotation_corrections.getAxis().normalize();
+				localization_detailed_msg.rotation_correction_angle = rotation_corrections.getAngle();
 				localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
 				localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
 				localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
-				if (std::abs(rotation_correction_q.getAngleShortestPath() - localization_detailed_msg.rotation_correction_angle) > 0.025) {
-					localization_detailed_msg.rotation_correction_axis.x *= -1;
-					localization_detailed_msg.rotation_correction_axis.y *= -1;
-					localization_detailed_msg.rotation_correction_axis.z *= -1;
-				}
+
+
 				if (localization_detailed_use_degrees_in_rotation_corrections_) {
 					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
 				}

@@ -270,6 +270,7 @@ class Localization : public ConfigurableObject {
 		bool localization_detailed_use_millimeters_in_root_mean_square_error_inliers_;
 		bool localization_detailed_use_millimeters_in_translation_corrections_;
 		bool localization_detailed_use_degrees_in_rotation_corrections_;
+		bool localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_;
 		bool save_reference_pointclouds_in_binary_format_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
