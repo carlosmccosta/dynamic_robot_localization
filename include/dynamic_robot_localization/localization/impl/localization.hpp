@@ -614,7 +614,6 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 template<typename PointT>
 void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg) {
 	if (!reference_pointcloud_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_reference_pointcloud_update_) {
-
 		if (reference_pointcloud_msg->width > 0 && reference_pointcloud_msg->data.size() > 0 && reference_pointcloud_msg->fields.size() >= 3) {
 			pcl::fromROSMsg(*reference_pointcloud_msg, *reference_pointcloud_);
 			size_t pointcloud_size = reference_pointcloud_->size();
@@ -633,8 +632,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 				if (reference_pointcloud_2d_) { resetPointCloudHeight(*reference_pointcloud_); }
 				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
-					last_map_received_time_ = ros::Time::now();
 					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->size() << " points");
+					last_map_received_time_ = ros::Time::now();
 				}
 			}
 		}
@@ -645,7 +644,6 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 template<typename PointT>
 void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg) {
 	if (!reference_pointcloud_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_reference_pointcloud_update_) {
-
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_)) {
 			if (!reference_pointcloud_->empty()) {
 				reference_pointcloud_2d_ = true;
@@ -653,8 +651,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 				private_node_handle_->param("normal_estimators/reference_pointcloud/flip_normals_using_occupancy_grid_analysis", flip_normals_using_occupancy_grid_analysis, true);
 				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
-					last_map_received_time_ = ros::Time::now();
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points");
+					last_map_received_time_ = ros::Time::now();
 				}
 			}
 		}

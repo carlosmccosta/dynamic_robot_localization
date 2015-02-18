@@ -23,8 +23,12 @@
 	<!-- reference map data -->
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
-	<arg name="reference_pointcloud_type" default="3D" />
-	<arg name="reference_pointcloud_update_mode" default="NoIntegration" /> <!-- NoIntegration | FullIntegration | InliersIntegration | OutliersIntegration -->
+	<arg name="reference_pointcloud_available" default="true" />
+	<arg name="reference_pointcloud_type_3d" default="true" />
+	<arg name="reference_pointcloud_type" default="2D" unless="$(arg reference_pointcloud_type_3d)"/>
+	<arg name="reference_pointcloud_type" default="3D" if="$(arg reference_pointcloud_type_3d)" />
+	<arg name="reference_pointcloud_update_mode" default="NoIntegration" if="$(arg reference_pointcloud_available)"/> <!-- NoIntegration | FullIntegration | InliersIntegration | OutliersIntegration -->
+	<arg name="reference_pointcloud_update_mode" default="FullIntegration" unless="$(arg reference_pointcloud_available)"/>
 	<arg name="reference_pointcloud_keypoints_filename" default="" />
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
@@ -75,8 +79,16 @@
 	<arg name="transform_pose_to_map_frame_id" default="true" />
 	
 	<!-- map update -->
-	<arg name="use_dynamic_map_update" default="0" />
+	<arg name="use_dynamic_map_update" default="false" />
+	<arg name="octomap_pointcloud_topic" default="aligned_pointcloud" />  <!-- ambient_pointcloud | aligned_pointcloud | aligned_pointcloud_outliers | aligned_pointcloud_inliers -->
 	<arg name="octomap_file" default="" />
+	<arg name="octomap_resolution" default="0.025" />
+	<arg name="octomap_minimum_amount_of_time_between_ros_msg_publishing" default="5.0" />
+	<arg name="octomap_minimum_number_of_integrations_before_ros_msg_publishing" default="10" />
+	<arg name="octomap_override_sensor_z" default="false" if="$(arg reference_pointcloud_type_3d)" />
+	<arg name="octomap_override_sensor_z" default="true" unless="$(arg reference_pointcloud_type_3d)" />
+	<arg name="octomap_override_sensor_z_value" default="0.0" />
+	<arg name="initial_2d_map_file" default="" />
 
 
 	<!-- ==================================================== localization system ============================================= -->
@@ -173,11 +185,26 @@
 
 
 	<!-- OctoMap for dynamic map update -->
-	<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" ns="dynamic_robot_localization" if="$(arg use_dynamic_map_update)" >
-		<arg name="octomap_file" default="$(arg octomap_file)" />
-		<arg name="map_frame_id" default="$(arg map_frame_id)" />
-		<arg name="base_frame_id" default="$(arg base_link_frame_id)" />
-		<arg name="sensor_frame_id" default="$(arg sensor_frame_id)" />
-	</include>
+	<group if="$(arg use_dynamic_map_update)" ns="dynamic_robot_localization" >
+		<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" >
+			<arg name="octomap_file" default="$(arg octomap_file)" />
+			<arg name="cloud_in" default="$(arg octomap_pointcloud_topic)" />
+			<arg name="map_frame_id" default="$(arg map_frame_id)" />
+			<arg name="base_frame_id" default="$(arg base_link_frame_id)" />
+			<arg name="sensor_frame_id" default="$(arg sensor_frame_id)" />
+			<arg name="override_sensor_z" default="$(arg octomap_override_sensor_z)" />
+			<arg name="override_sensor_z_value" default="$(arg octomap_override_sensor_z_value)" />
+			<arg name="resolution" default="$(arg octomap_resolution)" />
+			<arg name="minimum_amount_of_time_between_ros_msg_publishing" default="$(arg octomap_minimum_amount_of_time_between_ros_msg_publishing)" />
+			<arg name="minimum_number_of_integrations_before_ros_msg_publishing" default="$(arg octomap_minimum_number_of_integrations_before_ros_msg_publishing)" />
+		</include>
+		
+		<group if="$(arg reference_pointcloud_available)" >
+			<node name="map_server" pkg="map_server" type="map_server" args="$(arg initial_2d_map_file)" output="screen" unless="$(arg reference_pointcloud_type_3d)" >
+				<param name="frame_id" type="str" value="$(arg map_frame_id)" />
+				<remap from="map" to="initial_2d_map" />
+			</node>
+		</group>
+	</group>
 </launch>
  
