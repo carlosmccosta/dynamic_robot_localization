@@ -1,28 +1,69 @@
+localization_point_type: 'PointXYZRGBNormal'
+
 filters:
-#    reference_pointcloud:
-#        1_pass_through_x:
-#            field_name: 'x'
-#            min_value: -5.392
-#            max_value: 3.0069
-#            pass_through_filtered_cloud_publish_topic: ''
-#        2_pass_through_y:
-#            field_name: 'y'
-#            min_value: -4.186
-#            max_value: 8.212
-#            pass_through_filtered_cloud_publish_topic: ''
-#        3_pass_through_z:
-#            field_name: 'z'
-#            min_value: -0.001
-#            max_value: 2.593
-#            pass_through_filtered_cloud_publish_topic: ''
-    ambient_pointcloud:
+    reference_pointcloud:
         1_voxel_grid:
-            leaf_size_x: 0.05
-            leaf_size_y: 0.05
-            leaf_size_z: 0.05
+            leaf_size_x: 0.0025
+            leaf_size_y: 0.0025
+            leaf_size_z: 0.0025
             filter_limit_field_name: 'z'
-            filter_limit_min: -3.0
-            filter_limit_max: 3.0
-            voxel_grid_filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
-            downsample_all_data: false
+            filter_limit_min: -5.0
+            filter_limit_max: 5.0
+            filtered_cloud_publish_topic: ''
+            downsample_all_data: true
             save_leaf_layout: false
+    ambient_pointcloud:
+        filter_ambient_cloud_in_map_frame: false
+#        1_voxel_grid:
+#            leaf_size_x: 0.05
+#            leaf_size_y: 0.05
+#            leaf_size_z: 0.05
+#            filter_limit_field_name: 'z'
+#            filter_limit_min: -1.0
+#            filter_limit_max: 2.0
+#            filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
+#            downsample_all_data: false
+#            save_leaf_layout: false
+#        2_approximate_voxel_grid:
+#            leaf_size_x: 0.025
+#            leaf_size_y: 0.025
+#            leaf_size_z: 0.025
+#            filtered_cloud_publish_topic: ''
+#            downsample_all_data: false
+#        3_radius_outlier_removal:
+#            radius_search: 2.0
+#            min_neighbors_in_radius: 6
+#            invert_removal: false
+#            filtered_cloud_publish_topic: ''
+        4_crop_box:
+            box_min_x: -2.0
+            box_min_y: -2.0
+            box_min_z: -2.0
+            box_max_x: 2.0
+            box_max_y: 2.0
+            box_max_z: 2.0
+            box_translation_x: 0.0
+            box_translation_y: 0.0
+            box_translation_z: 0.0
+            box_rotation_roll: 0.0
+            box_rotation_pitch: 0.0
+            box_rotation_yaw: 0.0
+            invert_selection: false
+            filtered_cloud_publish_topic: ''
+#        5_random_sample:
+#            number_of_random_samples: 100
+#            invert_sampling: false
+#            filtered_cloud_publish_topic: ''
+#        6_statistical_outlier_removal:
+#            number_of_neighbors_for_mean_distance_estimation: 6
+#            standard_deviation_multiplier: 2.0
+#            invert_selection: false
+#            filtered_cloud_publish_topic: ''
+#        7_covariance_sampling:
+#            number_of_samples: 100
+#            filtered_cloud_publish_topic: ''
+#        8_radius_outlier_removal:
+#            radius_search: 1.0
+#            min_neighbors_in_radius: 2
+#            invert_removal: false
+#            filtered_cloud_publish_topic: ''

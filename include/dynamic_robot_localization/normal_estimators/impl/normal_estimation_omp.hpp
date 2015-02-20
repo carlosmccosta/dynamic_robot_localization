@@ -48,7 +48,7 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 	indexes.clear();
 
 	normal_estimator_.setSearchMethod(surface_search_method);
-	normal_estimator_.setSearchSurface(surface);
+	if (surface) { normal_estimator_.setSearchSurface(surface); }
 	normal_estimator_.setInputCloud(pointcloud);
 	normal_estimator_.setViewPoint(viewpoint_guess.getOrigin().getX(), viewpoint_guess.getOrigin().getY(), viewpoint_guess.getOrigin().getZ());
 	normal_estimator_.compute(*pointcloud); // adds normals to existing points
@@ -64,7 +64,7 @@ void NormalEstimationOMP<PointT>::estimateNormals(typename pcl::PointCloud<Point
 
 	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 
-	if (pointcloud_with_normals_out->size() != pointcloud_original_size) {
+	if (pointcloud_with_normals_out->size() > 3 && pointcloud_with_normals_out->size() != pointcloud_original_size) {
 		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
 }

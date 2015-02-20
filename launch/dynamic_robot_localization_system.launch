@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 	<!-- ======================================================= arguments ==================================================== -->
-	<!-- sensor data from point cloud topic -->
-	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
-	<arg name="reference_costmap_topic" default="/map" />
-	<arg name="reference_pointcloud_topic" default="" /> <!-- OctoMap is configured to use topic 'reference_pointcloud_update' -->
-	
 	<!-- initial pose topics -->
 	<arg name="pose_topic" default="initial_pose" />
 	<arg name="pose_stamped_topic" default="initial_pose_stamped" />
@@ -33,6 +28,13 @@
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
+	
+	<!-- sensor data from point cloud topic -->
+	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
+	<arg name="reference_costmap_topic" default="" if="$(arg reference_pointcloud_type_3d)" />
+	<arg name="reference_costmap_topic" default="/map" unless="$(arg reference_pointcloud_type_3d)" />
+	<arg name="reference_pointcloud_topic" default="reference_pointcloud_update" if="$(arg reference_pointcloud_type_3d)" /> <!-- OctoMap is configured to use topic 'reference_pointcloud_update' -->
+	<arg name="reference_pointcloud_topic" default="" unless="$(arg reference_pointcloud_type_3d)" />
 	
 	<!-- intial pose setup -->
 	<arg name="robot_initial_pose_in_base_to_map" default="false" /> <!-- recommendation: use false to allow direct publish of tf between odom -> map -->
@@ -79,7 +81,7 @@
 	<arg name="transform_pose_to_map_frame_id" default="true" />
 	
 	<!-- map update -->
-	<arg name="use_dynamic_map_update" default="false" />
+	<arg name="use_octomap_for_dynamic_map_update" default="false" />
 	<arg name="octomap_pointcloud_topic" default="aligned_pointcloud" />  <!-- ambient_pointcloud | aligned_pointcloud | aligned_pointcloud_outliers | aligned_pointcloud_inliers -->
 	<arg name="octomap_file" default="" />
 	<arg name="octomap_resolution" default="0.025" />
@@ -88,6 +90,7 @@
 	<arg name="octomap_override_sensor_z" default="false" if="$(arg reference_pointcloud_type_3d)" />
 	<arg name="octomap_override_sensor_z" default="true" unless="$(arg reference_pointcloud_type_3d)" />
 	<arg name="octomap_override_sensor_z_value" default="0.0" />
+	<arg name="octomap_cloud_out_topic" default="reference_pointcloud_update" />
 	<arg name="initial_2d_map_file" default="" />
 
 
@@ -185,7 +188,7 @@
 
 
 	<!-- OctoMap for dynamic map update -->
-	<group if="$(arg use_dynamic_map_update)" ns="dynamic_robot_localization" >
+	<group if="$(arg use_octomap_for_dynamic_map_update)" ns="dynamic_robot_localization" >
 		<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" >
 			<arg name="octomap_file" default="$(arg octomap_file)" />
 			<arg name="cloud_in" default="$(arg octomap_pointcloud_topic)" />
@@ -197,6 +200,7 @@
 			<arg name="resolution" default="$(arg octomap_resolution)" />
 			<arg name="minimum_amount_of_time_between_ros_msg_publishing" default="$(arg octomap_minimum_amount_of_time_between_ros_msg_publishing)" />
 			<arg name="minimum_number_of_integrations_before_ros_msg_publishing" default="$(arg octomap_minimum_number_of_integrations_before_ros_msg_publishing)" />
+			<arg name="cloud_out_topic" default="$(arg octomap_cloud_out_topic)" />
 		</include>
 		
 		<group if="$(arg reference_pointcloud_available)" >

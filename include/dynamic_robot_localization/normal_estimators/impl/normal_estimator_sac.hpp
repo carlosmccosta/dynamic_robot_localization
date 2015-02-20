@@ -186,7 +186,7 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 
 	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 
-	if (pointcloud_with_normals_out->size() != pointcloud_original_size) {
+	if (pointcloud_with_normals_out->size() > 3 && pointcloud_with_normals_out->size() != pointcloud_original_size) {
 		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
 }

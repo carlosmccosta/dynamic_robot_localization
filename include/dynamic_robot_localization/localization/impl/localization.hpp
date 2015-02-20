@@ -624,7 +624,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 
 			size_t number_of_nans_in_reference_pointcloud = pointcloud_size - reference_pointcloud_->size();
 			if (number_of_nans_in_reference_pointcloud > 0) {
-				ROS_INFO_STREAM("Removed " << number_of_nans_in_reference_pointcloud << " NaNs from reference cloud with " << pointcloud_size << " points");
+				ROS_DEBUG_STREAM("Removed " << number_of_nans_in_reference_pointcloud << " NaNs from reference cloud with " << pointcloud_size << " points");
 			}
 
 			if (!reference_pointcloud_->empty()) {
@@ -884,11 +884,12 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 	localization_times_msg_ = LocalizationTimes();
 
-	if (!reference_pointcloud_received_ && map_update_mode_ != NoIntegration) {
+	/*if (!reference_pointcloud_received_ && map_update_mode_ != NoIntegration) {
 		loadReferencePointCloudFromROSPointCloud(ambient_cloud_msg);
-	} else if (reference_pointcloud_received_
+	} else */if ((!reference_pointcloud_received_ && map_update_mode_ != NoIntegration) ||
+			(reference_pointcloud_received_
 			&& (elapsed_time_since_last_scan.toSec() < 0 || elapsed_time_since_last_scan > min_seconds_between_scan_registration_)
-			&& scan_age < max_seconds_ambient_pointcloud_age_) {
+			&& scan_age < max_seconds_ambient_pointcloud_age_)) {
 
 		tf2::Transform transform_base_link_to_odom;
 		if (!pose_to_tf_publisher_.getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_msg->header.stamp)) {
@@ -913,7 +914,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		indexes.clear();
 		size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
 		if (number_of_nans_in_ambient_pointcloud > 0) {
-			ROS_INFO_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
+			ROS_DEBUG_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
 		}
 
 		tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();
@@ -929,7 +930,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		tf2::Transform pose_corrections;
 		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 		ambient_pointcloud_keypoints->header = ambient_pointcloud->header;
-		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_msg->header.stamp, pose_tf_initial_guess, pose_tf_corrected, pose_corrections, ambient_pointcloud_keypoints)) {
+		if (updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_msg->header.stamp, pose_tf_initial_guess, pose_tf_corrected, pose_corrections, ambient_pointcloud_keypoints) || (!reference_pointcloud_received_ && map_update_mode_ != NoIntegration)) {
 			if (ignore_height_corrections_) {
 				pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
 			}
@@ -1077,22 +1078,33 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			}
 
 			performance_timer.restart();
-			switch (map_update_mode_) {
-				case FullIntegration: {
-					updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints);
-					break;
-				}
 
-				case InliersIntegration: {
-					updateReferencePointCloudWithAmbientPointCloud(registered_inliers_, ambient_pointcloud_keypoints);
-					break;
-				}
+			if (!reference_pointcloud_received_ && map_update_mode_ != NoIntegration) {
+				updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints);
+				reference_pointcloud_received_ = true;
+			} else {
+				switch (map_update_mode_) {
+					case FullIntegration: {
+						updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints);
+						break;
+					}
 
-				case OutliersIntegration: {
-					updateReferencePointCloudWithAmbientPointCloud(registered_outliers_, ambient_pointcloud_keypoints);
-					break;
+					case InliersIntegration: {
+						if (registered_inliers_) {
+							updateReferencePointCloudWithAmbientPointCloud(registered_inliers_, ambient_pointcloud_keypoints);
+						}
+						break;
+					}
+
+					case OutliersIntegration: {
+						if (registered_outliers_) {
+							updateReferencePointCloudWithAmbientPointCloud(registered_outliers_, ambient_pointcloud_keypoints);
+						}
+						break;
+					}
 				}
 			}
+
 			localization_times_msg_.map_update_time = performance_timer.getElapsedTimeInMilliSec();
 		} else {
 			if (ambient_pointcloud_with_circular_buffer_) {
@@ -1247,6 +1259,24 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 		detected_inliers_.push_back(inliers);
 	}
 
+	if (detected_outliers_.size() > 1) {
+		registered_outliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
+		pointcloud_utils::concatenatePointClouds<PointT>(detected_outliers_, registered_outliers_);
+	} else if (detected_outliers_.size() == 1) {
+		registered_outliers_ = detected_outliers_[0];
+	} else {
+		registered_outliers_->clear();
+	}
+
+	if (detected_inliers_.size() > 1) {
+		registered_inliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
+		pointcloud_utils::concatenatePointClouds<PointT>(detected_inliers_, registered_inliers_);
+	} else if (detected_inliers_.size() == 1) {
+		registered_inliers_ = detected_inliers_[0];
+	} else {
+		registered_inliers_->clear();
+	}
+
 	number_inliers_ = ambient_pointcloud->size() - number_outliers;
 
 	return (double)number_outliers / (double) (ambient_pointcloud->size());
@@ -1256,29 +1286,17 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 template<typename PointT>
 bool Localization<PointT>::applyCloudAnalysis(const tf2::Transform& estimated_pose) {
 	bool performed_analysis = false;
-	inliers_angular_distribution_ = -2.0;
-	outliers_angular_distribution_ = 2.0;
+	inliers_angular_distribution_ = 2.0;
+	outliers_angular_distribution_ = -2.0;
 
 	if (cloud_analyzer_) {
 		if (compute_outliers_angular_distribution_ && !detected_outliers_.empty()) {
-			if (detected_outliers_.size() > 1) {
-				registered_outliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-				pointcloud_utils::concatenatePointClouds<PointT>(detected_outliers_, registered_outliers_);
-			} else {
-				registered_outliers_ = detected_outliers_[0];
-			}
 			std::vector<size_t> analysis_histogram;
 			outliers_angular_distribution_ = cloud_analyzer_->analyzeCloud(estimated_pose, *registered_outliers_, analysis_histogram);
 			performed_analysis = true;
 		}
 
 		if (compute_inliers_angular_distribution_ && !detected_inliers_.empty()) {
-			if (detected_inliers_.size() > 1) {
-				registered_inliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-				pointcloud_utils::concatenatePointClouds<PointT>(detected_inliers_, registered_inliers_);
-			} else {
-				registered_inliers_ = detected_inliers_[0];
-			}
 			std::vector<size_t> analysis_histogram;
 			inliers_angular_distribution_ = cloud_analyzer_->analyzeCloud(estimated_pose, *registered_inliers_, analysis_histogram);
 			performed_analysis = true;
@@ -1339,6 +1357,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = 0;
 	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
 	accepted_pose_corrections_.clear();
+	pose_corrections_out = tf2::Transform::getIdentity();
+
 	if (ambient_pointcloud->empty()) {
 		return false;
 	}
@@ -1400,6 +1420,10 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		computed_keypoints = true;
 	}
 
+	if (!reference_pointcloud_received_) {
+		return false; // stop pipeline processing if no reference cloud is available (only before registration to allow preprocessing of the first cloud when performing SLAM)
+	}
+
 
 	// ==============================================================  initial pose estimation when tracking is lost
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
@@ -1412,7 +1436,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 	bool performed_recovery = false;
-	pose_corrections_out = tf2::Transform::getIdentity();
+
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && lost_tracking) { // lost tracking -> try to find initial pose
 		ROS_INFO("Performing initial pose recovery");
 		if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {

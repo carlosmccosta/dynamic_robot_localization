@@ -89,11 +89,13 @@ void MovingLeastSquares<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
 	indexes.clear();
 
+	typename pcl::PointCloud<PointT>::Ptr pointcloud_resampled(new typename pcl::PointCloud<PointT>());
+
 	normal_estimator_.setSearchMethod(surface_search_method);
 	normal_estimator_.setInputCloud(pointcloud);
-	normal_estimator_.process(*pointcloud_with_normals_out);
+	normal_estimator_.process(*pointcloud_resampled);
 
-	pcl::removeNaNFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
+	pcl::removeNaNFromPointCloud(*pointcloud_resampled, *pointcloud_with_normals_out, indexes);
 	indexes.clear();
 	pcl::removeNaNNormalsFromPointCloud(*pointcloud_with_normals_out, *pointcloud_with_normals_out, indexes);
 	indexes.clear();
@@ -102,7 +104,7 @@ void MovingLeastSquares<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 
 	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 
-	if (pointcloud_with_normals_out->size() != pointcloud_original_size) {
+	if (pointcloud_with_normals_out->size() > 3 && pointcloud_with_normals_out->size() != pointcloud_original_size) {
 		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
 }

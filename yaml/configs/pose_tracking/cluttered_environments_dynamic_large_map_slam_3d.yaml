@@ -1,0 +1,94 @@
+publish_topic_names:
+#    reference_pointcloud_publish_topic: ''
+#    aligned_pointcloud_publish_topic: ''
+    pose_with_covariance_stamped_publish_topic: ''
+#    localization_detailed_publish_topic: ''
+#    localization_diagnostics_publish_topic: ''
+#    localization_times_publish_topic: ''
+
+
+reference_pointclouds:
+    use_incremental_map_update: false
+
+
+normal_estimators:
+    reference_pointcloud:
+        display_normals: false
+        display_occupancy_grid_pointcloud: false
+        flip_normals_using_occupancy_grid_analysis: true
+        occupancy_grid_analysis_radius_resolution_percentage: 4.0
+        moving_least_squares:
+            compute_normals: true
+            polynomial_order: 3
+            polynomial_fit: true
+            search_radius: 0.02
+            sqr_gauss_param: 0.0004
+            upsample_method: 'NONE'
+            upsampling_radius: 0.03
+            upsampling_step: 0.03
+            desired_num_points_in_radius: 10
+            dilation_voxel_size: 0.03
+            dilation_iterations: 1
+    ambient_pointcloud:
+        compute_normals_when_tracking_pose: true
+        compute_normals_when_recovering_pose_tracking: true
+        compute_normals_when_estimating_initial_pose: true
+        use_filtered_cloud_as_normal_estimation_surface: true
+        display_normals: false
+        normal_estimation_omp:
+            search_k: 0
+            search_radius: 0.12
+
+
+tracking_matchers:
+    ignore_height_corrections: false
+    use_internal_tracking: false
+    pose_tracking_timeout: 2.0
+    point_matchers:
+        iterative_closest_point:
+#        iterative_closest_point_non_linear:
+#        iterative_closest_point_with_normals:
+#        iterative_closest_point_generalized:
+#        normal_distributions_transform_3d:
+            max_correspondence_distance: 1.0
+            transformation_epsilon: 1e-6
+            euclidean_fitness_epsilon: 1e-6
+            max_number_of_registration_iterations: 250
+            max_number_of_ransac_iterations: 250
+            ransac_outlier_rejection_threshold: 0.05
+            match_only_keypoints: false
+            display_cloud_aligment: false
+            maximum_number_of_displayed_correspondences: 0
+            # gicp
+            rotation_epsilon: 0.002
+            correspondence_randomness: 50
+            maximum_optimizer_iterations: 100
+            use_reciprocal_correspondences: true
+            # ndt 3d
+            voxel_grid_resolution: 1.0
+            line_search_step_size: 0.1
+            outlier_ratio: 0.25
+
+
+outlier_detectors:
+    euclidean_outlier_detector:
+        max_inliers_distance: 0.07
+        aligned_pointcloud_outliers_publish_topic: '' #'aligned_pointcloud_outliers'
+        aligned_pointcloud_inliers_publish_topic: '' #'aligned_pointcloud_inliers'
+
+
+#cloud_analyzers:
+#    compute_inliers_angular_distribution: true
+#    compute_outliers_angular_distribution: true
+#    angular_distribution_analyzer:
+#        number_of_angular_bins: 180
+
+
+transformation_validators:
+    euclidean_transformation_validator:
+        max_transformation_angle: 0.4
+        max_transformation_distance: 0.3
+        max_new_pose_diff_angle: 1.1
+        max_new_pose_diff_distance: 0.8
+        max_root_mean_square_error: 0.035
+        max_outliers_percentage: 0.35
