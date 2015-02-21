@@ -3,34 +3,27 @@ localization_point_type: 'PointXYZRGBNormal'
 filters:
     reference_pointcloud:
         1_voxel_grid:
-            leaf_size_x: 0.02
-            leaf_size_y: 0.02
-            leaf_size_z: 0.02
+            leaf_size_x: 0.0025
+            leaf_size_y: 0.0025
+            leaf_size_z: 0.0025
             filter_limit_field_name: 'z'
             filter_limit_min: -5.0
             filter_limit_max: 5.0
             filtered_cloud_publish_topic: ''
             downsample_all_data: true
             save_leaf_layout: false
-#        2_covariance_sampling:
-#            number_of_samples: 10000
-#            filtered_cloud_publish_topic: ''
-#        3_random_sample:
-#            number_of_random_samples: 6000
-#            invert_sampling: false
-#            filtered_cloud_publish_topic: ''
     ambient_pointcloud:
         filter_ambient_cloud_in_map_frame: false
-        1_voxel_grid:
-            leaf_size_x: 0.07
-            leaf_size_y: 0.07
-            leaf_size_z: 0.07
-            filter_limit_field_name: 'z'
-            filter_limit_min: -2.0
-            filter_limit_max: 2.0
-            filtered_cloud_publish_topic: '' # ambient_pointcloud_filtered
-            downsample_all_data: true
-            save_leaf_layout: false
+#        1_voxel_grid:
+#            leaf_size_x: 0.05
+#            leaf_size_y: 0.05
+#            leaf_size_z: 0.05
+#            filter_limit_field_name: 'z'
+#            filter_limit_min: -1.0
+#            filter_limit_max: 2.0
+#            filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
+#            downsample_all_data: false
+#            save_leaf_layout: false
 #        2_approximate_voxel_grid:
 #            leaf_size_x: 0.025
 #            leaf_size_y: 0.025
@@ -43,12 +36,12 @@ filters:
 #            invert_removal: false
 #            filtered_cloud_publish_topic: ''
         4_crop_box:
-            box_min_x: -4.0
-            box_min_y: -4.0
-            box_min_z: -4.0
-            box_max_x: 4.0
-            box_max_y: 4.0
-            box_max_z: 4.0
+            box_min_x: -2.0
+            box_min_y: -2.0
+            box_min_z: -2.0
+            box_max_x: 2.0
+            box_max_y: 2.0
+            box_max_z: 2.0
             box_translation_x: 0.0
             box_translation_y: 0.0
             box_translation_z: 0.0
@@ -57,17 +50,17 @@ filters:
             box_rotation_yaw: 0.0
             invert_selection: false
             filtered_cloud_publish_topic: ''
-        5_random_sample:
-            number_of_random_samples: 500
-            invert_sampling: false
-            filtered_cloud_publish_topic: ''
+#        5_random_sample:
+#            number_of_random_samples: 100
+#            invert_sampling: false
+#            filtered_cloud_publish_topic: ''
 #        6_statistical_outlier_removal:
 #            number_of_neighbors_for_mean_distance_estimation: 6
 #            standard_deviation_multiplier: 2.0
 #            invert_selection: false
 #            filtered_cloud_publish_topic: ''
 #        7_covariance_sampling:
-#            number_of_samples: 1000
+#            number_of_samples: 100
 #            filtered_cloud_publish_topic: ''
 #        8_radius_outlier_removal:
 #            radius_search: 1.0
