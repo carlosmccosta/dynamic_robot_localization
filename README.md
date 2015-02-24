@@ -11,8 +11,22 @@ The dynamic_robot_localization is a ROS package that offers 3 DOF and 6 DOF loca
 It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](https://github.com/carlosmccosta/dynamic_robot_localization/blob/hydro-devel/yaml/schema/drl_configs.yaml))
 
 ![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
+Figure 1: Localization system processing pipeline
 
-[![Localization system tests with Guardian platform in CROB lab](http://img.youtube.com/vi/Rl6utteku8k/maxresdefault.jpg)](http://www.youtube.com/watch?v=Rl6utteku8k)
+[![3 DoF localization system tests with the Guardian platform in the CROB lab](http://img.youtube.com/vi/Rl6utteku8k/maxresdefault.jpg)](http://www.youtube.com/watch?v=Rl6utteku8k)
+Video 1: 3 DoF localization system tests with the Guardian platform in the CROB lab
+
+[![3 DoF localization system tests with the Jarvis platform in the CROB lab](http://img.youtube.com/vi/DCYdJtbad18/maxresdefault.jpg)](http://www.youtube.com/watch?v=DCYdJtbad18)
+Video 2: 3 DoF localization system tests with the Jarvis platform in the CROB lab
+
+[![3 DoF localization system tests with the Pioneer platform in TUM RGB-D dataset](http://img.youtube.com/vi/jAJ5wiN-mJ8/maxresdefault.jpg)](http://www.youtube.com/watch?v=jAJ5wiN-mJ8)
+Video 3: 3 DoF localization system tests with the Pioneer platform in the TUM RGB-D dataset
+
+[![Free fly test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/UslDiUkm7wE/maxresdefault.jpg)](http://www.youtube.com/watch?v=UslDiUkm7wE)
+Video 4: Free fly test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+
+[![Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/2OYWJIi9Rdk/maxresdefault.jpg)](http://www.youtube.com/watch?v=2OYWJIi9Rdk)
+Video 5: Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
 
 
 ## Data sources
