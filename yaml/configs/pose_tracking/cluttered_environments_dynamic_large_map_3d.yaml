@@ -90,8 +90,8 @@ outlier_detectors:
 transformation_validators:
     euclidean_transformation_validator:
         max_transformation_angle: 0.7
-        max_transformation_distance: 0.3
+        max_transformation_distance: 0.5
         max_new_pose_diff_angle: 1.1
         max_new_pose_diff_distance: 0.8
-        max_root_mean_square_error: 0.04
-        max_outliers_percentage: 0.7
+        max_root_mean_square_error: 0.035
+        max_outliers_percentage: 0.1
