@@ -780,7 +780,7 @@ void Localization<PointT>::updateMatchersReferenceCloud() {
 template<typename PointT>
 void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time) {
 	ros::Time pose_time_updated = pose_time;
-	if (pose_time.sec == 0 && pose_time.nsec == 0 || pose_time.toSec() < 3.0) {
+	if ((pose_time.sec == 0 && pose_time.nsec == 0) || pose_time.toSec() < 3.0) {
 		pose_time_updated = ros::Time::now();
 	}
 
@@ -1642,9 +1642,5 @@ bool Localization<PointT>::updateReferencePointCloudWithAmbientPointCloud(typena
 // =============================================================================   <protected-section>   =======================================================================
 // =============================================================================   </protected-section>  =======================================================================
 
-
-
-// =============================================================================   <private-section>   =========================================================================
-// =============================================================================   </private-section>  =========================================================================
 
 } /* namespace dynamic_robot_localization */

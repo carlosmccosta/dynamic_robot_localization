@@ -23,9 +23,9 @@ template<typename Scalar>
 bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 	double elapsed_time = convergence_timer_.getTimeSeconds();
 	if (convergence_time_limit_seconds_ >= 0.0 && elapsed_time > convergence_time_limit_seconds_) {
-		ROS_WARN_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged] Convergence time limit of (" << convergence_time_limit_seconds_ << ") seconds exceeded (" << elapsed_time << ")" \
+		ROS_WARN_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged] Convergence time limit of " << convergence_time_limit_seconds_ << " seconds exceeded (elapsed time: " << elapsed_time << ")" \
 				<< " | Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
-				<< " | CorrespondencesCurrentMeanSquareError: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_);
+				<< " | CorrespondencesCurrentMSE: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_);
 
 		pcl::registration::DefaultConvergenceCriteria<Scalar>::convergence_state_ = pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_ITERATIONS;
 		return true;

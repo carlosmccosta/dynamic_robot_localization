@@ -105,10 +105,6 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 		double convergence_time_limit_seconds_as_mean_convergence_time_percentage_;
 		int minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_;
 	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
-	// ========================================================================   </private-section>  ==========================================================================
 };
 
 } /* namespace dynamic_robot_localization */

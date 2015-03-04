@@ -67,10 +67,6 @@ class EuclideanTransformationValidator : public TransformationValidator {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
 		double max_transformation_angle_;
 		double max_transformation_distance_;
 		double max_new_pose_diff_angle_;
@@ -79,7 +75,7 @@ class EuclideanTransformationValidator : public TransformationValidator {
 		double max_outliers_percentage_;
 		double min_inliers_angular_distribution_;
 		double max_outliers_angular_distribution_;
-	// ========================================================================   </private-section>  ==========================================================================
+	// ========================================================================   </protected-section>  ========================================================================
 };
 
 } /* namespace dynamic_robot_localization */

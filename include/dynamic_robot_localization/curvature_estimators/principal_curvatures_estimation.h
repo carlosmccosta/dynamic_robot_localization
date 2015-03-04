@@ -75,16 +75,10 @@ class PrincipalCurvaturesEstimation : public CurvatureEstimator<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
 		pcl::PrincipalCurvaturesEstimation<PointT, PointT> curvature_estimator_;
-//		pcl::PrincipalCurvaturesEstimation<pcl::PointNormal, pcl::PointNormal> curvature_estimator_;
-
 		CurvatureType curvature_type_;
 		bool update_normals_with_principal_component_directions_;
-	// ========================================================================   </private-section>  ==========================================================================
+	// ========================================================================   </protected-section>  ========================================================================
 };
 
 } /* namespace dynamic_robot_localization */

@@ -90,10 +90,6 @@ class NormalEstimator : public ConfigurableObject {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
 		bool display_normals_;
 		bool display_occupancy_grid_pointcloud_;
 		int occupancy_grid_analysis_k_;
@@ -101,7 +97,7 @@ class NormalEstimator : public ConfigurableObject {
 		double occupancy_grid_analysis_radius_resolution_percentage_;
 		nav_msgs::OccupancyGridConstPtr occupancy_grid_msg_;
 		typename CurvatureEstimator<PointT>::Ptr curvature_estimator_;
-	// ========================================================================   </private-section>  ==========================================================================
+	// ========================================================================   </protected-section>  ========================================================================
 };
 
 } /* namespace dynamic_robot_localization */

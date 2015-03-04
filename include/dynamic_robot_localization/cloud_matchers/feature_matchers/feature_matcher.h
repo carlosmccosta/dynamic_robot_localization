@@ -81,15 +81,11 @@ class FeatureMatcher : public CloudMatcher<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
 		typename KeypointDescriptor<PointT, FeatureT>::Ptr keypoint_descriptor_;
 		std::string reference_pointcloud_descriptors_filename_;
 		std::string reference_pointcloud_descriptors_save_filename_;
 		bool save_descriptors_in_binary_format_;
-	// ========================================================================   </private-section>  ==========================================================================
+	// ========================================================================   </protected-section>  ========================================================================
 };
 
 } /* namespace dynamic_robot_localization */

@@ -3,9 +3,9 @@ localization_point_type: 'PointXYZINormal'
 filters:
     reference_pointcloud:
         1_voxel_grid:
-            leaf_size_x: 0.025
-            leaf_size_y: 0.025
-            leaf_size_z: 0.025
+            leaf_size_x: 0.02
+            leaf_size_y: 0.02
+            leaf_size_z: 0.02
             filter_limit_field_name: 'z'
             filter_limit_min: -0.001
             filter_limit_max: 1.8
@@ -15,13 +15,13 @@ filters:
     ambient_pointcloud:
         filter_ambient_cloud_in_map_frame: false
         1_voxel_grid:
-            leaf_size_x: 0.05
-            leaf_size_y: 0.05
-            leaf_size_z: 0.05
+            leaf_size_x: 0.02
+            leaf_size_y: 0.02
+            leaf_size_z: 0.02
             filter_limit_field_name: 'z'
             filter_limit_min: -1.0
             filter_limit_max: 2.0
-            filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
+            filtered_cloud_publish_topic: ''
             downsample_all_data: false
             save_leaf_layout: false
 #        2_approximate_voxel_grid:
@@ -50,10 +50,10 @@ filters:
 #            box_rotation_yaw: 0.0
 #            invert_selection: false
 #            filtered_cloud_publish_topic: ''
-#        5_random_sample:
-#            number_of_random_samples: 100
-#            invert_sampling: false
-#            filtered_cloud_publish_topic: ''
+        5_random_sample:
+            number_of_random_samples: 500
+            invert_sampling: false
+            filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
 #        6_statistical_outlier_removal:
 #            number_of_neighbors_for_mean_distance_estimation: 6
 #            standard_deviation_multiplier: 2.0

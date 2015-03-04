@@ -231,10 +231,6 @@ class Localization : public ConfigurableObject {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
 		// subscription topic names
 		std::string pose_topic_;
 		std::string pose_stamped_topic_;
@@ -357,7 +353,7 @@ class Localization : public ConfigurableObject {
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_inliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
-	// ========================================================================   </private-section>  ==========================================================================
+	// ========================================================================   </protected-section>  ========================================================================
 };
 
 } /* namespace dynamic_robot_localization */
