@@ -27,6 +27,15 @@ SampleConsensusInitialAlignment<PointT, FeatureT>::SampleConsensusInitialAlignme
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignment-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
 void SampleConsensusInitialAlignment<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	double convergence_time_limit_seconds;
+	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds", convergence_time_limit_seconds, -1.0);
+
+	if (convergence_time_limit_seconds <= 0.0) {
+		convergence_time_limit_seconds = std::numeric_limits<double>::max();
+	}
+
+	matcher_scia_->setConvergenceTimeLimitSeconds(convergence_time_limit_seconds);
+
 	double min_sample_distance;
 	private_node_handle->param(configuration_namespace + "min_sample_distance", min_sample_distance, 1.0);
 	matcher_scia_->setMinSampleDistance(min_sample_distance);

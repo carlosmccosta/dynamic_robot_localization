@@ -1,6 +1,6 @@
 #pragma once
 
-/**\file sample_consensus_initial_alignment.h
+/**\file default_convergence_criteria_with_time.h
  * \brief Description...
  *
  * @version 1.0
@@ -13,39 +13,37 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
-#include <limits>
-#include <algorithm>
 
 // ROS includes
 #include <ros/ros.h>
 
 // PCL includes
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-//#include <pcl/registration/ia_ransac.h>
+#include <pcl/common/time.h>
+#include <pcl/registration/default_convergence_criteria.h>
+#include <pcl/pcl_macros.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/feature_matcher.h>
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/ia_ransac.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
-// ###################################################################   sample_consensus_initial_alignment   ##################################################################
+// ##################################################################   DefaultConvergenceCriteriaWithTime   ###################################################################
 /**
  * \brief Description...
  */
-template <typename PointT, typename FeatureT>
-class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> {
+template <typename Scalar = float>
+class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConvergenceCriteria<Scalar> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< SampleConsensusInitialAlignment<PointT, FeatureT> > Ptr;
-		typedef boost::shared_ptr< const SampleConsensusInitialAlignment<PointT, FeatureT> > ConstPtr;
+		typedef boost::shared_ptr< DefaultConvergenceCriteriaWithTime<Scalar> > Ptr;
+		typedef boost::shared_ptr< const DefaultConvergenceCriteriaWithTime<Scalar> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+		using pcl::registration::DefaultConvergenceCriteria<Scalar>::transformation_;
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -54,20 +52,25 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		SampleConsensusInitialAlignment();
-		virtual ~SampleConsensusInitialAlignment() {}
+		DefaultConvergenceCriteriaWithTime(const int &iterations, const typename pcl::registration::DefaultConvergenceCriteria<Scalar>::Matrix4 &transform,
+				const pcl::Correspondences &correspondences, double convergence_time_limit_seconds = 3.0) :
+			pcl::registration::DefaultConvergenceCriteria<Scalar>(iterations, transform, correspondences),
+			convergence_time_limit_seconds_(convergence_time_limit_seconds) {}
+		virtual ~DefaultConvergenceCriteriaWithTime() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignment-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
-		virtual void setMatcherReferenceDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& reference_descriptors);
-		virtual void setMatcherAmbientDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& ambient_descriptors);
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SampleConsensusInitialAlignment-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <DefaultConvergenceCriteriaWithTime-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		virtual bool hasConverged();
+		virtual void resetConvergenceTimer();
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </DefaultConvergenceCriteriaWithTime-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		inline double getConvergenceTimeLimitSeconds() const { return convergence_time_limit_seconds_; }
+		inline double getConvergenceElaspedTime() { return convergence_timer_.getTimeSeconds(); }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		inline void setConvergenceTimeLimitSeconds(double convergence_time_limit_seconds) { convergence_time_limit_seconds_ = convergence_time_limit_seconds; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -77,8 +80,8 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-		typename SampleConsensusInitialAlignmentRegistration<PointT, FeatureT>::Ptr matcher_scia_;
-		int number_of_samples_;
+		pcl::StopWatch convergence_timer_;
+		double convergence_time_limit_seconds_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
@@ -86,6 +89,6 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 
 
 #ifdef DRL_NO_PRECOMPILE
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/impl/sample_consensus_initial_alignment.hpp>
+#include <dynamic_robot_localization/convergence_estimators/impl/default_convergence_criteria_with_time.hpp>
 #endif
 

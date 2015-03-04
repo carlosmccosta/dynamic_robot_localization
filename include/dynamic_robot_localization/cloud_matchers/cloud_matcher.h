@@ -22,6 +22,8 @@
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/registration/registration.h>
+#include <pcl/filters/filter.h>
+#include <pcl/pcl_macros.h>
 //#include <pcl/visualization/registration_visualizer.h>
 
 // external libs includes
@@ -77,12 +79,13 @@ class CloudMatcher : public ConfigurableObject {
 		virtual boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> > getAcceptedTransformations() { return boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> >(new std::vector< typename pcl::Registration<PointT, PointT>::Matrix4>()); }
 
 		void setupRegistrationVisualizer();
+		virtual bool registrationRequiresNormalsOnAmbientPointCloud() { return false; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		inline const typename pcl::Registration<PointT, PointT>::Ptr& getCloudMatcher() const { return cloud_matcher_; }
+		inline typename pcl::Registration<PointT, PointT>::Ptr getCloudMatcher() { return cloud_matcher_; }
 		inline bool getMatchOnlyKeypoints() const { return match_only_keypoints_; }
-		inline typename CloudPublisher<PointT>::Ptr& getCloudPublisher() { return cloud_publisher_; }
+		inline typename CloudPublisher<PointT>::Ptr getCloudPublisher() { return cloud_publisher_; }
 		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
 		inline const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -90,18 +93,14 @@ class CloudMatcher : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline void setCloudMatcher(const typename pcl::Registration<PointT, PointT>::Ptr& cloud_matcher) { cloud_matcher_ = cloud_matcher; }
 		inline void setMatchOnlyKeypoints(bool match_only_keypoints) { match_only_keypoints_ = match_only_keypoints; }
-		void setCloudPublisher(typename CloudPublisher<PointT>::Ptr& cloud_publisher) { cloud_publisher_ = cloud_publisher; }
-		void setDisplayCloudAligment(bool display_cloud_aligment);
-		void setRegistrationVisualizer(const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& registration_visualizer) { registration_visualizer_ = registration_visualizer; }
+		inline void setCloudPublisher(typename CloudPublisher<PointT>::Ptr& cloud_publisher) { cloud_publisher_ = cloud_publisher; }
+		inline void setDisplayCloudAligment(bool display_cloud_aligment) { display_cloud_aligment_ = display_cloud_aligment; }
+		inline void setRegistrationVisualizer(const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& registration_visualizer) { registration_visualizer_ = registration_visualizer; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	// ========================================================================   </protected-section>  ========================================================================
-
-	// ========================================================================   <private-section>   ==========================================================================
-	private:
 		typename pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
 		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
 		bool match_only_keypoints_;

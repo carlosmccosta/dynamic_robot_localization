@@ -208,6 +208,7 @@ dynamic_robot_localization::SampleConsensusInitialAlignmentRegistration<PointT, 
   if (!error_functor_)
     error_functor_.reset (new TruncatedError (static_cast<float> (corr_dist_threshold_)));
 
+  convergence_timer_.reset();
 
   std::vector<int> sample_indices (nr_samples_);
   std::vector<int> corresponding_indices (nr_samples_);
@@ -225,7 +226,7 @@ dynamic_robot_localization::SampleConsensusInitialAlignmentRegistration<PointT, 
     i_iter = 1;
   }
 
-  for (; i_iter < max_iterations_; ++i_iter)
+  for (; i_iter < max_iterations_ && convergence_timer_.getTimeSeconds() < convergence_time_limit_seconds_; ++i_iter)
   {
     // Draw nr_samples_ random samples
     selectSamples (*input_, nr_samples_, min_sample_distance_, sample_indices);

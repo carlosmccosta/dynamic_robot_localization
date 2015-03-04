@@ -364,23 +364,39 @@ tracking_matchers:
         #   Several feature matchers can be specified. This allows the use of preprocessing matchers for filtering the point descriptors that will be used on matchers later on.
         matchers:
             sample_consensus_initial_alignment_prerejective:        # Allows prefix and postfix of letters to ensure parsing order
+                convergence_time_limit_seconds: -1.0                # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
                 similarity_threshold: 0.8                           # The similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object, where 1 is a perfect match
                 inlier_fraction: 0.25                               # Required inlier fraction, must be in [0,1]
                 inlier_rmse: 0.2                                    # Maximum inlier root mean square error
                 number_of_samples: 3                                # Set the number of samples to use during each iteration
                 correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence. A higher value will add more randomness to the feature matching
             sample_consensus_initial_alignment:                     # Allows prefix and postfix of letters to ensure parsing order
+                convergence_time_limit_seconds: -1.0                # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
                 min_sample_distance: 1.0                            # The minimum distances between samples
                 number_of_samples: 3                                # The number of samples to use during each iteration
                 correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence
     #   Several point matchers can be specified. This is useful to have a fast matcher that can achieve a rough registration and other matchers to refine it.
     point_matchers:
         iterative_closest_point:                                    # Allows prefix and postfix of letters to ensure parsing order
+            convergence_time_limit_seconds: -1.0                    # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied, if > 0 this value will be the maximum time limit, even when using the percentage of the mean convergence time)
+            convergence_time_limit_seconds_as_mean_convergence_time_percentage: 3.0                 # Allows to update the convergence time limit value based on the percentage of the mean convergence time [1 -> 100%] (if < 0, the time limit isn't updated)
+            minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit: 25    # Minimum number of convergence time measurements required to update the convergence time limit value
             max_number_of_registration_iterations: 100              # Overrides parameter in parent namespace
             use_reciprocal_correspondences: true
-        iterative_closest_point_non_linear:                         # Allows prefix and postfix of letters to ensure parsing order
+        iterative_closest_point_2d:                                 # Allows prefix and postfix of letters to ensure parsing order
+            convergence_time_limit_seconds: -1.0                    # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
+            convergence_time_limit_seconds_as_mean_convergence_time_percentage: 3.0                 # Allows to update the convergence time limit value based on the percentage of the mean convergence time [1 -> 100%] (if < 0, the time limit isn't updated)
+            minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit: 25    # Minimum number of convergence time measurements required to update the convergence time limit value
             use_reciprocal_correspondences: true
-        iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order
+        iterative_closest_point_non_linear:                         # Allows prefix and postfix of letters to ensure parsing order
+            convergence_time_limit_seconds: -1.0                    # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
+            convergence_time_limit_seconds_as_mean_convergence_time_percentage: 3.0                 # Allows to update the convergence time limit value based on the percentage of the mean convergence time [1 -> 100%] (if < 0, the time limit isn't updated)
+            minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit: 25    # Minimum number of convergence time measurements required to update the convergence time limit value
+            use_reciprocal_correspondences: true
+        iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order | Cannot be used for 3 DoF because the PCL implementation of pcl::registration::TransformationEstimationPointToPlaneLLS::estimateRigidTransformation will produce a 6x6 matrix that cannot be inverted (singular), and will result in a transformation estimation with NaNs
+            convergence_time_limit_seconds: -1.0                    # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
+            convergence_time_limit_seconds_as_mean_convergence_time_percentage: 3.0                 # Allows to update the convergence time limit value based on the percentage of the mean convergence time [1 -> 100%] (if < 0, the time limit isn't updated)
+            minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit: 25    # Minimum number of convergence time measurements required to update the convergence time limit value
             use_reciprocal_correspondences: true
         iterative_closest_point_generalized:                        # Allows prefix and postfix of letters to ensure parsing order
             use_reciprocal_correspondences: true

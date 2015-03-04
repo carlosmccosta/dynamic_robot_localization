@@ -41,6 +41,7 @@
 #ifndef PCL_REGISTRATION_SAMPLE_CONSENSUS_PREREJECTIVE_H_
 #define PCL_REGISTRATION_SAMPLE_CONSENSUS_PREREJECTIVE_H_
 
+#include <limits>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/transformation_validation.h>
@@ -60,6 +61,7 @@
 #include <pcl/registration/correspondence_rejection_var_trimmed.h>
 #include <pcl/common/distances.h>
 #include <pcl/common/point_tests.h>
+#include <pcl/common/time.h>
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 
@@ -148,6 +150,7 @@ namespace dynamic_robot_localization
         , inlier_fraction_ (0.0f)
         , inlier_rmse_(0.0f)
         , accepted_transformations_(new std::vector<Matrix4>())
+        , convergence_time_limit_seconds_(std::numeric_limits<double>::max())
       {
         reg_name_ = "SampleConsensusPrerejective";
         correspondence_rejector_poly_->setSimilarityThreshold (0.6f);
@@ -275,6 +278,7 @@ namespace dynamic_robot_localization
 
       boost::shared_ptr< std::vector<Matrix4> > getAcceptedTransformations() { return accepted_transformations_; }
 
+      inline void setConvergenceTimeLimitSeconds(double convergence_time_limit_seconds) { convergence_time_limit_seconds_ = convergence_time_limit_seconds; }
 
     protected:
       /** \brief Choose a random index between 0 and n-1
@@ -352,6 +356,9 @@ namespace dynamic_robot_localization
       std::vector<int> inliers_;
 
       boost::shared_ptr< std::vector<Matrix4> > accepted_transformations_;
+
+      pcl::StopWatch convergence_timer_;
+      double convergence_time_limit_seconds_;
   };
 
 } /* namespace dynamic_robot_localization */

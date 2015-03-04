@@ -13,6 +13,7 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <limits>
 
 // ROS includes
 
@@ -24,10 +25,31 @@
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
+#include <dynamic_robot_localization/convergence_estimators/default_convergence_criteria_with_time.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
+
+// ##########################################################   iterative_closest_point_generalized_time_constrained   #########################################################
+template <typename PointSource, typename PointTarget>
+class IterativeClosestPointGeneralizedTimeConstrained: public pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget> {
+	public:
+		typedef boost::shared_ptr< IterativeClosestPointGeneralizedTimeConstrained<PointSource, PointTarget> > Ptr;
+		typedef boost::shared_ptr< const IterativeClosestPointGeneralizedTimeConstrained<PointSource, PointTarget> > ConstPtr;
+
+		IterativeClosestPointGeneralizedTimeConstrained(double convergence_time_limit_seconds = std::numeric_limits<double>::max()) {
+			pcl::IterativeClosestPoint<PointSource, PointTarget>::convergence_criteria_.reset(new DefaultConvergenceCriteriaWithTime<float> (
+					pcl::Registration<PointSource, PointTarget>::nr_iterations_,
+					pcl::Registration<PointSource, PointTarget>::transformation_,
+					*pcl::Registration<PointSource, PointTarget>::correspondences_,
+					convergence_time_limit_seconds));
+		}
+
+		virtual ~IterativeClosestPointGeneralizedTimeConstrained() {}
+};
+
+
 // ###################################################################   iterative_closest_point_generalized   ##################################################################
 /**
  * \brief Description...

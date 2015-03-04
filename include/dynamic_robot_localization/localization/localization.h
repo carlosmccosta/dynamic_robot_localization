@@ -40,6 +40,7 @@
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/filters/filter.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -86,6 +87,7 @@
 
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_2d.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_non_linear.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_with_normals.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_generalized.h>
@@ -156,6 +158,7 @@ class Localization : public ConfigurableObject {
 		virtual void setupFiltersConfigurations();
 		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
 		virtual void setupNormalEstimatorsConfigurations();
+		virtual void updateNormalsEstimationFlags();
 		virtual void setupCurvatureEstimatorsConfigurations();
 		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
 		void loadCurvatureEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);

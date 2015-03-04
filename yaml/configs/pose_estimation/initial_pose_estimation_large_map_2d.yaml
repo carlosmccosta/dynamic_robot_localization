@@ -1,12 +1,10 @@
 keypoint_detectors:
     reference_pointcloud:
-#        reference_pointcloud_keypoints_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/sift_keypoints.pcd'
-#        reference_pointcloud_keypoints_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/sift_keypoints.pcd'
         sift_3d:
             min_scale: 0.015
             number_octaves: 4
             number_scales_per_octave: 8
-            min_contrast: 0.002
+            min_contrast: 0.0015
             sift3d_keypoints_cloud_publish_topic: 'reference_keypoints'
 #        intrinsic_shape_signature_3d:
 #            salient_radius: 0.14
@@ -26,7 +24,7 @@ keypoint_detectors:
             min_scale: 0.015
             number_octaves: 4
             number_scales_per_octave: 8
-            min_contrast: 0.002
+            min_contrast: 0.0015
             sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
 #        intrinsic_shape_signature_3d:
 #            salient_radius: 0.14
@@ -43,8 +41,6 @@ keypoint_detectors:
 initial_pose_estimators_matchers:
     feature_matchers:
         display_feature_matching: false
-#        reference_pointcloud_descriptors_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/fpfh_descriptors.pcd'
-#        reference_pointcloud_descriptors_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/fpfh_descriptors.pcd'
         save_descriptors_in_binary_format : true
         keypoint_descriptors:
             feature_descriptor_k_search: 0
@@ -71,23 +67,26 @@ initial_pose_estimators_matchers:
             max_correspondence_distance: 0.35
             max_number_of_registration_iterations: 1250
             sample_consensus_initial_alignment_prerejective:
+                convergence_time_limit_seconds: 10.0
                 similarity_threshold: 0.6
                 inlier_fraction: 0.65
                 inlier_rmse: 0.35
-                number_of_samples: 32
-                correspondence_randomness: 5
+                number_of_samples: 9
+                correspondence_randomness: 3
 #            sample_consensus_initial_alignment:
 #                min_sample_distance: 0.5
 #                number_of_samples: 3
 #                correspondence_randomness: 15
     point_matchers:
-#        iterative_closest_point:
+        iterative_closest_point:
+#        iterative_closest_point_2d:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_with_normals:
-        iterative_closest_point_generalized:
+#        iterative_closest_point_generalized:
+            convergence_time_limit_seconds: 5.0
             max_correspondence_distance: 10.0
-            transformation_epsilon: 1e-4
-            euclidean_fitness_epsilon: 1e-4
+            transformation_epsilon: 1e-6
+            euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 350
             max_number_of_ransac_iterations: 350
             ransac_outlier_rejection_threshold: 0.05

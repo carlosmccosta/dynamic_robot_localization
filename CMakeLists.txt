@@ -69,6 +69,7 @@ catkin_package(
     LIBRARIES
         drl_common
         drl_cloud_filters
+        drl_convergence_estimators
         drl_curvature_estimators
         drl_normal_estimators
         drl_keypoint_detectors
@@ -123,6 +124,10 @@ add_library(drl_common
     src/common/performance_timer.cpp
 )
 
+add_library(drl_convergence_estimators
+    src/convergence_estimators/default_convergence_criteria_with_time.cpp
+)
+
 add_library(drl_cloud_filters
     src/cloud_filters/cloud_filter.cpp
     src/cloud_filters/voxel_grid.cpp
@@ -168,6 +173,7 @@ add_library(drl_keypoint_descriptors
 add_library(drl_cloud_matchers
     src/cloud_matchers/cloud_matcher.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point.cpp
+    src/cloud_matchers/point_matchers/iterative_closest_point_2d.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point_non_linear.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point_with_normals.cpp
     src/cloud_matchers/point_matchers/iterative_closest_point_generalized.cpp
@@ -233,6 +239,11 @@ target_link_libraries(drl_common
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_convergence_estimators
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_cloud_filters
     drl_common
     ${PCL_LIBRARIES}
@@ -266,6 +277,7 @@ target_link_libraries(drl_keypoint_descriptors
 
 target_link_libraries(drl_cloud_matchers
     drl_common
+    drl_convergence_estimators
     drl_keypoint_descriptors
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}

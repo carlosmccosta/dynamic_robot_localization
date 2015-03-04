@@ -21,14 +21,76 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	typename pcl::IterativeClosestPoint<PointT, PointT>::Ptr matcher(new pcl::IterativeClosestPoint<PointT, PointT>());
+	double convergence_time_limit_seconds;
+	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds", convergence_time_limit_seconds, -1.0);
+	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds_as_mean_convergence_time_percentage", convergence_time_limit_seconds_as_mean_convergence_time_percentage_, 3.0);
+	private_node_handle->param(configuration_namespace + "minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit", minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_, 25);
+
+	convergence_time_limit_seconds_ = convergence_time_limit_seconds;
+
+	if (convergence_time_limit_seconds <= 0.0) {
+		convergence_time_limit_seconds = std::numeric_limits<double>::max();
+	}
+
+	if (!CloudMatcher<PointT>::cloud_matcher_) {
+//		CloudMatcher<PointT>::cloud_matcher_ = typename pcl::Registration<PointT, PointT, float>::Ptr(new pcl::IterativeClosestPoint<PointT, PointT, float>());
+		CloudMatcher<PointT>::cloud_matcher_ = typename pcl::Registration<PointT, PointT, float>::Ptr(new IterativeClosestPointTimeConstrained<PointT, PointT, float>(convergence_time_limit_seconds));
+	} else {
+		typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+		if (convergence_criteria) { convergence_criteria->setConvergenceTimeLimitSeconds(convergence_time_limit_seconds); }
+	}
+
+	ROS_DEBUG_STREAM("Setting a registration time limit of " << convergence_time_limit_seconds << " seconds to " << CloudMatcher<PointT>::cloud_matcher_->getClassName() << " algorithm");
 
 	bool use_reciprocal_correspondences;
 	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, true);
+	typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
 	matcher->setUseReciprocalCorrespondences(use_reciprocal_correspondences);
 
-	CloudMatcher<PointT>::setCloudMatcher(matcher);
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+}
+
+
+template<typename PointT>
+bool IterativeClosestPoint<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+		tf2::Transform& best_pose_correction_out, std::vector<tf2::Transform>& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
+	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_ff(new pcl::PointCloud<PointT>());
+
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+	if (convergence_criteria) {
+		convergence_criteria->resetConvergenceTimer();
+	}
+
+	if (CloudMatcher<PointT>::registerCloud(ambient_pointcloud, ambient_pointcloud_search_method, pointcloud_keypoints, best_pose_correction_out, accepted_pose_corrections_out, pointcloud_registered_out, return_aligned_keypoints)) {
+		cumulative_sum_of_convergence_time_ += convergence_criteria->getConvergenceElaspedTime();
+		++number_of_convergence_time_measurements;
+
+		if (convergence_time_limit_seconds_ > 0.0 &&
+				convergence_time_limit_seconds_as_mean_convergence_time_percentage_ > 0.0 &&
+				minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_ > 0 &&
+				number_of_convergence_time_measurements > minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_) {
+			double updated_convergence_time_limit_seconds = std::min(convergence_time_limit_seconds_, (cumulative_sum_of_convergence_time_ / number_of_convergence_time_measurements) * convergence_time_limit_seconds_as_mean_convergence_time_percentage_);
+			if (updated_convergence_time_limit_seconds > 0.0 && convergence_criteria) {
+				convergence_criteria->setConvergenceTimeLimitSeconds(updated_convergence_time_limit_seconds);
+				ROS_DEBUG_STREAM("Updating " << CloudMatcher<PointT>::cloud_matcher_->getClassName()  << " convergence time limit to " << updated_convergence_time_limit_seconds);
+			}
+		}
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+template<typename PointT>
+typename DefaultConvergenceCriteriaWithTime<float>::Ptr IterativeClosestPoint<PointT>::getConvergenceCriteria() {
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria;
+	if (CloudMatcher<PointT>::cloud_matcher_) {
+		typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
+		if (matcher) { convergence_criteria = boost::dynamic_pointer_cast< typename dynamic_robot_localization::DefaultConvergenceCriteriaWithTime<float> >(matcher->getConvergeCriteria()); }
+	}
+
+	return convergence_criteria;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

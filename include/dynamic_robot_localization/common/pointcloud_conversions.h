@@ -60,6 +60,8 @@ size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occ
 template <typename PointCloudT>
 bool fromFile(const std::string& filename, PointCloudT& pointcloud);
 
+template <typename PointCloudT>
+bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format);
 
 } /* namespace pointcloud_conversions */
 } /* namespace dynamic_robot_localization */

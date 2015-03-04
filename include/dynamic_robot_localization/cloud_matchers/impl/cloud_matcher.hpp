@@ -66,7 +66,7 @@ void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>:
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		cloud_matcher_->setInputTarget(reference_cloud);
-		cloud_matcher_->setSearchMethodTarget(search_method);
+		cloud_matcher_->setSearchMethodTarget(search_method, true);
 	}
 
 	if (registration_visualizer_) {
@@ -85,27 +85,47 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	if (!cloud_matcher_) {
 		return false;
 	}
+	std::vector<int> indexes;
+	pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+	indexes.clear();
+	pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+	indexes.clear();
+
+	if (ambient_pointcloud->size() != ambient_pointcloud_search_method->getInputCloud()->size()) {
+		ambient_pointcloud_search_method->setInputCloud(ambient_pointcloud);
+	}
 
 	initializeKeypointProcessing();
 
-	if (match_only_keypoints_) {
-		ROS_DEBUG_STREAM("Registering cloud with " << pointcloud_keypoints->size() << " points");
+	if (match_only_keypoints_ && !pointcloud_keypoints->empty()) {
+		ROS_DEBUG_STREAM("Registering cloud with " << pointcloud_keypoints->size() << " points (keypoints) using " << cloud_matcher_->getClassName() << " algorithm");
 		typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
 		pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
-		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
 		cloud_matcher_->setInputSource(pointcloud_keypoints);
+		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method, true);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*pointcloud_keypoints); }
 	} else {
-		ROS_DEBUG_STREAM("Registering cloud with " << ambient_pointcloud->size() << " points");
-		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
+		ROS_DEBUG_STREAM("Registering cloud with " << ambient_pointcloud->size() << " points using " << cloud_matcher_->getClassName() << " algorithm");
 		cloud_matcher_->setInputSource(ambient_pointcloud);
+		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method, true);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*ambient_pointcloud); }
 	}
 
 	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
 
 	cloud_matcher_->align(*pointcloud_registered_out);
-	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(cloud_matcher_->getFinalTransformation(), best_pose_correction_out);
+
+	Eigen::Matrix4f final_transformation = cloud_matcher_->getFinalTransformation();
+
+	if (!pcl_isfinite(final_transformation(0, 0)) || !pcl_isfinite(final_transformation(0, 1)) || !pcl_isfinite(final_transformation(0, 2)) || !pcl_isfinite(final_transformation(0, 3)) ||
+		!pcl_isfinite(final_transformation(1, 0)) || !pcl_isfinite(final_transformation(1, 1)) || !pcl_isfinite(final_transformation(1, 2)) || !pcl_isfinite(final_transformation(1, 3)) ||
+		!pcl_isfinite(final_transformation(2, 0)) || !pcl_isfinite(final_transformation(2, 1)) || !pcl_isfinite(final_transformation(2, 2)) || !pcl_isfinite(final_transformation(2, 3)) ||
+		!pcl_isfinite(final_transformation(3, 0)) || !pcl_isfinite(final_transformation(3, 1)) || !pcl_isfinite(final_transformation(3, 2)) || !pcl_isfinite(final_transformation(3, 3))) {
+		ROS_WARN("Rejected estimated transformation with NaN values!");
+		return false; // a transform with NaNs will cause a crash because of kd-tree search
+	}
+
+	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(final_transformation, best_pose_correction_out);
 
 	if (cloud_matcher_->hasConverged()) {
 		boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4 > > acceptedTransformations = getAcceptedTransformations();
@@ -127,6 +147,10 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
 		}
 
+		if (pointcloud_registered_out->size() < 5) {
+			return false;
+		}
+
 		pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_keypoints, cloud_matcher_->getFinalTransformation());
 
 		// if publisher available, send aligned cloud
@@ -138,12 +162,6 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	}
 
 	return false;
-}
-
-
-template<typename PointT>
-void CloudMatcher<PointT>::setDisplayCloudAligment(bool display_cloud_aligment) {
-	display_cloud_aligment_ = display_cloud_aligment;
 }
 
 

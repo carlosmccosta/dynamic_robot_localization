@@ -40,8 +40,10 @@
 #ifndef IA_RANSAC_H_
 #define IA_RANSAC_H_
 
+#include <limits>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
+#include <pcl/common/time.h>
 
 namespace dynamic_robot_localization
 {
@@ -135,7 +137,7 @@ namespace dynamic_robot_localization
         input_features_ (), target_features_ (), 
         nr_samples_(3), min_sample_distance_ (0.0f), k_correspondences_ (10), 
         feature_tree_ (new pcl::KdTreeFLANN<FeatureT>),
-        error_functor_ ()
+        error_functor_ (), convergence_time_limit_seconds_(std::numeric_limits<double>::max())
       {
         reg_name_ = "SampleConsensusInitialAlignmentRegistration";
         max_iterations_ = 1000;
@@ -211,6 +213,8 @@ namespace dynamic_robot_localization
       boost::shared_ptr<ErrorFunctor>
       getErrorFunction () { return (error_functor_); }
 
+      inline void setConvergenceTimeLimitSeconds(double convergence_time_limit_seconds) { convergence_time_limit_seconds_ = convergence_time_limit_seconds; }
+
     protected:
       /** \brief Choose a random index between 0 and n-1
         * \param n the number of possible indices to choose from
@@ -274,6 +278,9 @@ namespace dynamic_robot_localization
 
       /** */
       boost::shared_ptr<ErrorFunctor> error_functor_;
+
+      pcl::StopWatch convergence_timer_;
+      double convergence_time_limit_seconds_;
     public:
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };

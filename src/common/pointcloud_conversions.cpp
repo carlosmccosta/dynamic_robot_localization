@@ -25,8 +25,10 @@ PCL_INSTANTIATE(DRLPointcloudConversionsFlipPointCloudNormalsUsingOccpancyGrid, 
 #define PCL_INSTANTIATE_DRLPointcloudConversionsFromFile(T) template bool dynamic_robot_localization::pointcloud_conversions::fromFile< pcl::PointCloud<T> >(const std::string&, pcl::PointCloud<T>&);
 PCL_INSTANTIATE(DRLPointcloudConversionsFromFile, DRL_POINT_TYPES)
 PCL_INSTANTIATE(DRLPointcloudConversionsFromFile, DRL_DESCRIPTOR_TYPES)
-#endif
 
+#define PCL_INSTANTIATE_DRLPointcloudConversionsToFile(T) template bool dynamic_robot_localization::pointcloud_conversions::toFile< pcl::PointCloud<T> >(const std::string&, const pcl::PointCloud<T>&, bool);
+PCL_INSTANTIATE(DRLPointcloudConversionsToFile, DRL_POINT_TYPES)
+#endif
 
 
 namespace dynamic_robot_localization {

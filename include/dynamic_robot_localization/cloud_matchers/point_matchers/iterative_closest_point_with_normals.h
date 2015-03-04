@@ -13,6 +13,7 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <limits>
 
 // ROS includes
 
@@ -24,10 +25,31 @@
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
+#include <dynamic_robot_localization/convergence_estimators/default_convergence_criteria_with_time.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
+
+// ##########################################################   iterative_closest_point_with_normals_time_constrained   #########################################################
+template <typename PointSource, typename PointTarget, typename Scalar = float>
+class IterativeClosestPointWithNormalsTimeConstrained: public pcl::IterativeClosestPointWithNormals<PointSource, PointTarget, Scalar> {
+	public:
+		typedef boost::shared_ptr< IterativeClosestPointWithNormalsTimeConstrained<PointSource, PointTarget, Scalar> > Ptr;
+		typedef boost::shared_ptr< const IterativeClosestPointWithNormalsTimeConstrained<PointSource, PointTarget, Scalar> > ConstPtr;
+
+		IterativeClosestPointWithNormalsTimeConstrained(double convergence_time_limit_seconds = std::numeric_limits<double>::max()) {
+			pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::convergence_criteria_.reset(new DefaultConvergenceCriteriaWithTime<Scalar> (
+					pcl::Registration<PointSource, PointTarget, Scalar>::nr_iterations_,
+					pcl::Registration<PointSource, PointTarget, Scalar>::transformation_,
+					*pcl::Registration<PointSource, PointTarget, Scalar>::correspondences_,
+					convergence_time_limit_seconds));
+		}
+
+		virtual ~IterativeClosestPointWithNormalsTimeConstrained() {}
+};
+
+
 // ##################################################################   iterative_closest_point_with_normals   #################################################################
 /**
  * \brief Description...

@@ -172,6 +172,23 @@ bool fromFile(const std::string& filename, PointCloudT& pointcloud) {
 }
 
 
+template<typename PointCloudT>
+bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format) {
+	std::string::size_type index = filename.rfind(".");
+	if (index == std::string::npos) return false;
+
+	std::string extension = filename.substr(index + 1);
+
+	if (extension == "pcd") {
+		if (pcl::io::savePCDFile(filename, pointcloud, save_in_binary_format) == 0) return true;
+	} else if (extension == "ply") {
+		if (pcl::io::savePLYFile(filename, pointcloud, save_in_binary_format) == 0) return true;
+	}
+
+	return false;
+}
+
+
 
 } /* namespace pointcloud_conversions */
 } /* namespace dynamic_robot_localization */

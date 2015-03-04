@@ -34,7 +34,7 @@ normal_estimators:
 #            search_radius: 0.35
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false
-        compute_normals_when_recovering_pose_tracking: true
+        compute_normals_when_recovering_pose_tracking: false
         compute_normals_when_estimating_initial_pose: true
         use_filtered_cloud_as_normal_estimation_surface: true
         display_normals: false
@@ -53,6 +53,7 @@ tracking_matchers:
 #        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_3d:
+            convergence_time_limit_seconds: 0.080
             max_correspondence_distance: 2.5
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6

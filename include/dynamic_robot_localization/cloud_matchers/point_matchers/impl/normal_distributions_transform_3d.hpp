@@ -21,7 +21,8 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalDistributionsTransform3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void NormalDistributionsTransform3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	typename pcl::NormalDistributionsTransform<PointT, PointT>::Ptr matcher(new pcl::NormalDistributionsTransform<PointT, PointT>());
+	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new pcl::NormalDistributionsTransform<PointT, PointT>());
+	typename pcl::NormalDistributionsTransform<PointT, PointT>::Ptr matcher = boost::static_pointer_cast< typename pcl::NormalDistributionsTransform<PointT, PointT> >(matcher_base);
 
 	double voxel_grid_resolution;
 	private_node_handle->param(configuration_namespace + "voxel_grid_resolution", voxel_grid_resolution, 1.0);
@@ -35,7 +36,7 @@ void NormalDistributionsTransform3D<PointT>::setupConfigurationFromParameterServ
 	private_node_handle->param(configuration_namespace + "outlier_ratio", outlier_ratio, 0.55);
 	matcher->setOulierRatio(outlier_ratio);
 
-	CloudMatcher<PointT>::setCloudMatcher(matcher);
+	CloudMatcher<PointT>::setCloudMatcher(matcher_base);
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalDistributionsTransform3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -1,6 +1,6 @@
 #pragma once
 
-/**\file sample_consensus_initial_alignment.h
+/**\file iterative_closest_point_2d.h
  * \brief Description...
  *
  * @version 1.0
@@ -14,37 +14,57 @@
 // std includes
 #include <string>
 #include <limits>
-#include <algorithm>
 
 // ROS includes
-#include <ros/ros.h>
 
 // PCL includes
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-//#include <pcl/registration/ia_ransac.h>
+#include <pcl/registration/icp.h>
+#include <pcl/registration/transformation_estimation_2D.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/feature_matcher.h>
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/ia_ransac.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
+#include <dynamic_robot_localization/convergence_estimators/default_convergence_criteria_with_time.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
-// ###################################################################   sample_consensus_initial_alignment   ##################################################################
+
+// ###############################################################   iterative_closest_point_time_constrained   ################################################################
+template <typename PointSource, typename PointTarget, typename Scalar = float>
+class IterativeClosestPoint2DTimeConstrained: public pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar> {
+	public:
+		typedef boost::shared_ptr< IterativeClosestPoint2DTimeConstrained<PointSource, PointTarget, Scalar> > Ptr;
+		typedef boost::shared_ptr< const IterativeClosestPoint2DTimeConstrained<PointSource, PointTarget, Scalar> > ConstPtr;
+
+		IterativeClosestPoint2DTimeConstrained(double convergence_time_limit_seconds = std::numeric_limits<double>::max()) {
+			pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::convergence_criteria_.reset(new DefaultConvergenceCriteriaWithTime<Scalar> (
+					pcl::Registration<PointSource, PointTarget, Scalar>::nr_iterations_,
+					pcl::Registration<PointSource, PointTarget, Scalar>::transformation_,
+					*pcl::Registration<PointSource, PointTarget, Scalar>::correspondences_,
+					convergence_time_limit_seconds));
+
+			pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::transformation_estimation_.reset(new pcl::registration::TransformationEstimation2D<PointSource, PointTarget, Scalar>());
+			pcl::Registration<PointSource, PointTarget, Scalar>::reg_name_ = "IterativeClosestPoint2D";
+		}
+
+		virtual ~IterativeClosestPoint2DTimeConstrained() {}
+};
+
+
+// ########################################################################   iterative_closest_point   ########################################################################
 /**
  * \brief Description...
  */
-template <typename PointT, typename FeatureT>
-class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> {
+template <typename PointT>
+class IterativeClosestPoint2D : public IterativeClosestPoint<PointT> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< SampleConsensusInitialAlignment<PointT, FeatureT> > Ptr;
-		typedef boost::shared_ptr< const SampleConsensusInitialAlignment<PointT, FeatureT> > ConstPtr;
+		typedef boost::shared_ptr< IterativeClosestPoint2D<PointT> > Ptr;
+		typedef boost::shared_ptr< const IterativeClosestPoint2D<PointT> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -54,15 +74,13 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		SampleConsensusInitialAlignment();
-		virtual ~SampleConsensusInitialAlignment() {}
+		IterativeClosestPoint2D() {}
+		virtual ~IterativeClosestPoint2D() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignment-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
-		virtual void setMatcherReferenceDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& reference_descriptors);
-		virtual void setMatcherAmbientDescriptors(typename pcl::PointCloud<FeatureT>::Ptr& ambient_descriptors);
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </SampleConsensusInitialAlignment-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -77,8 +95,6 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 
 	// ========================================================================   <private-section>   ==========================================================================
 	private:
-		typename SampleConsensusInitialAlignmentRegistration<PointT, FeatureT>::Ptr matcher_scia_;
-		int number_of_samples_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
@@ -86,6 +102,6 @@ class SampleConsensusInitialAlignment : public FeatureMatcher<PointT, FeatureT> 
 
 
 #ifdef DRL_NO_PRECOMPILE
-#include <dynamic_robot_localization/cloud_matchers/feature_matchers/impl/sample_consensus_initial_alignment.hpp>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/impl/iterative_closest_point_2d.hpp>
 #endif
 

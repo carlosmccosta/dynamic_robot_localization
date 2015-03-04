@@ -178,6 +178,8 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 		return;
 	}
 
+	convergence_timer_.reset();
+
 	// Initialize prerejector (similarity threshold already set to default value in constructor)
 	/*correspondence_rejector_poly_->setInputSource(input_);
 	correspondence_rejector_poly_->setInputTarget(target_);
@@ -364,7 +366,11 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 	#pragma omp parallel for
 	for (int i = 0; i < max_iterations_; ++i) {
-//		if (highest_inlier_fraction < 0.99) {
+		if (convergence_timer_.getTimeSeconds() > convergence_time_limit_seconds_) {
+			continue;
+		}
+
+		//		if (highest_inlier_fraction < 0.99) {
 			std::vector<std::vector<int> > similar_features(input_->size());
 			std::vector<int> sample_indices, corresponding_indices;
 
@@ -463,10 +469,11 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 
 	// Apply the final transformation
+	output.clear();
 	if (converged_) pcl::transformPointCloud(*input_, output, final_transformation_);
 
 	// Debug output
-	PCL_DEBUG("[pcl::%s::computeTransformation] Rejected %i out of %i generated pose hypotheses.\n", getClassName().c_str(), num_rejections, max_iterations_);
+	PCL_DEBUG("[pcl::%s::computeTransformation] Accepted %i out of %i generated pose hypotheses.\n", getClassName().c_str(), accepted_transformations_->size(), max_iterations_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

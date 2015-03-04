@@ -13,6 +13,8 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <limits>
+#include <algorithm>
 
 // ROS includes
 
@@ -24,10 +26,37 @@
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
+#include <dynamic_robot_localization/convergence_estimators/default_convergence_criteria_with_time.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
+
+// ###############################################################   iterative_closest_point_time_constrained   ################################################################
+template <typename PointSource, typename PointTarget, typename Scalar = float>
+class IterativeClosestPointTimeConstrained: public pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar> {
+	public:
+		typedef boost::shared_ptr< IterativeClosestPointTimeConstrained<PointSource, PointTarget, Scalar> > Ptr;
+		typedef boost::shared_ptr< const IterativeClosestPointTimeConstrained<PointSource, PointTarget, Scalar> > ConstPtr;
+
+		IterativeClosestPointTimeConstrained(double convergence_time_limit_seconds = std::numeric_limits<double>::max()) {
+			pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::convergence_criteria_.reset(new DefaultConvergenceCriteriaWithTime<Scalar> (
+					pcl::Registration<PointSource, PointTarget, Scalar>::nr_iterations_,
+					pcl::Registration<PointSource, PointTarget, Scalar>::transformation_,
+					*pcl::Registration<PointSource, PointTarget, Scalar>::correspondences_,
+					convergence_time_limit_seconds));
+		}
+
+		virtual ~IterativeClosestPointTimeConstrained() {}
+
+		inline bool getSourceHasNormals() { return pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::source_has_normals_; }
+		inline bool getTargetHasNormals() { return pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::target_has_normals_; }
+
+		inline void setSourceHasNormals(bool source_has_normals) { pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::source_has_normals_ = source_has_normals; }
+		inline void setTargetHasNormals(bool target_has_normals) { pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::target_has_normals_ = target_has_normals; }
+};
+
+
 // ########################################################################   iterative_closest_point   ########################################################################
 /**
  * \brief Description...
@@ -48,12 +77,17 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		IterativeClosestPoint() {}
+		IterativeClosestPoint() : cumulative_sum_of_convergence_time_(0.0), number_of_convergence_time_measurements(0) {}
 		virtual ~IterativeClosestPoint() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+						typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
+						typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+						tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
+		typename DefaultConvergenceCriteriaWithTime<float>::Ptr getConvergenceCriteria();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -65,6 +99,11 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
+		double convergence_time_limit_seconds_;
+		double cumulative_sum_of_convergence_time_;
+		size_t number_of_convergence_time_measurements;
+		double convergence_time_limit_seconds_as_mean_convergence_time_percentage_;
+		int minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_;
 	// ========================================================================   </protected-section>  ========================================================================
 
 	// ========================================================================   <private-section>   ==========================================================================

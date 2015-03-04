@@ -9,6 +9,12 @@
 	<!-- published pose -->
 	<arg name="pose_stamped_publish_topic" default="localization_pose" />
 	
+	<!-- frame ids -->
+	<arg name="map_frame_id" default="map" />
+	<arg name="odom_frame_id" default="odom" />
+	<arg name="base_link_frame_id" default="base_footprint" />
+	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
+	
 	<!-- main configurations -->
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
 	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_2d.yaml" />
@@ -19,7 +25,7 @@
 	<arg name="reference_pointcloud_filename" default="" />
 	<arg name="reference_pointcloud_preprocessed_save_filename" default="" />
 	<arg name="reference_pointcloud_available" default="true" />
-	<arg name="reference_pointcloud_type_3d" default="true" />
+	<arg name="reference_pointcloud_type_3d" default="false" />
 	<arg name="reference_pointcloud_type" default="2D" unless="$(arg reference_pointcloud_type_3d)"/>
 	<arg name="reference_pointcloud_type" default="3D" if="$(arg reference_pointcloud_type_3d)" />
 	<arg name="reference_pointcloud_update_mode" default="NoIntegration" if="$(arg reference_pointcloud_available)"/> <!-- NoIntegration | FullIntegration | InliersIntegration | OutliersIntegration -->
@@ -28,13 +34,13 @@
 	<arg name="reference_pointcloud_keypoints_save_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_filename" default="" />
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
-	
-	<!-- sensor data from point cloud topic -->
-	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
 	<arg name="reference_costmap_topic" default="" if="$(arg reference_pointcloud_type_3d)" />
 	<arg name="reference_costmap_topic" default="/map" unless="$(arg reference_pointcloud_type_3d)" />
 	<arg name="reference_pointcloud_topic" default="reference_pointcloud_update" if="$(arg reference_pointcloud_type_3d)" /> <!-- OctoMap is configured to use topic 'reference_pointcloud_update' -->
 	<arg name="reference_pointcloud_topic" default="" unless="$(arg reference_pointcloud_type_3d)" />
+	
+	<!-- sensor data from point cloud topic -->
+	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
 	
 	<!-- intial pose setup -->
 	<arg name="robot_initial_pose_in_base_to_map" default="false" /> <!-- recommendation: use false to allow direct publish of tf between odom -> map -->
@@ -66,12 +72,6 @@
 	<arg name="max_linear_velocity" default="0.025" /> <!-- when the linear velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
 	<arg name="max_angular_velocity" default="0.174532925" /> <!-- when the angular velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
 	
-	<!-- frame ids -->
-	<arg name="map_frame_id" default="map" />
-	<arg name="odom_frame_id" default="odom" />
-	<arg name="base_link_frame_id" default="base_footprint" />
-	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
-	
 	<!-- tf configurations -->
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
@@ -95,7 +95,7 @@
 
 
 	<!-- ==================================================== localization system ============================================= -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />

@@ -21,7 +21,8 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalDistributionsTransform2D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	typename pcl::NormalDistributionsTransform2D<PointT, PointT>::Ptr matcher(new pcl::NormalDistributionsTransform2D<PointT, PointT>());
+	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new pcl::NormalDistributionsTransform2D<PointT, PointT>());
+	typename pcl::NormalDistributionsTransform2D<PointT, PointT>::Ptr matcher = boost::static_pointer_cast< typename pcl::NormalDistributionsTransform2D<PointT, PointT> >(matcher_base);
 
 	double grid_center_x, grid_center_y;
 	private_node_handle->param(configuration_namespace + "grid_center_x", grid_center_x, 0.0);
@@ -44,7 +45,7 @@ void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServ
 	private_node_handle->param(configuration_namespace + "grid_optimization_step_size_theta", grid_optimization_step_size_theta, 1.0);
 	matcher->setOptimizationStepSize(Eigen::Vector3d(grid_optimization_step_size_x, grid_optimization_step_size_y, grid_optimization_step_size_theta));
 
-	CloudMatcher<PointT>::setCloudMatcher(matcher);
+	CloudMatcher<PointT>::setCloudMatcher(matcher_base);
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalDistributionsTransform2D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
