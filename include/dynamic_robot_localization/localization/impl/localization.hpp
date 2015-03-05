@@ -190,6 +190,11 @@ void Localization<PointT>::setupInitialPose() {
 	orientation.normalize();
 	last_accepted_pose_base_link_to_map_.setRotation(orientation);
 
+	if (!math_utils::isTransformValid(last_accepted_pose_base_link_to_map_)) {
+		ROS_WARN("Discarded initial pose with NaN values (set to identity)!");
+		last_accepted_pose_base_link_to_map_ = tf2::Transform::getIdentity();
+	}
+
 	ros::Time::waitForValid();
 
 	bool robot_initial_pose_in_base_to_map;
@@ -785,13 +790,25 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 	}
 
 	if (frame_id == map_frame_id_) {
-		tf2::Transform transform_base_link_to_map(
-				tf2::Quaternion(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w).normalize(),
-				tf2::Vector3(pose.position.x, pose.position.y, pose.position.z));
+		tf2::Vector3 transform_base_link_to_map_position(pose.position.x, pose.position.y, pose.position.z);
+		tf2::Quaternion transform_base_link_to_map_orientation(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+		transform_base_link_to_map_orientation.normalize();
+		tf2::Transform transform_base_link_to_map(transform_base_link_to_map_orientation, transform_base_link_to_map_position);
+
+		if (!math_utils::isTransformValid(transform_base_link_to_map)) {
+			ROS_WARN("Discarded initial pose with NaN values!");
+			return;
+		}
 
 		tf2::Transform transform_odom_to_base_link;
 		if (pose_to_tf_publisher_.getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time_updated)) {
-			last_accepted_pose_odom_to_map_ = transform_base_link_to_map * transform_odom_to_base_link;
+			tf2::Transform last_accepted_pose_odom_to_map = transform_base_link_to_map * transform_odom_to_base_link;
+			if (!math_utils::isTransformValid(last_accepted_pose_odom_to_map)) {
+				ROS_WARN("Discarded initial pose because the multiplication of [transform_base_link_to_map * transform_odom_to_base_link] resulted in a transform with NaN values!");
+				return;
+			}
+
+			last_accepted_pose_odom_to_map_ = last_accepted_pose_odom_to_map;
 			received_external_initial_pose_estimation_ = true;
 			ROS_INFO_STREAM("Received initial pose at time [" << pose_time_updated << "]: " \
 					<< "\n\tTranslation -> [ x: " << transform_base_link_to_map.getOrigin().getX() << " | y: " << transform_base_link_to_map.getOrigin().getY() << " | z: " << transform_base_link_to_map.getOrigin().getZ() << " ]" \

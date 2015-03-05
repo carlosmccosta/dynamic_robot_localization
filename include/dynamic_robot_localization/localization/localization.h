@@ -44,6 +44,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/pcl_macros.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>

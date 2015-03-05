@@ -13,7 +13,11 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 // ROS includes
+#include <tf2/LinearMath/Transform.h>
+
 // PCL includes
+#include <pcl/pcl_macros.h>
+
 // external libs includes
 // project includes
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -41,6 +45,9 @@ PointPosition computePointPositionInRelationToLine(
 		float query_point_x, float query_point_y);
 
 PointPosition computePointPosition(float cross_product_z);
+
+
+bool isTransformValid(const tf2::Transform& transform);
 
 
 } /* namespace math_utils */

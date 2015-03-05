@@ -35,7 +35,7 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 				<< " | Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
 				<< " | CorrespondencesCurrentMeanSquareError: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_);
 
-		ROS_DEBUG("[DefaultConvergenceCriteriaWithTime::hasConverged] Current convergence transformation is:\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n",
+		ROS_DEBUG("[DefaultConvergenceCriteriaWithTime::hasConverged] Current convergence transformation is:\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f",
 				transformation_(0, 0), transformation_(0, 1), transformation_(0, 2), transformation_(0, 3),
 				transformation_(1, 0), transformation_(1, 1), transformation_(1, 2), transformation_(1, 3),
 				transformation_(2, 0), transformation_(2, 1), transformation_(2, 2), transformation_(2, 3),

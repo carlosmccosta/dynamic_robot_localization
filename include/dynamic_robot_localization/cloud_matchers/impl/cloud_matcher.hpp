@@ -66,7 +66,7 @@ void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>:
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		cloud_matcher_->setInputTarget(reference_cloud);
-		cloud_matcher_->setSearchMethodTarget(search_method, true);
+		cloud_matcher_->setSearchMethodTarget(search_method);
 	}
 
 	if (registration_visualizer_) {
@@ -98,16 +98,16 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	initializeKeypointProcessing();
 
 	if (match_only_keypoints_ && !pointcloud_keypoints->empty()) {
-		ROS_DEBUG_STREAM("Registering cloud with " << pointcloud_keypoints->size() << " points (keypoints) using " << cloud_matcher_->getClassName() << " algorithm");
+		ROS_DEBUG_STREAM("Registering cloud with " << pointcloud_keypoints->size() << " keypoints against a reference cloud with " << cloud_matcher_->getInputTarget()->size() << " points using " << cloud_matcher_->getClassName() << " algorithm");
 		typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
 		pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
 		cloud_matcher_->setInputSource(pointcloud_keypoints);
-		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method, true);
+		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*pointcloud_keypoints); }
 	} else {
-		ROS_DEBUG_STREAM("Registering cloud with " << ambient_pointcloud->size() << " points using " << cloud_matcher_->getClassName() << " algorithm");
+		ROS_DEBUG_STREAM("Registering cloud with " << ambient_pointcloud->size() << " points against a reference cloud with " << cloud_matcher_->getInputTarget()->size() << " points using " << cloud_matcher_->getClassName() << " algorithm");
 		cloud_matcher_->setInputSource(ambient_pointcloud);
-		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method, true);
+		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*ambient_pointcloud); }
 	}
 

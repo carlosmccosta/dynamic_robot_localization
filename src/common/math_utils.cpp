@@ -43,10 +43,19 @@ PointPosition computePointPosition(float cross_product_z) {
 		return ON_TOP_OF_LINE;
 	}
 }
+
+bool isTransformValid(const tf2::Transform& transform) {
+	tf2::Vector3 position = transform.getOrigin();
+	tf2::Quaternion orientation = transform.getRotation();
+	if (!pcl_isfinite(position.x()) || !pcl_isfinite(position.y()) || !pcl_isfinite(position.z())
+			|| !pcl_isfinite(orientation.x()) || !pcl_isfinite(orientation.y()) || !pcl_isfinite(orientation.z()) || !pcl_isfinite(orientation.w())) {
+		return false;
+	}
+
+	return true;
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </math_utils-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
 } /* namespace math_utils */
 } /* namespace dynamic_robot_localization */
-
-
