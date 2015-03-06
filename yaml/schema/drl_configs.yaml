@@ -220,6 +220,7 @@ filters:
 normal_estimators:
     reference_pointcloud:
         flip_normals_using_occupancy_grid_analysis: true            # Only used in the reference pointcloud
+        use_filtered_cloud_as_normal_estimation_surface: true       # Normals can be estimated with the filtered cloud or with the original reference cloud as search surface
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false                   # Some registration algorithms don't require normals. Only activate its calculation when required
         compute_normals_when_recovering_pose_tracking: false        # Some registration algorithms don't require normals. Only activate its calculation when required

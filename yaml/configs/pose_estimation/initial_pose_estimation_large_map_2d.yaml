@@ -67,7 +67,7 @@ initial_pose_estimators_matchers:
             max_correspondence_distance: 0.25
             max_number_of_registration_iterations: 1337
             sample_consensus_initial_alignment_prerejective:
-                convergence_time_limit_seconds: 5.0
+                convergence_time_limit_seconds: 3.0
                 similarity_threshold: 0.6
                 inlier_fraction: 0.65
                 inlier_rmse: 0.35
@@ -81,9 +81,8 @@ initial_pose_estimators_matchers:
         iterative_closest_point:
 #        iterative_closest_point_2d:
 #        iterative_closest_point_non_linear:
-#        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
-            convergence_time_limit_seconds: 3.0
+            convergence_time_limit_seconds: 2.0
             max_correspondence_distance: 10.0
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6

@@ -82,16 +82,16 @@ template<typename PointT>
 void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 		typename pcl::PointCloud<PointT>::Ptr& surface, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, tf2::Transform& viewpoint_guess,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
-	size_t pointcloud_original_size = pointcloud->size();
-	if (pointcloud_original_size < 3) { return; }
-
 	std::vector<int> indexes;
 	pcl::removeNaNFromPointCloud(*pointcloud, *pointcloud, indexes);
 	indexes.clear();
 
+	size_t pointcloud_original_size = pointcloud->size();
+	if (pointcloud_original_size < 3) { return; }
+
 	pointcloud_with_normals_out = pointcloud;
 	sac_segmentation_.setSamplesMaxDist(random_samples_max_radius_, surface_search_method);
-	sac_segmentation_.setInputCloud(pointcloud_with_normals_out);
+	sac_segmentation_.setInputCloud(surface_search_method->getInputCloud());
 
 	float vp_x = viewpoint_guess.getOrigin().x();
 	float vp_y = viewpoint_guess.getOrigin().y();
@@ -119,12 +119,12 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 		}
 
 		bool orient_normal_towards_viewpoint = true;
-		if (nn_indices->size() > 2) {
+		if (nn_distances.size() > 2 && nn_indices->size() > 2) {
 			sac_segmentation_.setIndices(nn_indices);
 			pcl::ModelCoefficients coefficients;
 			pcl::PointIndices inliers;
 			sac_segmentation_.segment(inliers, coefficients);
-			if (!inliers.indices.empty() && !coefficients.values.empty() && inliers.indices.size() > 1 && nn_indices->size() / inliers.indices.size() > minimum_inliers_percentage_) {
+			if (!coefficients.values.empty() && inliers.indices.size() > 2 && ((double)nn_indices->size() / (double)inliers.indices.size()) > minimum_inliers_percentage_) {
 				if (sac_segmentation_.getModelType() == pcl::SACMODEL_LINE) {
 					if (coefficients.values.size() == 6) {
 						tf2::Vector3 line_vector(coefficients.values[3], coefficients.values[4], coefficients.values[5]);
@@ -182,13 +182,13 @@ void NormalEstimatorSAC<PointT>::estimateNormals(typename pcl::PointCloud<PointT
 		}
 	}
 
-	ROS_DEBUG_STREAM("NormalEstimatorSAC computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
-
-	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
-
 	if (pointcloud_with_normals_out->size() > 3 && pointcloud_with_normals_out->size() != pointcloud_original_size) {
 		surface_search_method->setInputCloud(pointcloud_with_normals_out);
 	}
+
+	ROS_DEBUG_STREAM("NormalEstimatorSAC computed " << pointcloud_with_normals_out->size() << " normals from a cloud with " << pointcloud_original_size << " points");
+
+	NormalEstimator<PointT>::estimateNormals(pointcloud, surface, surface_search_method, viewpoint_guess, pointcloud_with_normals_out);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimatorSAC-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

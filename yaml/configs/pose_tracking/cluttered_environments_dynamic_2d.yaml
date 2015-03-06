@@ -2,9 +2,9 @@ tracking_matchers:
     ignore_height_corrections: false
     pose_tracking_timeout: 1.0
     point_matchers:
-        iterative_closest_point:
+#        iterative_closest_point:
+        iterative_closest_point_2d:
 #        iterative_closest_point_non_linear:
-#        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
             max_correspondence_distance: 0.05
             transformation_epsilon: 1e-4

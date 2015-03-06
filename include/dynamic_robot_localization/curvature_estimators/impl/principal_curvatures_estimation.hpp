@@ -50,7 +50,7 @@ void PrincipalCurvaturesEstimation<PointT>::estimatePointsCurvature(typename pcl
 	pcl::PointCloud<pcl::PrincipalCurvatures> principal_curvatures;
 	curvature_estimator_.compute(principal_curvatures);
 
-	for (size_t i = 0; i < pointcloud->size(); ++i) {
+	for (size_t i = 0; (i < pointcloud->size()) && (i < principal_curvatures.size()); ++i) {
 		if (curvature_type_ == CURVATURE_TYPE_GAUSSIAN) {
 			(*pointcloud)[i].curvature = principal_curvatures[i].pc1 * principal_curvatures[i].pc2;
 		} else {

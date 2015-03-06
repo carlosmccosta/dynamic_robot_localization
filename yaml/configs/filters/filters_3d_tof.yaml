@@ -26,9 +26,9 @@ filters:
             leaf_size_y: 0.07
             leaf_size_z: 0.07
             filter_limit_field_name: 'z'
-            filter_limit_min: -2.0
-            filter_limit_max: 2.0
-            filtered_cloud_publish_topic: '' # ambient_pointcloud_filtered
+            filter_limit_min: -4.0
+            filter_limit_max: 4.0
+            filtered_cloud_publish_topic: ''
             downsample_all_data: true
             save_leaf_layout: false
 #        2_approximate_voxel_grid:
@@ -60,7 +60,7 @@ filters:
         5_random_sample:
             number_of_random_samples: 425
             invert_sampling: false
-            filtered_cloud_publish_topic: ''
+            filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
 #        6_statistical_outlier_removal:
 #            number_of_neighbors_for_mean_distance_estimation: 6
 #            standard_deviation_multiplier: 2.0

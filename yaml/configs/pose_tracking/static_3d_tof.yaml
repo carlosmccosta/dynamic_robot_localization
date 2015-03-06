@@ -1,6 +1,27 @@
 #message_management:
 #    maximum_number_points_ambient_pointcloud_circular_buffer: 750
 
+normal_estimators:
+    reference_pointcloud:
+        display_normals: false
+        display_occupancy_grid_pointcloud: false
+        use_filtered_cloud_as_normal_estimation_surface: false
+        flip_normals_using_occupancy_grid_analysis: true
+        occupancy_grid_analysis_radius_resolution_percentage: 4.0
+#        normal_estimation_omp:
+#            search_k: 0
+#            search_radius: 0.35
+    ambient_pointcloud:
+        compute_normals_when_tracking_pose: true
+        compute_normals_when_recovering_pose_tracking: false
+        compute_normals_when_estimating_initial_pose: true
+        use_filtered_cloud_as_normal_estimation_surface: false
+        display_normals: false
+        normal_estimation_omp:
+            search_k: 0
+            search_radius: 0.35
+
+
 
 tracking_matchers:
     ignore_height_corrections: false
@@ -12,7 +33,7 @@ tracking_matchers:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
-            max_correspondence_distance: 0.25
+            max_correspondence_distance: 2.0
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
             max_number_of_registration_iterations: 250

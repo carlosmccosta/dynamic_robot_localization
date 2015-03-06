@@ -275,7 +275,8 @@ class Localization : public ConfigurableObject {
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
-		bool use_filtered_cloud_as_normal_estimation_surface_;
+		bool use_filtered_cloud_as_normal_estimation_surface_ambient_;
+		bool use_filtered_cloud_as_normal_estimation_surface_reference_;
 		bool filter_ambient_cloud_in_map_frame_;
 		bool compute_normals_when_tracking_pose_;
 		bool compute_normals_when_recovering_pose_tracking_;
