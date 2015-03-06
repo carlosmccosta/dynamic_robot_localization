@@ -14,6 +14,7 @@ tracking_recovery_matchers:
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
+            # gicp
             rotation_epsilon: 0.002
             correspondence_randomness: 50
             maximum_optimizer_iterations: 100

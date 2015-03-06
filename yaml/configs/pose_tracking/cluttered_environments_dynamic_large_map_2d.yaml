@@ -60,7 +60,7 @@ tracking_matchers:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_2d:
             convergence_time_limit_seconds: 0.050
-            max_correspondence_distance: 0.25
+            max_correspondence_distance: 0.5
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 150

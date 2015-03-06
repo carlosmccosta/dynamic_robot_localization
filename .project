@@ -8,16 +8,4 @@
 	</buildSpec>
 	<natures>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>[Subprojects]</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
-			<name>[Subprojects]/gtest</name>
-			<type>2</type>
-			<location>/usr/src/gtest</location>
-		</link>
-	</linkedResources>
 </projectDescription>
