@@ -236,7 +236,7 @@ class Localization : public ConfigurableObject {
 		std::string pose_topic_;
 		std::string pose_stamped_topic_;
 		std::string pose_with_covariance_stamped_topic_;
-		std::string ambient_pointcloud_topic_;
+		std::string ambient_pointcloud_topics_;
 		std::string reference_pointcloud_topic_;
 		std::string reference_costmap_topic_;
 
@@ -263,6 +263,7 @@ class Localization : public ConfigurableObject {
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;
 		ros::Duration max_seconds_ambient_pointcloud_age_;
+		ros::Duration max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
@@ -314,7 +315,7 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber pose_subscriber_;
 		ros::Subscriber pose_stamped_subscriber_;
 		ros::Subscriber pose_with_covariance_stamped_subscriber_;
-		ros::Subscriber ambient_pointcloud_subscriber_;
+		std::vector< ros::Subscriber > ambient_pointcloud_subscribers_;
 		ros::Subscriber costmap_subscriber_;
 		ros::Subscriber reference_pointcloud_subscriber_;
 		ros::Publisher reference_pointcloud_publisher_;

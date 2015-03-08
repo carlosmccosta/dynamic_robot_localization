@@ -142,19 +142,22 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 		}
 
 		if (return_aligned_keypoints && !match_only_keypoints_) {
-			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
+			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_registered_out, final_transformation);
 		} else if (!return_aligned_keypoints && match_only_keypoints_) {
-			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, cloud_matcher_->getFinalTransformation());
+			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
 		}
 
 		if (pointcloud_registered_out->size() < 5) {
 			return false;
 		}
 
-		pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_keypoints, cloud_matcher_->getFinalTransformation());
+		if (pointcloud_keypoints && !pointcloud_keypoints->empty()) {
+			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_keypoints, final_transformation);
+		}
 
 		// if publisher available, send aligned cloud
-		if (cloud_publisher_) {
+		if (cloud_publisher_ && pointcloud_registered_out) {
+			pointcloud_registered_out->header = ambient_pointcloud->header;
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
 		}
 

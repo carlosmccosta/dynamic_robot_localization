@@ -44,15 +44,17 @@ void RandomSample<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& i
 	if (filter->getSample() >= number_of_points_in_input_cloud) {
 		if (filter->getNegative()) {
 			output_cloud = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
+			output_cloud->header = input_cloud->header;
 		} else {
 			output_cloud = input_cloud;
 		}
+	} else {
+		CloudFilter<PointT>::filter_->setInputCloud(input_cloud);
+		CloudFilter<PointT>::filter_->filter(*output_cloud);
 	}
 
-	CloudFilter<PointT>::filter_->setInputCloud(input_cloud);
-	CloudFilter<PointT>::filter_->filter(*output_cloud);
 
-	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
+	if (CloudFilter<PointT>::getCloudPublisher() && output_cloud) { CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud); }
 	ROS_DEBUG_STREAM(CloudFilter<PointT>::filter_name_ << " filter reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->size() << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RandomSample-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

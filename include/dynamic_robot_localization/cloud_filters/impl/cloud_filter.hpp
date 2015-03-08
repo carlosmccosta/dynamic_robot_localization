@@ -33,7 +33,7 @@ void CloudFilter<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& in
 	filter_->setInputCloud(input_cloud);
 	filter_->filter(*output_cloud);
 
-	CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud);
+	if (cloud_publisher_ && output_cloud) { cloud_publisher_->publishPointCloud(*output_cloud); }
 	ROS_DEBUG_STREAM(filter_name_ << " filter reduced point cloud from " << number_of_points_in_input_cloud << " points to " << output_cloud->size() << " points");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudFilter-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

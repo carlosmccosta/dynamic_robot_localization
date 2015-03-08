@@ -77,8 +77,8 @@ class NormalEstimator : public ConfigurableObject {
 		int getOccupancyGridAnalysisK() const { return occupancy_grid_analysis_k_; }
 		double getOccupancyGridAnalysisRadius() const { return occupancy_grid_analysis_radius_; }
 		double getOccupancyGridAnalysisRadiusResolutionPercentage() const { return occupancy_grid_analysis_radius_resolution_percentage_; }
-		nav_msgs::OccupancyGridConstPtr& getOccupancyGridMsg() { return occupancy_grid_msg_; }
-		typename CurvatureEstimator<PointT>::Ptr& getCurvatureEstimator() { return curvature_estimator_; }
+		nav_msgs::OccupancyGridConstPtr getOccupancyGridMsg() { return occupancy_grid_msg_; }
+		typename CurvatureEstimator<PointT>::Ptr getCurvatureEstimator() { return curvature_estimator_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

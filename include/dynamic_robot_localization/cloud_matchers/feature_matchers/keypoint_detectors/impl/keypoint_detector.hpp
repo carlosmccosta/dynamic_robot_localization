@@ -30,7 +30,7 @@ void KeypointDetector<PointT>::findKeypoints(typename pcl::PointCloud<PointT>::P
 	keypoint_detector_->compute(*pointcloud_keypoints_out);
 
 	pointcloud_keypoints_out->header = pointcloud->header;
-	getCloudPublisher()->publishPointCloud(*pointcloud_keypoints_out);
+	if (cloud_publisher_ && pointcloud_keypoints_out) { cloud_publisher_->publishPointCloud(*pointcloud_keypoints_out); }
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </KeypointDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
