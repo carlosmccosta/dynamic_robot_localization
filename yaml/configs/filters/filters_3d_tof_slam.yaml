@@ -13,7 +13,6 @@ filters:
             downsample_all_data: true
             save_leaf_layout: false
     ambient_pointcloud:
-        filter_ambient_cloud_in_map_frame: false
 #        1_voxel_grid:
 #            leaf_size_x: 0.05
 #            leaf_size_y: 0.05

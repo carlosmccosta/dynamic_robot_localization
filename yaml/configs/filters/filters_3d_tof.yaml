@@ -20,7 +20,6 @@ filters:
 #            invert_sampling: false
 #            filtered_cloud_publish_topic: ''
     ambient_pointcloud:
-        filter_ambient_cloud_in_map_frame: false
         1_voxel_grid:
             leaf_size_x: 0.07
             leaf_size_y: 0.07
@@ -43,12 +42,12 @@ filters:
 #            invert_removal: false
 #            filtered_cloud_publish_topic: ''
         4_crop_box:
-            box_min_x: -4.0
-            box_min_y: -4.0
-            box_min_z: -4.0
-            box_max_x: 4.0
-            box_max_y: 4.0
-            box_max_z: 4.0
+            box_min_x: -1.5
+            box_min_y: -1.5
+            box_min_z: 0.5
+            box_max_x: 1.5
+            box_max_y: 1.5
+            box_max_z: 2.25
             box_translation_x: 0.0
             box_translation_y: 0.0
             box_translation_z: 0.0

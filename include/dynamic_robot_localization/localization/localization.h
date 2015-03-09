@@ -278,7 +278,6 @@ class Localization : public ConfigurableObject {
 		bool add_odometry_displacement_;
 		bool use_filtered_cloud_as_normal_estimation_surface_ambient_;
 		bool use_filtered_cloud_as_normal_estimation_surface_reference_;
-		bool filter_ambient_cloud_in_map_frame_;
 		bool compute_normals_when_tracking_pose_;
 		bool compute_normals_when_recovering_pose_tracking_;
 		bool compute_normals_when_estimating_initial_pose_;
@@ -335,6 +334,7 @@ class Localization : public ConfigurableObject {
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_map_frame_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;
