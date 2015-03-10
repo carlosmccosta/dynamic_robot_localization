@@ -74,6 +74,7 @@
 	
 	<!-- tf configurations -->
 	<arg name="publish_tf_map_odom" default="1" />
+	<arg name="publish_initial_pose" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="-3.0" />
 	<arg name="invert_tf_transform" default="false" />
@@ -96,6 +97,8 @@
 
 	<!-- ==================================================== localization system ============================================= -->
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="valgrind -tool=memcheck -leak-check=full -show-reachable=yes -v -track-origins=yes" > -->
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="valgrind -tool=massif -heap=yes -stacks=yes" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
@@ -141,7 +144,7 @@
 		<arg name="map_frame_id" default="$(arg map_frame_id)" />
 		<arg name="odom_frame_id" default="$(arg odom_frame_id)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
-		<arg name="publish_initial_pose" default="true" />
+		<arg name="publish_initial_pose" default="$(arg publish_initial_pose)" />
 		<arg name="initial_pose_in_base_to_map" default="$(arg robot_initial_pose_in_base_to_map)" />
 		<arg name="initial_x" default="$(arg robot_initial_x)" />
 		<arg name="initial_y" default="$(arg robot_initial_y)" />
