@@ -335,6 +335,8 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_map_frame_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_feature_registration_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;

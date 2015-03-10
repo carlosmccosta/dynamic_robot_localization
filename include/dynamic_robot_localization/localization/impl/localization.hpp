@@ -280,11 +280,15 @@ void Localization<PointT>::setupReferencePointCloud() {
 
 template<typename PointT>
 void Localization<PointT>::setupFiltersConfigurations() {
+	reference_cloud_filters_.clear();
+	ambient_pointcloud_feature_registration_.clear();
+	ambient_pointcloud_map_frame_feature_registration_.clear();
 	ambient_cloud_filters_.clear();
 	ambient_cloud_filters_map_frame_.clear();
-	reference_cloud_filters_.clear();
 
 	loadFiltersFromParameterServer(reference_cloud_filters_, "filters/reference_pointcloud/");
+	loadFiltersFromParameterServer(ambient_pointcloud_feature_registration_, "filters/ambient_pointcloud_feature_registration/");
+	loadFiltersFromParameterServer(ambient_pointcloud_map_frame_feature_registration_, "filters/ambient_pointcloud_map_frame_feature_registration/");
 	loadFiltersFromParameterServer(ambient_cloud_filters_, "filters/ambient_pointcloud/");
 	loadFiltersFromParameterServer(ambient_cloud_filters_map_frame_, "filters/ambient_pointcloud_map_frame/");
 }
@@ -1459,6 +1463,13 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false;
 	}
 
+	bool lost_tracking = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_) ||
+			(pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_);
+	if (lost_tracking) {
+		ROS_ERROR("Lost tracking!");
+		last_accepted_pose_valid_ = false;
+	}
+
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
 	if (use_filtered_cloud_as_normal_estimation_surface_ambient_) {
 		ROS_DEBUG("Using filtered ambient point cloud for normal estimation");
@@ -1473,9 +1484,9 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	performance_timer.start();
 	// ==============================================================  filters
 	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
-	if (!applyFilters(ambient_cloud_filters_, ambient_pointcloud)) { return false; }
+	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_ : ambient_cloud_filters_, ambient_pointcloud)) { return false; }
 	if (!transformCloudToMapFrame(ambient_pointcloud, pointcloud_time)) { return false; }
-	if (!applyFilters(ambient_cloud_filters_map_frame_, ambient_pointcloud)) { return false; }
+	if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_ : ambient_cloud_filters_map_frame_, ambient_pointcloud)) { return false; }
 	if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
@@ -1520,12 +1531,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	// ==============================================================  initial pose estimation when tracking is lost
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
 	performance_timer.restart();
-	bool lost_tracking = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_) ||
-			(pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_);
-	if (lost_tracking) {
-		ROS_ERROR("Lost tracking!");
-		last_accepted_pose_valid_ = false;
-	}
 
 	bool performed_recovery = false;
 

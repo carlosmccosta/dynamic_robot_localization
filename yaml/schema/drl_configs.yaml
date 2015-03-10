@@ -154,9 +154,11 @@ reference_pointclouds:
 #   Bellow they are specified only in the ambient_pointcloud namespace to avoid repetition.
 #   The ambient cloud can be filtered in the original TF frame or after being transformed into the map_frame_id (useful for pass through / crop box filters)
 filters:
-    reference_pointcloud:
-    ambient_pointcloud:                                             # Filters that will be applied in the original TF frame
+    reference_pointcloud:                                           # Filters that will be applied to the reference point cloud
+    ambient_pointcloud:                                             # Filters that will be applied to the ambient point cloud in the original TF frame
     ambient_pointcloud_map_frame:                                   # Filters that will be applied after the ambient point cloud is transformed into the map frame (useful to restrict points to a given world region -> ex. map boundaries)
+    ambient_pointcloud_feature_registration:                        # Filters that will be applied to the ambient point cloud in the original TF frame when applying feature registration (overrides the ambient_pointcloud filters)
+    ambient_pointcloud_map_frame_feature_registration:              # Filters that will be applied after the ambient point cloud is transformed into the map frame (overrides the ambient_pointcloud_map_frame filters)
         pass_through:                                               # Allows prefix and postfix of letters to ensure parsing order
             field_name: 'z'                                         # Field name -> [ x | y | z ]
             min_value: -5.0

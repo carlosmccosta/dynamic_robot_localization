@@ -44,7 +44,7 @@ initial_pose_estimators_matchers:
         save_descriptors_in_binary_format: true
         keypoint_descriptors:
             feature_descriptor_k_search: 0
-            feature_descriptor_radius_search: 0.2
+            feature_descriptor_radius_search: 0.35
             fpfh:
                 number_subdivisions_f1: 11
                 number_subdivisions_f2: 11
