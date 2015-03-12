@@ -76,7 +76,7 @@
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_initial_pose" default="1" />
 	<arg name="publish_pose_tf_rate" default="30.0" />
-	<arg name="publish_last_pose_tf_timeout_seconds" default="-3.0" />
+	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
 	<arg name="transform_pose_to_map_frame_id" default="true" />
