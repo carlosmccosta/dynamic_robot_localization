@@ -1066,7 +1066,6 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				}
 
 				last_accepted_pose_odom_to_map_ = pose_tf_corrected * transform_base_link_to_odom.inverse();
-				received_external_initial_pose_estimation_ = false;
 
 				tf2::Quaternion pose_tf_corrected_q = pose_tf_corrected.getRotation().normalize();
 				ROS_DEBUG_STREAM("Corrected pose:" \
@@ -1208,6 +1207,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				ROS_WARN_STREAM("Discarded cloud because localization couldn't be calculated");
 			}
 
+			received_external_initial_pose_estimation_ = false;
 			accepted_pose_corrections_.clear();
 		} else {
 			if (!reference_pointcloud_received_) {

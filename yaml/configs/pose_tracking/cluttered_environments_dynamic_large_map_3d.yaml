@@ -11,41 +11,44 @@ reference_pointclouds:
     use_incremental_map_update: false
 
 
-normal_estimators:
-    reference_pointcloud:
-        display_normals: true
-        display_occupancy_grid_pointcloud: false
-        flip_normals_using_occupancy_grid_analysis: true
-        occupancy_grid_analysis_radius_resolution_percentage: 4.0
-#        moving_least_squares:
-#            compute_normals: true
-#            polynomial_order: 3
-#            polynomial_fit: true
-#            search_radius: 0.02
-#            sqr_gauss_param: 0.0004
-#            upsample_method: 'NONE'
-#            upsampling_radius: 0.03
-#            upsampling_step: 0.03
-#            desired_num_points_in_radius: 10
-#            dilation_voxel_size: 0.03
-#            dilation_iterations: 1
+#normal_estimators:
+#    reference_pointcloud:
+#        display_normals: true
+#        display_occupancy_grid_pointcloud: false
+#        flip_normals_using_occupancy_grid_analysis: true
+#        occupancy_grid_analysis_radius_resolution_percentage: 4.0
+##        moving_least_squares:
+##            compute_normals: true
+##            polynomial_order: 3
+##            polynomial_fit: true
+##            search_radius: 0.02
+##            sqr_gauss_param: 0.0004
+##            upsample_method: 'NONE'
+##            upsampling_radius: 0.03
+##            upsampling_step: 0.03
+##            desired_num_points_in_radius: 10
+##            dilation_voxel_size: 0.03
+##            dilation_iterations: 1
+##        normal_estimation_omp:
+##            search_k: 0
+##            search_radius: 0.35
+#    ambient_pointcloud:
+#        compute_normals_when_tracking_pose: false
+#        compute_normals_when_recovering_pose_tracking: false
+#        compute_normals_when_estimating_initial_pose: true
+#        use_filtered_cloud_as_normal_estimation_surface: false
+#        display_normals: false
 #        normal_estimation_omp:
 #            search_k: 0
-#            search_radius: 0.35
-    ambient_pointcloud:
-        compute_normals_when_tracking_pose: false
-        compute_normals_when_recovering_pose_tracking: false
-        compute_normals_when_estimating_initial_pose: true
-        use_filtered_cloud_as_normal_estimation_surface: true
-        display_normals: false
-        normal_estimation_omp:
-            search_k: 0
-            search_radius: 0.35
+#            search_radius: 0.05
 
 
 tracking_matchers:
     ignore_height_corrections: false
     use_internal_tracking: true
+#    pose_tracking_timeout: 1.0
+#    pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 0
+#    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 0
     point_matchers:
         iterative_closest_point:
 #        iterative_closest_point_non_linear:

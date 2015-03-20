@@ -1,9 +1,9 @@
 normal_estimators:
-#    reference_pointcloud:
-#        display_normals: true
-#        normal_estimation_omp:
-#            search_k: 0
-#            search_radius: 0.085
+    reference_pointcloud:
+        display_normals: false
+        normal_estimation_omp:
+            search_k: 0
+            search_radius: 0.05
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false
         compute_normals_when_recovering_pose_tracking: false
@@ -12,21 +12,21 @@ normal_estimators:
         display_normals: false
         normal_estimation_omp:
             search_k: 0
-            search_radius: 0.085
+            search_radius: 0.07
 
 
 keypoint_detectors:
     reference_pointcloud:
         sift_3d:
-            min_scale: 0.01
+            min_scale: 0.03
             number_octaves: 3
             number_scales_per_octave: 4
-            min_contrast: 0.0125
+            min_contrast: 0.03
             sift3d_keypoints_cloud_publish_topic: 'reference_keypoints'
 #        intrinsic_shape_signature_3d:
-#            salient_radius: 0.25
-#            non_max_radius: 0.15
-#            normal_radius: 0.085
+#            salient_radius: 0.1
+#            non_max_radius: 0.07
+#            normal_radius: 0.07
 #            border_radius: 0.0
 #            threshold21: 0.975
 #            threshold32: 0.975
@@ -38,15 +38,15 @@ keypoint_detectors:
         compute_keypoints_when_recovering_pose_tracking: false
         compute_keypoints_when_estimating_initial_pose: true
         sift_3d:
-            min_scale: 0.01
+            min_scale: 0.03
             number_octaves: 3
             number_scales_per_octave: 4
-            min_contrast: 0.0125
+            min_contrast: 0.03
             sift3d_keypoints_cloud_publish_topic: 'ambient_keypoints'
 #        intrinsic_shape_signature_3d:
-#            salient_radius: 0.25
-#            non_max_radius: 0.15
-#            normal_radius: 0.085
+#            salient_radius: 0.1
+#            non_max_radius: 0.07
+#            normal_radius: 0.07
 #            border_radius: 0.0
 #            threshold21: 0.975
 #            threshold32: 0.975
@@ -61,7 +61,7 @@ initial_pose_estimators_matchers:
         save_descriptors_in_binary_format : true
         keypoint_descriptors:
             feature_descriptor_k_search: 0
-            feature_descriptor_radius_search: 0.4
+            feature_descriptor_radius_search: 0.5
             fpfh:
                 number_subdivisions_f1: 11
                 number_subdivisions_f2: 11
@@ -84,11 +84,11 @@ initial_pose_estimators_matchers:
             max_correspondence_distance: 1.0
             max_number_of_registration_iterations: 10000
             sample_consensus_initial_alignment_prerejective:
-                convergence_time_limit_seconds: 3.0
-                similarity_threshold: 0.75
-                inlier_fraction: 0.75
-                number_of_samples: 20
-                correspondence_randomness: 100
+                convergence_time_limit_seconds: 5.0
+                similarity_threshold: 0.5
+                inlier_fraction: 0.5
+                number_of_samples: 15
+                correspondence_randomness: 75
 #            sample_consensus_initial_alignment:
 #                min_sample_distance: 0.5
 #                number_of_samples: 3
