@@ -198,7 +198,7 @@ class Localization : public ConfigurableObject {
 
 		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::PointCloud<PointT>::Ptr& surface,
-				typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method);
+				typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method, bool pointcloud_is_map = false);
 
 		virtual bool applyKeypointDetection(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
@@ -298,6 +298,7 @@ class Localization : public ConfigurableObject {
 		int pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
 		bool reference_pointcloud_received_;
 		bool reference_pointcloud_2d_;
+		bool reference_pointcloud_available_;
 		bool ignore_height_corrections_;
 		bool last_accepted_pose_valid_;
 		bool received_external_initial_pose_estimation_; // from rviz / other localization system / operator

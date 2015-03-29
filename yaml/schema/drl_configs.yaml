@@ -143,6 +143,7 @@ reference_pointclouds:
     reference_pointcloud_filename: ''
     reference_pointcloud_preprocessed_save_filename: ''
     reference_pointcloud_type: '3D'                                 # Supported modes: [ 2D | 3D ]
+    reference_pointcloud_available: true                            # Informs if a reference point cloud (map) will be provided to the self-localization system
     reference_pointcloud_update_mode: 'NoIntegration'               # Supported modes: [ NoIntegration | FullIntegration | InliersIntegration | OutliersIntegration ]
     use_incremental_map_update: false                               # Incremental SLAM mode will add new registered clouds without preprocessing (if false, it will preprocess the reference cloud after adding the new registered points)
     save_reference_pointclouds_in_binary_format: true

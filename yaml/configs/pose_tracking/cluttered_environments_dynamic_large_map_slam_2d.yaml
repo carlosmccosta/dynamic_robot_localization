@@ -6,7 +6,7 @@ tracking_matchers:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_2d:
-            convergence_time_limit_seconds: 0.075
+            convergence_time_limit_seconds: 0.09
             max_correspondence_distance: 0.5
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6

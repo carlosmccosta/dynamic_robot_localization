@@ -122,6 +122,7 @@
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_type" type="str" value="$(arg reference_pointcloud_type)" />
+		<param name="reference_pointclouds/reference_pointcloud_available" type="str" value="$(arg reference_pointcloud_available)" />
 		<param name="reference_pointclouds/reference_pointcloud_update_mode" type="str" value="$(arg reference_pointcloud_update_mode)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
