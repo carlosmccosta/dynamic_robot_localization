@@ -21,12 +21,12 @@ filters:
 #            filtered_cloud_publish_topic: ''
     ambient_pointcloud:
         1_voxel_grid:
-            leaf_size_x: 0.07
-            leaf_size_y: 0.07
-            leaf_size_z: 0.07
+            leaf_size_x: 0.02
+            leaf_size_y: 0.02
+            leaf_size_z: 0.02
             filter_limit_field_name: 'z'
-            filter_limit_min: -4.0
-            filter_limit_max: 4.0
+            filter_limit_min: -5.0
+            filter_limit_max: 5.0
             filtered_cloud_publish_topic: ''
             downsample_all_data: true
             save_leaf_layout: false

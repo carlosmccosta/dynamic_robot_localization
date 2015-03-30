@@ -12,7 +12,7 @@ normal_estimators:
         display_normals: false
         normal_estimation_omp:
             search_k: 0
-            search_radius: 0.07
+            search_radius: 0.05
 
 
 keypoint_detectors:
