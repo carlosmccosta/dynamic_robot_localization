@@ -83,6 +83,7 @@
 	
 	<!-- map update -->
 	<arg name="use_octomap_for_dynamic_map_update" default="false" />
+	<arg name="use_octomap_only_to_build_occupancy_grid" default="false" />
 	<arg name="octomap_pointcloud_topic" default="aligned_pointcloud" />  <!-- ambient_pointcloud | aligned_pointcloud | aligned_pointcloud_outliers | aligned_pointcloud_inliers -->
 	<arg name="octomap_file" default="" />
 	<arg name="octomap_resolution" default="0.025" />
@@ -96,9 +97,9 @@
 
 
 	<!-- ==================================================== localization system ============================================= -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="valgrind -tool=memcheck -leak-check=full -show-reachable=yes -v -track-origins=yes" > -->
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="valgrind -tool=massif -heap=yes -stacks=yes" > -->
+<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen">
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
@@ -122,7 +123,7 @@
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_type" type="str" value="$(arg reference_pointcloud_type)" />
-		<param name="reference_pointclouds/reference_pointcloud_available" type="str" value="$(arg reference_pointcloud_available)" />
+		<param name="reference_pointclouds/reference_pointcloud_available" type="bool" value="$(arg reference_pointcloud_available)" />
 		<param name="reference_pointclouds/reference_pointcloud_update_mode" type="str" value="$(arg reference_pointcloud_update_mode)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename" type="str" value="$(arg reference_pointcloud_keypoints_filename)" />
 		<param name="keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename" type="str" value="$(arg reference_pointcloud_keypoints_save_filename)" />
@@ -205,6 +206,8 @@
 			<arg name="minimum_amount_of_time_between_ros_msg_publishing" default="$(arg octomap_minimum_amount_of_time_between_ros_msg_publishing)" />
 			<arg name="minimum_number_of_integrations_before_ros_msg_publishing" default="$(arg octomap_minimum_number_of_integrations_before_ros_msg_publishing)" />
 			<arg name="cloud_out_topic" default="$(arg octomap_cloud_out_topic)" />
+			<arg name="map_out_topic" default="/map_updated" if="$(arg use_octomap_only_to_build_occupancy_grid)" />
+			<arg name="map_out_topic" default="/map" unless="$(arg use_octomap_only_to_build_occupancy_grid)" />
 		</include>
 		
 		<group if="$(arg reference_pointcloud_available)" >

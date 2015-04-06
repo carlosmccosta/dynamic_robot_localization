@@ -23,8 +23,8 @@
 		<param name="override_sensor_z_value" type="double" value="$(arg override_sensor_z_value)" />
 		<param name="height_map" type="bool" value="true" />
 		<param name="sensor_model/max_range" type="double" value="200" />
-		<param name="sensor_model/hit" type="double" value="0.66" />
-		<param name="sensor_model/miss" type="double" value="0.42" />
+		<param name="sensor_model/hit" type="double" value="0.6" />
+		<param name="sensor_model/miss" type="double" value="0.45" /> <!-- 0.5 for static environments (will not decrease the occupied probability when ray tracing) -->
 		<param name="sensor_model/min" type="double" value="0.07" />
 		<param name="sensor_model/max" type="double" value="0.99" />
 		<param name="sensor_model/occupancy_treshold" type="double" value="0.7" />
