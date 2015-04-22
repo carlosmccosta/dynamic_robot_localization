@@ -1,5 +1,5 @@
-#message_management:
-#    maximum_number_points_ambient_pointcloud_circular_buffer: 750
+message_management:
+    maximum_number_points_ambient_pointcloud_circular_buffer: 500
 
 
 tracking_matchers:
@@ -9,7 +9,7 @@ tracking_matchers:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
-            convergence_time_limit_seconds: 0.250
+            convergence_time_limit_seconds: 0.500
             max_correspondence_distance: 0.35
             transformation_epsilon: 1e-3
             euclidean_fitness_epsilon: 1e-3
@@ -35,7 +35,7 @@ outlier_detectors:
 transformation_validators:
     euclidean_transformation_validator:
         max_transformation_angle: 0.3
-        max_transformation_distance: 0.5
+        max_transformation_distance: 0.2
         max_new_pose_diff_angle: 1.0
         max_new_pose_diff_distance: 1.0
         max_root_mean_square_error: 0.07
