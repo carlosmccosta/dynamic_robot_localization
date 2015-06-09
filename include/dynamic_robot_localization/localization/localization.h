@@ -106,6 +106,10 @@
 #include <dynamic_robot_localization/cloud_analyzers/cloud_analyzer.h>
 #include <dynamic_robot_localization/cloud_analyzers/angular_distribution_analyzer.h>
 
+#include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_estimator.h>
+#include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_point_to_point_3d.h>
+#include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_point_to_plane_3d.h>
+
 #include <dynamic_robot_localization/common/circular_buffer_pointcloud.h>
 #include <dynamic_robot_localization/common/performance_timer.h>
 
@@ -174,6 +178,7 @@ class Localization : public ConfigurableObject {
 		virtual void setupTransformationValidatorsConfigurations(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace);
 		virtual void setupOutlierDetectorsConfigurations();
 		virtual void setupCloudAnalyzersConfigurations();
+		virtual void setupRegistrationCovarianceEstimatorsConfigurations();
 
 		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename);
 		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
@@ -217,7 +222,9 @@ class Localization : public ConfigurableObject {
 		virtual bool applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators,
 				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
 
-		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, ros::Time pointcloud_time,
+		virtual void fillPoseCovariance(geometry_msgs::PoseWithCovarianceStamped& pose_corrected_msg, Eigen::MatrixXd& covariance_matrix);
+
+		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, const ros::Time& pointcloud_time,
 				const tf2::Transform& pointcloud_pose_initial_guess,
 				tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform& pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out);
 		virtual bool updateReferencePointCloudWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr pointcloud_keypoints);
@@ -246,6 +253,7 @@ class Localization : public ConfigurableObject {
 		std::string pose_stamped_publish_topic_;
 		std::string pose_array_publish_topic_;
 		std::string pose_with_covariance_stamped_publish_topic_;
+		std::string pose_with_covariance_stamped_tracking_reset_publish_topic_;
 		std::string localization_detailed_publish_topic_;
 		std::string localization_diagnostics_publish_topic_;
 		std::string localization_times_publish_topic_;
@@ -294,6 +302,7 @@ class Localization : public ConfigurableObject {
 		ros::Time last_scan_time_;
 		ros::Time last_map_received_time_;
 		ros::Time last_accepted_pose_time_;
+		bool robot_initial_pose_available_;
 		int pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
@@ -302,15 +311,17 @@ class Localization : public ConfigurableObject {
 		bool reference_pointcloud_available_;
 		bool ignore_height_corrections_;
 		bool last_accepted_pose_valid_;
+		bool last_accepted_pose_performed_tracking_reset_;
 		bool received_external_initial_pose_estimation_; // from rviz / other localization system / operator
 		bool use_internal_tracking_;
+		Eigen::MatrixXd last_accepted_pose_covariance_;
 		tf2::Transform last_accepted_pose_base_link_to_map_;
 		tf2::Transform last_accepted_pose_odom_to_map_;
 		std::vector< tf2::Transform > accepted_pose_corrections_;
 
 
 		// ros communication fields
-		pose_to_tf_publisher::PoseToTFPublisher pose_to_tf_publisher_;
+		pose_to_tf_publisher::PoseToTFPublisher::Ptr pose_to_tf_publisher_;
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
 		ros::Subscriber pose_subscriber_;
@@ -322,6 +333,7 @@ class Localization : public ConfigurableObject {
 		ros::Publisher reference_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_with_covariance_stamped_publisher_;
+		ros::Publisher pose_with_covariance_stamped_tracking_reset_publisher_;
 		ros::Publisher pose_stamped_publisher_;
 		ros::Publisher pose_array_publisher_;
 		ros::Publisher localization_detailed_publisher_;
@@ -335,8 +347,10 @@ class Localization : public ConfigurableObject {
 		size_t last_number_points_inserted_in_circular_buffer_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
-		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_;
-		std::vector< typename CloudFilter<PointT>::Ptr > ambient_cloud_filters_map_frame_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_integration_filters_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_integration_filters_map_frame_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_map_frame_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_feature_registration_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
@@ -351,6 +365,7 @@ class Localization : public ConfigurableObject {
 		std::vector< TransformationValidator::Ptr > transformation_validators_tracking_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
 		typename CloudAnalyzer<PointT>::Ptr cloud_analyzer_;
+		typename RegistrationCovarianceEstimator<PointT>::Ptr registration_covariance_estimator_;
 		typename pcl::PointCloud<PointT>::Ptr registered_inliers_;
 		typename pcl::PointCloud<PointT>::Ptr registered_outliers_;
 		double outlier_percentage_;

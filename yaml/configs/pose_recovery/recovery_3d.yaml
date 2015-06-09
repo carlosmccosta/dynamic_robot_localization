@@ -6,10 +6,10 @@ tracking_recovery_matchers:
 #        iterative_closest_point_generalized:
             convergence_time_limit_seconds: 0.350
             max_correspondence_distance: 5.0
-            transformation_epsilon: 1e-3
-            euclidean_fitness_epsilon: 1e-3
-            max_number_of_registration_iterations: 250
-            max_number_of_ransac_iterations: 250
+            transformation_epsilon: 1e-6
+            euclidean_fitness_epsilon: 1e-6
+            max_number_of_registration_iterations: 350
+            max_number_of_ransac_iterations: 350
             ransac_outlier_rejection_threshold: 0.07
             match_only_keypoints: false
             display_cloud_aligment: false
@@ -19,9 +19,9 @@ tracking_recovery_matchers:
 
 transformation_validators_tracking_recovery:
     euclidean_transformation_validator:
-        max_transformation_angle: 0.5
-        max_transformation_distance: 0.3
+        max_transformation_angle: 0.7
+        max_transformation_distance: 0.7
         max_new_pose_diff_angle: 1.04
-        max_new_pose_diff_distance: 0.35
+        max_new_pose_diff_distance: 0.8
         max_root_mean_square_error: 0.07
         max_outliers_percentage: 0.66

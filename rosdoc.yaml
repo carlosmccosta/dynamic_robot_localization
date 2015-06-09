@@ -1,0 +1,4 @@
+ - builder: doxygen
+   name: C++ API
+   output_dir: docs/doxygen
+   file_patterns: '*.cpp *.hpp *.h *.dox'

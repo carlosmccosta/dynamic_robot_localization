@@ -8,4 +8,5 @@ float64 pointcloud_registration_time
 float64 outlier_detection_time
 float64 registered_points_angular_distribution_analysis_time
 float64 transformation_validators_time
+float64 covariance_estimator_time
 float64 map_update_time

@@ -106,6 +106,20 @@ transformation_validators:
         max_new_pose_diff_angle: 1.1
         max_new_pose_diff_distance: 0.7
         max_root_mean_square_error: 0.04
-        max_outliers_percentage: 0.4
+        max_outliers_percentage: 0.6
         min_inliers_angular_distribution: 0.125
         max_outliers_angular_distribution: 0.875
+
+
+#registration_covariance_estimator:
+#    error_metric: 'PointToPoint3D'
+#    correspondance_estimator: 'CorrespondenceEstimation'
+#    correspondence_distance_threshold: 0.1
+#    sensor_mean_noise: 0.02
+#    use_reciprocal_correspondences: false
+#    filtered_reference_cloud_publish_topic: 'covariance_reference_cloud'
+#    filtered_ambient_cloud_publish_topic: 'covariance_ambient_cloud'
+#    random_sample:
+#        number_of_random_samples: 100
+#        invert_sampling: false
+#        filtered_cloud_publish_topic: ''

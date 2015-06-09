@@ -13,8 +13,9 @@
 	<arg name="resolution" default="0.025" />
 	<arg name="minimum_amount_of_time_between_ros_msg_publishing" default="5.0" />
 	<arg name="minimum_number_of_integrations_before_ros_msg_publishing" default="10" />
+	<arg name="nodes_respawn" default="true" />
 
-	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg octomap_file)" respawn="true" output="screen">
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg octomap_file)" output="screen" respawn="$(arg nodes_respawn)" clear_params="true" >
 		<param name="frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="resolution" type="double" value="$(arg resolution)" />
 		<param name="base_frame_id" type="str" value="$(arg base_frame_id" />

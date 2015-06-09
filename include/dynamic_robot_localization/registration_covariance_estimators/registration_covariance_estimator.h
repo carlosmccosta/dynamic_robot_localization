@@ -1,6 +1,6 @@
 #pragma once
 
-/**\file euclidean_transformation_validator.h
+/**\file registration_covariance_estimator.h
  * \brief Description...
  *
  * @version 1.0
@@ -13,32 +13,41 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
-#include <sstream>
-#include <cmath>
 
 // ROS includes
 #include <ros/ros.h>
+#include <tf2/LinearMath/Transform.h>
 
 // PCL includes
+#include <pcl/point_cloud.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/registration/correspondence_estimation.h>
+#include <pcl/registration/correspondence_estimation_backprojection.h>
+#include <pcl/registration/correspondence_estimation_normal_shooting.h>
+#include <pcl/conversions.h>
+
+
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
-#include <dynamic_robot_localization/transformation_validators/transformation_validator.h>
-
+#include <dynamic_robot_localization/common/configurable_object.h>
+#include <dynamic_robot_localization/cloud_filters/random_sample.h>
+#include <dynamic_robot_localization/common/cloud_publisher.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
-// ##################################################################   euclidean_transformation_validator   ###################################################################
+// ####################################################################   RegistrationCovarianceEstimator   ####################################################################
 /**
  * \brief Description...
  */
-class EuclideanTransformationValidator : public TransformationValidator {
+template <typename PointT>
+class RegistrationCovarianceEstimator : public ConfigurableObject {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< EuclideanTransformationValidator > Ptr;
-		typedef boost::shared_ptr< const EuclideanTransformationValidator > ConstPtr;
+		typedef boost::shared_ptr< RegistrationCovarianceEstimator<PointT> > Ptr;
+		typedef boost::shared_ptr< const RegistrationCovarianceEstimator<PointT> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -48,15 +57,20 @@ class EuclideanTransformationValidator : public TransformationValidator {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		EuclideanTransformationValidator();
-		virtual ~EuclideanTransformationValidator() {}
+		RegistrationCovarianceEstimator() {}
+		virtual ~RegistrationCovarianceEstimator() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanTransformationValidator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RegistrationCovarianceEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
-		virtual bool validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose,
-				double root_mean_square_error = 0.05, double outliers_percentage = 0.6, double inliers_angular_distribution = 0.125, double outliers_angular_distribution = 0.875);
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanTransformationValidator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		void setReferenceCloud(const typename pcl::PointCloud<PointT>::Ptr& reference_cloud_, const typename pcl::search::KdTree<PointT>::Ptr& reference_cloud_search_method);
+		bool computeRegistrationCovariance(const typename pcl::PointCloud<PointT>::Ptr& cloud, const typename pcl::search::KdTree<PointT>::Ptr& search_method, const Eigen::Matrix4f& registration_corrections,
+				const Eigen::Transform<float, 3, Eigen::Affine>& transform_from_map_cloud_data_to_sensor_origin, const std::string& sensor_frame_id, Eigen::MatrixXd& covariance_out);
+		virtual bool computeRegistrationCovariance(const pcl::PointCloud<PointT>& reference_cloud_correspondences_map_frame,
+				const pcl::PointCloud<PointT>& ambient_cloud_orrespondences_map_frame, const Eigen::Matrix4f& registration_corrections,
+				const Eigen::Transform<float, 3, Eigen::Affine>& transform_from_map_cloud_data_to_sensor_origin, const std::string& sensor_frame_id,
+				Eigen::MatrixXd& covariance_out, double sensor_mean_noise = 0.01) = 0;
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovarianceEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -67,18 +81,20 @@ class EuclideanTransformationValidator : public TransformationValidator {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-		double max_transformation_angle_;
-		double max_transformation_distance_;
-		double max_new_pose_diff_angle_;
-		double max_new_pose_diff_distance_;
-		double max_root_mean_square_error_;
-		double min_overriding_root_mean_square_error_;
-		double max_outliers_percentage_;
-		double min_overriding_outliers_percentage_;
-		double min_inliers_angular_distribution_;
-		double max_outliers_angular_distribution_;
+		typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT>::Ptr correspondence_estimation_;
+		typename RandomSample<PointT>::Ptr random_sample_filter_;
+		double correspondence_distance_threshold_;
+		double sensor_mean_noise_;
+		bool use_reciprocal_correspondences_;
+		typename CloudPublisher<PointT>::Ptr cloud_publisher_reference_cloud_;
+		typename CloudPublisher<PointT>::Ptr cloud_publisher_ambient_cloud_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
 } /* namespace dynamic_robot_localization */
+
+
+#ifdef DRL_NO_PRECOMPILE
+#include <dynamic_robot_localization/registration_covariance_estimators/impl/registration_covariance_estimator.hpp>
+#endif
 

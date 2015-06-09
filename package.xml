@@ -45,5 +45,10 @@
 	<run_depend>pose_to_tf_publisher</run_depend>
 	<run_depend>message_generation</run_depend>
 	<run_depend>message_runtime</run_depend>
-	<run_depend>octomap_server</run_depend>	
+	<run_depend>octomap_server</run_depend>
+	<run_depend>robot_localization</run_depend>
+	
+	<export>
+		<rosdoc config="rosdoc.yaml" />
+	</export>
 </package>

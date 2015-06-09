@@ -35,7 +35,9 @@ void EuclideanTransformationValidator::setupConfigurationFromParameterServer(ros
 	private_node_handle->param(configuration_namespace + "max_new_pose_diff_angle", max_new_pose_diff_angle_, 1.59);
 	private_node_handle->param(configuration_namespace + "max_new_pose_diff_distance", max_new_pose_diff_distance_, 0.2);
 	private_node_handle->param(configuration_namespace + "max_root_mean_square_error", max_root_mean_square_error_, 0.05);
+	private_node_handle->param(configuration_namespace + "min_overriding_root_mean_square_error", min_overriding_root_mean_square_error_, 0.01);
 	private_node_handle->param(configuration_namespace + "max_outliers_percentage", max_outliers_percentage_, 0.6);
+	private_node_handle->param(configuration_namespace + "min_overriding_outliers_percentage", min_overriding_outliers_percentage_, 0.1);
 	private_node_handle->param(configuration_namespace + "min_inliers_angular_distribution", min_inliers_angular_distribution_, 0.125);
 	private_node_handle->param(configuration_namespace + "max_outliers_angular_distribution", max_outliers_angular_distribution_, 0.875);
 }
@@ -58,14 +60,16 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 					<< "\n\t inliers_angular_distribution: "	<< inliers_angular_distribution \
 					<< "\n\t outliers_angular_distribution: "	<< outliers_angular_distribution;
 
-	if (root_mean_square_error < max_root_mean_square_error_
+	if ((root_mean_square_error < min_overriding_root_mean_square_error_ &&
+			outliers_percentage < min_overriding_outliers_percentage_) ||
+			(root_mean_square_error < max_root_mean_square_error_
 			&& outliers_percentage < max_outliers_percentage_
 			&& (max_transformation_distance_ < 0 || transform_distance < max_transformation_distance_)
 			&& (max_transformation_angle_ < 0 || transform_angle < max_transformation_angle_)
 			&& (max_new_pose_diff_distance_ < 0 || new_pose_distance < max_new_pose_diff_distance_)
 			&& (max_new_pose_diff_angle_ < 0 || new_pose_angle < max_new_pose_diff_angle_)
 			&& inliers_angular_distribution > min_inliers_angular_distribution_
-			&& outliers_angular_distribution < max_outliers_angular_distribution_) {
+			&& outliers_angular_distribution < max_outliers_angular_distribution_)) {
 
 		ROS_DEBUG_STREAM("EuclideanTransformationValidator accepted new pose at time " << ros::Time::now() << " -> " << validation_info.str());
 		return true;

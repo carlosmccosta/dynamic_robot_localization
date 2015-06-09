@@ -5,6 +5,7 @@
 	<arg name="pose_topic" default="initial_pose" />
 	<arg name="pose_stamped_topic" default="initial_pose_stamped" />
 	<arg name="pose_with_covariance_stamped_topic" default="/initialpose" /> <!-- rviz topic -->
+	<arg name="pose_with_covariance_stamped_publish_topic" default="localization_pose_with_covariance" /> <!-- rviz topic -->
 	
 	<!-- published pose -->
 	<arg name="pose_stamped_publish_topic" default="localization_pose" />
@@ -16,6 +17,9 @@
 	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
 	
 	<!-- main configurations -->
+	<arg name="use_ukf_filtering" default="false" />
+	<arg name="nodes_namespace" default="dynamic_robot_localization" />
+	<arg name="nodes_respawn" default="true" />
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
 	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_2d.yaml" />
 	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_2d.yaml" />
@@ -41,9 +45,11 @@
 	
 	<!-- sensor data from point cloud topic -->
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
+	<arg name="imu_topic" default="imu" />
 	
 	<!-- intial pose setup -->
 	<arg name="robot_initial_pose_in_base_to_map" default="false" /> <!-- recommendation: use false to allow direct publish of tf between odom -> map -->
+	<arg name="robot_initial_pose_available" default="false" />
 	<arg name="robot_initial_x" default="0.0" />
 	<arg name="robot_initial_y" default="0.0" />
 	<arg name="robot_initial_z" default="0.0" />
@@ -97,15 +103,16 @@
 
 
 	<!-- ==================================================== localization system ============================================= -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="valgrind -tool=memcheck -leak-check=full -show-reachable=yes -v -track-origins=yes" > -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="valgrind -tool=massif -heap=yes -stacks=yes" > -->
-<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen" launch-prefix="gdbserver localhost:1337" > -->
-	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="dynamic_robot_localization" output="screen">
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="$(arg nodes_namespace)" output="screen" launch-prefix="valgrind -tool=memcheck -leak-check=full -show-reachable=yes -v -track-origins=yes" > -->
+	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="$(arg nodes_namespace)" output="screen" launch-prefix="valgrind -tool=massif -heap=yes -stacks=yes" > -->
+<!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="$(arg nodes_namespace)" output="screen" launch-prefix="gdbserver localhost:1337" > -->
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" >
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
 		<param name="frame_ids/sensor_frame_id" type="str" value="$(arg sensor_frame_id)" />
 		<param name="initial_pose/robot_initial_pose_in_base_to_map" type="bool" value="$(arg robot_initial_pose_in_base_to_map)" />
+		<param name="initial_pose/robot_initial_pose_available" type="bool" value="$(arg robot_initial_pose_available)" />
 		<param name="initial_pose/position/x" type="double" value="$(arg robot_initial_x)" />
 		<param name="initial_pose/position/y" type="double" value="$(arg robot_initial_y)" />
 		<param name="initial_pose/position/z" type="double" value="$(arg robot_initial_z)" />
@@ -118,7 +125,7 @@
 		<param name="subscribe_topic_names/ambient_pointcloud_topic" type="str" value="$(arg ambient_pointcloud_topic)" />
 		<param name="subscribe_topic_names/reference_costmap_topic" type="str" value="$(arg reference_costmap_topic)" />
 		<param name="subscribe_topic_names/reference_pointcloud_topic" type="str" value="$(arg reference_pointcloud_topic)" />
-		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="" />
+		<param name="publish_topic_names/pose_with_covariance_stamped_publish_topic" type="str" value="$(arg pose_with_covariance_stamped_publish_topic)" />
 		<param name="publish_topic_names/pose_stamped_publish_topic" type="str" value="$(arg pose_stamped_publish_topic)" />
 		<param name="reference_pointclouds/reference_pointcloud_filename" type="str" value="$(arg reference_pointcloud_filename)" />
 		<param name="reference_pointclouds/reference_pointcloud_preprocessed_save_filename" type="str" value="$(arg reference_pointcloud_preprocessed_save_filename)" />
@@ -136,6 +143,20 @@
 	</node>
 
 
+	<include file="$(find dynamic_robot_localization)/launch/ukf.launch" ns="$(arg nodes_namespace)" if="$(arg use_ukf_filtering)" >
+		<arg name="planar_pose_estimation" default="false" if="$(arg reference_pointcloud_type_3d)" />
+		<arg name="planar_pose_estimation" default="true" unless="$(arg reference_pointcloud_type_3d)" />
+		<arg name="tracking_state_reset_topic" default="initial_pose_with_covariance" />
+		<arg name="sensor_timeout" default="$(arg publish_last_pose_tf_timeout_seconds)" />
+		<arg name="map_frame_id" default="$(arg map_frame_id)" />
+		<arg name="odom_frame_id" default="$(arg odom_frame_id)" />
+		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
+		<arg name="odometry_topic" default="$(arg dynamic_update_of_assembly_configuration_from_odometry_topic)" />
+		<arg name="imu_topic" default="$(arg imu_topic)" />
+		<arg name="nodes_respawn" default="$(arg nodes_respawn)" />
+	</include>
+
+
 	<!-- map to odom publisher -->
 	<include file="$(find pose_to_tf_publisher)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
 		<arg name="publish_rate" default="$(arg publish_pose_tf_rate)" />
@@ -143,7 +164,8 @@
 		<arg name="pose_with_covariance_stamped_topic" default="$(arg pose_with_covariance_stamped_topic)" /> <!-- rviz topic -->
 		<arg name="pose_stamped_topic" default="$(arg pose_stamped_publish_topic)" />
 		<arg name="odometry_topic" default="" />
-		<arg name="map_frame_id" default="$(arg map_frame_id)" />
+		<arg name="map_frame_id" default="$(arg map_frame_id)_drl" if="$(arg use_ukf_filtering)" />
+		<arg name="map_frame_id" default="$(arg map_frame_id)" unless="$(arg use_ukf_filtering)" />
 		<arg name="odom_frame_id" default="$(arg odom_frame_id)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
 		<arg name="publish_initial_pose" default="$(arg publish_initial_pose)" />
@@ -154,15 +176,19 @@
 		<arg name="initial_roll" default="$(arg robot_initial_roll)" />
 		<arg name="initial_pitch" default="$(arg robot_initial_pitch)" />
 		<arg name="initial_yaw" default="$(arg robot_initial_yaw)" />
-		<arg name="invert_tf_transform" default="$(arg invert_tf_transform)" />
-		<arg name="invert_tf_hierarchy" default="$(arg invert_tf_hierarchy)" />
-		<arg name="transform_pose_to_map_frame_id" default="$(arg transform_pose_to_map_frame_id)" />
+		<arg name="invert_tf_transform" default="true" if="$(arg use_ukf_filtering)" />
+		<arg name="invert_tf_transform" default="$(arg invert_tf_transform)" unless="$(arg use_ukf_filtering)" />
+		<arg name="invert_tf_hierarchy" default="true" if="$(arg use_ukf_filtering)" />
+		<arg name="invert_tf_hierarchy" default="$(arg invert_tf_hierarchy)" unless="$(arg use_ukf_filtering)" />
+		<arg name="transform_pose_to_map_frame_id" default="false" if="$(arg use_ukf_filtering)" />
+		<arg name="transform_pose_to_map_frame_id" default="$(arg transform_pose_to_map_frame_id)" unless="$(arg use_ukf_filtering)" />
 		<arg name="parameters_namespace" default="dynamic_robot_localization" />
+		<arg name="nodes_respawn" default="$(arg nodes_respawn)" />
 	</include>
 
 
 	<!-- laser assembler -->
-	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="dynamic_robot_localization" if="$(arg use_laser_assembler)" >
+	<include file="$(find laserscan_to_pointcloud)/launch/laserscan_to_pointcloud_assembler.launch" ns="$(arg nodes_namespace)" if="$(arg use_laser_assembler)" >
 		<arg name="laser_scan_topics" default="$(arg laser_scan_topics)" />
 		<arg name="number_of_tf_queries_for_spherical_interpolation" default="$(arg number_of_tf_queries_for_spherical_interpolation)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
@@ -189,11 +215,12 @@
 		<arg name="recovery_to_target_frame_transform_initial_roll" default="$(arg robot_initial_roll)" />
 		<arg name="recovery_to_target_frame_transform_initial_pitch" default="$(arg robot_initial_pitch)" />
 		<arg name="recovery_to_target_frame_transform_initial_yaw" default="$(arg robot_initial_yaw)" />
+		<arg name="nodes_respawn" default="$(arg nodes_respawn)" />
 	</include>
 
 
 	<!-- OctoMap for dynamic map update -->
-	<group if="$(arg use_octomap_for_dynamic_map_update)" ns="dynamic_robot_localization" >
+	<group if="$(arg use_octomap_for_dynamic_map_update)" ns="$(arg nodes_namespace)" >
 		<include file="$(find dynamic_robot_localization)/launch/octo_map.launch" >
 			<arg name="octomap_file" default="$(arg octomap_file)" />
 			<arg name="cloud_in" default="$(arg octomap_pointcloud_topic)" />
@@ -208,10 +235,11 @@
 			<arg name="cloud_out_topic" default="$(arg octomap_cloud_out_topic)" />
 			<arg name="map_out_topic" default="/map_updated" if="$(arg use_octomap_only_to_build_occupancy_grid)" />
 			<arg name="map_out_topic" default="/map" unless="$(arg use_octomap_only_to_build_occupancy_grid)" />
+			<arg name="nodes_respawn" default="$(arg nodes_respawn)" />
 		</include>
 		
 		<group if="$(arg reference_pointcloud_available)" >
-			<node name="map_server" pkg="map_server" type="map_server" args="$(arg initial_2d_map_file)" output="screen" unless="$(arg reference_pointcloud_type_3d)" >
+			<node name="map_server" pkg="map_server" type="map_server" args="$(arg initial_2d_map_file)" respawn="$(arg nodes_respawn)" clear_params="true" output="screen" unless="$(arg reference_pointcloud_type_3d)" >
 				<param name="frame_id" type="str" value="$(arg map_frame_id)" />
 				<remap from="map" to="initial_2d_map" />
 			</node>

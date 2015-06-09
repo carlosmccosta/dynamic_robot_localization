@@ -77,6 +77,7 @@ catkin_package(
         drl_transformation_validators
         drl_outliers_detectors
         drl_cloud_analyzers
+        drl_registration_covariance_estimators
         drl_localization
     CATKIN_DEPENDS
         ${${PROJECT_NAME}_CATKIN_COMPONENTS}
@@ -201,6 +202,12 @@ add_library(drl_cloud_analyzers
     src/cloud_analyzers/angular_distribution_analyzer.cpp
 )
 
+add_library(drl_registration_covariance_estimators
+    src/registration_covariance_estimators/registration_covariance_estimator.cpp
+    src/registration_covariance_estimators/registration_covariance_point_to_point_3d.cpp
+    src/registration_covariance_estimators/registration_covariance_point_to_plane_3d.cpp
+)
+
 add_library(drl_localization
     src/localization/localization.cpp
 )
@@ -300,6 +307,12 @@ target_link_libraries(drl_cloud_analyzers
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_registration_covariance_estimators
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_localization
     drl_common
     drl_cloud_filters
@@ -310,6 +323,7 @@ target_link_libraries(drl_localization
     drl_transformation_validators
     drl_outliers_detectors
     drl_cloud_analyzers
+    drl_registration_covariance_estimators
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
