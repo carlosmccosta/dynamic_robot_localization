@@ -157,8 +157,10 @@ Installation scripts can be found in this [shared folder.](https://www.dropbox.c
 
 ## More info
 
-* [ICIT 2015 paper](https://www.dropbox.com/sh/yizj93xtvsapl9e/AABdCPKrMX2V58vzpzECKiExa?dl=0)
-* [Results folder](https://www.dropbox.com/sh/nwb6gezj2dan187/AABM2u4BGd12lN__nYFwSktLa?dl=0)
 * [Dissertation webpage](http://carlosmccosta.wix.com/personal-webpage#!dissertation/c12dl)
-* [Dissertation abstract](http://1drv.ms/1odZRYO)
+* [Dissertation pdf](https://www.researchgate.net/publication/277752192_Robot_Self-Localization_in_Dynamic_Environments)
+* [Dissertation latex](https://github.com/carlosmccosta/dynamic_robot_localization_dissertation)
+* [Dissertation abstracts](https://github.com/carlosmccosta/dynamic_robot_localization_dissertation_abstracts)
+* [ICIT 2015 paper](https://www.researchgate.net/publication/275958401_Robust_and_Accurate_Localization_System_for_Mobile_Manipulators_in_Cluttered_Environments)
+* [Results folder](https://www.dropbox.com/sh/nwb6gezj2dan187/AABM2u4BGd12lN__nYFwSktLa?dl=0)
 * [Research](http://1drv.ms/1l8yGei)
