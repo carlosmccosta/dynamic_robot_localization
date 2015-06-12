@@ -7,9 +7,10 @@ echo "##########################################################################
 echo "##### Checking and installing dependencies for drl package"
 echo "####################################################################################################"
 
-sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
+sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl -y
 sudo apt-get update
-
+sudo apt-get upgrade -y
+sudo apt-get dist-upgrade -y
 
 # required system dependencies
 sudo apt-get install libpcl-1.7-all-dev -y
@@ -24,7 +25,7 @@ sudo apt-get install ros-${ros_version}-geometry-msgs -y
 sudo apt-get install ros-${ros_version}-message-generation -y
 sudo apt-get install ros-${ros_version}-pcl-conversions -y
 sudo apt-get install ros-${ros_version}-pcl-ros -y
-sudo apt-get install ros-${ros_version}-ros-cpp-common -y
+sudo apt-get install ros-${ros_version}-cpp-common -y
 sudo apt-get install ros-${ros_version}-rosconsole -y
 sudo apt-get install ros-${ros_version}-sensor-msgs -y
 sudo apt-get install ros-${ros_version}-std-msgs -y
@@ -50,7 +51,7 @@ sudo apt-get install libopenthreads-dev -y
 sudo apt-get install libopenscenegraph-dev -y
 
 
-echo -e "\n\n"
+echo "\n\n"
 echo "----------------------------------------------------------------------------------------------------"
 echo ">>>>> Installation of drl dependencies finished"
 echo "----------------------------------------------------------------------------------------------------"

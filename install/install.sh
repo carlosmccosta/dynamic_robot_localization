@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-catkin_ws=${1:-"$USER/catkin_ws"}
+catkin_ws=${1:-"$HOME/catkin_ws"}
 ros_version=${2:-"$(rosversion -d)"}
 
 script_dir="$(dirname "$(readlink -e "${BASH_SOURCE[0]}")" && echo X)" && script_dir="${script_dir%$'\nX'}"
@@ -18,6 +18,7 @@ echo -e "\n\n"
 echo "--------------------------------------------------------------------"
 echo "--- Installing remaining dependencies"
 
+cd "${catkin_ws}"
 rosdep update
 rosdep check --from-paths src --ignore-src --rosdistro=${ros_version}
 rosdep install --from-paths src --ignore-src --rosdistro=${ros_version}
@@ -35,7 +36,6 @@ echo "##########################################################################
 echo "##### Building catkin workspace"
 echo "####################################################################################################"
 
-cd "${catkin_ws}"
 catkin_make
 
 echo -e "\n\n"

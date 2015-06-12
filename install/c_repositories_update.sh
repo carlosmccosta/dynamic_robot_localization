@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 reset_ws=${1:-true}
 catkin_ws=${2:-"$HOME/catkin_ws"}
