@@ -11,21 +11,21 @@ project(dynamic_robot_localization)
 # set(ROS_COMPILE_FLAGS "-DROSCONSOLE_MIN_SEVERITY=5 ${ROS_COMPILE_FLAGS}")
 
 set(${PROJECT_NAME}_CATKIN_COMPONENTS
-    roscpp
-    std_msgs
-    sensor_msgs
-    geometry_msgs
-    pcl_conversions
-    pcl_ros
-    tf2
-    tf2_ros
-    rosconsole
-    angles
-    dynamic_reconfigure
-    cmake_modules
     laserscan_to_pointcloud
     pose_to_tf_publisher
+    angles
+    cmake_modules
+    dynamic_reconfigure
+    geometry_msgs
     message_generation
+    pcl_conversions
+    pcl_ros
+    roscpp
+    rosconsole
+    sensor_msgs
+    std_msgs
+    tf2
+    tf2_ros
 )
 
 find_package(OpenMP)
