@@ -20,6 +20,13 @@ do
 		echo "-------------------------------------------"
 		echo "==> Cloning ${git_repository}"
 		git clone "https://github.com/carlosmccosta/${git_repository}.git"
+	else
+		echo -e "\n\n"
+		echo "-------------------------------------------"
+		echo "==> Updating ${git_repository}"
+		cd ${git_repository}
+		git pull
+		cd ..
 	fi
 done
 
