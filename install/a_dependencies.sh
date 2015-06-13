@@ -20,12 +20,14 @@ sudo apt-get install libboost-all-dev -y
 # required ros packages
 sudo apt-get install ros-${ros_version}-angles -y
 sudo apt-get install ros-${ros_version}-cmake-modules -y
+sudo apt-get install ros-${ros_version}-cpp-common -y
 sudo apt-get install ros-${ros_version}-dynamic-reconfigure -y
 sudo apt-get install ros-${ros_version}-geometry-msgs -y
+sudo apt-get install ros-${ros_version}-map-server -y
 sudo apt-get install ros-${ros_version}-message-generation -y
+sudo apt-get install ros-${ros_version}-message-runtime -y
 sudo apt-get install ros-${ros_version}-pcl-conversions -y
 sudo apt-get install ros-${ros_version}-pcl-ros -y
-sudo apt-get install ros-${ros_version}-cpp-common -y
 sudo apt-get install ros-${ros_version}-rosconsole -y
 sudo apt-get install ros-${ros_version}-sensor-msgs -y
 sudo apt-get install ros-${ros_version}-std-msgs -y
