@@ -11,7 +11,7 @@ source "${catkin_ws}/devel/setup.bash"
 
 
 "${script_dir}/a_dependencies.sh" ${ros_version}
-"${script_dir}/b_repositories.sh" "${catkin_ws}"
+"${script_dir}/b_repositories.bash" "${catkin_ws}"
 
 
 echo -e "\n\n"

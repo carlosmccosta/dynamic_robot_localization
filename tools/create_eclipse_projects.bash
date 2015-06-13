@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 echo "####################################################################################################"
 echo "##### Creating eclipse project for package dynamic_robot_localization"
