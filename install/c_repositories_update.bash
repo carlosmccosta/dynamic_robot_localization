@@ -49,6 +49,7 @@ echo "##########################################################################
 
 cd "${catkin_ws}"
 find ./src -name "*.sh" -exec chmod +x {} \;
+find ./src -name "*.bash" -exec chmod +x {} \;
 find ./src -name "*.cfg" -exec chmod +x {} \;
 
 catkin_make
