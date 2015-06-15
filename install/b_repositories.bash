@@ -12,6 +12,7 @@ if [ $? -ne 0 ]; then
 	exit -1
 fi
 
+wstool init
 for git_repository in ${repositories}
 do
 	ls "${git_repository}" &> /dev/null
@@ -20,6 +21,7 @@ do
 		echo "-------------------------------------------"
 		echo "==> Cloning ${git_repository}"
 		git clone "https://github.com/carlosmccosta/${git_repository}.git"
+		wstool set ${git_repository} "https://github.com/carlosmccosta/${git_repository}.git" --git -y
 	else
 		echo -e "\n\n"
 		echo "-------------------------------------------"
@@ -35,5 +37,11 @@ echo -e "\n\n"
 echo "----------------------------------------------------------------------------------------------------"
 echo ">>>>> Cloning git repositories finished"
 echo ">>>>> For updating each git repository use: git pull"
-echo ">>>>> Or run ${catkin_ws}/src/dynamic_robot_localization/install/c_repositories_update.sh to update all repositories"
+echo ">>>>> For updating all repositories use:"
+echo ">>>>> ${catkin_ws}/src/dynamic_robot_localization/install/c_repositories_update.sh"
+echo ">>>>> or"
+echo ">>>>> cd ${catkin_ws}/src"
+echo ">>>>> wstool status"
+echo ">>>>> Commit or stash modified files"
+echo ">>>>> wstool update"
 echo "----------------------------------------------------------------------------------------------------"

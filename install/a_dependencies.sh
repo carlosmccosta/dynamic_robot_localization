@@ -15,6 +15,7 @@ sudo apt-get dist-upgrade -y
 # required system dependencies
 sudo apt-get install libpcl-1.7-all-dev -y
 sudo apt-get install libboost-all-dev -y
+sudo apt-get install python-wstool -y
 
 
 # required ros packages
