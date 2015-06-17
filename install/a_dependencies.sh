@@ -4,7 +4,7 @@ ros_version=${1:-"$(rosversion -d)"}
 
 
 echo "####################################################################################################"
-echo "##### Checking and installing dependencies for drl package"
+echo "##### Checking and installing dependencies for dynamic_robot_localization ros package"
 echo "####################################################################################################"
 
 sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl -y
@@ -13,6 +13,8 @@ sudo apt-get upgrade -y
 sudo apt-get dist-upgrade -y
 
 # required system dependencies
+sudo apt-get install coreutils -y
+sudo apt-get install git -y
 sudo apt-get install libpcl-1.7-all-dev -y
 sudo apt-get install libboost-all-dev -y
 sudo apt-get install python-wstool -y
