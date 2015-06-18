@@ -21,6 +21,11 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudPublisher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	std::string final_param_name;
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "publish_only_if_there_is_subscribers", final_param_name)) {
+		private_node_handle->param(final_param_name, publish_pointclouds_only_if_there_is_subscribers_, true);
+	}
+
 	if (!parameter_server_argument_to_load_topic_name_.empty()) {
 		private_node_handle->param(parameter_server_argument_to_load_topic_name_, cloud_publish_topic_, cloud_publish_topic_);
 	}
@@ -33,7 +38,12 @@ void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHand
 
 template<typename PointT>
 void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
-	if (!cloud_publish_topic_.empty() && cloud.size() > 0) {
+	if (!cloud_publisher_.getTopic().empty() && cloud.size() > 0) {
+		if (publish_pointclouds_only_if_there_is_subscribers_ && cloud_publisher_.getNumSubscribers() == 0) {
+			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << cloud_publisher_.getTopic() << " because there is no subscribers");
+			return;
+		}
+
 		sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
 		pcl::toROSMsg(cloud, *cloud_msg);
 		cloud_publisher_.publish(cloud_msg);

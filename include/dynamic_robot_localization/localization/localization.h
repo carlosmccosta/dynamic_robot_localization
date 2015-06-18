@@ -319,7 +319,6 @@ class Localization : public ConfigurableObject {
 		tf2::Transform last_accepted_pose_odom_to_map_;
 		std::vector< tf2::Transform > accepted_pose_corrections_;
 
-
 		// ros communication fields
 		pose_to_tf_publisher::PoseToTFPublisher::Ptr pose_to_tf_publisher_;
 		ros::NodeHandlePtr node_handle_;
@@ -375,6 +374,7 @@ class Localization : public ConfigurableObject {
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_inliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
+		bool publish_aligned_pointcloud_only_if_there_is_subscribers_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 

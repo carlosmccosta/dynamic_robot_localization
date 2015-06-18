@@ -52,7 +52,7 @@ class CloudPublisher : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		CloudPublisher() {}
+		CloudPublisher() : publish_pointclouds_only_if_there_is_subscribers_(true) {}
 		virtual ~CloudPublisher() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -75,6 +75,7 @@ class CloudPublisher : public ConfigurableObject {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
+		bool publish_pointclouds_only_if_there_is_subscribers_;
 		std::string parameter_server_argument_to_load_topic_name_;
 		std::string cloud_publish_topic_;
 		ros::Publisher cloud_publisher_;

@@ -71,7 +71,8 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
 	outlier_percentage_(0.0),
 	number_inliers_(0),
-	root_mean_square_error_inliers_(0.0) {}
+	root_mean_square_error_inliers_(0.0),
+	publish_aligned_pointcloud_only_if_there_is_subscribers_(true) {}
 
 template<typename PointT>
 Localization<PointT>::~Localization() {}
@@ -148,6 +149,7 @@ void Localization<PointT>::setupSubcriptionTopicNames() {
 
 template<typename PointT>
 void Localization<PointT>::setupPublishTopicNames() {
+	private_node_handle_->param("publish_topic_names/publish_aligned_pointcloud_only_if_there_is_subscribers", publish_aligned_pointcloud_only_if_there_is_subscribers_, true);
 	private_node_handle_->param("publish_topic_names/reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
 	private_node_handle_->param("publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("publish_topic_names/pose_with_covariance_stamped_publish_topic", pose_with_covariance_stamped_publish_topic_, std::string("localization_pose_with_covariance"));
@@ -1239,10 +1241,14 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				}
 
 				if (!aligned_pointcloud_publisher_.getTopic().empty()) {
-					ROS_DEBUG_STREAM("Publishing registered ambient pointcloud with " << ambient_pointcloud->size() << " points");
-					sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
-					pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
-					aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
+					if (!publish_aligned_pointcloud_only_if_there_is_subscribers_ || (publish_aligned_pointcloud_only_if_there_is_subscribers_ && aligned_pointcloud_publisher_.getNumSubscribers() > 0)) {
+						ROS_DEBUG_STREAM("Publishing registered ambient pointcloud with " << ambient_pointcloud->size() << " points");
+						sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
+						pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
+						aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
+					} else {
+						ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << aligned_pointcloud_publisher_.getTopic() << " because there is no subscribers");
+					}
 				}
 
 				performance_timer.restart();

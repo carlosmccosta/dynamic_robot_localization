@@ -32,6 +32,10 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	if (ros::param::search(search_namespace, "display_cloud_aligment", final_param_name)) { private_node_handle->param(final_param_name, display_cloud_aligment_, false); }
 	if (ros::param::search(search_namespace, "maximum_number_of_displayed_correspondences", final_param_name)) { private_node_handle->param(final_param_name, maximum_number_of_displayed_correspondences_, 0); } // show all
 
+	cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
+	cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "registered_cloud_publish_topic");
+	cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		double max_correspondence_distance;
