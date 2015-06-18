@@ -38,7 +38,7 @@ void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHand
 
 template<typename PointT>
 void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
-	if (!cloud_publisher_.getTopic().empty() && cloud.size() > 0) {
+	if (!cloud_publisher_.getTopic().empty()) {
 		if (publish_pointclouds_only_if_there_is_subscribers_ && cloud_publisher_.getNumSubscribers() == 0) {
 			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << cloud_publisher_.getTopic() << " because there is no subscribers");
 			return;

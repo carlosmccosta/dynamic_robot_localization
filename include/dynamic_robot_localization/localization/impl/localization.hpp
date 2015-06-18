@@ -53,6 +53,8 @@ Localization<PointT>::Localization() :
 	robot_initial_pose_available_(true),
 	pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_(25),
 	pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_(50),
+	pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_(3),
+	pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_(5),
 	pose_tracking_number_of_failed_registrations_since_last_valid_pose_(0),
 	reference_pointcloud_received_(false),
 	reference_pointcloud_2d_(false),
@@ -498,8 +500,14 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 	private_node_handle_->param("tracking_matchers/pose_tracking_timeout", pose_tracking_timeout, 30.0);
 	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
 
+	double pose_tracking_recovery_timeout;
+	private_node_handle_->param("tracking_matchers/pose_tracking_recovery_timeout", pose_tracking_recovery_timeout, 0.5);
+	pose_tracking_recovery_timeout_.fromSec(pose_tracking_recovery_timeout);
+
 	private_node_handle_->param("tracking_matchers/pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_, 25);
 	private_node_handle_->param("tracking_matchers/pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_, 50);
+	private_node_handle_->param("tracking_matchers/pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_, 3);
+	private_node_handle_->param("tracking_matchers/pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_, 5);
 }
 
 
@@ -1566,6 +1574,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_accepted_pose_performed_tracking_reset_ = false;
 	bool lost_tracking = !robot_initial_pose_available_ || ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_) ||
 			(pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_);
+
 	if (lost_tracking) {
 		ROS_ERROR("Lost tracking!");
 		last_accepted_pose_valid_ = false;
@@ -1648,6 +1657,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
 	performance_timer.restart();
 
+	bool tracking_recovery_reached = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_recovery_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_) || (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_);
 	bool performed_recovery = false;
 
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && lost_tracking) { // lost tracking -> try to find initial pose
@@ -1675,7 +1685,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		if (!applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 			if (tracking_recovery_matchers_.empty()) {
 				return false;
-			} else {
+			} else if (tracking_recovery_reached) {
 				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
 					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
@@ -1726,7 +1736,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		if (!applyTransformationValidators(transformation_validators_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
-			if (!performed_recovery && !tracking_recovery_matchers_.empty()) {
+			if (!performed_recovery && !tracking_recovery_matchers_.empty() && tracking_recovery_reached) {
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
 					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 					computed_normals = true;

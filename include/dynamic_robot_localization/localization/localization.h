@@ -275,6 +275,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
 		ros::Duration pose_tracking_timeout_;
+		ros::Duration pose_tracking_recovery_timeout_;
 		int minimum_number_of_points_in_ambient_pointcloud_;
 		int minimum_number_of_points_in_reference_pointcloud_;
 		bool localization_detailed_use_millimeters_in_root_mean_square_error_inliers_;
@@ -305,6 +306,8 @@ class Localization : public ConfigurableObject {
 		bool robot_initial_pose_available_;
 		int pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_;
+		int pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_;
+		int pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
 		bool reference_pointcloud_received_;
 		bool reference_pointcloud_2d_;
