@@ -1660,7 +1660,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool tracking_recovery_reached = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_recovery_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_) || (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_);
 	bool performed_recovery = false;
 
-	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && lost_tracking) { // lost tracking -> try to find initial pose
+	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose
 		ROS_INFO("Performing initial pose recovery");
 		if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
 			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
