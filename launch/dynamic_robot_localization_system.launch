@@ -14,7 +14,7 @@
 	<arg name="map_frame_id" default="map" />
 	<arg name="odom_frame_id" default="odom" />
 	<arg name="base_link_frame_id" default="base_footprint" />
-	<arg name="sensor_frame_id" default="hokuyo_tilt_laser_link" />
+	<arg name="sensor_frame_id" default="hokuyo_front_laser_link" />
 	
 	<!-- main configurations -->
 	<arg name="use_ukf_filtering" default="false" />

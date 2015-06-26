@@ -169,7 +169,7 @@ void Localization<PointT>::setupFrameIds() {
 	private_node_handle_->param("frame_ids/map_frame_id", map_frame_id_, std::string("map"));
 	private_node_handle_->param("frame_ids/odom_frame_id", odom_frame_id_, std::string("odom"));
 	private_node_handle_->param("frame_ids/base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
-	private_node_handle_->param("frame_ids/sensor_frame_id", sensor_frame_id_, std::string("hokuyo_tilt_laser_link"));
+	private_node_handle_->param("frame_ids/sensor_frame_id", sensor_frame_id_, std::string("hokuyo_front_laser_link"));
 }
 
 
