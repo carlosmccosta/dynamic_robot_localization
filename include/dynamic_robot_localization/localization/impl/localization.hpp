@@ -211,10 +211,12 @@ void Localization<PointT>::setupInitialPose() {
 	private_node_handle_->param("initial_pose/robot_initial_pose_available", robot_initial_pose_available_, true);
 
 	tf2::Transform transform_odom_to_base_link;
+	ROS_DEBUG_STREAM("Looking for TF [ " << base_link_frame_id_ << " -> " << odom_frame_id_ << " ]");
 	if (!pose_to_tf_publisher_->getTfCollector().lookForLatestTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Duration(10)) || !math_utils::isTransformValid(transform_odom_to_base_link)) {
 		transform_odom_to_base_link = tf2::Transform::getIdentity();
 		ROS_WARN_STREAM("Failed to get tf from " << base_link_frame_id_ << " to " << odom_frame_id_ << " when setting localization initial pose");
 	}
+	ROS_DEBUG_STREAM("Finished looking for TF [ " << base_link_frame_id_ << " -> " << odom_frame_id_ << " ]");
 
 	if (robot_initial_pose_in_base_to_map) {
 		last_accepted_pose_odom_to_map_ = last_accepted_pose_base_link_to_map_ * transform_odom_to_base_link;
@@ -958,6 +960,7 @@ void Localization<PointT>::startLocalization() {
 
 		// initial pose setup might block while waiting for valid TF
 		while (!ros::Time::isValid() || (reference_pointcloud_available_ && !reference_pointcloud_received_)) {
+			ROS_DEBUG_THROTTLE(1.0, "Waiting for valid time...");
 			ros::spinOnce(); // allows to setup reference map before tf is available (which happens when playing bag files with --pause option)
 		}
 
@@ -1142,7 +1145,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				}
 
 				if (publish_tf_map_odom_) {
-					pose_to_tf_publisher_->publishTF(pose_tf_corrected, ambient_cloud_msg->header.stamp);
+					pose_to_tf_publisher_->publishTF(pose_tf_corrected, ambient_cloud_msg->header.stamp, ambient_cloud_msg->header.stamp);
 				}
 
 				last_accepted_pose_odom_to_map_ = pose_tf_corrected * transform_base_link_to_odom.inverse();

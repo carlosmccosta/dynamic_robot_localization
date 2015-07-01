@@ -160,6 +160,7 @@
 	<!-- map to odom publisher -->
 	<include file="$(find pose_to_tf_publisher)/launch/pose_to_tf_publisher.launch" if="$(arg publish_tf_map_odom)" >
 		<arg name="publish_rate" default="$(arg publish_pose_tf_rate)" />
+		<arg name="tf_lookup_timeout" default="0.5" />
 		<arg name="publish_last_pose_tf_timeout_seconds" default="$(arg publish_last_pose_tf_timeout_seconds)" />
 		<arg name="pose_with_covariance_stamped_topic" default="$(arg pose_with_covariance_stamped_topic)" /> <!-- rviz topic -->
 		<arg name="pose_stamped_topic" default="$(arg pose_stamped_publish_topic)" />

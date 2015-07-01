@@ -9,7 +9,9 @@ repositories=${2:-"dynamic_robot_localization pose_to_tf_publisher laserscan_to_
 
 cd "${catkin_ws}/src"
 if [ $? -ne 0 ]; then
-	exit -1
+	mkdir -p "${catkin_ws}/src"
+	cd "${catkin_ws}/src"
+	catkin_init_workspace
 fi
 
 wstool init
