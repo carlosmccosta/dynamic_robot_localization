@@ -11,7 +11,7 @@ reference_pointclouds:
     use_incremental_map_update: false
 
 message_management:
-    maximum_number_points_ambient_pointcloud_circular_buffer: 1000
+    maximum_number_points_ambient_pointcloud_circular_buffer: 1500
 
 normal_estimators:
     reference_pointcloud:
@@ -33,7 +33,7 @@ normal_estimators:
             dilation_iterations: 1
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false
-        compute_normals_when_recovering_pose_tracking: true
+        compute_normals_when_recovering_pose_tracking: false
         compute_normals_when_estimating_initial_pose: true
         use_filtered_cloud_as_normal_estimation_surface: false
         display_normals: false
@@ -52,12 +52,12 @@ tracking_matchers:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_3d:
 #            convergence_time_limit_seconds: 0.300
-            max_correspondence_distance: 1.0
+            max_correspondence_distance: 0.27
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
-            max_number_of_registration_iterations: 350
-            max_number_of_ransac_iterations: 350
-            ransac_outlier_rejection_threshold: 0.05
+            max_number_of_registration_iterations: 500
+            max_number_of_ransac_iterations: 500
+            ransac_outlier_rejection_threshold: 0.035
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
@@ -74,7 +74,7 @@ tracking_matchers:
 
 outlier_detectors:
     euclidean_outlier_detector:
-        max_inliers_distance: 0.05
+        max_inliers_distance: 0.035
         aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
         aligned_pointcloud_inliers_publish_topic: 'aligned_pointcloud_inliers'
 
@@ -93,4 +93,4 @@ transformation_validators:
         max_new_pose_diff_angle: 1.1
         max_new_pose_diff_distance: 0.8
         max_root_mean_square_error: 0.05
-        max_outliers_percentage: 0.5
+        max_outliers_percentage: 0.7
