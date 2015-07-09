@@ -87,7 +87,7 @@ tracking_matchers:
 
 outlier_detectors:
     euclidean_outlier_detector:
-        max_inliers_distance: 0.07
+        max_inliers_distance: 0.03
         aligned_pointcloud_outliers_publish_topic: 'aligned_pointcloud_outliers'
         aligned_pointcloud_inliers_publish_topic: 'aligned_pointcloud_inliers'
 
@@ -106,7 +106,7 @@ transformation_validators:
         max_new_pose_diff_angle: 1.1
         max_new_pose_diff_distance: 0.7
         max_root_mean_square_error: 0.04
-        max_outliers_percentage: 0.6
+        max_outliers_percentage: 0.75
         min_inliers_angular_distribution: 0.125
         max_outliers_angular_distribution: 0.875
 

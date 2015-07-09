@@ -763,11 +763,13 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 					last_map_received_time_ = ros::Time::now();
 					return;
 				}
+			} else {
+				reference_pointcloud_received_ = false;
 			}
+		} else {
+			reference_pointcloud_received_ = false;
 		}
 	}
-	
-	reference_pointcloud_received_ = false;
 }
 
 

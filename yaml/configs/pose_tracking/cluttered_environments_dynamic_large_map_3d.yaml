@@ -10,8 +10,8 @@ publish_topic_names:
 reference_pointclouds:
     use_incremental_map_update: false
 
-message_management:
-    maximum_number_points_ambient_pointcloud_circular_buffer: 1000
+#message_management:
+#    maximum_number_points_ambient_pointcloud_circular_buffer: 1000
 
 
 #normal_estimators:
