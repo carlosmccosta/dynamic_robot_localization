@@ -20,10 +20,13 @@
 	<arg name="use_ukf_filtering" default="false" />
 	<arg name="nodes_namespace" default="dynamic_robot_localization" />
 	<arg name="nodes_respawn" default="true" />
+	<arg name="drl_localization_node_name" default="drl_localization_node" />
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
 	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_2d.yaml" />
 	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_2d.yaml" />
 	<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_2d.yaml" />
+	<arg name="yaml_configuration_covariance_filename" default="$(find dynamic_robot_localization)/yaml/configs/covariance_estimation/covariance_estimation.yaml" if="$(arg use_ukf_filtering)" />
+	<arg name="yaml_configuration_covariance_filename" default="$(find dynamic_robot_localization)/yaml/configs/empty.yaml" unless="$(arg use_ukf_filtering)" />
 	
 	<!-- reference map data -->
 	<arg name="reference_pointcloud_filename" default="" />
@@ -40,7 +43,8 @@
 	<arg name="reference_pointcloud_descriptors_save_filename" default="" />
 	<arg name="reference_costmap_topic" default="" if="$(arg reference_pointcloud_type_3d)" />
 	<arg name="reference_costmap_topic" default="/map" unless="$(arg reference_pointcloud_type_3d)" />
-	<arg name="reference_pointcloud_topic" default="reference_pointcloud_update" if="$(arg reference_pointcloud_type_3d)" /> <!-- OctoMap is configured to use topic 'reference_pointcloud_update' -->
+	<arg name="reference_costmap_topic_updated" default="/map_updated" />
+	<arg name="reference_pointcloud_topic" default="reference_pointcloud_updated" if="$(arg reference_pointcloud_type_3d)" /> <!-- OctoMap is configured to use topic 'reference_pointcloud_update' -->
 	<arg name="reference_pointcloud_topic" default="" unless="$(arg reference_pointcloud_type_3d)" />
 	
 	<!-- sensor data from point cloud topic -->
@@ -98,7 +102,7 @@
 	<arg name="octomap_override_sensor_z" default="false" if="$(arg reference_pointcloud_type_3d)" />
 	<arg name="octomap_override_sensor_z" default="true" unless="$(arg reference_pointcloud_type_3d)" />
 	<arg name="octomap_override_sensor_z_value" default="0.0" />
-	<arg name="octomap_cloud_out_topic" default="reference_pointcloud_update" />
+	<arg name="octomap_cloud_out_topic" default="reference_pointcloud_updated" />
 	<arg name="initial_2d_map_file" default="" />
 
 
@@ -106,7 +110,7 @@
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="$(arg nodes_namespace)" output="screen" launch-prefix="valgrind -tool=memcheck -leak-check=full -show-reachable=yes -v -track-origins=yes" > -->
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="$(arg nodes_namespace)" output="screen" launch-prefix="valgrind -tool=massif -heap=yes -stacks=yes" > -->
 <!-- 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="true" ns="$(arg nodes_namespace)" output="screen" launch-prefix="gdbserver localhost:1337" > -->
-	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="drl_localization_node" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" >
+	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" >
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
@@ -140,6 +144,7 @@
 		<rosparam command="load" file="$(arg yaml_configuration_pose_estimation_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_recovery_filename)" subst_value="true" />
 		<rosparam command="load" file="$(arg yaml_configuration_tracking_filename)" subst_value="true" />
+		<rosparam command="load" file="$(arg yaml_configuration_covariance_filename)" subst_value="true" />
 	</node>
 
 
@@ -234,8 +239,8 @@
 			<arg name="minimum_amount_of_time_between_ros_msg_publishing" default="$(arg octomap_minimum_amount_of_time_between_ros_msg_publishing)" />
 			<arg name="minimum_number_of_integrations_before_ros_msg_publishing" default="$(arg octomap_minimum_number_of_integrations_before_ros_msg_publishing)" />
 			<arg name="cloud_out_topic" default="$(arg octomap_cloud_out_topic)" />
-			<arg name="map_out_topic" default="/map_updated" if="$(arg use_octomap_only_to_build_occupancy_grid)" />
-			<arg name="map_out_topic" default="/map" unless="$(arg use_octomap_only_to_build_occupancy_grid)" />
+			<arg name="map_out_topic" default="$(arg reference_costmap_topic_updated)" if="$(arg use_octomap_only_to_build_occupancy_grid)" />
+			<arg name="map_out_topic" default="$(arg reference_costmap_topic)" unless="$(arg use_octomap_only_to_build_occupancy_grid)" />
 			<arg name="nodes_respawn" default="$(arg nodes_respawn)" />
 		</include>
 		

@@ -54,8 +54,6 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 template<typename PointT>
 bool IterativeClosestPoint<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 		tf2::Transform& best_pose_correction_out, std::vector<tf2::Transform>& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
-	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_ff(new pcl::PointCloud<PointT>());
-
 	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
 	if (convergence_criteria) {
 		convergence_criteria->resetConvergenceTimer();

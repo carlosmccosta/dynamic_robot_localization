@@ -59,7 +59,7 @@ tracking_matchers:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_2d:
             convergence_time_limit_seconds: 0.090
-            max_correspondence_distance: 0.2
+            max_correspondence_distance: 0.15
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 150
@@ -109,17 +109,3 @@ transformation_validators:
         max_outliers_percentage: 0.75
         min_inliers_angular_distribution: 0.125
         max_outliers_angular_distribution: 0.875
-
-
-#registration_covariance_estimator:
-#    error_metric: 'PointToPoint3D'
-#    correspondance_estimator: 'CorrespondenceEstimation'
-#    correspondence_distance_threshold: 0.1
-#    sensor_mean_noise: 0.02
-#    use_reciprocal_correspondences: false
-#    filtered_reference_cloud_publish_topic: 'covariance_reference_cloud'
-#    filtered_ambient_cloud_publish_topic: 'covariance_ambient_cloud'
-#    random_sample:
-#        number_of_random_samples: 100
-#        invert_sampling: false
-#        filtered_cloud_publish_topic: ''
