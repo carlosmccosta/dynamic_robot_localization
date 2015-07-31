@@ -486,10 +486,10 @@ cloud_analyzers:
 # ===================================================================================================================================================
 #   The covariance matrix of the registration can be computed using a point-to-point or point-to-plane approach
 registration_covariance_estimator:
-    error_metric: 'PointToPoint3D'                                  # PointToPoint3D | PointToPlane3D
+    error_metric: 'PointToPoint3D'                                  # PointToPoint3D | PointToPlane3D | PointToPointPM3D | PointToPlanePM3D
     correspondance_estimator: 'CorrespondenceEstimation'            # CorrespondenceEstimation | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting
     correspondence_distance_threshold: 0.05                         # Maximum distance between point correspondences
-    sensor_mean_noise: 0.01                                         # The mean noise expected in the sensor readings
+    sensor_std_dev_noise: 0.01                                         # The mean noise expected in the sensor readings
     use_reciprocal_correspondences: false
     filtered_reference_cloud_publish_topic: ''
     filtered_ambient_cloud_publish_topic: ''

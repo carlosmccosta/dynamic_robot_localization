@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void RegistrationCovarianceEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	private_node_handle->param(configuration_namespace + "correspondence_distance_threshold", correspondence_distance_threshold_, 0.05);
-	private_node_handle->param(configuration_namespace + "sensor_mean_noise", sensor_mean_noise_, 0.01);
+	private_node_handle->param(configuration_namespace + "sensor_std_dev_noise", sensor_std_dev_noise_, 0.01);
 	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences_, false);
 
 	int number_of_random_sampples;
@@ -72,8 +72,8 @@ void RegistrationCovarianceEstimator<PointT>::setReferenceCloud(const typename p
 
 template<typename PointT>
 bool RegistrationCovarianceEstimator<PointT>::computeRegistrationCovariance(const typename pcl::PointCloud<PointT>::Ptr& cloud, const typename pcl::search::KdTree<PointT>::Ptr& search_method,
-		const Eigen::Matrix4f& registration_corrections, const Eigen::Transform<float, 3, Eigen::Affine>& transform_from_map_cloud_data_to_sensor_origin,
-		const std::string& sensor_frame_id, Eigen::MatrixXd& covariance_out) {
+		const Eigen::Matrix4f& registration_corrections, const Eigen::Transform<float, 3, Eigen::Affine>& transform_from_map_cloud_data_to_base_link,
+		const std::string& base_link_frame_id, Eigen::MatrixXd& covariance_out) {
 	typename pcl::PointCloud<PointT>::Ptr filtered_cloud(new pcl::PointCloud<PointT>());
 
 	size_t cloud_size = cloud->size();
@@ -105,18 +105,36 @@ bool RegistrationCovarianceEstimator<PointT>::computeRegistrationCovariance(cons
 		correspondence_estimation_->determineCorrespondences (*correspondences, correspondence_distance_threshold_);
 	}
 
-	pcl::PointCloud<PointT> reference_cloud_correspondences;
-	pcl::PointCloud<PointT> ambient_cloud_correspondences;
+	pcl::PointCloud<PointT> reference_cloud_correspondences_map_frame;
+	pcl::PointCloud<PointT> ambient_cloud_correspondences_map_frame;
 
 	for (size_t i = 0; i < correspondences->size(); ++i) {
-		reference_cloud_correspondences.push_back((*correspondence_estimation_->getInputTarget())[(*correspondences)[i].index_match]);
-		ambient_cloud_correspondences.push_back((*correspondence_estimation_->getInputSource())[(*correspondences)[i].index_query]);
+		reference_cloud_correspondences_map_frame.push_back((*correspondence_estimation_->getInputTarget())[(*correspondences)[i].index_match]);
+		ambient_cloud_correspondences_map_frame.push_back((*correspondence_estimation_->getInputSource())[(*correspondences)[i].index_query]);
 	}
 
 	ROS_DEBUG_STREAM("Computing covariance for " << correspondences->size() << " correspondences");
 
+	pcl::PointCloud<PointT> reference_cloud_correspondences;
+	pcl::PointCloud<PointT> ambient_cloud_correspondences;
+
+	pcl::transformPointCloudWithNormals(reference_cloud_correspondences_map_frame, reference_cloud_correspondences, transform_from_map_cloud_data_to_base_link);
+	pcl::transformPointCloud(ambient_cloud_correspondences_map_frame, ambient_cloud_correspondences, transform_from_map_cloud_data_to_base_link);
+
+	reference_cloud_correspondences.header = cloud->header;
 	ambient_cloud_correspondences.header = cloud->header;
-	return computeRegistrationCovariance(reference_cloud_correspondences, ambient_cloud_correspondences, registration_corrections, transform_from_map_cloud_data_to_sensor_origin, sensor_frame_id, covariance_out, sensor_mean_noise_);
+	reference_cloud_correspondences.header.frame_id = base_link_frame_id;
+	ambient_cloud_correspondences.header.frame_id = base_link_frame_id;
+
+	if (cloud_publisher_reference_cloud_) {
+		cloud_publisher_reference_cloud_->publishPointCloud(reference_cloud_correspondences);
+	}
+
+	if (cloud_publisher_ambient_cloud_) {
+		cloud_publisher_ambient_cloud_->publishPointCloud(ambient_cloud_correspondences);
+	}
+
+	return computeRegistrationCovariance(reference_cloud_correspondences, ambient_cloud_correspondences, registration_corrections, covariance_out, sensor_std_dev_noise_);
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovarianceEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

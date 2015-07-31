@@ -59,8 +59,7 @@ class RegistrationCovariancePointToPlane3D : public RegistrationCovarianceEstima
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RegistrationCovariancePointToPlane3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual bool computeRegistrationCovariance(const pcl::PointCloud<PointT>& reference_cloud_correspondences_map_frame,
 				const pcl::PointCloud<PointT>& ambient_cloud_orrespondences_map_frame, const Eigen::Matrix4f& registration_corrections,
-				const Eigen::Transform<float, 3, Eigen::Affine>& transform_from_map_cloud_data_to_sensor_origin, const std::string& sensor_frame_id,
-				Eigen::MatrixXd& covariance_out, double sensor_mean_noise = 0.01);
+				Eigen::MatrixXd& covariance_out, double sensor_std_dev_noise = 0.01);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovariancePointToPlane3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -76,6 +75,7 @@ class RegistrationCovariancePointToPlane3D : public RegistrationCovarianceEstima
 };
 
 } /* namespace dynamic_robot_localization */
+
 
 #ifdef DRL_NO_PRECOMPILE
 #include <dynamic_robot_localization/registration_covariance_estimators/impl/registration_covariance_point_to_plane_3d.hpp>

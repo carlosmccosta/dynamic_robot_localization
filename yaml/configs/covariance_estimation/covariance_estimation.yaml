@@ -2,11 +2,11 @@ registration_covariance_estimator:
     error_metric: 'PointToPoint3D'
     correspondance_estimator: 'CorrespondenceEstimation'
     correspondence_distance_threshold: 0.1
-    sensor_mean_noise: 0.02
+    sensor_std_dev_noise: 0.02
     use_reciprocal_correspondences: false
     filtered_reference_cloud_publish_topic: 'covariance_reference_cloud'
     filtered_ambient_cloud_publish_topic: 'covariance_ambient_cloud'
     random_sample:
-        number_of_random_samples: 100
+        number_of_random_samples: 250
         invert_sampling: false
         filtered_cloud_publish_topic: ''

@@ -1,7 +1,7 @@
 #pragma once
 
-/**\file registration_covariance_point_to_point_3d.h
- * \brief Based on implementation from paper "A Closed-form Estimate of 3D ICP Covariance"
+/**\file registration_covariance_point_to_plane_pm_3d.h
+ * \brief Adapted from implementation available in libpointmatcher which was based on paper "An accurate closed-form estimate of ICP's covariance"
  *
  * @version 1.0
  * @author Carlos Miguel Correia da Costa
@@ -32,17 +32,17 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
-// ##################################################################   RegistrationCovariancePointToPoint3D   #################################################################
+// #################################################################   RegistrationCovariancePointToPlanePM3D   ################################################################
 /**
  * \brief Description...
  */
 template <typename PointT>
-class RegistrationCovariancePointToPoint3D : public RegistrationCovarianceEstimator<PointT> {
+class RegistrationCovariancePointToPlanePM3D : public RegistrationCovarianceEstimator<PointT> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< RegistrationCovariancePointToPoint3D<PointT> > Ptr;
-		typedef boost::shared_ptr< const RegistrationCovariancePointToPoint3D<PointT> > ConstPtr;
+		typedef boost::shared_ptr< RegistrationCovariancePointToPlanePM3D<PointT> > Ptr;
+		typedef boost::shared_ptr< const RegistrationCovariancePointToPlanePM3D<PointT> > ConstPtr;
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -52,15 +52,15 @@ class RegistrationCovariancePointToPoint3D : public RegistrationCovarianceEstima
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		RegistrationCovariancePointToPoint3D() {}
-		virtual ~RegistrationCovariancePointToPoint3D() {}
+		RegistrationCovariancePointToPlanePM3D(bool use_normals = true) : use_normals_(use_normals) {}
+		virtual ~RegistrationCovariancePointToPlanePM3D() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RegistrationCovariancePointToPoint3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RegistrationCovariancePointToPlanePM3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual bool computeRegistrationCovariance(const pcl::PointCloud<PointT>& reference_cloud_correspondences_map_frame,
 				const pcl::PointCloud<PointT>& ambient_cloud_orrespondences_map_frame, const Eigen::Matrix4f& registration_corrections,
 				Eigen::MatrixXd& covariance_out, double sensor_std_dev_noise = 0.01);
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovariancePointToPoint3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovariancePointToPlanePM3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -71,6 +71,7 @@ class RegistrationCovariancePointToPoint3D : public RegistrationCovarianceEstima
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
+		bool use_normals_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
@@ -78,6 +79,6 @@ class RegistrationCovariancePointToPoint3D : public RegistrationCovarianceEstima
 
 
 #ifdef DRL_NO_PRECOMPILE
-#include <dynamic_robot_localization/registration_covariance_estimators/impl/registration_covariance_point_to_point_3d.hpp>
+#include <dynamic_robot_localization/registration_covariance_estimators/impl/registration_covariance_point_to_plane_pm_3d.hpp>
 #endif
 

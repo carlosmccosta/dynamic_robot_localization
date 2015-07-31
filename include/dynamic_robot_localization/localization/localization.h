@@ -109,6 +109,8 @@
 #include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_estimator.h>
 #include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_point_to_point_3d.h>
 #include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_point_to_plane_3d.h>
+#include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_point_to_point_pm_3d.h>
+#include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_point_to_plane_pm_3d.h>
 
 #include <dynamic_robot_localization/common/circular_buffer_pointcloud.h>
 #include <dynamic_robot_localization/common/performance_timer.h>

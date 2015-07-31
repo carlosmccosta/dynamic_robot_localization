@@ -207,6 +207,8 @@ add_library(drl_registration_covariance_estimators
     src/registration_covariance_estimators/registration_covariance_estimator.cpp
     src/registration_covariance_estimators/registration_covariance_point_to_point_3d.cpp
     src/registration_covariance_estimators/registration_covariance_point_to_plane_3d.cpp
+    src/registration_covariance_estimators/registration_covariance_point_to_point_pm_3d.cpp
+    src/registration_covariance_estimators/registration_covariance_point_to_plane_pm_3d.cpp
 )
 
 add_library(drl_localization

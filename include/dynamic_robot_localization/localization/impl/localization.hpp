@@ -686,7 +686,11 @@ void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations()
 	std::string covariance_error_metric;
 	private_node_handle_->param(configuration_namespace + "error_metric", covariance_error_metric, std::string("None"));
 
-	if (covariance_error_metric == "PointToPoint3D") {
+	if (covariance_error_metric == "PointToPointPM3D") {
+		registration_covariance_estimator_.reset(new RegistrationCovariancePointToPointPM3D<PointT>());
+	} else if (covariance_error_metric == "PointToPlanePM3D") {
+		registration_covariance_estimator_.reset(new RegistrationCovariancePointToPlanePM3D<PointT>());
+	} else if (covariance_error_metric == "PointToPoint3D") {
 		registration_covariance_estimator_.reset(new RegistrationCovariancePointToPoint3D<PointT>());
 	} else if (covariance_error_metric == "PointToPlane3D") {
 		registration_covariance_estimator_.reset(new RegistrationCovariancePointToPlane3D<PointT>());
@@ -1780,6 +1784,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
+	/*pointcloud_pose_corrected_out.getOrigin().setInterpolate3(last_accepted_pose_base_link_to_map_.getOrigin(), pointcloud_pose_corrected_out.getOrigin(), 0.6);
+	pointcloud_pose_corrected_out.setRotation(tf2::slerp(last_accepted_pose_base_link_to_map_.getRotation(), pointcloud_pose_corrected_out.getRotation(), 0.6));*/
+
+	pointcloud_pose_corrected_out.getRotation().normalize();
+	pose_corrections_out.getRotation().normalize();
 
 	localization_times_msg_.transformation_validators_time += performance_timer.getElapsedTimeInMilliSec();
 	ambient_pointcloud->header.stamp = pointcloud_time.toNSec() / 1000;
@@ -1793,22 +1802,17 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		pose_corrections_out.getOpenGLMatrix(opengl_matrix);
 		Eigen::Matrix4d registration_corrections(opengl_matrix);
 
-		tf2::Transform transform_from_map_cloud_data_to_sensor_origin;
-		if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_from_map_cloud_data_to_sensor_origin, sensor_frame_id_, map_frame_id_, pointcloud_time) && math_utils::isTransformValid(transform_from_map_cloud_data_to_sensor_origin)) {
-			ROS_WARN_STREAM("Missing TF between " << map_frame_id_ << " and " << sensor_frame_id_);
-			transform_from_map_cloud_data_to_sensor_origin.setIdentity();
+		if (registered_inliers_->size() > minimum_number_of_points_in_ambient_pointcloud_) {
+			typename pcl::search::KdTree<PointT>::Ptr registered_inliers_search_method(new pcl::search::KdTree<PointT>());
+			registered_inliers_search_method->setInputCloud(ambient_pointcloud);
+			registration_covariance_estimator_->computeRegistrationCovariance(registered_inliers_, registered_inliers_search_method, registration_corrections.cast<float>(),
+					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<float>(pointcloud_pose_corrected_out.inverse()), base_link_frame_id_, last_accepted_pose_covariance_);
+		} else {
+			registration_covariance_estimator_->computeRegistrationCovariance(ambient_pointcloud, ambient_search_method, registration_corrections.cast<float>(),
+					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<float>(pointcloud_pose_corrected_out.inverse()), base_link_frame_id_, last_accepted_pose_covariance_);
 		}
-
-		registration_covariance_estimator_->computeRegistrationCovariance(ambient_pointcloud, ambient_search_method, registration_corrections.cast<float>(),
-				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<float>(transform_from_map_cloud_data_to_sensor_origin), sensor_frame_id_, last_accepted_pose_covariance_);
 	}
 	localization_times_msg_.covariance_estimator_time = performance_timer.getElapsedTimeInMilliSec();
-
-	pointcloud_pose_corrected_out.getRotation().normalize();
-	pose_corrections_out.getRotation().normalize();
-
-	/*pointcloud_pose_corrected_out.getOrigin().setInterpolate3(last_accepted_pose_base_link_to_map_.getOrigin(), pointcloud_pose_corrected_out.getOrigin(), 0.6);
-	pointcloud_pose_corrected_out.setRotation(tf2::slerp(last_accepted_pose_base_link_to_map_.getRotation(), pointcloud_pose_corrected_out.getRotation(), 0.6));*/
 
 	last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
 	last_accepted_pose_time_ = ros::Time::now();
