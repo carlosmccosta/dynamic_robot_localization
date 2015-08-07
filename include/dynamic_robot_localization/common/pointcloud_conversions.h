@@ -32,7 +32,8 @@
 #include <pcl/visualization/cloud_viewer.h>
 
 // external libs includes
-#include <Eigen/src/Geometry/Transform.h>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes

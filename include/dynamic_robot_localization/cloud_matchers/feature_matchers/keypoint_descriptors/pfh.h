@@ -25,6 +25,7 @@
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <Eigen/Core>
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/keypoint_descriptors/keypoint_descriptor_from_normals.h>

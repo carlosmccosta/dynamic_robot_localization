@@ -29,9 +29,10 @@ bool RegistrationCovariancePointToPlane3D<PointT>::computeRegistrationCovariance
 	double correction_x = registration_corrections(0, 3);
 	double correction_y = registration_corrections(1, 3);
 	double correction_z = registration_corrections(2, 3);
-	double correction_roll = atan2f(registration_corrections(2, 1), registration_corrections(2, 2));
-	double correction_pitch = asinf(-registration_corrections(2, 0));
-	double correction_yaw = atan2f(registration_corrections(1, 0), registration_corrections(0, 0));
+
+	double correction_roll, correction_pitch, correction_yaw;
+	math_utils::getRollPitchYawFromMatrix(registration_corrections, correction_roll, correction_pitch, correction_yaw);
+
 	double cos_roll = cos(correction_roll);
 	double sin_roll = sin(correction_roll);
 	double cos_pitch = cos(correction_pitch);
@@ -161,7 +162,9 @@ bool RegistrationCovariancePointToPlane3D<PointT>::computeRegistrationCovariance
 
 	Eigen::MatrixXd cov_z(6 * ambient_cloud_orrespondences_size, 6 * ambient_cloud_orrespondences_size);
 	cov_z = sensor_std_dev_noise * sensor_std_dev_noise * Eigen::MatrixXd::Identity(6 * ambient_cloud_orrespondences_size, 6 * ambient_cloud_orrespondences_size);
-	covariance_out = d2J_dX2.inverse() * d2J_dZdX * cov_z * d2J_dZdX.transpose() * d2J_dX2.inverse();
+	Eigen::FullPivLU<Eigen::MatrixXd> lu(d2J_dX2);
+	Eigen::MatrixXd d2J_dX2_inverse = lu.inverse();
+	covariance_out = d2J_dX2_inverse * d2J_dZdX * cov_z * d2J_dZdX.transpose() * d2J_dX2_inverse;
 
 	return true;
 }

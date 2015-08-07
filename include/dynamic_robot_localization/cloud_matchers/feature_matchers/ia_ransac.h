@@ -44,6 +44,7 @@
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/common/time.h>
+#include <Eigen/Core>
 
 namespace dynamic_robot_localization
 {

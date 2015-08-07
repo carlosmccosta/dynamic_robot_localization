@@ -19,6 +19,8 @@
 #include <pcl/pcl_macros.h>
 
 // external libs includes
+#include <Eigen/Core>
+
 // project includes
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -48,6 +50,9 @@ PointPosition computePointPosition(float cross_product_z);
 
 
 bool isTransformValid(const tf2::Transform& transform);
+
+void getRollPitchYawFromMatrix(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out);
+void getRollPitchYawFromMatrixUsigTF2(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out);
 
 
 } /* namespace math_utils */

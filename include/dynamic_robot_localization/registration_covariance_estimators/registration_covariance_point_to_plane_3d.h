@@ -25,8 +25,12 @@
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <Eigen/Core>
+#include <Eigen/LU>
+
 
 // project includes
+#include <dynamic_robot_localization/common/math_utils.h>
 #include <dynamic_robot_localization/registration_covariance_estimators/registration_covariance_estimator.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

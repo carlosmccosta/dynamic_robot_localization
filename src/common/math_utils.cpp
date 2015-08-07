@@ -44,6 +44,7 @@ PointPosition computePointPosition(float cross_product_z) {
 	}
 }
 
+
 bool isTransformValid(const tf2::Transform& transform) {
 	tf2::Vector3 position = transform.getOrigin();
 	tf2::Quaternion orientation = transform.getRotation();
@@ -53,6 +54,22 @@ bool isTransformValid(const tf2::Transform& transform) {
 	}
 
 	return true;
+}
+
+
+void getRollPitchYawFromMatrix(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out) {
+	roll_out = atan2(matrix(2, 1), matrix(2, 2));
+	pitch_out = asin(-matrix(2, 0));
+//	pitch_out = atan2(-matrix(2,0), std::sqrt(matrix(2,1) * matrix(2,1) + matrix(2,2) * matrix(2,2)));
+	yaw_out = atan2(matrix(1, 0), matrix(0, 0));
+}
+
+
+void getRollPitchYawFromMatrixUsigTF2(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out) {
+	tf2::Transform transform;
+	Eigen::Matrix4d doubleMatrix(matrix.cast<double>());
+	transform.setFromOpenGLMatrix(doubleMatrix.data());
+	transform.getBasis().getRPY(roll_out, pitch_out, yaw_out);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </math_utils-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

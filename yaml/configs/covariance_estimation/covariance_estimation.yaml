@@ -1,5 +1,5 @@
 registration_covariance_estimator:
-    error_metric: 'PointToPoint3D'
+    error_metric: 'PointToPlane3D'
     correspondance_estimator: 'CorrespondenceEstimation'
     correspondence_distance_threshold: 0.1
     sensor_std_dev_noise: 0.02

@@ -63,6 +63,7 @@
 #include <pcl/common/point_tests.h>
 #include <pcl/common/time.h>
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <Eigen/Core>
 
 
 #ifdef _OPENMP

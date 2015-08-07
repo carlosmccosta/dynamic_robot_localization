@@ -33,9 +33,9 @@ bool RegistrationCovariancePointToPlanePM3D<PointT>::computeRegistrationCovarian
 	Eigen::MatrixXd d2J_dReadingdX(Eigen::MatrixXd::Zero(6, number_points));
 	Eigen::MatrixXd d2J_dReferencedX(Eigen::MatrixXd::Zero(6, number_points));
 
-	double correction_pitch = -asin(registration_corrections(2,0));
-	double correction_roll = atan2(registration_corrections(2,1), registration_corrections(2,2));
-	double correction_yaw = atan2(registration_corrections(1,0)/cos(correction_pitch), registration_corrections(0,0)/cos(correction_pitch));
+	double correction_roll, correction_pitch, correction_yaw;
+	math_utils::getRollPitchYawFromMatrix(registration_corrections, correction_roll, correction_pitch, correction_yaw);
+
 	double correction_x = registration_corrections(0,3);
 	double correction_y = registration_corrections(1,3);
 	double correction_z = registration_corrections(2,3);
@@ -96,12 +96,14 @@ bool RegistrationCovariancePointToPlanePM3D<PointT>::computeRegistrationCovarian
 	d2J_dZdX.block(0,0,6,valid_points_count) = d2J_dReadingdX.block(0,0,6,valid_points_count);
 	d2J_dZdX.block(0,valid_points_count,6,valid_points_count) = d2J_dReferencedX.block(0,0,6,valid_points_count);
 
-	Eigen::MatrixXd inv_J_hessian = J_hessian.inverse();
+//	Eigen::MatrixXd inv_J_hessian = J_hessian.inverse();
+	Eigen::FullPivLU<Eigen::MatrixXd> lu(J_hessian);
+	Eigen::MatrixXd inv_J_hessian = lu.inverse();
 
 	covariance_out = d2J_dZdX * d2J_dZdX.transpose();
 	covariance_out = inv_J_hessian * covariance_out * inv_J_hessian;
 	covariance_out = (sensor_std_dev_noise * sensor_std_dev_noise) * covariance_out;
-	
+
 	return true;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovariancePointToPlanePM3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

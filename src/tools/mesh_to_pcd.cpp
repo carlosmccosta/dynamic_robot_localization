@@ -24,6 +24,7 @@
 #include <pcl/console/time.h>
 
 // external libs includes
+#include <Eigen/Core>
 
 // project includes
 #include <dynamic_robot_localization/common/pointcloud_conversions.h>

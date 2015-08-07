@@ -136,7 +136,6 @@ bool RegistrationCovarianceEstimator<PointT>::computeRegistrationCovariance(cons
 
 	return computeRegistrationCovariance(reference_cloud_correspondences, ambient_cloud_correspondences, registration_corrections, covariance_out, sensor_std_dev_noise_);
 }
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </RegistrationCovarianceEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

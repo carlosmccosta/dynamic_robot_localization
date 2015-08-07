@@ -22,6 +22,7 @@
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <Eigen/Core>
 
 // project includes
 #include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
