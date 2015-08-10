@@ -506,6 +506,10 @@ void Localization<PointT>::setupCloudMatchersConfigurations() {
 	private_node_handle_->param("tracking_matchers/pose_tracking_recovery_timeout", pose_tracking_recovery_timeout, 0.5);
 	pose_tracking_recovery_timeout_.fromSec(pose_tracking_recovery_timeout);
 
+	double initial_pose_estimation_timeout;
+	private_node_handle_->param("initial_pose_estimators_matchers/initial_pose_estimation_timeout", initial_pose_estimation_timeout, 600.0);
+	initial_pose_estimation_timeout_.fromSec(initial_pose_estimation_timeout);
+
 	private_node_handle_->param("tracking_matchers/pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_, 25);
 	private_node_handle_->param("tracking_matchers/pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_, 50);
 	private_node_handle_->param("tracking_matchers/pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_, 3);
@@ -1670,19 +1674,28 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool performed_recovery = false;
 
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose
-		ROS_INFO("Performing initial pose recovery");
-		if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
-			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
-			computed_normals = true;
+		if (!received_external_initial_pose_estimation_ && !initial_pose_estimators_feature_matchers_.empty()) {
+			ros::Duration time_from_last_pose = ros::Time::now() - last_accepted_pose_time_;
+			if (time_from_last_pose < initial_pose_estimation_timeout_) {
+				ROS_INFO("Performing initial pose recovery");
+				if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+					computed_normals = true;
+				}
+
+				if (!computed_keypoints && compute_keypoints_when_estimating_initial_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+					applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out);
+					computed_keypoints = true;
+				}
+
+				applyCloudRegistration(initial_pose_estimators_feature_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out);
+			} else {
+				ROS_DEBUG_STREAM("Timeout of " << initial_pose_estimation_timeout_ << " seconds reached (" << time_from_last_pose << " seconds from last valid pose)");
+			}
 		}
 
-		if (!computed_keypoints && compute_keypoints_when_estimating_initial_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
-			applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out);
-			computed_keypoints = true;
-		}
-
-		if (!received_external_initial_pose_estimation_ && !initial_pose_estimators_feature_matchers_.empty()) { applyCloudRegistration(initial_pose_estimators_feature_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out); }
 		if (!initial_pose_estimators_point_matchers_.empty() && !applyCloudRegistration(initial_pose_estimators_point_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) { return false; }
+
 		localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 		last_accepted_pose_performed_tracking_reset_ = true;
 		ROS_INFO("Successfully performed initial pose estimation");

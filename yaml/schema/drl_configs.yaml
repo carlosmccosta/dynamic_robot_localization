@@ -329,10 +329,10 @@ keypoint_detectors:
 tracking_matchers:
     ignore_height_corrections: false                                # When activated, the pose corrections in the z axis will be ignored
     use_internal_tracking: true                                     # If true it will store the transform [map_frame_id -> odom_frame_id] internally, otherwise it will query TF
-    pose_tracking_timeout: 30.0                                     # When point cloud registration has failed during this amount of time, the initial pose recovery algorithms will be activated
+    pose_tracking_timeout: 30.0                                     # When point cloud registration has failed during this amount of time (seconds), the initial pose recovery algorithms will be activated
     pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 25  # Initial pose estimation will be activated if the registration has failed at least [this number] and the pose_tracking_timeout has been reached
     pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 50 # When cloud registration fails for more than [this number], the initial pose recovery algorithms will be activated
-    pose_tracking_recovery_timeout: 0.5                             # When point cloud registration has failed during this amount of time, the pose tracking recovery algorithms will be activated
+    pose_tracking_recovery_timeout: 0.5                             # When point cloud registration has failed during this amount of time (seconds), the pose tracking recovery algorithms will be activated
     pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose: 3  # Pose tracking recovery will be activated if the registration has failed at least [this number] and the pose_tracking_recovery_timeout has been reached
     pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose: 5 # When cloud registration fails for more than [this number], the pose tracking recovery algorithms will be activated
     max_correspondence_distance: 0.1                                # Can be overridden in child namespaces | The maximum distance threshold between two correspondent points in source <-> target. If the distance is larger than this threshold, the points will be ignored in the alignment process
@@ -454,7 +454,8 @@ tracking_recovery_matchers:          # Any of the feature / point matchers shown
 #    Given that the initial pose estimation can have a very different set of algorithms and parameters (in relation to tracking), the localization system will rely on the configuration under initial_pose_estimators_matchers/ namespace
 # for initial pose estiamtion when the tracking has failed to recover for over tracking_matchers/pose_tracking_timeout seconds.
 initial_pose_estimators_matchers:   # Any of the feature / point matchers shown above can be used (same configuration layout). Allows prefix and postfix of letters to ensure parsing order inside each type of matcher.
-    publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
+    publish_pointclouds_only_if_there_is_subscribers: true              # Can be overridden in child namespaces
+    initial_pose_estimation_timeout: 600.0                              # Maximum time (seconds) that the initial pose estimation systems are allowed to try to find the initial pose of the robot (useful when the robot starts in an unkown section of the map and it is undesirable to try to find the robot pose indefinitely)
     feature_matchers:               # Feature matchers are applied before point matchers.
         registered_cloud_publish_topic: ''                              # Can be overridden in child namespaces
     point_matchers:
