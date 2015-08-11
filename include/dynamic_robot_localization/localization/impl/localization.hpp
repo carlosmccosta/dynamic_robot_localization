@@ -889,8 +889,18 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 			return;
 		}
 
+		bool tf_available = false;
 		tf2::Transform transform_odom_to_base_link;
-		if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time_updated)) {
+		if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time)) {
+			tf_available = true;
+		} else {
+			if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time(0))) {
+				ROS_WARN_STREAM("Set new initial pose using latest TF because there is no transform from frame [" << base_link_frame_id_ << "] to frame [" << odom_frame_id_ << "] at time " << pose_time);
+				tf_available = true;
+			}
+		}
+
+		if (tf_available) {
 			tf2::Transform last_accepted_pose_odom_to_map = transform_base_link_to_map * transform_odom_to_base_link;
 			if (!math_utils::isTransformValid(last_accepted_pose_odom_to_map)) {
 				ROS_WARN("Discarded initial pose because the multiplication of [transform_base_link_to_map * transform_odom_to_base_link] resulted in a transform with NaN values!");
