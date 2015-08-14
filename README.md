@@ -40,6 +40,20 @@ Video 4: Free fly test with Kinect in the ETHZ RGB-D dataset using the 6 DoF loc
 Video 5: Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
 
 
+[![3 DoF localization system tests with the Guardian platform in Labiomep dataset](http://img.youtube.com/vi/VtOv4beLcBM/maxresdefault.jpg)](http://www.youtube.com/watch?v=VtOv4beLcBM)
+
+Video 6: 3 DoF localization system tests with the Guardian platform in Labiomep dataset
+
+
+[![Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system](http://img.youtube.com/vi/p4JaE6i7NqM/maxresdefault.jpg)](http://www.youtube.com/watch?v=p4JaE6i7NqM)
+
+Video 7: Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system
+
+
+[![Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/Us9XkcRx_5I/maxresdefault.jpg)](http://www.youtube.com/watch?v=Us9XkcRx_5I)
+
+Video 8: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+
 
 ## Data sources
 
