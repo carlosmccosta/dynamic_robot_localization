@@ -17,42 +17,52 @@ Figure 1: Localization system processing pipeline
 
 [![3 DoF localization system tests with the Guardian platform in the CROB lab](http://img.youtube.com/vi/Rl6utteku8k/maxresdefault.jpg)](http://www.youtube.com/watch?v=Rl6utteku8k)
 
-Video 1: 3 DoF localization system tests with the Guardian platform in the CROB lab
+Video 1: 3 DoF localization and navigation tests with the Guardian platform in the CROB lab
+
+
+[![3 DoF localization and navigation tests with the Guardian platform in ship interior at Deltamatic](http://img.youtube.com/vi/uG6AVm-FAM4/maxresdefault.jpg)](http://www.youtube.com/watch?v=uG6AVm-FAM4)
+
+Video 2: 3 DoF localization and navigation tests with the Guardian platform in ship interior at Deltamatic
+
+
+[![3 DoF localization and navigation tests with the Guardian platform in ship interior at Aimen](http://img.youtube.com/vi/9jh58dxR7_M/maxresdefault.jpg)](http://www.youtube.com/watch?v=9jh58dxR7_M)
+
+Video 3: 3 DoF localization and navigation tests with the Guardian platform in ship interior at Aimen
 
 
 [![3 DoF localization system tests with the Jarvis platform in the CROB lab](http://img.youtube.com/vi/DCYdJtbad18/maxresdefault.jpg)](http://www.youtube.com/watch?v=DCYdJtbad18)
 
-Video 2: 3 DoF localization system tests with the Jarvis platform in the CROB lab
+Video 4: 3 DoF localization system tests with the Jarvis platform in the CROB lab
 
 
 [![3 DoF localization system tests with the Pioneer platform in TUM RGB-D dataset](http://img.youtube.com/vi/jAJ5wiN-mJ8/maxresdefault.jpg)](http://www.youtube.com/watch?v=jAJ5wiN-mJ8)
 
-Video 3: 3 DoF localization system tests with the Pioneer platform in the TUM RGB-D dataset
+Video 5: 3 DoF localization system tests with the Pioneer platform in the TUM RGB-D dataset
 
 
 [![Free fly test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/UslDiUkm7wE/maxresdefault.jpg)](http://www.youtube.com/watch?v=UslDiUkm7wE)
 
-Video 4: Free fly test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+Video 6: Free fly test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
 
 
 [![Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/2OYWJIi9Rdk/maxresdefault.jpg)](http://www.youtube.com/watch?v=2OYWJIi9Rdk)
 
-Video 5: Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+Video 7: Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
 
 
 [![3 DoF localization system tests with the Guardian platform in Labiomep dataset](http://img.youtube.com/vi/VtOv4beLcBM/maxresdefault.jpg)](http://www.youtube.com/watch?v=VtOv4beLcBM)
 
-Video 6: 3 DoF localization system tests with the Guardian platform in Labiomep dataset
+Video 8: 3 DoF localization system tests with the Guardian platform in Labiomep dataset
 
 
 [![Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system](http://img.youtube.com/vi/p4JaE6i7NqM/maxresdefault.jpg)](http://www.youtube.com/watch?v=p4JaE6i7NqM)
 
-Video 7: Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system
+Video 9: Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system
 
 
 [![Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/Us9XkcRx_5I/maxresdefault.jpg)](http://www.youtube.com/watch?v=Us9XkcRx_5I)
 
-Video 8: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+Video 10: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
 
 
 ## Data sources
@@ -153,7 +163,7 @@ The main tests performed using the dynamic_robot_localization package are availa
 
 ## Installation and package dependencies
 
-Installation scripts can be found in this [shared folder.](https://www.dropbox.com/sh/fkio31gyt55oolj/AACGFB2gB5eH-o8B0Cc4qeHma?dl=0)
+Installation scripts can be found in the [install folder.](install/)
 
 
 
