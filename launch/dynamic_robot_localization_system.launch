@@ -69,6 +69,7 @@
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
 	<arg name="min_range_cutoff_percentage_offset" default="2.00" />
 	<arg name="max_range_cutoff_percentage_offset" default="0.95" />
+	<arg name="laser_asssembler_remove_invalid_measurements" default="true" />
 	<arg name="number_of_tf_queries_for_spherical_interpolation" default="4" />
 	<arg name="number_of_scans_to_assemble_per_cloud" default="2" />
 	<arg name="timeout_for_cloud_assembly" default="0.5" />
@@ -199,6 +200,7 @@
 		<arg name="number_of_tf_queries_for_spherical_interpolation" default="$(arg number_of_tf_queries_for_spherical_interpolation)" />
 		<arg name="number_of_scans_to_assemble_per_cloud" default="$(arg number_of_scans_to_assemble_per_cloud)" />
 		<arg name="timeout_for_cloud_assembly" default="$(arg timeout_for_cloud_assembly)" />
+		<arg name="remove_invalid_measurements" default="$(arg laser_asssembler_remove_invalid_measurements)" />
 		<arg name="dynamic_update_of_assembly_configuration_from_twist_topic" default="$(arg dynamic_update_of_assembly_configuration_from_twist_topic)" />
 		<arg name="dynamic_update_of_assembly_configuration_from_odometry_topic" default="$(arg dynamic_update_of_assembly_configuration_from_odometry_topic)" />
 		<arg name="dynamic_update_of_assembly_configuration_from_imu_topic" default="$(arg dynamic_update_of_assembly_configuration_from_imu_topic)" />
