@@ -20,14 +20,14 @@ Figure 1: Localization system processing pipeline
 Video 1: 3 DoF localization and navigation tests with the Guardian platform in the CROB lab
 
 
-[![3 DoF localization and navigation tests with the Guardian platform in ship interior at Deltamatic](http://img.youtube.com/vi/uG6AVm-FAM4/maxresdefault.jpg)](http://www.youtube.com/watch?v=uG6AVm-FAM4)
+[![3 DoF localization and navigation tests with the Guardian platform in ship interior](http://img.youtube.com/vi/NCh9ahU_Qcs/maxresdefault.jpg)](http://www.youtube.com/watch?v=NCh9ahU_Qcs)
 
-Video 2: 3 DoF localization and navigation tests with the Guardian platform in ship interior at Deltamatic
+Video 2: 3 DoF localization and navigation tests with the Guardian platform in ship interior
 
 
-[![3 DoF localization and navigation tests with the Guardian platform in ship interior at Aimen](http://img.youtube.com/vi/9jh58dxR7_M/maxresdefault.jpg)](http://www.youtube.com/watch?v=9jh58dxR7_M)
+[![3 DoF localization, navigation and welding tests with the Guardian platform in ship interior](http://img.youtube.com/vi/CIP-QH87z8E/maxresdefault.jpg)](http://www.youtube.com/watch?v=CIP-QH87z8E)
 
-Video 3: 3 DoF localization and navigation tests with the Guardian platform in ship interior at Aimen
+Video 3: 3 DoF localization, navigation and welding tests with the Guardian platform in ship interior
 
 
 [![3 DoF localization system tests with the Jarvis platform in the CROB lab](http://img.youtube.com/vi/DCYdJtbad18/maxresdefault.jpg)](http://www.youtube.com/watch?v=DCYdJtbad18)
