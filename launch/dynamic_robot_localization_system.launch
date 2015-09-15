@@ -66,6 +66,8 @@
 	<arg name="assemble_lasers_on_map_frame" default="0" /> <!-- if false -> assembles lasers on odom frame -->
 	<arg name="laser_assembly_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
 	<arg name="laser_assembly_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
+	<arg name="laser_assembly_motion_estimation_source_frame_id" default="" />
+	<arg name="laser_assembly_motion_estimation_target_frame_id" default="" />
 	<arg name="laser_scan_topics" default="/tilt_scan+/base_scan" />
 	<arg name="min_range_cutoff_percentage_offset" default="2.00" />
 	<arg name="max_range_cutoff_percentage_offset" default="0.95" />
@@ -86,7 +88,7 @@
 	<!-- tf configurations -->
 	<arg name="publish_tf_map_odom" default="1" />
 	<arg name="publish_initial_pose" default="1" />
-	<arg name="publish_pose_tf_rate" default="30.0" />
+	<arg name="publish_pose_tf_rate" default="-10.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
@@ -217,6 +219,8 @@
 		<arg name="recovery_frame" default="" unless="$(arg assemble_lasers_on_map_frame)" />
 		<arg name="initial_recovery_transform_in_base_link_to_target" default="$(arg robot_initial_pose_in_base_to_map)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
+		<arg name="motion_estimation_source_frame_id" default="$(arg laser_assembly_motion_estimation_source_frame_id)" />
+		<arg name="motion_estimation_target_frame_id" default="$(arg laser_assembly_motion_estimation_target_frame_id)" />
 		<arg name="recovery_to_target_frame_transform_initial_x" default="$(arg robot_initial_x)" />
 		<arg name="recovery_to_target_frame_transform_initial_y" default="$(arg robot_initial_y)" />
 		<arg name="recovery_to_target_frame_transform_initial_z" default="$(arg robot_initial_z)" />
