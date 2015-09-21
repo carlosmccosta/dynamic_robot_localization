@@ -304,6 +304,7 @@ void Localization<PointT>::setupReferencePointCloud() {
 	}
 
 	private_node_handle_->param("reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
+	reference_pointcloud_->header.frame_id = map_frame_id_;
 }
 
 
@@ -795,6 +796,7 @@ void Localization<PointT>::publishReferencePointCloud() {
 
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
+	reference_pointcloud_->header.frame_id = map_frame_id_;
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
 
 	std::vector<int> indexes;
@@ -1060,6 +1062,11 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
 
 		ROS_DEBUG_STREAM("Received pointcloud in frame " << ambient_cloud_msg->header.frame_id << " with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_msg->header.stamp << " (map_frame_id: " << map_frame_id_ << ")");
+
+		if (reference_pointcloud_available_ && !reference_pointcloud_received_) {
+			ROS_WARN_STREAM("Discarded cloud because there is no reference cloud to compare to");
+			return;
+		}
 
 		int number_points_ambient_pointcloud = ambient_cloud_msg->width * ambient_cloud_msg->height;
 		if (number_points_ambient_pointcloud < minimum_number_of_points_in_ambient_pointcloud_) {
