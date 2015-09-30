@@ -302,6 +302,7 @@ class Localization : public ConfigurableObject {
 		bool compute_outliers_angular_distribution_;
 		double inliers_angular_distribution_;
 		double outliers_angular_distribution_;
+		double last_pose_weighted_mean_filter_;
 
 		// state fields
 		ros::Time last_scan_time_;
@@ -357,8 +358,8 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_integration_filters_map_frame_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_map_frame_;
-		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_feature_registration_;
-		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_feature_registration_filters_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_filters_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;
