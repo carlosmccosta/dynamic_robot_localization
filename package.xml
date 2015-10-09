@@ -29,10 +29,12 @@
 	<build_depend>pcl_ros</build_depend>
 	<build_depend>roscpp</build_depend>
 	<build_depend>rosconsole</build_depend>
+	<build_depend>rostime</build_depend>
 	<build_depend>sensor_msgs</build_depend>
 	<build_depend>std_msgs</build_depend>
 	<build_depend>tf2</build_depend>
 	<build_depend>tf2_ros</build_depend>
+	<build_depend>xmlrpcpp</build_depend>
 
 	<!-- system dependencies -->
 	<build_depend>Boost</build_depend>
@@ -58,10 +60,12 @@
 	<run_depend>pcl_ros</run_depend>
 	<run_depend>roscpp</run_depend>
 	<run_depend>rosconsole</run_depend>
+	<run_depend>rostime</run_depend>
 	<run_depend>sensor_msgs</run_depend>
 	<run_depend>std_msgs</run_depend>
 	<run_depend>tf2</run_depend>
 	<run_depend>tf2_ros</run_depend>
+	<run_depend>xmlrpcpp</run_depend>
 
 	<!-- other ros packages (run only) -->
 	<run_depend>message_runtime</run_depend>

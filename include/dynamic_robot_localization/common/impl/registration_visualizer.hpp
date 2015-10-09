@@ -216,7 +216,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::runDisplay() {
 	viewer_->addText("Red    -> source", 10, 10, 1.0, 0.0, 0.0, "legend source v2", viewport1);
 
 	// Add coordinate system to both ports
-	viewer_->addCoordinateSystem(1.0, 0);
+	viewer_->addCoordinateSystem();
 
 	// Visualization loop
 	while (!viewer_->wasStopped()) {

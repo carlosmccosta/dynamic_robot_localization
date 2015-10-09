@@ -22,10 +22,12 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     pcl_ros
     roscpp
     rosconsole
+    rostime
     sensor_msgs
     std_msgs
     tf2
     tf2_ros
+    xmlrpcpp
 )
 
 find_package(OpenMP)
