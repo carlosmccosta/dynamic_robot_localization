@@ -1,5 +1,4 @@
-[![DOI](https://zenodo.org/badge/7410/carlosmccosta/dynamic_robot_localization.png)](http://dx.doi.org/10.5281/zenodo.12907)
-
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.34082.svg)](http://dx.doi.org/10.5281/zenodo.34082)
 
 Dynamic Robot Localization
 ==================
