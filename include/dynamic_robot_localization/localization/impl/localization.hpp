@@ -1455,7 +1455,7 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 	detected_inliers_.clear();
 	root_mean_square_error_inliers_ = std::numeric_limits<double>::max();
 	number_inliers_ = 0;
-	if (ambient_pointcloud->size() < minimum_number_of_points_in_ambient_pointcloud_) { return 1.0; }
+	if (ambient_pointcloud->size() <= 0 || ambient_pointcloud->size() < minimum_number_of_points_in_ambient_pointcloud_) { return 1.0; }
 
 	size_t number_outliers = 0;
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
@@ -1483,7 +1483,7 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 	} else if (detected_outliers_.size() == 1) {
 		registered_outliers_ = detected_outliers_[0];
 	} else {
-		registered_outliers_->clear();
+		if (registered_outliers_) registered_outliers_->clear();
 	}
 
 	if (detected_inliers_.size() > 1) {
@@ -1492,12 +1492,13 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 	} else if (detected_inliers_.size() == 1) {
 		registered_inliers_ = detected_inliers_[0];
 	} else {
-		registered_inliers_->clear();
+		if (registered_inliers_) registered_inliers_->clear();
 	}
 
 	number_inliers_ = ambient_pointcloud->size() - number_outliers;
-
-	return (double)number_outliers / (double) (ambient_pointcloud->size());
+	double outlier_ratio = (double)number_outliers / (double) (ambient_pointcloud->size());
+	if (outlier_ratio < 0.0 || outlier_ratio > 1.0) { outlier_ratio = 1.0; }
+	return outlier_ratio;
 }
 
 
@@ -1508,13 +1509,13 @@ bool Localization<PointT>::applyCloudAnalysis(const tf2::Transform& estimated_po
 	outliers_angular_distribution_ = -2.0;
 
 	if (cloud_analyzer_) {
-		if (compute_outliers_angular_distribution_ && !detected_outliers_.empty()) {
+		if (compute_outliers_angular_distribution_ && registered_outliers_ && !detected_outliers_.empty()) {
 			std::vector<size_t> analysis_histogram;
 			outliers_angular_distribution_ = cloud_analyzer_->analyzeCloud(estimated_pose, *registered_outliers_, analysis_histogram);
 			performed_analysis = true;
 		}
 
-		if (compute_inliers_angular_distribution_ && !detected_inliers_.empty()) {
+		if (compute_inliers_angular_distribution_ && registered_inliers_ && !detected_inliers_.empty()) {
 			std::vector<size_t> analysis_histogram;
 			inliers_angular_distribution_ = cloud_analyzer_->analyzeCloud(estimated_pose, *registered_inliers_, analysis_histogram);
 			performed_analysis = true;
