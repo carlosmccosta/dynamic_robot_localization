@@ -89,6 +89,8 @@ class CloudMatcher : public ConfigurableObject {
 		inline typename CloudPublisher<PointT>::Ptr getCloudPublisher() { return cloud_publisher_; }
 		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
 		inline const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
+		virtual int getNumberOfRegistrationIterations() { return -1; }
+		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences() { return -1.0; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

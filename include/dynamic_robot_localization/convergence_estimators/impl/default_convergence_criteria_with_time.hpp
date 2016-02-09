@@ -31,15 +31,16 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 		return true;
 	} else {
 		bool converged = pcl::registration::DefaultConvergenceCriteria<Scalar>::hasConverged();
-		ROS_DEBUG_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged] Convergence time within limits (" << elapsed_time << "\t < " << convergence_time_limit_seconds_ << ")" \
-				<< " | Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
-				<< " | CorrespondencesCurrentMeanSquareError: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_);
-
-		ROS_DEBUG("[DefaultConvergenceCriteriaWithTime::hasConverged] Current convergence transformation is:\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f\n\t%5f\t%5f\t%5f\t%5f",
-				transformation_(0, 0), transformation_(0, 1), transformation_(0, 2), transformation_(0, 3),
-				transformation_(1, 0), transformation_(1, 1), transformation_(1, 2), transformation_(1, 3),
-				transformation_(2, 0), transformation_(2, 1), transformation_(2, 2), transformation_(2, 3),
-				transformation_(3, 0), transformation_(3, 1), transformation_(3, 2), transformation_(3, 3));
+		ROS_DEBUG_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged]:" \
+				<< "\n\t Current convergence time: " << elapsed_time \
+				<< "\n\t Convergence time limit: " << convergence_time_limit_seconds_ \
+				<< "\n\t Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
+				<< "\n\t CorrespondencesCurrentMeanSquareError: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_ \
+				<< "\n\t Current convergence transformation is:" \
+				<< "\n\t\t " << std::setw(18) << transformation_(0, 0) << " " << std::setw(18) <<  transformation_(0, 1) << " " << std::setw(18) <<  transformation_(0, 2) << " " << std::setw(18) <<  transformation_(0, 3) \
+				<< "\n\t\t " << std::setw(18) << transformation_(1, 0) << " " << std::setw(18) <<  transformation_(1, 1) << " " << std::setw(18) <<  transformation_(1, 2) << " " << std::setw(18) <<  transformation_(1, 3) \
+				<< "\n\t\t " << std::setw(18) << transformation_(2, 0) << " " << std::setw(18) <<  transformation_(2, 1) << " " << std::setw(18) <<  transformation_(2, 2) << " " << std::setw(18) <<  transformation_(2, 3) \
+				<< "\n\t\t " << std::setw(18) << transformation_(3, 0) << " " << std::setw(18) <<  transformation_(3, 1) << " " << std::setw(18) <<  transformation_(3, 2) << " " << std::setw(18) <<  transformation_(3, 3) << "\n");
 
 		if (!pcl_isfinite(transformation_(0, 0)) || !pcl_isfinite(transformation_(0, 1)) || !pcl_isfinite(transformation_(0, 2)) || !pcl_isfinite(transformation_(0, 3)) ||
 			!pcl_isfinite(transformation_(1, 0)) || !pcl_isfinite(transformation_(1, 1)) || !pcl_isfinite(transformation_(1, 2)) || !pcl_isfinite(transformation_(1, 3)) ||
@@ -57,6 +58,16 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 template<typename Scalar>
 void DefaultConvergenceCriteriaWithTime<Scalar>::resetConvergenceTimer() {
 	convergence_timer_.reset();
+}
+
+template<typename Scalar>
+double DefaultConvergenceCriteriaWithTime<Scalar>::getRootMeanSquareErrorOfRegistrationCorrespondences() {
+	double mse = pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_;
+	if (mse >= 0.0) {
+		return std::sqrt(mse);
+	} else {
+		return std::numeric_limits<double>::max();
+	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </DefaultConvergenceCriteriaWithTime-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

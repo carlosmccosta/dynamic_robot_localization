@@ -368,6 +368,8 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudMatcher<PointT>::Ptr > initial_pose_estimators_point_matchers_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > tracking_matchers_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > tracking_recovery_matchers_;
+		int number_of_registration_iterations_for_all_matchers_;
+		double root_mean_square_error_of_last_registration_correspondences_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_tracking_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;

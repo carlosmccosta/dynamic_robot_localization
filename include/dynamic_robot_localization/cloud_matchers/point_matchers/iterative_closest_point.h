@@ -87,6 +87,8 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 						typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 						typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 						tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
+		virtual int getNumberOfRegistrationIterations();
+		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences();
 		typename DefaultConvergenceCriteriaWithTime<float>::Ptr getConvergenceCriteria();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

@@ -81,6 +81,28 @@ bool IterativeClosestPoint<PointT>::registerCloud(typename pcl::PointCloud<Point
 
 
 template<typename PointT>
+int IterativeClosestPoint<PointT>::getNumberOfRegistrationIterations() {
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+	if (convergence_criteria) {
+		return convergence_criteria->getNumberOfRegistrationIterations();
+	} else {
+		return -1;
+	}
+}
+
+
+template<typename PointT>
+double IterativeClosestPoint<PointT>::getRootMeanSquareErrorOfRegistrationCorrespondences() {
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+	if (convergence_criteria) {
+		return convergence_criteria->getRootMeanSquareErrorOfRegistrationCorrespondences();
+	} else {
+		return -1.0;
+	}
+}
+
+
+template<typename PointT>
 typename DefaultConvergenceCriteriaWithTime<float>::Ptr IterativeClosestPoint<PointT>::getConvergenceCriteria() {
 	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria;
 	if (CloudMatcher<PointT>::cloud_matcher_) {
