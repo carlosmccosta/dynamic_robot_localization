@@ -22,6 +22,7 @@
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/registration/registration.h>
+#include <pcl/registration/correspondence_rejection_sample_consensus.h>
 #include <pcl/filters/filter.h>
 #include <pcl/pcl_macros.h>
 //#include <pcl/visualization/registration_visualizer.h>

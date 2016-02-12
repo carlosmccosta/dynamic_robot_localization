@@ -59,6 +59,13 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 		cloud_matcher_->setRANSACIterations(max_number_of_ransac_iterations);
 		cloud_matcher_->setRANSACOutlierRejectionThreshold(ransac_outlier_rejection_threshold);
 
+		if (max_number_of_ransac_iterations > 0) {
+			typename pcl::registration::CorrespondenceRejectorSampleConsensus<PointT>::Ptr rej_sac(new pcl::registration::CorrespondenceRejectorSampleConsensus<PointT>());
+			rej_sac->setMaximumIterations(max_number_of_ransac_iterations);
+			rej_sac->setInlierThreshold(ransac_outlier_rejection_threshold);
+			cloud_matcher_->addCorrespondenceRejector(rej_sac);
+		}
+
 		setupRegistrationVisualizer();
 	}
 }

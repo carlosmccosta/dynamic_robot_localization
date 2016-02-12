@@ -63,7 +63,7 @@ tracking_matchers:
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 200
-            max_number_of_ransac_iterations: 125
+            max_number_of_ransac_iterations: 40
             ransac_outlier_rejection_threshold: 0.03
             match_only_keypoints: false
             display_cloud_aligment: false

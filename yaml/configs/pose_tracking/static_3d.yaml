@@ -22,7 +22,7 @@ tracking_matchers:
             transformation_epsilon: 1e-4
             euclidean_fitness_epsilon: 1e-4
             max_number_of_registration_iterations: 250
-            max_number_of_ransac_iterations: 250
+            max_number_of_ransac_iterations: 50
             ransac_outlier_rejection_threshold: 0.1
             match_only_keypoints: false
             display_cloud_aligment: false

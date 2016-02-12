@@ -9,7 +9,7 @@ tracking_recovery_matchers:
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 350
-            max_number_of_ransac_iterations: 350
+            max_number_of_ransac_iterations: 75
             ransac_outlier_rejection_threshold: 0.07
             match_only_keypoints: false
             display_cloud_aligment: false
