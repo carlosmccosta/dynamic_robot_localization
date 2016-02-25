@@ -1261,22 +1261,18 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 					// rotation corrections
 					tf2::Quaternion rotation_corrections;
-
 					if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
-						tf2::Quaternion rotation_correction_q = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
+						rotation_corrections = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
 					} else {
-						tf2::Quaternion orientation_corrections = pose_corrections.getRotation();
+						rotation_corrections = pose_corrections.getRotation();
 					}
-
 					rotation_corrections.normalize();
 					if (rotation_corrections.getW() < 0.0) { rotation_corrections *= -1.0; } // shortest path angle
-
 					tf2::Vector3 rotation_correction_axis = rotation_corrections.getAxis().normalize();
 					localization_detailed_msg.rotation_correction_angle = rotation_corrections.getAngle();
 					localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
 					localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
 					localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
-
 
 					if (localization_detailed_use_degrees_in_rotation_corrections_) {
 						localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
