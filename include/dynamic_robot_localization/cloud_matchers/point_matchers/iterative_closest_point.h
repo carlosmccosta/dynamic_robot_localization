@@ -90,6 +90,7 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 		virtual int getNumberOfRegistrationIterations();
 		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences();
 		typename DefaultConvergenceCriteriaWithTime<float>::Ptr getConvergenceCriteria();
+		virtual std::string getMatcherConvergenceState();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

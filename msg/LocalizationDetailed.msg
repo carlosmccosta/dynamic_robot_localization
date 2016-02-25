@@ -12,4 +12,5 @@ uint64 number_points_registered
 float64 inliers_angular_distribution
 float64 outliers_angular_distribution
 int64 number_of_registration_iterations_for_all_matchers
+string last_matcher_convergence_state
 geometry_msgs/PoseArray initial_pose_estimation_poses

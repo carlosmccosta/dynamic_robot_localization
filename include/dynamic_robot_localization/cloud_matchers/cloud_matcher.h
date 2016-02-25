@@ -12,6 +12,7 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <string>
 
 // ROS includes
 #include <ros/ros.h>
@@ -91,6 +92,7 @@ class CloudMatcher : public ConfigurableObject {
 		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
 		inline const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
 		virtual int getNumberOfRegistrationIterations() { return -1; }
+		virtual std::string getMatcherConvergenceState() { return ""; }
 		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences() { return -1.0; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

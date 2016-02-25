@@ -112,6 +112,16 @@ typename DefaultConvergenceCriteriaWithTime<float>::Ptr IterativeClosestPoint<Po
 
 	return convergence_criteria;
 }
+
+template<typename PointT>
+std::string IterativeClosestPoint<PointT>::getMatcherConvergenceState() {
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+	if (convergence_criteria) {
+		return convergence_criteria->getConvergenceStateString();
+	} else {
+		return "";
+	}
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

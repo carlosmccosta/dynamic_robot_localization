@@ -32,6 +32,7 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 	} else {
 		bool converged = pcl::registration::DefaultConvergenceCriteria<Scalar>::hasConverged();
 		ROS_DEBUG_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged]:" \
+				<< "\n\t Convergence state: " << getConvergenceStateString() \
 				<< "\n\t Current convergence time: " << elapsed_time \
 				<< "\n\t Convergence time limit: " << convergence_time_limit_seconds_ \
 				<< "\n\t Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
@@ -58,6 +59,22 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 template<typename Scalar>
 void DefaultConvergenceCriteriaWithTime<Scalar>::resetConvergenceTimer() {
 	convergence_timer_.reset();
+}
+
+
+template<typename Scalar>
+std::string DefaultConvergenceCriteriaWithTime<Scalar>::getConvergenceStateString() {
+	typename pcl::registration::DefaultConvergenceCriteria<Scalar>::ConvergenceState convergence_state = pcl::registration::DefaultConvergenceCriteria<Scalar>::getConvergenceState();
+	switch (convergence_state) {
+		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_NOT_CONVERGED: 		{ return "CONVERGENCE_CRITERIA_NOT_CONVERGED"; 		break; }
+		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_ITERATIONS: 			{ return "CONVERGENCE_CRITERIA_ITERATIONS"; 		break; }
+		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_TRANSFORM: 			{ return "CONVERGENCE_CRITERIA_TRANSFORM"; 			break; }
+		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_ABS_MSE: 				{ return "CONVERGENCE_CRITERIA_ABS_MSE"; 			break; }
+		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_REL_MSE: 				{ return "CONVERGENCE_CRITERIA_REL_MSE"; 			break; }
+		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_NO_CORRESPONDENCES: 	{ return "CONVERGENCE_CRITERIA_NO_CORRESPONDENCES"; break; }
+		default: break;
+	}
+	return "";
 }
 
 template<typename Scalar>

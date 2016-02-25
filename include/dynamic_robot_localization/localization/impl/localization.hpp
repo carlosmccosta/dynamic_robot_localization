@@ -1288,6 +1288,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 						localization_detailed_msg.number_of_registration_iterations_for_all_matchers = -1;
 					}
 
+					localization_detailed_msg.last_matcher_convergence_state = last_matcher_convergence_state_;
 					localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences = root_mean_square_error_of_last_registration_correspondences_;
 					localization_detailed_msg.initial_pose_estimation_poses = *accepted_poses;
 					localization_detailed_publisher_.publish(localization_detailed_msg);
@@ -1453,6 +1454,7 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 		}
 		int number_registration_iterations = matchers[i]->getNumberOfRegistrationIterations();
 		if (number_registration_iterations > 0) number_of_registration_iterations_for_all_matchers_ += number_registration_iterations;
+		last_matcher_convergence_state_ = matchers[i]->getMatcherConvergenceState();
 		root_mean_square_error_of_last_registration_correspondences_ = matchers[i]->getRootMeanSquareErrorOfRegistrationCorrespondences();
 	}
 
@@ -1710,6 +1712,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool tracking_recovery_reached = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_recovery_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_) || (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_);
 	bool performed_recovery = false;
 	number_of_registration_iterations_for_all_matchers_ = 0;
+	last_matcher_convergence_state_ = "";
 	root_mean_square_error_of_last_registration_correspondences_ = -1.0;
 
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose

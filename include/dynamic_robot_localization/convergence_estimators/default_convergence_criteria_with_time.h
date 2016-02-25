@@ -70,6 +70,7 @@ class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConv
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline double getConvergenceTimeLimitSeconds() const { return convergence_time_limit_seconds_; }
 		inline double getConvergenceElaspedTime() { return convergence_timer_.getTimeSeconds(); }
+		std::string getConvergenceStateString();
 		inline int getNumberOfRegistrationIterations() { return pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_; }
 		double getRootMeanSquareErrorOfRegistrationCorrespondences();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
