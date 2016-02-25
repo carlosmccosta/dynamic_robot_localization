@@ -22,12 +22,14 @@ namespace dynamic_robot_localization {
 template<typename Scalar>
 bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 	double elapsed_time = convergence_timer_.getTimeSeconds();
+	convergence_state_time_limit_reached_ = false;
 	if (convergence_time_limit_seconds_ >= 0.0 && elapsed_time > convergence_time_limit_seconds_) {
 		ROS_WARN_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged] Convergence time limit of " << convergence_time_limit_seconds_ << " seconds exceeded (elapsed time: " << elapsed_time << ")" \
 				<< " | Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
 				<< " | CorrespondencesCurrentMSE: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_);
 
 		pcl::registration::DefaultConvergenceCriteria<Scalar>::convergence_state_ = pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_ITERATIONS;
+		convergence_state_time_limit_reached_ = true;
 		return true;
 	} else {
 		bool converged = pcl::registration::DefaultConvergenceCriteria<Scalar>::hasConverged();
@@ -64,6 +66,7 @@ void DefaultConvergenceCriteriaWithTime<Scalar>::resetConvergenceTimer() {
 
 template<typename Scalar>
 std::string DefaultConvergenceCriteriaWithTime<Scalar>::getConvergenceStateString() {
+	if (convergence_state_time_limit_reached_) { return "CONVERGENCE_CRITERIA_TIME_LIMIT"; }
 	typename pcl::registration::DefaultConvergenceCriteria<Scalar>::ConvergenceState convergence_state = pcl::registration::DefaultConvergenceCriteria<Scalar>::getConvergenceState();
 	switch (convergence_state) {
 		case pcl::registration::DefaultConvergenceCriteria<Scalar>::CONVERGENCE_CRITERIA_NOT_CONVERGED: 		{ return "CONVERGENCE_CRITERIA_NOT_CONVERGED"; 		break; }
