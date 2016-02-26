@@ -32,6 +32,7 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 		convergence_state_time_limit_reached_ = true;
 		return true;
 	} else {
+		if (convergence_rotation_threshold_ > -1337.0) { pcl::registration::DefaultConvergenceCriteria<Scalar>::setRotationThreshold(convergence_rotation_threshold_); }
 		bool converged = pcl::registration::DefaultConvergenceCriteria<Scalar>::hasConverged();
 		ROS_DEBUG_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged]:" \
 				<< "\n\t Convergence state: " << getConvergenceStateString() \

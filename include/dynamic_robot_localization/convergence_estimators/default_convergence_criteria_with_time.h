@@ -58,7 +58,7 @@ class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConv
 		DefaultConvergenceCriteriaWithTime(const int &iterations, const typename pcl::registration::DefaultConvergenceCriteria<Scalar>::Matrix4 &transform,
 				const pcl::Correspondences &correspondences, double convergence_time_limit_seconds = 3.0) :
 			pcl::registration::DefaultConvergenceCriteria<Scalar>(iterations, transform, correspondences),
-			convergence_time_limit_seconds_(convergence_time_limit_seconds), convergence_state_time_limit_reached_(false) {}
+			convergence_time_limit_seconds_(convergence_time_limit_seconds), convergence_state_time_limit_reached_(false), convergence_rotation_threshold_(-1337.0) {}
 		virtual ~DefaultConvergenceCriteriaWithTime() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -73,10 +73,12 @@ class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConv
 		std::string getConvergenceStateString();
 		inline int getNumberOfRegistrationIterations() { return pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_; }
 		double getRootMeanSquareErrorOfRegistrationCorrespondences();
+		inline double getConvergenceRotationThreshold() const { return convergence_rotation_threshold_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline void setConvergenceTimeLimitSeconds(double convergence_time_limit_seconds) { convergence_time_limit_seconds_ = convergence_time_limit_seconds; }
+		inline void setConvergenceRotationThreshold(double convergenceRotationThreshold) { convergence_rotation_threshold_ = convergenceRotationThreshold; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -85,6 +87,7 @@ class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConv
 		pcl::StopWatch convergence_timer_;
 		double convergence_time_limit_seconds_;
 		bool convergence_state_time_limit_reached_;
+		double convergence_rotation_threshold_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 

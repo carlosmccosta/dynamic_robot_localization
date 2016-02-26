@@ -102,6 +102,9 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
+		double convergence_absolute_mse_threshold_;
+		double convergence_rotation_threshold_;
+		int convergence_max_iterations_similar_transforms_;
 		double convergence_time_limit_seconds_;
 		double cumulative_sum_of_convergence_time_;
 		size_t number_of_convergence_time_measurements;

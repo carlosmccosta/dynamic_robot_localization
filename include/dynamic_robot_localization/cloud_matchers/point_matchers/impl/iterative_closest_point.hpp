@@ -21,6 +21,9 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	private_node_handle->param(configuration_namespace + "convergence_absolute_mse_threshold", convergence_absolute_mse_threshold_, 1e-12);
+	private_node_handle->param(configuration_namespace + "convergence_rotation_threshold", convergence_rotation_threshold_, -1337.0);
+	private_node_handle->param(configuration_namespace + "convergence_max_iterations_similar_transforms", convergence_max_iterations_similar_transforms_, 0);
 	double convergence_time_limit_seconds;
 	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds", convergence_time_limit_seconds, -1.0);
 	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds_as_mean_convergence_time_percentage", convergence_time_limit_seconds_as_mean_convergence_time_percentage_, 3.0);
@@ -35,9 +38,13 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 	if (!CloudMatcher<PointT>::cloud_matcher_) {
 //		CloudMatcher<PointT>::cloud_matcher_ = typename pcl::Registration<PointT, PointT, float>::Ptr(new pcl::IterativeClosestPoint<PointT, PointT, float>());
 		CloudMatcher<PointT>::cloud_matcher_ = typename pcl::Registration<PointT, PointT, float>::Ptr(new IterativeClosestPointTimeConstrained<PointT, PointT, float>(convergence_time_limit_seconds));
-	} else {
-		typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
-		if (convergence_criteria) { convergence_criteria->setConvergenceTimeLimitSeconds(convergence_time_limit_seconds); }
+	}
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+	if (convergence_criteria) {
+		convergence_criteria->setConvergenceTimeLimitSeconds(convergence_time_limit_seconds);
+		convergence_criteria->setAbsoluteMSE(convergence_absolute_mse_threshold_);
+		convergence_criteria->setConvergenceRotationThreshold(convergence_rotation_threshold_);
+		convergence_criteria->setMaximumIterationsSimilarTransforms(convergence_max_iterations_similar_transforms_);
 	}
 
 	ROS_DEBUG_STREAM("Setting a registration time limit of " << convergence_time_limit_seconds << " seconds to " << CloudMatcher<PointT>::cloud_matcher_->getClassName() << " algorithm");
