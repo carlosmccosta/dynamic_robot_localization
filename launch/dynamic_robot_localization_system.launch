@@ -111,9 +111,6 @@
 
 
 	<!-- ==================================================== localization system ============================================= -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" launch-prefix="valgrind -tool=memcheck -leak-check=full -show-reachable=yes -v -track-origins=yes" > -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" launch-prefix="valgrind -tool=massif -heap=yes -stacks=yes" > -->
-	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" launch-prefix="gdb -ex run -args" > -->
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" >
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
