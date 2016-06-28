@@ -8,7 +8,7 @@ echo "##########################################################################
 echo "##### Checking and installing dependencies for dynamic_robot_localization ros package"
 echo "####################################################################################################"
 
-sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl ${install_args}
+sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl -y
 sudo apt-get update
 sudo apt-get upgrade ${install_args}
 sudo apt-get dist-upgrade ${install_args}
@@ -32,7 +32,7 @@ sudo apt-get install ros-${ros_version}-message-generation ${install_args}
 sudo apt-get install ros-${ros_version}-message-runtime ${install_args}
 sudo apt-get install ros-${ros_version}-pcl-conversions ${install_args}
 sudo apt-get install ros-${ros_version}-pcl-ros ${install_args}
-sudo apt-get install ros-${ros_version}-rospp ${install_args}
+sudo apt-get install ros-${ros_version}-roscpp ${install_args}
 sudo apt-get install ros-${ros_version}-rosconsole ${install_args}
 sudo apt-get install ros-${ros_version}-rostime ${install_args}
 sudo apt-get install ros-${ros_version}-sensor-msgs ${install_args}
