@@ -336,13 +336,14 @@ tracking_matchers:
     pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose: 3  # Pose tracking recovery will be activated if the registration has failed at least [this number] and the pose_tracking_recovery_timeout has been reached
     pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose: 5 # When cloud registration fails for more than [this number], the pose tracking recovery algorithms will be activated
     max_correspondence_distance: 0.1                                # Can be overridden in child namespaces | The maximum distance threshold between two correspondent points in source <-> target. If the distance is larger than this threshold, the points will be ignored in the alignment process
-    correspondence_estimation_approach: 'CorrespondenceEstimation'  # Can be overridden in child namespaces | CorrespondenceEstimation | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting | CorrespondenceEstimationOrganizedProjection
+    correspondence_estimation_approach: ''                          # Can be overridden in child namespaces | If not specified it will not change the correspondence estimator | [ CorrespondenceEstimation | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting | CorrespondenceEstimationOrganizedProjection ]
     correspondence_estimation_k: 10                                 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: [ CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting ]
     correspondence_estimation_organized_projection:                 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationOrganizedProjection
       fx: 525.0
       fy: 525.0
       cx: 319.5
       cy: 239.5
+    transformation_estimation_approach: ''                          # Can be overridden in child namespaces | If not specified it will not change the transformation estimator | [ TransformationEstimation2D | TransformationEstimationDualQuaternion | TransformationEstimationLM | TransformationEstimationPointToPlane | TransformationEstimationPointToPlaneLLS | TransformationEstimationPointToPlaneLLSWeighted | TransformationEstimationPointToPlaneWeighted | TransformationEstimationSVD | TransformationEstimationSVDScale ]
     last_pose_weighted_mean_filter: -1.0                            # Valid values are in range ]0, 1[. The filtered pose is computed using linear interpolation (using the last and current estimated pose as the two interpolating extremes). Values close to 0 result in a final pose closer to the last pose. Values close to 1 result in a final pose close to the current estimated pose (based on the sensor data).
     transformation_epsilon: 1e-8                                    # Can be overridden in child namespaces | The transformation epsilon (maximum allowable difference between two consecutive transformations -> TranslationThreshold) in order for an optimization to be considered as having converged to the final solution (translation threshold squared)
     euclidean_fitness_epsilon: 1e-6                                 # Can be overridden in child namespaces | The maximum allowed Euclidean error between two consecutive steps in the ICP loop, before the algorithm is considered to have converged. The error is estimated as the sum of the differences between correspondences in an Euclidean sense, divided by the number of correspondences (Relative Mean Square Error) -> (correspondences_cur_mse_ - correspondences_prev_mse_) / correspondences_prev_mse_ < mse_threshold_relative_
@@ -490,7 +491,7 @@ registration_covariance_estimator:
     error_metric: 'PointToPoint3D'                                  # PointToPoint3D | PointToPlane3D | PointToPointPM3D | PointToPlanePM3D
     correspondance_estimator: 'CorrespondenceEstimation'            # CorrespondenceEstimation | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting
     correspondence_distance_threshold: 0.05                         # Maximum distance between point correspondences
-    sensor_std_dev_noise: 0.01                                         # The mean noise expected in the sensor readings
+    sensor_std_dev_noise: 0.01                                      # The mean noise expected in the sensor readings
     use_reciprocal_correspondences: false
     filtered_reference_cloud_publish_topic: ''
     filtered_ambient_cloud_publish_topic: ''

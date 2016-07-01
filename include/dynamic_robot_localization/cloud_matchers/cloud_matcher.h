@@ -33,10 +33,11 @@
 #include <Eigen/Core>
 
 // project includes
-#include <dynamic_robot_localization/cloud_matchers/correspondence_estimation.h>
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_publisher.h>
 #include <dynamic_robot_localization/common/registration_visualizer.h>
+#include <dynamic_robot_localization/cloud_matchers/correspondence_estimation.h>
+#include <dynamic_robot_localization/cloud_matchers/transformation_estimation.h>
 #include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -86,6 +87,8 @@ class CloudMatcher : public ConfigurableObject {
 		virtual bool registrationRequiresNormalsOnAmbientPointCloud() { return false; }
 		virtual double getCorrespondenceEstimationElapsedTime();
 		virtual void resetCorrespondenceEstimationElapsedTime();
+		virtual double getTransformationEstimationElapsedTime();
+		virtual void resetTransformationEstimationElapsedTime();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -113,6 +116,8 @@ class CloudMatcher : public ConfigurableObject {
 		typename pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
 		CorrepondenceEstimationApproach correpondence_estimation_approach_;
 		typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr correspondence_estimation_ptr_;
+		TransformationEstimationApproach transformation_estimation_approach_;
+		typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr transformation_estimation_ptr_;
 		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
 		bool match_only_keypoints_;
 

@@ -24,7 +24,7 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
-
+#include <dynamic_robot_localization/common/common.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -38,13 +38,12 @@ enum CorrepondenceEstimationApproach {
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#define UNPACK_ARGS( ... ) __VA_ARGS__
-#define GenerateCorrespondenceEstimationTimed(BaseClass, Suffix, TemlatesDeclaration, TemplatesUsage) \
-template < UNPACK_ARGS TemlatesDeclaration > \
-class BaseClass##Suffix : public pcl::registration::BaseClass< UNPACK_ARGS TemplatesUsage > { \
+#define GenerateCorrespondenceEstimationTimed(BaseClass, Suffix, TemplatesDeclaration, TemplatesUsage) \
+template < DRL_UNPACK_ARGS TemplatesDeclaration > \
+class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage > { \
 	public: \
-		typedef boost::shared_ptr< BaseClass##Suffix< UNPACK_ARGS TemplatesUsage > > Ptr; \
-		typedef boost::shared_ptr< const BaseClass##Suffix< UNPACK_ARGS TemplatesUsage > > ConstPtr; \
+		typedef boost::shared_ptr< BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > > Ptr; \
+		typedef boost::shared_ptr< const BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > > ConstPtr; \
 \
 		BaseClass##Suffix() : correspondence_estimation_elapsed_time_(0) {} \
 		virtual ~BaseClass##Suffix() {} \
@@ -52,14 +51,14 @@ class BaseClass##Suffix : public pcl::registration::BaseClass< UNPACK_ARGS Templ
 		virtual void determineCorrespondences(pcl::Correspondences &correspondences, double max_distance = std::numeric_limits<double>::max()) { \
 			pcl::StopWatch timer_; \
 			timer_.reset(); \
-			pcl::registration::BaseClass< UNPACK_ARGS TemplatesUsage >::determineCorrespondences(correspondences, max_distance); \
+			pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage >::determineCorrespondences(correspondences, max_distance); \
 			correspondence_estimation_elapsed_time_ += timer_.getTime(); \
 		} \
 \
 		virtual void determineReciprocalCorrespondences(pcl::Correspondences &correspondences, double max_distance = std::numeric_limits<double>::max()) { \
 			pcl::StopWatch timer_; \
 			timer_.reset(); \
-			pcl::registration::BaseClass< UNPACK_ARGS TemplatesUsage >::determineReciprocalCorrespondences(correspondences, max_distance); \
+			pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage >::determineReciprocalCorrespondences(correspondences, max_distance); \
 			correspondence_estimation_elapsed_time_ += timer_.getTime(); \
 		} \
 \

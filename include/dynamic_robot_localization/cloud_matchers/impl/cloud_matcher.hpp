@@ -66,6 +66,7 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 			cloud_matcher_->addCorrespondenceRejector(rej_sac);
 		}
 
+
 		correspondence_estimation_ptr_.reset();
 		int correspondence_estimation_k;
 		if (ros::param::search(search_namespace, "correspondence_estimation_k", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_k, 10); }
@@ -102,6 +103,43 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 		if (correspondence_estimation_ptr_) {
 			cloud_matcher_->setCorrespondenceEstimation(correspondence_estimation_ptr_);
 		}
+
+
+		std::string transformation_estimation_method;
+		if (ros::param::search(search_namespace, "transformation_estimation_approach", final_param_name)) { private_node_handle->param(final_param_name, transformation_estimation_method, std::string("")); }
+		if (transformation_estimation_method == "TransformationEstimation2D") {
+			transformation_estimation_approach_ = TransformationEstimation2D;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimation2DTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationDualQuaternion") {
+			transformation_estimation_approach_ = TransformationEstimationDualQuaternion;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationDualQuaternionTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationLM") {
+			transformation_estimation_approach_ = TransformationEstimationLM;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationLMTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationPointToPlane") {
+			transformation_estimation_approach_ = TransformationEstimationPointToPlane;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationPointToPlaneTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationPointToPlaneLLS") {
+			transformation_estimation_approach_ = TransformationEstimationPointToPlaneLLS;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationPointToPlaneLLSWeighted") {
+			transformation_estimation_approach_ = TransformationEstimationPointToPlaneLLSWeighted;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationPointToPlaneWeighted") {
+			transformation_estimation_approach_ = TransformationEstimationPointToPlaneWeighted;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationSVD") {
+			transformation_estimation_approach_ = TransformationEstimationSVD;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationSVDTimed<PointT, PointT, float>());
+		} else if (transformation_estimation_method == "TransformationEstimationSVDScale") {
+			transformation_estimation_approach_ = TransformationEstimationSVDScale;
+			transformation_estimation_ptr_ = typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr(new TransformationEstimationSVDScaleTimed<PointT, PointT, float>());
+		}
+
+		if (transformation_estimation_ptr_) {
+			cloud_matcher_->setTransformationEstimation(transformation_estimation_ptr_);
+		}
+
 
 		setupRegistrationVisualizer();
 	}
@@ -162,6 +200,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
 
 	resetCorrespondenceEstimationElapsedTime();
+	resetTransformationEstimationElapsedTime();
 	cloud_matcher_->align(*pointcloud_registered_out);
 
 	Eigen::Matrix4f final_transformation = cloud_matcher_->getFinalTransformation();
@@ -298,6 +337,137 @@ void CloudMatcher<PointT>::resetCorrespondenceEstimationElapsedTime() {
 		}
 	}
 }
+
+template<typename PointT>
+double CloudMatcher<PointT>::getTransformationEstimationElapsedTime() {
+	if (transformation_estimation_ptr_) {
+		switch (transformation_estimation_approach_) {
+			case TransformationEstimation2D: {
+				typename TransformationEstimation2DTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimation2DTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationDualQuaternion: {
+				typename TransformationEstimationDualQuaternionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationDualQuaternionTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationLM: {
+				typename TransformationEstimationLMTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationLMTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlane: {
+				typename TransformationEstimationPointToPlaneTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlaneLLS: {
+				typename TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlaneLLSWeighted: {
+				typename TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlaneWeighted: {
+				typename TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationSVD: {
+				typename TransformationEstimationSVDTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationSVDScale: {
+				typename TransformationEstimationSVDScaleTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDScaleTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+
+	return -1.0;
+}
+
+template<typename PointT>
+void CloudMatcher<PointT>::resetTransformationEstimationElapsedTime() {
+	if (transformation_estimation_ptr_) {
+		switch (transformation_estimation_approach_) {
+			case TransformationEstimation2D: {
+				typename TransformationEstimation2DTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimation2DTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationDualQuaternion: {
+				typename TransformationEstimationDualQuaternionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationDualQuaternionTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationLM: {
+				typename TransformationEstimationLMTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationLMTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlane: {
+				typename TransformationEstimationPointToPlaneTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlaneLLS: {
+				typename TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlaneLLSWeighted: {
+				typename TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationPointToPlaneWeighted: {
+				typename TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationSVD: {
+				typename TransformationEstimationSVDTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			case TransformationEstimationSVDScale: {
+				typename TransformationEstimationSVDScaleTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDScaleTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+}
+
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

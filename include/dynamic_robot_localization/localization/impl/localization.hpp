@@ -74,6 +74,7 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
 	number_of_registration_iterations_for_all_matchers_(0),
 	correspondence_estimation_time_for_all_matchers_(0),
+	transformation_estimation_time_for_all_matchers_(0),
 	root_mean_square_error_of_last_registration_correspondences_(0.0),
 	outlier_percentage_(0.0),
 	number_inliers_(0),
@@ -1185,6 +1186,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
 					localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
 					localization_times_msg_.correspondence_estimation_time_for_all_matchers = correspondence_estimation_time_for_all_matchers_;
+					localization_times_msg_.transformation_estimation_time_for_all_matchers = transformation_estimation_time_for_all_matchers_;
 					localization_times_publisher_.publish(localization_times_msg_);
 				}
 
@@ -1454,6 +1456,8 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 		if (number_registration_iterations > 0) number_of_registration_iterations_for_all_matchers_ += number_registration_iterations;
 		double correspondence_estimation_time = matchers[i]->getCorrespondenceEstimationElapsedTime();
 		if (correspondence_estimation_time > 0) correspondence_estimation_time_for_all_matchers_ += correspondence_estimation_time;
+		double transformation_estimation_time = matchers[i]->getTransformationEstimationElapsedTime();
+		if (transformation_estimation_time > 0) transformation_estimation_time_for_all_matchers_ += transformation_estimation_time;
 		last_matcher_convergence_state_ = matchers[i]->getMatcherConvergenceState();
 		root_mean_square_error_of_last_registration_correspondences_ = matchers[i]->getRootMeanSquareErrorOfRegistrationCorrespondences();
 	}
@@ -1713,6 +1717,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool performed_recovery = false;
 	number_of_registration_iterations_for_all_matchers_ = 0;
 	correspondence_estimation_time_for_all_matchers_ = 0;
+	transformation_estimation_time_for_all_matchers_ = 0;
 	last_matcher_convergence_state_ = "";
 	root_mean_square_error_of_last_registration_correspondences_ = -1.0;
 
