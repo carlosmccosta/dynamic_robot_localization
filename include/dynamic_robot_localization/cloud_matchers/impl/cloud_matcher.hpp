@@ -66,6 +66,43 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 			cloud_matcher_->addCorrespondenceRejector(rej_sac);
 		}
 
+		correspondence_estimation_ptr_.reset();
+		int correspondence_estimation_k;
+		if (ros::param::search(search_namespace, "correspondence_estimation_k", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_k, 10); }
+
+		std::string correspondence_estimation_method;
+		if (ros::param::search(search_namespace, "correspondence_estimation_approach", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_method, std::string("")); }
+
+		if (correspondence_estimation_method == "CorrespondenceEstimation") {
+			correpondence_estimation_approach_ = CorrespondenceEstimation;
+			correspondence_estimation_ptr_ = typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr(new CorrespondenceEstimationTimed<PointT, PointT, float>());
+		} else if (correspondence_estimation_method == "CorrespondenceEstimationBackProjection") {
+			correpondence_estimation_approach_ = CorrespondenceEstimationBackProjection;
+			CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>* correspondence_estimation_raw_ptr_ = new CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>();
+			correspondence_estimation_raw_ptr_->setKSearch(correspondence_estimation_k);
+			correspondence_estimation_ptr_ = typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr(correspondence_estimation_raw_ptr_);
+		} else if (correspondence_estimation_method == "CorrespondenceEstimationNormalShooting") {
+			correpondence_estimation_approach_ = CorrespondenceEstimationNormalShooting;
+			CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>* correspondence_estimation_raw_ptr_ = new CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>();
+			correspondence_estimation_raw_ptr_->setKSearch(correspondence_estimation_k);
+			correspondence_estimation_ptr_ = typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr(correspondence_estimation_raw_ptr_);
+		} else if (correspondence_estimation_method == "CorrespondenceEstimationOrganizedProjection") {
+			correpondence_estimation_approach_ = CorrespondenceEstimationOrganizedProjection;
+			CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>* correspondence_estimation_raw_ptr_ = new CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>();
+			double fx = 525.0, fy = 525.0, cx = 319.5, cy = 239.5;
+			if (ros::param::search(search_namespace, "correspondence_estimation_organized_projection/fx", final_param_name)) { private_node_handle->param(final_param_name, fx, 525.0); }
+			if (ros::param::search(search_namespace, "correspondence_estimation_organized_projection/fy", final_param_name)) { private_node_handle->param(final_param_name, fy, 525.0); }
+			if (ros::param::search(search_namespace, "correspondence_estimation_organized_projection/cx", final_param_name)) { private_node_handle->param(final_param_name, cx, 319.5); }
+			if (ros::param::search(search_namespace, "correspondence_estimation_organized_projection/cy", final_param_name)) { private_node_handle->param(final_param_name, cy, 239.5); }
+			correspondence_estimation_raw_ptr_->setFocalLengths(fx, fy);
+			correspondence_estimation_raw_ptr_->setCameraCenters(cx, cy);
+			correspondence_estimation_ptr_ = typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr(correspondence_estimation_raw_ptr_);
+		}
+
+		if (correspondence_estimation_ptr_) {
+			cloud_matcher_->setCorrespondenceEstimation(correspondence_estimation_ptr_);
+		}
+
 		setupRegistrationVisualizer();
 	}
 }
@@ -124,6 +161,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 	processKeypoints(pointcloud_keypoints, ambient_pointcloud, ambient_pointcloud_search_method);
 
+	resetCorrespondenceEstimationElapsedTime();
 	cloud_matcher_->align(*pointcloud_registered_out);
 
 	Eigen::Matrix4f final_transformation = cloud_matcher_->getFinalTransformation();
@@ -188,6 +226,76 @@ void CloudMatcher<PointT>::setupRegistrationVisualizer() {
 
 		registration_visualizer_->startDisplay();
 		ROS_DEBUG_STREAM("RegistrationVisualizer activated with " << maximum_number_of_displayed_correspondences_ << " number_maximum_displayed_correspondences");
+	}
+}
+
+template<typename PointT>
+double CloudMatcher<PointT>::getCorrespondenceEstimationElapsedTime() {
+	if (correspondence_estimation_ptr_) {
+		switch (correpondence_estimation_approach_) {
+			case CorrespondenceEstimation: {
+				typename CorrespondenceEstimationTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			case CorrespondenceEstimationBackProjection: {
+				typename CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			case CorrespondenceEstimationNormalShooting: {
+				typename CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			case CorrespondenceEstimationOrganizedProjection: {
+				typename CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+
+	return -1.0;
+}
+
+template<typename PointT>
+void CloudMatcher<PointT>::resetCorrespondenceEstimationElapsedTime() {
+	if (correspondence_estimation_ptr_) {
+		switch (correpondence_estimation_approach_) {
+			case CorrespondenceEstimation: {
+				typename CorrespondenceEstimationTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			case CorrespondenceEstimationBackProjection: {
+				typename CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			case CorrespondenceEstimationNormalShooting: {
+				typename CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			case CorrespondenceEstimationOrganizedProjection: {
+				typename CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
+				break;
+			}
+
+			default:
+				break;
+		}
 	}
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -33,6 +33,7 @@
 #include <Eigen/Core>
 
 // project includes
+#include <dynamic_robot_localization/cloud_matchers/correspondence_estimation.h>
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_publisher.h>
 #include <dynamic_robot_localization/common/registration_visualizer.h>
@@ -83,6 +84,8 @@ class CloudMatcher : public ConfigurableObject {
 
 		void setupRegistrationVisualizer();
 		virtual bool registrationRequiresNormalsOnAmbientPointCloud() { return false; }
+		virtual double getCorrespondenceEstimationElapsedTime();
+		virtual void resetCorrespondenceEstimationElapsedTime();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -108,6 +111,8 @@ class CloudMatcher : public ConfigurableObject {
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
 		typename pcl::Registration<PointT, PointT>::Ptr cloud_matcher_;
+		CorrepondenceEstimationApproach correpondence_estimation_approach_;
+		typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr correspondence_estimation_ptr_;
 		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
 		bool match_only_keypoints_;
 

@@ -73,6 +73,7 @@ Localization<PointT>::Localization() :
 	last_number_points_inserted_in_circular_buffer_(0),
 	reference_pointcloud_search_method_(new pcl::search::KdTree<PointT>()),
 	number_of_registration_iterations_for_all_matchers_(0),
+	correspondence_estimation_time_for_all_matchers_(0),
 	root_mean_square_error_of_last_registration_correspondences_(0.0),
 	outlier_percentage_(0.0),
 	number_inliers_(0),
@@ -1183,6 +1184,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					localization_times_msg_.header.frame_id = map_frame_id_;
 					localization_times_msg_.header.stamp = ambient_cloud_msg->header.stamp;
 					localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
+					localization_times_msg_.correspondence_estimation_time_for_all_matchers = correspondence_estimation_time_for_all_matchers_;
 					localization_times_publisher_.publish(localization_times_msg_);
 				}
 
@@ -1450,6 +1452,8 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 		}
 		int number_registration_iterations = matchers[i]->getNumberOfRegistrationIterations();
 		if (number_registration_iterations > 0) number_of_registration_iterations_for_all_matchers_ += number_registration_iterations;
+		double correspondence_estimation_time = matchers[i]->getCorrespondenceEstimationElapsedTime();
+		if (correspondence_estimation_time > 0) correspondence_estimation_time_for_all_matchers_ += correspondence_estimation_time;
 		last_matcher_convergence_state_ = matchers[i]->getMatcherConvergenceState();
 		root_mean_square_error_of_last_registration_correspondences_ = matchers[i]->getRootMeanSquareErrorOfRegistrationCorrespondences();
 	}
@@ -1708,6 +1712,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool tracking_recovery_reached = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_recovery_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_) || (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_);
 	bool performed_recovery = false;
 	number_of_registration_iterations_for_all_matchers_ = 0;
+	correspondence_estimation_time_for_all_matchers_ = 0;
 	last_matcher_convergence_state_ = "";
 	root_mean_square_error_of_last_registration_correspondences_ = -1.0;
 

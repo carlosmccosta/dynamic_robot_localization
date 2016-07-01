@@ -50,7 +50,7 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 	ROS_DEBUG_STREAM("Setting a registration time limit of " << convergence_time_limit_seconds << " seconds to " << CloudMatcher<PointT>::cloud_matcher_->getClassName() << " algorithm");
 
 	bool use_reciprocal_correspondences;
-	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, true);
+	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, false);
 	typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
 	matcher->setUseReciprocalCorrespondences(use_reciprocal_correspondences);
 
