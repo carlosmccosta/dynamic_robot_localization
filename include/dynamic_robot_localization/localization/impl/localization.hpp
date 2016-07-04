@@ -1073,6 +1073,9 @@ bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 
 template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+
 	try {
 		ros::Duration scan_age = ros::Time::now() - ambient_cloud_msg->header.stamp;
 		ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
@@ -1140,8 +1143,6 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					<< "\tTF position -> [ x: " << pose_tf_initial_guess.getOrigin().getX() << " | y: " << pose_tf_initial_guess.getOrigin().getY() << " | z: " << pose_tf_initial_guess.getOrigin().getZ() << " ]" \
 					<< "\tTF orientation -> [ qx: " << pose_tf_initial_guess_q.getX() << " | qy: " << pose_tf_initial_guess_q.getY() << " | qz: " << pose_tf_initial_guess_q.getZ() << " | qw: " << pose_tf_initial_guess_q.getW() << " ]");
 
-			PerformanceTimer performance_timer;
-			performance_timer.start();
 
 			// >>>>> localization pipeline <<<<<
 			tf2::Transform pose_tf_corrected;
@@ -1650,13 +1651,15 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
-	if (use_filtered_cloud_as_normal_estimation_surface_ambient_) {
-		ROS_DEBUG("Using filtered ambient point cloud for normal estimation");
-	} else {
-		ROS_DEBUG("Using raw ambient point cloud for normal estimation");
-		ambient_pointcloud_raw = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
-		if (!transformCloudToMapFrame(ambient_pointcloud_raw, pointcloud_time)) { return false; }
-		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
+	if (ambient_cloud_normal_estimator_ && (compute_normals_when_tracking_pose_ || compute_normals_when_estimating_initial_pose_ || compute_normals_when_recovering_pose_tracking_)) {
+		if (use_filtered_cloud_as_normal_estimation_surface_ambient_) {
+			ROS_DEBUG("Using filtered ambient point cloud for normal estimation");
+		} else {
+			ROS_DEBUG("Using raw ambient point cloud for normal estimation");
+			ambient_pointcloud_raw = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
+			if (!transformCloudToMapFrame(ambient_pointcloud_raw, pointcloud_time)) { return false; }
+			if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
+		}
 	}
 
 	PerformanceTimer performance_timer;
