@@ -201,7 +201,11 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 	resetCorrespondenceEstimationElapsedTime();
 	resetTransformationEstimationElapsedTime();
+	cloud_align_time_ms_ = 0;
+	PerformanceTimer performance_timer;
+	performance_timer.start();
 	cloud_matcher_->align(*pointcloud_registered_out);
+	cloud_align_time_ms_ = performance_timer.getElapsedTimeInMilliSec();
 
 	Eigen::Matrix4f final_transformation = cloud_matcher_->getFinalTransformation();
 

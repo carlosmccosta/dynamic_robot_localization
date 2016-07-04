@@ -35,6 +35,7 @@
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_publisher.h>
+#include <dynamic_robot_localization/common/performance_timer.h>
 #include <dynamic_robot_localization/common/registration_visualizer.h>
 #include <dynamic_robot_localization/cloud_matchers/correspondence_estimation.h>
 #include <dynamic_robot_localization/cloud_matchers/transformation_estimation.h>
@@ -97,6 +98,7 @@ class CloudMatcher : public ConfigurableObject {
 		inline typename CloudPublisher<PointT>::Ptr getCloudPublisher() { return cloud_publisher_; }
 		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
 		inline const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
+		inline double getCloudAlignTimeMS() { return cloud_align_time_ms_; }
 		virtual int getNumberOfRegistrationIterations() { return -1; }
 		virtual std::string getMatcherConvergenceState() { return ""; }
 		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences() { return -1.0; }
@@ -118,6 +120,7 @@ class CloudMatcher : public ConfigurableObject {
 		typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr correspondence_estimation_ptr_;
 		TransformationEstimationApproach transformation_estimation_approach_;
 		typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr transformation_estimation_ptr_;
+		double cloud_align_time_ms_;
 		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
 		bool match_only_keypoints_;
 

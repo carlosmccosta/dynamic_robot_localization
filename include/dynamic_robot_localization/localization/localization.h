@@ -371,6 +371,7 @@ class Localization : public ConfigurableObject {
 		int number_of_registration_iterations_for_all_matchers_;
 		double correspondence_estimation_time_for_all_matchers_;
 		double transformation_estimation_time_for_all_matchers_;
+		double cloud_align_time_for_all_matchers_;
 		std::string last_matcher_convergence_state_;
 		double root_mean_square_error_of_last_registration_correspondences_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
