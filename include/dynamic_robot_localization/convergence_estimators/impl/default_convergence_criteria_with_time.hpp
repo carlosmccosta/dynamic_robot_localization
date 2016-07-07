@@ -21,7 +21,7 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <DefaultConvergenceCriteriaWithTime-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename Scalar>
 bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
-	double elapsed_time = convergence_timer_.getTimeSeconds();
+	double elapsed_time = convergence_timer_.getElapsedTimeInSec();
 	convergence_state_time_limit_reached_ = false;
 	if (convergence_time_limit_seconds_ >= 0.0 && elapsed_time > convergence_time_limit_seconds_) {
 		ROS_WARN_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged] Convergence time limit of " << convergence_time_limit_seconds_ << " seconds exceeded (elapsed time: " << elapsed_time << ")" \
@@ -61,7 +61,7 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 
 template<typename Scalar>
 void DefaultConvergenceCriteriaWithTime<Scalar>::resetConvergenceTimer() {
-	convergence_timer_.reset();
+	convergence_timer_.restart();
 }
 
 

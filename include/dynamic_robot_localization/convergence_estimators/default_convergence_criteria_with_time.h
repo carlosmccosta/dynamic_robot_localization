@@ -21,7 +21,6 @@
 #include <ros/ros.h>
 
 // PCL includes
-#include <pcl/common/time.h>
 #include <pcl/registration/default_convergence_criteria.h>
 #include <pcl/pcl_macros.h>
 
@@ -29,6 +28,7 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
+#include <dynamic_robot_localization/common/performance_timer.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -69,7 +69,7 @@ class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConv
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline double getConvergenceTimeLimitSeconds() const { return convergence_time_limit_seconds_; }
-		inline double getConvergenceElaspedTime() { return convergence_timer_.getTimeSeconds(); }
+		inline double getConvergenceElaspedTime() { return convergence_timer_.getElapsedTimeInSec(); }
 		std::string getConvergenceStateString();
 		inline int getNumberOfRegistrationIterations() { return pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_; }
 		double getRootMeanSquareErrorOfRegistrationCorrespondences();
@@ -84,7 +84,7 @@ class DefaultConvergenceCriteriaWithTime : public pcl::registration::DefaultConv
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-		pcl::StopWatch convergence_timer_;
+		PerformanceTimer convergence_timer_;
 		double convergence_time_limit_seconds_;
 		bool convergence_state_time_limit_reached_;
 		double convergence_rotation_threshold_;

@@ -10,11 +10,11 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <limits>
 
 // ROS includes
 
 // PCL includes
-#include <pcl/common/time.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_estimation_normal_shooting.h>
@@ -25,6 +25,7 @@
 
 // project includes
 #include <dynamic_robot_localization/common/common.h>
+#include <dynamic_robot_localization/common/performance_timer.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -49,17 +50,17 @@ class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS T
 		virtual ~BaseClass##Suffix() {} \
 \
 		virtual void determineCorrespondences(pcl::Correspondences &correspondences, double max_distance = std::numeric_limits<double>::max()) { \
-			pcl::StopWatch timer_; \
-			timer_.reset(); \
+			PerformanceTimer timer_; \
+			timer_.start(); \
 			pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage >::determineCorrespondences(correspondences, max_distance); \
-			correspondence_estimation_elapsed_time_ += timer_.getTime(); \
+			correspondence_estimation_elapsed_time_ += timer_.getElapsedTimeInMilliSec(); \
 		} \
 \
 		virtual void determineReciprocalCorrespondences(pcl::Correspondences &correspondences, double max_distance = std::numeric_limits<double>::max()) { \
-			pcl::StopWatch timer_; \
-			timer_.reset(); \
+			PerformanceTimer timer_; \
+			timer_.start(); \
 			pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage >::determineReciprocalCorrespondences(correspondences, max_distance); \
-			correspondence_estimation_elapsed_time_ += timer_.getTime(); \
+			correspondence_estimation_elapsed_time_ += timer_.getElapsedTimeInMilliSec(); \
 		} \
 \
 		double getCorrespondenceEstimationElapsedTime() { return correspondence_estimation_elapsed_time_; } \

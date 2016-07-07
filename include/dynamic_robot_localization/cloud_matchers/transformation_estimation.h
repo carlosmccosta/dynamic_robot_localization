@@ -14,7 +14,6 @@
 // ROS includes
 
 // PCL includes
-#include <pcl/common/time.h>
 #include <pcl/registration/transformation_estimation.h>
 #include <pcl/registration/transformation_estimation_2D.h>
 #include <pcl/registration/transformation_estimation_dual_quaternion.h>
@@ -31,6 +30,7 @@
 
 // project includes
 #include <dynamic_robot_localization/common/common.h>
+#include <dynamic_robot_localization/common/performance_timer.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -60,10 +60,10 @@ class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS T
 		virtual ~BaseClass##Suffix() {} \
 \
 		virtual void estimateRigidTransformation (const pcl::PointCloud<PointSource> &cloud_src, const pcl::PointCloud<PointTarget> &cloud_tgt, const pcl::Correspondences &correspondences, typename pcl::registration::TransformationEstimation< DRL_UNPACK_ARGS TemplatesUsage >::Matrix4 &transformation_matrix) const {\
-			pcl::StopWatch timer_; \
-			timer_.reset(); \
+			PerformanceTimer timer_; \
+			timer_.start(); \
 			pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage >::estimateRigidTransformation(cloud_src, cloud_tgt, correspondences, transformation_matrix); \
-			transformation_estimation_elapsed_time_ += timer_.getTime(); \
+			transformation_estimation_elapsed_time_ += timer_.getElapsedTimeInMilliSec(); \
 		}\
 \
 		double getTransformationEstimationElapsedTime() { return transformation_estimation_elapsed_time_; } \
