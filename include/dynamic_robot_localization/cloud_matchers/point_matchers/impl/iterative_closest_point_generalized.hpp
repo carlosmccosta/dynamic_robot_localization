@@ -39,6 +39,20 @@ void IterativeClosestPointGeneralized<PointT>::setupConfigurationFromParameterSe
 	CloudMatcher<PointT>::setCloudMatcher(matcher_base);
 	IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
+
+template<typename PointT>
+double IterativeClosestPointGeneralized<PointT>::getTransformCloudElapsedTimeMS() {
+	typename IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
+	return -1.0;
+}
+
+
+template<typename PointT>
+void IterativeClosestPointGeneralized<PointT>::resetTransformCloudElapsedTime() {
+	typename IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPointWithNormals-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

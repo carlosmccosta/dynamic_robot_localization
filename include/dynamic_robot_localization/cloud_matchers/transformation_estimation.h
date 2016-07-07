@@ -66,8 +66,8 @@ class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS T
 			transformation_estimation_elapsed_time_ += timer_.getElapsedTimeInMilliSec(); \
 		}\
 \
-		double getTransformationEstimationElapsedTime() { return transformation_estimation_elapsed_time_; } \
-		void resetTransformationEstimationElapsedTime() { transformation_estimation_elapsed_time_ = 0; } \
+		inline double getTransformationEstimationElapsedTime() { return transformation_estimation_elapsed_time_; } \
+		inline void resetTransformationEstimationElapsedTime() { transformation_estimation_elapsed_time_ = 0; } \
 \
 	protected: \
 		mutable double transformation_estimation_elapsed_time_; \

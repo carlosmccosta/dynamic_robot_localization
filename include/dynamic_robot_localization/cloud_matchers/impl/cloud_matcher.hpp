@@ -201,6 +201,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 	resetCorrespondenceEstimationElapsedTime();
 	resetTransformationEstimationElapsedTime();
+	resetTransformCloudElapsedTime();
 	cloud_align_time_ms_ = 0;
 	PerformanceTimer performance_timer;
 	performance_timer.start();
@@ -273,7 +274,7 @@ void CloudMatcher<PointT>::setupRegistrationVisualizer() {
 }
 
 template<typename PointT>
-double CloudMatcher<PointT>::getCorrespondenceEstimationElapsedTime() {
+double CloudMatcher<PointT>::getCorrespondenceEstimationElapsedTimeMS() {
 	if (correspondence_estimation_ptr_) {
 		switch (correpondence_estimation_approach_) {
 			case CorrespondenceEstimation: {
@@ -343,7 +344,7 @@ void CloudMatcher<PointT>::resetCorrespondenceEstimationElapsedTime() {
 }
 
 template<typename PointT>
-double CloudMatcher<PointT>::getTransformationEstimationElapsedTime() {
+double CloudMatcher<PointT>::getTransformationEstimationElapsedTimeMS() {
 	if (transformation_estimation_ptr_) {
 		switch (transformation_estimation_approach_) {
 			case TransformationEstimation2D: {

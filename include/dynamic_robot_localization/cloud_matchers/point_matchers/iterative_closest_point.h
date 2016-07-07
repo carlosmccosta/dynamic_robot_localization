@@ -26,8 +26,8 @@
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
+#include <dynamic_robot_localization/common/performance_timer.h>
 #include <dynamic_robot_localization/convergence_estimators/default_convergence_criteria_with_time.h>
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -54,6 +54,19 @@ class IterativeClosestPointTimeConstrained: public pcl::IterativeClosestPoint<Po
 
 		inline void setSourceHasNormals(bool source_has_normals) { pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::source_has_normals_ = source_has_normals; }
 		inline void setTargetHasNormals(bool target_has_normals) { pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::target_has_normals_ = target_has_normals; }
+
+		inline double getTransformCloudElapsedTime() { return transform_cloud_elapsed_time_ms_; }
+		inline void resetTransformCloudElapsedTime() { transform_cloud_elapsed_time_ms_ = 0; }
+
+	protected:
+		virtual void transformCloud(const typename pcl::Registration<PointSource, PointTarget, Scalar>::PointCloudSource &input, typename pcl::Registration<PointSource, PointTarget, Scalar>::PointCloudSource &output, const typename pcl::Registration<PointSource, PointTarget, Scalar>::Matrix4 &transform) {
+			PerformanceTimer timer_;
+			timer_.start();
+			pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::transformCloud(input, output, transform);
+			transform_cloud_elapsed_time_ms_ += timer_.getElapsedTimeInMilliSec();
+		}
+
+		double transform_cloud_elapsed_time_ms_;
 };
 
 
@@ -77,7 +90,7 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		IterativeClosestPoint() : cumulative_sum_of_convergence_time_(0.0), number_of_convergence_time_measurements(0) {}
+		IterativeClosestPoint() : cumulative_sum_of_convergence_time_(0.0), number_of_convergence_time_measurements(0) { }
 		virtual ~IterativeClosestPoint() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -91,6 +104,8 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences();
 		typename DefaultConvergenceCriteriaWithTime<float>::Ptr getConvergenceCriteria();
 		virtual std::string getMatcherConvergenceState();
+		virtual double getTransformCloudElapsedTimeMS();
+		virtual void resetTransformCloudElapsedTime();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

@@ -51,6 +51,19 @@ class IterativeClosestPoint2DTimeConstrained: public pcl::IterativeClosestPoint<
 		}
 
 		virtual ~IterativeClosestPoint2DTimeConstrained() {}
+
+		inline double getTransformCloudElapsedTime() { return transform_cloud_elapsed_time_ms_; }
+		inline void resetTransformCloudElapsedTime() { transform_cloud_elapsed_time_ms_ = 0; }
+
+	protected:
+		virtual void transformCloud(const typename pcl::Registration<PointSource, PointTarget, Scalar>::PointCloudSource &input, typename pcl::Registration<PointSource, PointTarget, Scalar>::PointCloudSource &output, const typename pcl::Registration<PointSource, PointTarget, Scalar>::Matrix4 &transform) {
+			PerformanceTimer timer_;
+			timer_.start();
+			pcl::IterativeClosestPoint<PointSource, PointTarget, Scalar>::transformCloud(input, output, transform);
+			transform_cloud_elapsed_time_ms_ += timer_.getElapsedTimeInMilliSec();
+		}
+
+		double transform_cloud_elapsed_time_ms_;
 };
 
 
@@ -80,6 +93,8 @@ class IterativeClosestPoint2D : public IterativeClosestPoint<PointT> {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual double getTransformCloudElapsedTimeMS();
+		virtual void resetTransformCloudElapsedTime();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

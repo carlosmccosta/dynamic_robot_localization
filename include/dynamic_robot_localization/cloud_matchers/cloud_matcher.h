@@ -86,10 +86,12 @@ class CloudMatcher : public ConfigurableObject {
 
 		void setupRegistrationVisualizer();
 		virtual bool registrationRequiresNormalsOnAmbientPointCloud() { return false; }
-		virtual double getCorrespondenceEstimationElapsedTime();
+		virtual double getCorrespondenceEstimationElapsedTimeMS();
 		virtual void resetCorrespondenceEstimationElapsedTime();
-		virtual double getTransformationEstimationElapsedTime();
+		virtual double getTransformationEstimationElapsedTimeMS();
 		virtual void resetTransformationEstimationElapsedTime();
+		virtual double getTransformCloudElapsedTimeMS() { return -1.0; }
+		virtual void resetTransformCloudElapsedTime() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CloudMatcher-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

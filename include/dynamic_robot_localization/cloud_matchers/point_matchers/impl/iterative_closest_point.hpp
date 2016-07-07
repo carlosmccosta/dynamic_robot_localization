@@ -129,6 +129,20 @@ std::string IterativeClosestPoint<PointT>::getMatcherConvergenceState() {
 		return "";
 	}
 }
+
+template<typename PointT>
+double IterativeClosestPoint<PointT>::getTransformCloudElapsedTimeMS() {
+	typename IterativeClosestPointTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
+	return -1.0;
+}
+
+
+template<typename PointT>
+void IterativeClosestPoint<PointT>::resetTransformCloudElapsedTime() {
+	typename IterativeClosestPointTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

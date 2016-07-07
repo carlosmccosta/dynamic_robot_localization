@@ -63,8 +63,8 @@ class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS T
 			correspondence_estimation_elapsed_time_ += timer_.getElapsedTimeInMilliSec(); \
 		} \
 \
-		double getCorrespondenceEstimationElapsedTime() { return correspondence_estimation_elapsed_time_; } \
-		void resetCorrespondenceEstimationElapsedTime() { correspondence_estimation_elapsed_time_ = 0; } \
+		inline double getCorrespondenceEstimationElapsedTime() { return correspondence_estimation_elapsed_time_; } \
+		inline void resetCorrespondenceEstimationElapsedTime() { correspondence_estimation_elapsed_time_ = 0; } \
 \
 	protected: \
 		double correspondence_estimation_elapsed_time_; \
