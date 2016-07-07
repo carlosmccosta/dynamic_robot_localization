@@ -419,10 +419,10 @@ tracking_matchers:
             convergence_time_limit_seconds: -1.0                    # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied, if > 0 this value will be the maximum time limit, even when using the percentage of the mean convergence time)
             convergence_time_limit_seconds_as_mean_convergence_time_percentage: 3.0                 # Allows to update the convergence time limit value based on the percentage of the mean convergence time [1 -> 100%] (if < 0, the time limit isn't updated)
             minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit: 25    # Minimum number of convergence time measurements required to update the convergence time limit value
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
             max_number_of_registration_iterations: 100              # Overrides parameter in parent namespace
         iterative_closest_point_generalized:                        # Allows prefix and postfix of letters to ensure parsing order
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
             rotation_epsilon: 0.002                                 # The rotation epsilon (maximum allowable difference between two consecutive rotations) in order for an optimization to be considered as having converged to the final solution
             correspondence_randomness: 20                           # The number of neighbors used when selecting a point neighborhood to compute covariances
             maximum_optimizer_iterations: 20                        # Number of iterations at the optimization step
