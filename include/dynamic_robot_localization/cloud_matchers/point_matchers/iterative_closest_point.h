@@ -102,6 +102,7 @@ class IterativeClosestPoint : public CloudMatcher<PointT> {
 						tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
 		virtual int getNumberOfRegistrationIterations();
 		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences();
+		virtual int getNumberCorrespondencesInLastRegistrationIteration();
 		typename DefaultConvergenceCriteriaWithTime<float>::Ptr getConvergenceCriteria();
 		virtual std::string getMatcherConvergenceState();
 		virtual double getTransformCloudElapsedTimeMS();

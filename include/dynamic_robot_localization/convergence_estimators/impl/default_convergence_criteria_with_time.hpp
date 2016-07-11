@@ -90,6 +90,11 @@ double DefaultConvergenceCriteriaWithTime<Scalar>::getRootMeanSquareErrorOfRegis
 		return std::numeric_limits<double>::max();
 	}
 }
+
+template<typename Scalar>
+int DefaultConvergenceCriteriaWithTime<Scalar>::getNumberCorrespondences() {
+	return pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_.size();
+}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </DefaultConvergenceCriteriaWithTime-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
 

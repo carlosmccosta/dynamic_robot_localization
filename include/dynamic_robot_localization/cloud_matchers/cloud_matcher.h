@@ -104,6 +104,7 @@ class CloudMatcher : public ConfigurableObject {
 		virtual int getNumberOfRegistrationIterations() { return -1; }
 		virtual std::string getMatcherConvergenceState() { return ""; }
 		virtual double getRootMeanSquareErrorOfRegistrationCorrespondences() { return -1.0; }
+		virtual int getNumberCorrespondencesInLastRegistrationIteration() { return -1; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

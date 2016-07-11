@@ -110,6 +110,17 @@ double IterativeClosestPoint<PointT>::getRootMeanSquareErrorOfRegistrationCorres
 
 
 template<typename PointT>
+int IterativeClosestPoint<PointT>::getNumberCorrespondencesInLastRegistrationIteration() {
+	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria = getConvergenceCriteria();
+	if (convergence_criteria) {
+		return convergence_criteria->getNumberCorrespondences();
+	} else {
+		return -1.0;
+	}
+}
+
+
+template<typename PointT>
 typename DefaultConvergenceCriteriaWithTime<float>::Ptr IterativeClosestPoint<PointT>::getConvergenceCriteria() {
 	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria;
 	if (CloudMatcher<PointT>::cloud_matcher_) {

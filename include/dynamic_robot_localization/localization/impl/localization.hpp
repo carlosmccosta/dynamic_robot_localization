@@ -78,6 +78,7 @@ Localization<PointT>::Localization() :
 	transform_cloud_time_for_all_matchers_(0),
 	cloud_align_time_for_all_matchers_(0),
 	root_mean_square_error_of_last_registration_correspondences_(0.0),
+	number_correspondences_last_registration_algorithm_(-1),
 	outlier_percentage_(0.0),
 	number_inliers_(0),
 	root_mean_square_error_inliers_(0.0),
@@ -1307,6 +1308,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				if (!localization_diagnostics_publisher_.getTopic().empty()) {
 					localization_diagnostics_msg_.header.frame_id = map_frame_id_;
 					localization_diagnostics_msg_.header.stamp = ambient_cloud_time;
+					localization_diagnostics_msg_.number_correspondences_last_registration_algorithm = number_correspondences_last_registration_algorithm_;
 					localization_diagnostics_publisher_.publish(localization_diagnostics_msg_);
 				}
 
@@ -1481,6 +1483,7 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 
 		last_matcher_convergence_state_ = matchers[i]->getMatcherConvergenceState();
 		root_mean_square_error_of_last_registration_correspondences_ = matchers[i]->getRootMeanSquareErrorOfRegistrationCorrespondences();
+		number_correspondences_last_registration_algorithm_ = matchers[i]->getNumberCorrespondencesInLastRegistrationIteration();
 	}
 
 	return registration_successful;
@@ -1745,6 +1748,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	cloud_align_time_for_all_matchers_ = 0;
 	last_matcher_convergence_state_ = "";
 	root_mean_square_error_of_last_registration_correspondences_ = -1.0;
+	number_correspondences_last_registration_algorithm_ = -1;
 
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose
 		if (!received_external_initial_pose_estimation_ && !initial_pose_estimators_feature_matchers_.empty()) {
