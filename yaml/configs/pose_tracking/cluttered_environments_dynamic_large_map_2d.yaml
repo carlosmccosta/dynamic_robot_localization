@@ -51,6 +51,8 @@ curvature_estimators:
 
 
 tracking_matchers:
+    correspondence_estimation_approach: 'CorrespondenceEstimation'
+    transformation_estimation_approach: 'TransformationEstimation2D'
     ignore_height_corrections: false
     point_matchers:
 #        iterative_closest_point:
@@ -63,7 +65,7 @@ tracking_matchers:
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 150
-            max_number_of_ransac_iterations: 35
+            max_number_of_ransac_iterations: 0
             ransac_outlier_rejection_threshold: 0.035
             match_only_keypoints: false
             display_cloud_aligment: false
@@ -72,7 +74,7 @@ tracking_matchers:
             rotation_epsilon: 0.002
             correspondence_randomness: 50
             maximum_optimizer_iterations: 100
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
             # ndt_2d
             grid_center_x: 10.0
             grid_center_y: 5.0
