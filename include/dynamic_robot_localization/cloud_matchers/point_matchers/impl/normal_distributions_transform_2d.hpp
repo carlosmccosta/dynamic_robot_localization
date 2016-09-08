@@ -21,7 +21,7 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalDistributionsTransform2D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new pcl::NormalDistributionsTransform2D<PointT, PointT>());
+	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new NormalDistributionsTransform2DDetailed<PointT, PointT>());
 	typename pcl::NormalDistributionsTransform2D<PointT, PointT>::Ptr matcher = boost::static_pointer_cast< typename pcl::NormalDistributionsTransform2D<PointT, PointT> >(matcher_base);
 
 	double grid_center_x, grid_center_y;
@@ -47,6 +47,16 @@ void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServ
 
 	CloudMatcher<PointT>::setCloudMatcher(matcher_base);
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+}
+
+
+template<typename PointT>
+int NormalDistributionsTransform2D<PointT>::getNumberOfRegistrationIterations() {
+	if (CloudMatcher<PointT>::cloud_matcher_) {
+		typename NormalDistributionsTransform2DDetailed<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< typename dynamic_robot_localization::NormalDistributionsTransform2DDetailed<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+		if (matcher) { return matcher->getNumberOfRegistrationIterations(); }
+	}
+	return -1;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalDistributionsTransform2D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

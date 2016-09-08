@@ -28,6 +28,18 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
+
+// ###################################################################   NormalDistributionsTransformDetailed   ################################################################
+template <typename PointSource, typename PointTarget>
+class NormalDistributionsTransformDetailed: public pcl::NormalDistributionsTransform<PointSource, PointTarget> {
+	public:
+		typedef boost::shared_ptr< NormalDistributionsTransformDetailed<PointSource, PointTarget> > Ptr;
+		typedef boost::shared_ptr< const NormalDistributionsTransformDetailed<PointSource, PointTarget> > ConstPtr;
+
+		inline int getNumberOfRegistrationIterations() { return pcl::Registration<PointSource, PointTarget>::nr_iterations_; }
+};
+
+
 // #####################################################################   NormalDistributionsTransform3D   ####################################################################
 /**
  * \brief Description...
@@ -54,6 +66,7 @@ class NormalDistributionsTransform3D : public CloudMatcher<PointT> {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalDistributionsTransform3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual int getNumberOfRegistrationIterations();
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalDistributionsTransform3D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
