@@ -39,7 +39,7 @@
 	<!-- system dependencies -->
 	<build_depend>Boost</build_depend>
 	<build_depend>eigen</build_depend>
-	<build_depend>libpcl-1.7-all-dev</build_depend> <!-- latest from official pcl ppa | http://pointclouds.org/downloads/linux.html | >= 1.7.2 -->
+	<build_depend>libpcl-dev</build_depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
 
 
 	<!-- ################################################################## -->
@@ -77,7 +77,7 @@
 	<run_depend>Boost</run_depend>
 	<run_depend>coreutils</run_depend>
 	<run_depend>eigen</run_depend>
-	<run_depend>libpcl-1.7-all-dev</run_depend>
+	<run_depend>libpcl-dev</run_depend>
 
 
 	<export>

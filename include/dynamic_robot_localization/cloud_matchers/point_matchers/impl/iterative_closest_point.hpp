@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	private_node_handle->param(configuration_namespace + "convergence_absolute_mse_threshold", convergence_absolute_mse_threshold_, 1e-12);
-	private_node_handle->param(configuration_namespace + "convergence_rotation_threshold", convergence_rotation_threshold_, -1337.0);
+	private_node_handle->param(configuration_namespace + "convergence_rotation_threshold", convergence_rotation_threshold_, 0.0);
 	private_node_handle->param(configuration_namespace + "convergence_max_iterations_similar_transforms", convergence_max_iterations_similar_transforms_, 0);
 	double convergence_time_limit_seconds;
 	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds", convergence_time_limit_seconds, -1.0);
@@ -53,6 +53,8 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, false);
 	typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
 	matcher->setUseReciprocalCorrespondences(use_reciprocal_correspondences);
+	if (convergence_rotation_threshold_ > 0)
+	  matcher->setTransformationRotationEpsilon(convergence_rotation_threshold_);
 
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }

@@ -7,7 +7,11 @@ Dynamic Robot Localization
 ## Overview
 
 The dynamic_robot_localization is a ROS package that offers 3 DOF and 6 DOF localization using PCL and allows dynamic map update using OctoMap.
-It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](yaml/schema/drl_configs.yaml) and examples of configurations available in [guardian_config](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch) and [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests/tree/hydro-devel/launch/environments))
+It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](yaml/schema/drl_configs.yaml) and examples of configurations available in [guardian_config](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch) and [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests/tree/hydro-devel/launch/environments)).
+
+Notes:
+- branch hydro-devel can use PCL 1.7.* from official PPA
+- branch kinetic-devel requires to compile PCL from source using branch master-all-pr from https://github.com/carlosmccosta/pcl
 
 ![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
 

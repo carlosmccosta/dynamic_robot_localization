@@ -21,7 +21,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/kdtree.h>
-#include <pcl/features/usc.h>
+#include <pcl/features/impl/usc.hpp>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
