@@ -63,7 +63,7 @@ void RegistrationCovarianceEstimator<PointT>::setReferenceCloud(const typename p
 	}
 
 	if (reference_cloud_search_method) {
-		correspondence_estimation_->setSearchMethodTarget(reference_cloud_search_method);
+		correspondence_estimation_->setSearchMethodTarget(reference_cloud_search_method, true);
 	} else {
 		correspondence_estimation_->getSearchMethodTarget()->setInputCloud(reference_cloud);
 	}

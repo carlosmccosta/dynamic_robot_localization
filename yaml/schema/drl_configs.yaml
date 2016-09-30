@@ -57,6 +57,12 @@ localization_point_type: 'PointXYZRGBNormal'                                    
 
 
 # ===================================================================================================================================================
+#   PCL and ROS verbosity levels for console loggers
+pcl_verbosity_level: 'ERROR'                                    # VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output
+ros_verbosity_level: 'INFO'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
+
+
+# ===================================================================================================================================================
 #   These are the topics from which the localization system will receive the reference and ambient point clouds
 subscribe_topic_names:
     pose_topic: 'initial_pose'                                                  # geometry_msgs::Pose | Topic to reset localization pose
@@ -336,13 +342,22 @@ tracking_matchers:
     pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose: 3  # Pose tracking recovery will be activated if the registration has failed at least [this number] and the pose_tracking_recovery_timeout has been reached
     pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose: 5 # When cloud registration fails for more than [this number], the pose tracking recovery algorithms will be activated
     max_correspondence_distance: 0.1                                # Can be overridden in child namespaces | The maximum distance threshold between two correspondent points in source <-> target. If the distance is larger than this threshold, the points will be ignored in the alignment process
-    correspondence_estimation_approach: ''                          # Can be overridden in child namespaces | If not specified it will not change the correspondence estimator | [ CorrespondenceEstimation | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting | CorrespondenceEstimationOrganizedProjection ]
+    correspondence_estimation_approach: ''                          # Can be overridden in child namespaces | If not specified it will not change the correspondence estimator | [ CorrespondenceEstimation | CorrespondenceEstimationLookupTable | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting | CorrespondenceEstimationOrganizedProjection ]
     correspondence_estimation_k: 10                                 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: [ CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting ]
     correspondence_estimation_organized_projection:                 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationOrganizedProjection
       fx: 525.0
       fy: 525.0
       cx: 319.5
       cy: 239.5
+    correspondence_estimation_lookup_table:                         # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationLookupTable
+      map_cell_resolution: 0.01                                     # Cell size in meters
+      map_margin_x: 1.0                                             # Margin around map data with extra lookup cells
+      map_margin_y: 1.0                                             # Margin around map data with extra lookup cells
+      map_margin_z: 1.0                                             # Margin around map data with extra lookup cells
+      sensor_cell_resolution: 0.01                                  # Cell size in meters
+      sensor_margin_x: 1.0                                          # Margin around map data with extra lookup cells
+      sensor_margin_y: 1.0                                          # Margin around map data with extra lookup cells
+      sensor_margin_z: 1.0                                          # Margin around map data with extra lookup cells
     transformation_estimation_approach: ''                          # Can be overridden in child namespaces | If not specified it will not change the transformation estimator | [ TransformationEstimation2D | TransformationEstimationDualQuaternion | TransformationEstimationLM | TransformationEstimationPointToPlane | TransformationEstimationPointToPlaneLLS | TransformationEstimationPointToPlaneLLSWeighted | TransformationEstimationPointToPlaneWeighted | TransformationEstimationSVD | TransformationEstimationSVDScale ]
     last_pose_weighted_mean_filter: -1.0                            # Valid values are in range ]0, 1[. The filtered pose is computed using linear interpolation (using the last and current estimated pose as the two interpolating extremes). Values close to 0 result in a final pose closer to the last pose. Values close to 1 result in a final pose close to the current estimated pose (based on the sensor data).
     transformation_epsilon: 1e-8                                    # Can be overridden in child namespaces | Ignored if lower than 0 | The transformation epsilon (maximum allowable translation squared difference between two consecutive transformations -> TranslationThreshold) in order for an optimization to be considered as having converged to the final solution (translation threshold squared)

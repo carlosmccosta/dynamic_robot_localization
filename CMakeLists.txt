@@ -126,6 +126,7 @@ add_library(drl_common
     src/common/registration_visualizer.cpp
     src/common/time_utils.cpp
     src/common/performance_timer.cpp
+    src/common/verbosity_levels.cpp
 )
 
 add_library(drl_convergence_estimators
@@ -334,6 +335,7 @@ target_link_libraries(drl_localization
 )
 
 target_link_libraries(drl_localization_node
+    drl_common
     drl_localization
     ${catkin_LIBRARIES}
 )

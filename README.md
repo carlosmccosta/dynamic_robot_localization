@@ -6,12 +6,12 @@ Dynamic Robot Localization
 
 ## Overview
 
-The dynamic_robot_localization is a ROS package that offers 3 DOF and 6 DOF localization using PCL and allows dynamic map update using OctoMap.
+The dynamic\_robot\_localization is a ROS package that offers 3 DOF and 6 DOF localization using PCL and allows dynamic map update using OctoMap.
 It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](yaml/schema/drl_configs.yaml) and examples of configurations available in [guardian_config](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch) and [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests/tree/hydro-devel/launch/environments)).
 
 Notes:
-- branch hydro-devel can use PCL 1.7.* from official PPA
-- branch kinetic-devel requires to compile PCL from source using branch master-all-pr from https://github.com/carlosmccosta/pcl
+- The [hydro-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/hydro-devel) branch can use PCL 1.7.* from [official PPA](http://pointclouds.org/downloads/linux.html)
+- The [kinetic-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/kinetic-devel) branch requires to [compile PCL from source](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php) using branch [master-all-pr](https://github.com/carlosmccosta/pcl/tree/master-all-pr) from [https://github.com/carlosmccosta/pcl](https://github.com/carlosmccosta/pcl) (you can use this [package.xml](https://gist.github.com/carlosmccosta/1ec3e3bdce419441b0b17bf9bb707552) to compile it within a catkin workspace)
 
 ![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
 

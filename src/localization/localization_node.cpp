@@ -13,8 +13,8 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #include <ros/ros.h>
-#include <pcl/console/print.h>
 #include <dynamic_robot_localization/localization/localization.h>
+#include <dynamic_robot_localization/common/verbosity_levels.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -23,14 +23,16 @@
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "drl_localization_node");
 
-	/*if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info)) {
-		ros::console::notifyLoggerLevelsChanged();
-	}*/
-
-	pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
-
 	ros::NodeHandlePtr node_handle(new ros::NodeHandle());
 	ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
+
+	std::string pcl_verbosity_level;
+	private_node_handle->param("pcl_verbosity_level", pcl_verbosity_level, std::string("ERROR"));
+	dynamic_robot_localization::verbosity_levels::setVerbosityLevelPCL(pcl_verbosity_level);
+
+	std::string ros_verbosity_level;
+	private_node_handle->param("ros_verbosity_level", ros_verbosity_level, std::string("INFO"));
+	dynamic_robot_localization::verbosity_levels::setVerbosityLevelROS(ros_verbosity_level);
 
 	std::string localization_point_type;
 	private_node_handle->param("localization_point_type", localization_point_type, std::string("PointXYZRGBNormal"));

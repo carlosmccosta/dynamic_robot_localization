@@ -16,6 +16,7 @@
 
 // PCL includes
 #include <pcl/registration/correspondence_estimation.h>
+#include <pcl/registration/correspondence_estimation_lookup_table.h>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_estimation_normal_shooting.h>
 #include <pcl/registration/correspondence_estimation_organized_projection.h>
@@ -32,6 +33,7 @@ namespace dynamic_robot_localization {
 
 enum CorrepondenceEstimationApproach {
 	CorrespondenceEstimation,
+	CorrespondenceEstimationLookupTable,
 	CorrespondenceEstimationBackProjection,
 	CorrespondenceEstimationNormalShooting,
 	CorrespondenceEstimationOrganizedProjection
@@ -71,6 +73,7 @@ class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS T
 };
 
 GenerateCorrespondenceEstimationTimed(CorrespondenceEstimation, Timed, (typename PointSource, typename PointTarget, typename Scalar = float), (PointSource, PointTarget, Scalar))
+GenerateCorrespondenceEstimationTimed(CorrespondenceEstimationLookupTable, Timed, (typename PointSource, typename PointTarget, typename Scalar = float), (PointSource, PointTarget, Scalar))
 GenerateCorrespondenceEstimationTimed(CorrespondenceEstimationBackProjection, Timed, (typename PointSource, typename PointTarget, typename NormalT, typename Scalar = float), (PointSource, PointTarget, NormalT, Scalar))
 GenerateCorrespondenceEstimationTimed(CorrespondenceEstimationNormalShooting, Timed, (typename PointSource, typename PointTarget, typename NormalT, typename Scalar = float), (PointSource, PointTarget, NormalT, Scalar))
 GenerateCorrespondenceEstimationTimed(CorrespondenceEstimationOrganizedProjection, Timed, (typename PointSource, typename PointTarget, typename Scalar = float), (PointSource, PointTarget, Scalar))

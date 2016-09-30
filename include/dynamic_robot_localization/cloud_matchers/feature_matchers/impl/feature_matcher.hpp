@@ -46,7 +46,7 @@ void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCl
 
 	// subclass must set cloud_matcher_ ptr
 	if (CloudMatcher<PointT>::getCloudMatcher()) {
-		CloudMatcher<PointT>::getCloudMatcher()->setSearchMethodTarget(search_method);
+		CloudMatcher<PointT>::getCloudMatcher()->setSearchMethodTarget(search_method, true);
 		CloudMatcher<PointT>::getCloudMatcher()->setInputTarget(reference_cloud_final);
 	}
 
