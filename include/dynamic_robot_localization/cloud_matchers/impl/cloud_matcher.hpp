@@ -171,7 +171,8 @@ void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>:
 	if (cloud_matcher_) {
 		cloud_matcher_->setInputTarget(reference_cloud);
 		cloud_matcher_->setSearchMethodTarget(search_method, true);
-		cloud_matcher_->getCorrespondenceEstimation()->setSearchMethodTarget(search_method, false);
+		if (cloud_matcher_->getCorrespondenceEstimation())
+			cloud_matcher_->getCorrespondenceEstimation()->setSearchMethodTarget(search_method, false);
 	}
 
 	if (registration_visualizer_) {
