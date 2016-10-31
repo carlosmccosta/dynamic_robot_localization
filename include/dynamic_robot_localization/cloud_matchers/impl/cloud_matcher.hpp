@@ -83,29 +83,35 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 			double map_cell_resolution = 0.01, map_margin_x = 1.0, map_margin_y = 1.0, map_margin_z = 1.0;
 			bool map_use_search_tree_when_query_point_is_outside_lookup_table = true;
 			bool map_compute_distance_from_query_point_to_closest_point = false;
+			bool map_initialize_lookup_table_using_euclidean_distance_transform = true;
 			double sensor_cell_resolution = 0.01, sensor_margin_x = 1.0, sensor_margin_y = 1.0, sensor_margin_z = 1.0;
 			bool sensor_use_search_tree_when_query_point_is_outside_lookup_table = true;
 			bool sensor_compute_distance_from_query_point_to_closest_point = false;
+			bool sensor_initialize_lookup_table_using_euclidean_distance_transform = true;
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_cell_resolution", final_param_name)) { private_node_handle->param(final_param_name, map_cell_resolution, 0.01); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_margin_x", final_param_name)) { private_node_handle->param(final_param_name, map_margin_x, 1.0); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_margin_y", final_param_name)) { private_node_handle->param(final_param_name, map_margin_y, 1.0); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_margin_z", final_param_name)) { private_node_handle->param(final_param_name, map_margin_z, 1.0); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_use_search_tree_when_query_point_is_outside_lookup_table", final_param_name)) { private_node_handle->param(final_param_name, map_use_search_tree_when_query_point_is_outside_lookup_table, true); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_compute_distance_from_query_point_to_closest_point", final_param_name)) { private_node_handle->param(final_param_name, map_compute_distance_from_query_point_to_closest_point, false); }
+			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/map_initialize_lookup_table_using_euclidean_distance_transform", final_param_name)) { private_node_handle->param(final_param_name, map_initialize_lookup_table_using_euclidean_distance_transform, true); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_cell_resolution", final_param_name)) { private_node_handle->param(final_param_name, sensor_cell_resolution, 0.01); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_margin_x", final_param_name)) { private_node_handle->param(final_param_name, sensor_margin_x, 1.0); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_margin_y", final_param_name)) { private_node_handle->param(final_param_name, sensor_margin_y, 1.0); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_margin_z", final_param_name)) { private_node_handle->param(final_param_name, sensor_margin_z, 1.0); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_use_search_tree_when_query_point_is_outside_lookup_table", final_param_name)) { private_node_handle->param(final_param_name, sensor_use_search_tree_when_query_point_is_outside_lookup_table, true); }
 			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_compute_distance_from_query_point_to_closest_point", final_param_name)) { private_node_handle->param(final_param_name, sensor_compute_distance_from_query_point_to_closest_point, false); }
+			if (ros::param::search(search_namespace, "correspondence_estimation_lookup_table/sensor_initialize_lookup_table_using_euclidean_distance_transform", final_param_name)) { private_node_handle->param(final_param_name, sensor_initialize_lookup_table_using_euclidean_distance_transform, true); }
 			correspondence_estimation_raw_ptr_->getTargetCorrespondencesLookupTable().setCellResolution(map_cell_resolution);
 			correspondence_estimation_raw_ptr_->getTargetCorrespondencesLookupTable().setLookupTableMargin(Eigen::Vector3f(map_margin_x, map_margin_y, map_margin_z));
 			correspondence_estimation_raw_ptr_->getTargetCorrespondencesLookupTable().setUseSearchTreeWhenQueryPointIsOutsideLookupTable(map_use_search_tree_when_query_point_is_outside_lookup_table);
 			correspondence_estimation_raw_ptr_->getTargetCorrespondencesLookupTable().setComputeDistanceFromQueryPointToClosestPoint(map_compute_distance_from_query_point_to_closest_point);
+			correspondence_estimation_raw_ptr_->getTargetCorrespondencesLookupTable().setInitializeLookupTableUsingEuclideanDistanceTransform(map_initialize_lookup_table_using_euclidean_distance_transform);
 			correspondence_estimation_raw_ptr_->getSourceCorrespondencesLookupTable().setCellResolution(sensor_cell_resolution);
 			correspondence_estimation_raw_ptr_->getSourceCorrespondencesLookupTable().setLookupTableMargin(Eigen::Vector3f(sensor_margin_x, sensor_margin_y, sensor_margin_z));
 			correspondence_estimation_raw_ptr_->getSourceCorrespondencesLookupTable().setUseSearchTreeWhenQueryPointIsOutsideLookupTable(sensor_use_search_tree_when_query_point_is_outside_lookup_table);
 			correspondence_estimation_raw_ptr_->getSourceCorrespondencesLookupTable().setComputeDistanceFromQueryPointToClosestPoint(sensor_compute_distance_from_query_point_to_closest_point);
+			correspondence_estimation_raw_ptr_->getSourceCorrespondencesLookupTable().setInitializeLookupTableUsingEuclideanDistanceTransform(sensor_initialize_lookup_table_using_euclidean_distance_transform);
 			correspondence_estimation_ptr_ = typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr(correspondence_estimation_raw_ptr_);
 		} else if (correspondence_estimation_method == "CorrespondenceEstimationBackProjection") {
 			correpondence_estimation_approach_ = CorrespondenceEstimationBackProjection;

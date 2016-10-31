@@ -12,6 +12,10 @@ It's a modular localization pipeline, that can be configured using yaml files (d
 Notes:
 - The [hydro-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/hydro-devel) branch can use PCL 1.7.* from [official PPA](http://pointclouds.org/downloads/linux.html)
 - The [kinetic-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/kinetic-devel) branch requires to [compile PCL from source](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php) using branch [master-all-pr](https://github.com/carlosmccosta/pcl/tree/master-all-pr) from [https://github.com/carlosmccosta/pcl](https://github.com/carlosmccosta/pcl) (you can use this [package.xml](https://gist.github.com/carlosmccosta/1ec3e3bdce419441b0b17bf9bb707552) to compile it within a catkin workspace)
+  - To ensure that the same pcl libraries are used in drl and its dependencies, the following packages should also be compiled:
+    - [pcl_conversions](https://github.com/ros-perception/pcl_conversions)
+    - [pcl_msgs](https://github.com/ros-perception/pcl_msgs)
+    - [perception_pcl](https://github.com/ros-perception/perception_pcl)
 
 ![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
 

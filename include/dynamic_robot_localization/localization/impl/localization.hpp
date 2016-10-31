@@ -718,9 +718,11 @@ void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations()
 
 template<typename PointT>
 bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
+	PerformanceTimer performance_timer;
+	performance_timer.start();
 	if (pointcloud_conversions::fromFile(reference_pointcloud_filename, *reference_pointcloud_)) {
 		if (reference_pointcloud_->size() > minimum_number_of_points_in_reference_pointcloud_) {
-			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points");
+			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 			reference_pointcloud_->header.frame_id = map_frame_id_;
 
 			last_map_received_time_ = ros::Time::now();
@@ -737,6 +739,8 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 
 template<typename PointT>
 void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg) {
+	PerformanceTimer performance_timer;
+	performance_timer.start();
 	if ((reference_pointcloud_msg->width * reference_pointcloud_msg->height > minimum_number_of_points_in_reference_pointcloud_) && (!reference_pointcloud_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_reference_pointcloud_update_)) {
 		if (reference_pointcloud_msg->width > 0 && reference_pointcloud_msg->data.size() > 0 && reference_pointcloud_msg->fields.size() >= 3) {
 			pcl::fromROSMsg(*reference_pointcloud_msg, *reference_pointcloud_);
@@ -756,7 +760,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 				if (reference_pointcloud_2d_) { resetPointCloudHeight(*reference_pointcloud_); }
 				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
-					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->size() << " points");
+					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 					last_map_received_time_ = ros::Time::now();
 				} else {
 					reference_pointcloud_received_ = false;
@@ -773,6 +777,8 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 
 template<typename PointT>
 void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg) {
+	PerformanceTimer performance_timer;
+	performance_timer.start();
 	size_t number_points_in_occupancy_grid = occupancy_grid_msg->info.width * occupancy_grid_msg->info.height;
 	if (number_points_in_occupancy_grid > minimum_number_of_points_in_reference_pointcloud_ && (!reference_pointcloud_received_ || (ros::Time::now() - last_map_received_time_) > min_seconds_between_reference_pointcloud_update_)) {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_from_occupancy_grid(new pcl::PointCloud<PointT>());
@@ -785,7 +791,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 				reference_pointcloud_ = reference_pointcloud_from_occupancy_grid;
 				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
-					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points");
+					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 					last_map_received_time_ = ros::Time::now();
 					return;
 				} else {
