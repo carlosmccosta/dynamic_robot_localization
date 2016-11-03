@@ -20,7 +20,9 @@ template<typename PointT>
 CloudMatcher<PointT>::CloudMatcher() :
 		match_only_keypoints_(false),
 		display_cloud_aligment_(false),
-		maximum_number_of_displayed_correspondences_(0) {}
+		maximum_number_of_displayed_correspondences_(0),
+		cloud_align_time_ms_(0),
+		force_no_recompute_reciprocal_(true) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -231,12 +233,12 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 		typename pcl::search::KdTree<PointT>::Ptr pointcloud_keypoints_search_method(new pcl::search::KdTree<PointT>());
 		pointcloud_keypoints_search_method->setInputCloud(pointcloud_keypoints);
 		cloud_matcher_->setInputSource(pointcloud_keypoints);
-		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method);
+		cloud_matcher_->setSearchMethodSource(pointcloud_keypoints_search_method, force_no_recompute_reciprocal_);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*pointcloud_keypoints); }
 	} else {
 		ROS_DEBUG_STREAM("Registering cloud with " << ambient_pointcloud->size() << " points against a reference cloud with " << cloud_matcher_->getInputTarget()->size() << " points using " << cloud_matcher_->getClassName() << " algorithm");
 		cloud_matcher_->setInputSource(ambient_pointcloud);
-		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method);
+		cloud_matcher_->setSearchMethodSource(ambient_pointcloud_search_method, force_no_recompute_reciprocal_);
 		if (registration_visualizer_) { registration_visualizer_->setSourceCloud(*ambient_pointcloud); }
 	}
 

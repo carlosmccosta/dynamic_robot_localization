@@ -112,6 +112,7 @@ class CloudMatcher : public ConfigurableObject {
 		inline void setMatchOnlyKeypoints(bool match_only_keypoints) { match_only_keypoints_ = match_only_keypoints; }
 		inline void setCloudPublisher(typename CloudPublisher<PointT>::Ptr& cloud_publisher) { cloud_publisher_ = cloud_publisher; }
 		inline void setDisplayCloudAligment(bool display_cloud_aligment) { display_cloud_aligment_ = display_cloud_aligment; }
+		inline void setForceNoRecomputeReciprocal (bool force_no_recompute_reciprocal) { force_no_recompute_reciprocal_ = force_no_recompute_reciprocal; }
 		inline void setRegistrationVisualizer(const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& registration_visualizer) { registration_visualizer_ = registration_visualizer; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
@@ -130,6 +131,7 @@ class CloudMatcher : public ConfigurableObject {
 		boost::shared_ptr< RegistrationVisualizer<PointT, PointT> > registration_visualizer_;
 		bool display_cloud_aligment_;
 		int maximum_number_of_displayed_correspondences_;
+		bool force_no_recompute_reciprocal_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 

@@ -53,8 +53,10 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, false);
 	typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
 	matcher->setUseReciprocalCorrespondences(use_reciprocal_correspondences);
+	CloudMatcher<PointT>::setForceNoRecomputeReciprocal(!use_reciprocal_correspondences);
+
 	if (convergence_rotation_threshold_ > 0)
-	  matcher->setTransformationRotationEpsilon(convergence_rotation_threshold_);
+		matcher->setTransformationRotationEpsilon(convergence_rotation_threshold_);
 
 	CloudMatcher<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
