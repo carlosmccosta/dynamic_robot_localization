@@ -279,6 +279,10 @@ void Localization<PointT>::setupMessageManagement() {
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, false);
 	private_node_handle_->param("message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, false);
 	private_node_handle_->param("message_management/localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs", localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_, true);
+	private_node_handle_->param("message_management/use_odom_when_transforming_cloud_to_map_frame", use_odom_when_transforming_cloud_to_map_frame_, true);
+	private_node_handle_->param("message_management/invert_cloud_to_map_transform", invert_cloud_to_map_transform_, false);
+	private_node_handle_->param("message_management/invert_registration_transformation", invert_registration_transformation_, false);
+	private_node_handle_->param("message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
 }
 
 
@@ -904,7 +908,7 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 		pose_time_updated = ros::Time::now();
 	}
 
-	if (frame_id == map_frame_id_) {
+	if (!initial_pose_msg_needs_to_be_in_map_frame_ || frame_id == map_frame_id_) {
 		tf2::Vector3 transform_base_link_to_map_position(pose.position.x, pose.position.y, pose.position.z);
 		tf2::Quaternion transform_base_link_to_map_orientation(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
 		transform_base_link_to_map_orientation.normalize();
@@ -1057,12 +1061,23 @@ bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 	if (ambient_pointcloud->header.frame_id != map_frame_id_) {
 		tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
 		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
-			tf2::Transform pose_tf_cloud_to_odom;
-			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
-				ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
-				return false;
+			if (use_odom_when_transforming_cloud_to_map_frame_) {
+				tf2::Transform pose_tf_cloud_to_odom;
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
+					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
+					return false;
+				}
+				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
+			} else {
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, map_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
+					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << map_frame_id_ << " isn't available");
+					return false;
+				}
 			}
-			pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
+		}
+
+		if (invert_cloud_to_map_transform_) {
+			pose_tf_cloud_to_map = pose_tf_cloud_to_map.inverse();
 		}
 
 		if (!math_utils::isTransformValid(pose_tf_cloud_to_map)) {
@@ -1193,6 +1208,13 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				if (ignore_height_corrections_) {
 					pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
 				}
+				pose_tf_corrected.getRotation().normalize();
+
+				tf2::Transform pose_tf_corrected_to_publish = pose_tf_corrected;
+				if (invert_registration_transformation_) {
+					pose_tf_corrected_to_publish = pose_tf_corrected.inverse();
+					pose_corrections = pose_corrections.inverse();
+				}
 
 				last_scan_time_ = pose_time;
 
@@ -1208,14 +1230,14 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				}
 
 				if (publish_tf_map_odom_) {
-					pose_to_tf_publisher_->publishTF(pose_tf_corrected, ambient_cloud_time, ambient_cloud_time);
+					pose_to_tf_publisher_->publishTF(pose_tf_corrected_to_publish, ambient_cloud_time, ambient_cloud_time);
 				}
 
 				last_accepted_pose_odom_to_map_ = pose_tf_corrected * transform_base_link_to_odom.inverse();
 
-				tf2::Quaternion pose_tf_corrected_q = pose_tf_corrected.getRotation().normalize();
+				tf2::Quaternion pose_tf_corrected_q = pose_tf_corrected_to_publish.getRotation().normalize();
 				ROS_DEBUG_STREAM("Corrected pose:" \
-						<< "\tTF position -> [ x: " << pose_tf_corrected.getOrigin().getX() << " | y: " << pose_tf_corrected.getOrigin().getY() << " | z: " << pose_tf_corrected.getOrigin().getZ() << " ]" \
+						<< "\tTF position -> [ x: " << pose_tf_corrected_to_publish.getOrigin().getX() << " | y: " << pose_tf_corrected_to_publish.getOrigin().getY() << " | z: " << pose_tf_corrected_to_publish.getOrigin().getZ() << " ]" \
 						<< "\tTF orientation -> [ qx: " << pose_tf_corrected_q.getX() << " | qy: " << pose_tf_corrected_q.getY() << " | qz: " << pose_tf_corrected_q.getZ() << " | qw: " << pose_tf_corrected_q.getW() << " ]");
 
 				if (!pose_with_covariance_stamped_publisher_.getTopic().empty() || !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
@@ -1223,7 +1245,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					pose_corrected_msg->header.frame_id = map_frame_id_;
 					pose_corrected_msg->header.stamp = pose_time;
 
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, pose_corrected_msg->pose.pose);
+					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose.pose);
 					fillPoseCovariance(*pose_corrected_msg, last_accepted_pose_covariance_);
 
 					if (!pose_with_covariance_stamped_publisher_.getTopic().empty()) {
@@ -1240,7 +1262,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					pose_corrected_msg->header.frame_id = map_frame_id_;
 					pose_corrected_msg->header.stamp = pose_time;
 
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, pose_corrected_msg->pose);
+					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose);
 					pose_stamped_publisher_.publish(pose_corrected_msg);
 				}
 
@@ -1248,7 +1270,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 					LocalizationDetailed localization_detailed_msg;
 					localization_detailed_msg.header.frame_id = map_frame_id_;
 					localization_detailed_msg.header.stamp = ambient_cloud_time;
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected, localization_detailed_msg.pose);
+					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, localization_detailed_msg.pose);
 					localization_detailed_msg.outlier_percentage = outlier_percentage_;
 					localization_detailed_msg.root_mean_square_error_inliers = root_mean_square_error_inliers_;
 					if (localization_detailed_use_millimeters_in_root_mean_square_error_inliers_) {

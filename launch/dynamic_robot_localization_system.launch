@@ -51,7 +51,7 @@
 	<arg name="ambient_pointcloud_topic" default="ambient_pointcloud" />
 	<arg name="imu_topic" default="imu" />
 	
-	<!-- intial pose setup -->
+	<!-- initial pose setup -->
 	<arg name="robot_initial_pose_in_base_to_map" default="false" /> <!-- recommendation: use false to allow direct publish of tf between odom -> map -->
 	<arg name="robot_initial_pose_available" default="false" />
 	<arg name="robot_initial_x" default="0.0" />

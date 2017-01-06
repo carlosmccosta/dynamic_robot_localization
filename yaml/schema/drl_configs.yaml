@@ -131,6 +131,10 @@ message_management:
     min_seconds_between_reference_pointcloud_update: 5.0                # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
     minimum_number_of_points_in_ambient_pointcloud: 10
     maximum_number_points_ambient_pointcloud_circular_buffer: 0         # If != 0, the ambient pointcloud uses a circular buffer with the specified size of points
+    use_odom_when_transforming_cloud_to_map_frame: true
+    invert_cloud_to_map_transform: false
+    invert_registration_transformation: false
+    initial_pose_msg_needs_to_be_in_map_frame: true
     localization_detailed_use_millimeters_in_root_mean_square_error_inliers: true
     localization_detailed_use_millimeters_in_translation_corrections: true
     localization_detailed_use_degrees_in_rotation_corrections: true

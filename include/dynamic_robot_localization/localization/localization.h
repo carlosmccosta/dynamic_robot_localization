@@ -303,6 +303,10 @@ class Localization : public ConfigurableObject {
 		double inliers_angular_distribution_;
 		double outliers_angular_distribution_;
 		double last_pose_weighted_mean_filter_;
+		bool use_odom_when_transforming_cloud_to_map_frame_;
+		bool invert_cloud_to_map_transform_;
+		bool invert_registration_transformation_;
+		bool initial_pose_msg_needs_to_be_in_map_frame_;
 
 		// state fields
 		ros::Time last_scan_time_;
