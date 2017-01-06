@@ -175,6 +175,8 @@ filters:
     ambient_pointcloud_integration_filters:                         # Filters that will be applied to the original point cloud (with the registration corrections) when performing pointcloud integration (SLAM)
     ambient_pointcloud_integration_filters_map_frame:               # Filters that will be applied to the original point cloud in the map frame (with the registration corrections) when performing pointcloud integration (SLAM) (outlier detection will be performed in this filtered cloud)
     ambient_pointcloud:                                             # Filters that will be applied to the ambient point cloud in the original TF frame
+    ambient_pointcloud_custom_frame:
+        custom_frame_id: ''
     ambient_pointcloud_map_frame:                                   # Filters that will be applied after the ambient point cloud is transformed into the map frame (useful to restrict points to a given world region -> ex. map boundaries)
     ambient_pointcloud_feature_registration:                        # Filters that will be applied to the ambient point cloud in the original TF frame when applying feature registration (overrides the ambient_pointcloud filters)
     ambient_pointcloud_map_frame_feature_registration:              # Filters that will be applied after the ambient point cloud is transformed into the map frame (overrides the ambient_pointcloud_map_frame filters)

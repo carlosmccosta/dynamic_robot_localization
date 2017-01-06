@@ -197,7 +197,7 @@ class Localization : public ConfigurableObject {
 
 		void startLocalization();
 
-		bool transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp);
+		bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
@@ -361,6 +361,8 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_integration_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_integration_filters_map_frame_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_custom_frame_;
+		std::string ambient_pointcloud_filters_custom_frame_id_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_map_frame_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_feature_registration_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_filters_;

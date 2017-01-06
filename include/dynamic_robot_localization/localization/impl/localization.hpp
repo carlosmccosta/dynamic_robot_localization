@@ -336,6 +336,8 @@ void Localization<PointT>::setupFiltersConfigurations() {
 	loadFiltersFromParameterServer(ambient_pointcloud_feature_registration_filters_, "filters/ambient_pointcloud_feature_registration/");
 	loadFiltersFromParameterServer(ambient_pointcloud_map_frame_feature_registration_filters_, "filters/ambient_pointcloud_map_frame_feature_registration/");
 	loadFiltersFromParameterServer(ambient_pointcloud_filters_, "filters/ambient_pointcloud/");
+	loadFiltersFromParameterServer(ambient_pointcloud_filters_custom_frame_, "filters/ambient_pointcloud_custom_frame/");
+	private_node_handle_->param("filters/ambient_pointcloud_custom_frame/custom_frame_id", ambient_pointcloud_filters_custom_frame_id_, std::string(""));
 	loadFiltersFromParameterServer(ambient_pointcloud_filters_map_frame_, "filters/ambient_pointcloud_map_frame/");
 }
 
@@ -760,7 +762,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 			}
 
 			if (reference_pointcloud_->size() > minimum_number_of_points_in_reference_pointcloud_) {
-				if (!transformCloudToMapFrame(reference_pointcloud_, reference_pointcloud_msg->header.stamp)) { return; }
+				if (!transformCloudToTFFrame(reference_pointcloud_, reference_pointcloud_msg->header.stamp, map_frame_id_)) { return; }
 				if (reference_pointcloud_2d_) { resetPointCloudHeight(*reference_pointcloud_); }
 				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
@@ -791,7 +793,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 				reference_pointcloud_2d_ = true;
 				bool flip_normals_using_occupancy_grid_analysis;
 				private_node_handle_->param("normal_estimators/reference_pointcloud/flip_normals_using_occupancy_grid_analysis", flip_normals_using_occupancy_grid_analysis, true);
-				if (!transformCloudToMapFrame(reference_pointcloud_from_occupancy_grid, occupancy_grid_msg->header.stamp)) { return; }
+				if (!transformCloudToTFFrame(reference_pointcloud_from_occupancy_grid, occupancy_grid_msg->header.stamp, map_frame_id_)) { return; }
 				reference_pointcloud_ = reference_pointcloud_from_occupancy_grid;
 				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud()) {
@@ -1057,8 +1059,8 @@ void Localization<PointT>::startLocalization() {
 
 
 template<typename PointT>
-bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp) {
-	if (ambient_pointcloud->header.frame_id != map_frame_id_) {
+bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id) {
+	if (ambient_pointcloud->header.frame_id != target_frame_id) {
 		tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
 		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
 			if (use_odom_when_transforming_cloud_to_map_frame_) {
@@ -1069,8 +1071,8 @@ bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 				}
 				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
 			} else {
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, map_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
-					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << map_frame_id_ << " isn't available");
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp)) {
+					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << target_frame_id << " isn't available");
 					return false;
 				}
 			}
@@ -1086,8 +1088,8 @@ bool Localization<PointT>::transformCloudToMapFrame(typename pcl::PointCloud<Poi
 		}
 
 		pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
-		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << map_frame_id_);
-		ambient_pointcloud->header.frame_id = map_frame_id_;
+		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id);
+		ambient_pointcloud->header.frame_id = target_frame_id;
 	}
 
 	return true;
@@ -1686,7 +1688,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		ROS_DEBUG("Using a pointcloud with different filters for SLAM");
 		ambient_pointcloud_integration = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
 		if (!applyFilters(ambient_pointcloud_integration_filters_, ambient_pointcloud_integration)) { return false; }
-		if (!transformCloudToMapFrame(ambient_pointcloud_integration, pointcloud_time)) { return false; }
+		if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
+			if (!transformCloudToTFFrame(ambient_pointcloud_integration, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) { return false; }
+			if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud_integration)) { return false; }
+		}
+		if (!transformCloudToTFFrame(ambient_pointcloud_integration, pointcloud_time, map_frame_id_)) { return false; }
 		if (!applyFilters(ambient_pointcloud_integration_filters_map_frame_, ambient_pointcloud_integration)) { return false; }
 		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_integration); }
 	}
@@ -1698,7 +1704,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		} else {
 			ROS_DEBUG("Using raw ambient point cloud for normal estimation");
 			ambient_pointcloud_raw = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
-			if (!transformCloudToMapFrame(ambient_pointcloud_raw, pointcloud_time)) { return false; }
+			if (!transformCloudToTFFrame(ambient_pointcloud_raw, pointcloud_time, map_frame_id_)) { return false; }
 			if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
 		}
 	}
@@ -1708,7 +1714,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	// ==============================================================  filters
 	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
 	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) { return false; }
-	if (!transformCloudToMapFrame(ambient_pointcloud, pointcloud_time)) { return false; }
+	if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
+		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) { return false; }
+		if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) { return false; }
+	}
+	if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_)) { return false; }
 	if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) { return false; }
 	if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
