@@ -306,6 +306,7 @@ class Localization : public ConfigurableObject {
 		bool use_odom_when_transforming_cloud_to_map_frame_;
 		bool invert_cloud_to_map_transform_;
 		bool invert_registration_transformation_;
+		bool invert_initial_poses_from_msgs_;
 		bool initial_pose_msg_needs_to_be_in_map_frame_;
 
 		// state fields

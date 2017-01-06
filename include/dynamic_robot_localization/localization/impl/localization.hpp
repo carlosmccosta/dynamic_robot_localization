@@ -282,6 +282,7 @@ void Localization<PointT>::setupMessageManagement() {
 	private_node_handle_->param("message_management/use_odom_when_transforming_cloud_to_map_frame", use_odom_when_transforming_cloud_to_map_frame_, true);
 	private_node_handle_->param("message_management/invert_cloud_to_map_transform", invert_cloud_to_map_transform_, false);
 	private_node_handle_->param("message_management/invert_registration_transformation", invert_registration_transformation_, false);
+	private_node_handle_->param("message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
 	private_node_handle_->param("message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
 }
 
@@ -920,6 +921,9 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 			ROS_WARN("Discarded initial pose with NaN values!");
 			return;
 		}
+
+		if (invert_initial_poses_from_msgs_)
+			transform_base_link_to_map = transform_base_link_to_map.inverse();
 
 		bool tf_available = false;
 		tf2::Transform transform_odom_to_base_link;

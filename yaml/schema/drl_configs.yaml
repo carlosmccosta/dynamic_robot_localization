@@ -134,6 +134,7 @@ message_management:
     use_odom_when_transforming_cloud_to_map_frame: true
     invert_cloud_to_map_transform: false
     invert_registration_transformation: false
+    invert_initial_poses_from_msgs: false
     initial_pose_msg_needs_to_be_in_map_frame: true
     localization_detailed_use_millimeters_in_root_mean_square_error_inliers: true
     localization_detailed_use_millimeters_in_translation_corrections: true
