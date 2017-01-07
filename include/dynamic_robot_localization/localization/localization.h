@@ -252,6 +252,7 @@ class Localization : public ConfigurableObject {
 
 		// publish topic names
 		std::string reference_pointcloud_publish_topic_;
+		std::string filtered_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_stamped_publish_topic_;
 		std::string pose_array_publish_topic_;
@@ -343,6 +344,7 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber costmap_subscriber_;
 		ros::Subscriber reference_pointcloud_subscriber_;
 		ros::Publisher reference_pointcloud_publisher_;
+		ros::Publisher filtered_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_with_covariance_stamped_publisher_;
 		ros::Publisher pose_with_covariance_stamped_tracking_reset_publisher_;
@@ -356,6 +358,8 @@ class Localization : public ConfigurableObject {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints_;
 		typename CircularBufferPointCloud<PointT>::Ptr ambient_pointcloud_with_circular_buffer_;
+		bool circular_buffer_clear_inserted_points_if_registration_fails_;
+		int minimum_number_points_ambient_pointcloud_circular_buffer_;
 		size_t last_number_points_inserted_in_circular_buffer_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
@@ -397,6 +401,7 @@ class Localization : public ConfigurableObject {
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_inliers_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
+		bool publish_filtered_pointcloud_only_if_there_is_subscribers_;
 		bool publish_aligned_pointcloud_only_if_there_is_subscribers_;
 	// ========================================================================   </protected-section>  ========================================================================
 };

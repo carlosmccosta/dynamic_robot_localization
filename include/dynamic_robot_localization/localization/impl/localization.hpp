@@ -82,6 +82,7 @@ Localization<PointT>::Localization() :
 	outlier_percentage_(0.0),
 	number_inliers_(0),
 	root_mean_square_error_inliers_(0.0),
+	publish_filtered_pointcloud_only_if_there_is_subscribers_(true),
 	publish_aligned_pointcloud_only_if_there_is_subscribers_(true) {}
 
 template<typename PointT>
@@ -159,8 +160,10 @@ void Localization<PointT>::setupSubcriptionTopicNames() {
 
 template<typename PointT>
 void Localization<PointT>::setupPublishTopicNames() {
+	private_node_handle_->param("publish_topic_names/publish_filtered_pointcloud_only_if_there_is_subscribers", publish_filtered_pointcloud_only_if_there_is_subscribers_, true);
 	private_node_handle_->param("publish_topic_names/publish_aligned_pointcloud_only_if_there_is_subscribers", publish_aligned_pointcloud_only_if_there_is_subscribers_, true);
 	private_node_handle_->param("publish_topic_names/reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
+	private_node_handle_->param("publish_topic_names/filtered_pointcloud_publish_topic", filtered_pointcloud_publish_topic_, std::string("filtered_pointcloud"));
 	private_node_handle_->param("publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("publish_topic_names/pose_with_covariance_stamped_publish_topic", pose_with_covariance_stamped_publish_topic_, std::string("localization_pose_with_covariance"));
 	private_node_handle_->param("publish_topic_names/pose_with_covariance_stamped_tracking_reset_publish_topic", pose_with_covariance_stamped_tracking_reset_publish_topic_, std::string("initial_pose_with_covariance"));
@@ -270,6 +273,8 @@ void Localization<PointT>::setupMessageManagement() {
 	private_node_handle_->param("message_management/minimum_number_of_points_in_ambient_pointcloud", minimum_number_of_points_in_ambient_pointcloud_, 10);
 
 	int maximum_number_points_ambient_pointcloud_circular_buffer;
+	private_node_handle_->param("message_management/circular_buffer_clear_inserted_points_if_registration_fails", circular_buffer_clear_inserted_points_if_registration_fails_, false);
+	private_node_handle_->param("message_management/minimum_number_points_ambient_pointcloud_circular_buffer", minimum_number_points_ambient_pointcloud_circular_buffer_, 0);
 	private_node_handle_->param("message_management/maximum_number_points_ambient_pointcloud_circular_buffer", maximum_number_points_ambient_pointcloud_circular_buffer, 0);
 	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
@@ -986,6 +991,7 @@ void Localization<PointT>::startLocalization() {
 
 		// publishers
 		if (!reference_pointcloud_publish_topic_.empty()) reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 1, true);
+		if (!filtered_pointcloud_publish_topic_.empty()) filtered_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(filtered_pointcloud_publish_topic_, 1, true);
 		if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 1, true);
 		if (!pose_stamped_publish_topic_.empty()) pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 5, true);
 		if (!pose_with_covariance_stamped_publish_topic_.empty()) pose_with_covariance_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_publish_topic_, 5, true);
@@ -1373,7 +1379,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 				localization_times_msg_.map_update_time = performance_timer.getElapsedTimeInMilliSec();
 			} else {
-				if (ambient_pointcloud_with_circular_buffer_) {
+				if (ambient_pointcloud_with_circular_buffer_ && circular_buffer_clear_inserted_points_if_registration_fails_) {
 					ambient_pointcloud_with_circular_buffer_->eraseNewest(last_number_points_inserted_in_circular_buffer_);
 				}
 				++pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
@@ -1738,9 +1744,19 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		ROS_DEBUG_STREAM("Ambient pointcloud with circular buffer has " << ambient_pointcloud->size() << " points");
 	}
 
+	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
+		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
+			ROS_DEBUG_STREAM("Publishing filtered ambient pointcloud with " << ambient_pointcloud->size() << " points");
+			sensor_msgs::PointCloud2Ptr filtered_pointcloud_msg(new sensor_msgs::PointCloud2());
+			pcl::toROSMsg(*ambient_pointcloud, *filtered_pointcloud_msg);
+			filtered_pointcloud_publisher_.publish(filtered_pointcloud_msg);
+		} else {
+			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << filtered_pointcloud_publisher_.getTopic() << " because there is no subscribers");
+		}
+	}
 
 	// ==============================================================  normal estimation
-	if (ambient_pointcloud->size() < minimum_number_of_points_in_ambient_pointcloud_) { return false; }
+	if (ambient_pointcloud->size() < minimum_number_of_points_in_ambient_pointcloud_ || ambient_pointcloud->size() < minimum_number_points_ambient_pointcloud_circular_buffer_) { return false; }
 
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
 	ambient_search_method->setInputCloud(ambient_pointcloud);

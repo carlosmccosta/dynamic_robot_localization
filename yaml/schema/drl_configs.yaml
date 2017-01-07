@@ -78,7 +78,9 @@ subscribe_topic_names:
 #   Also, topics are published latched, which means the last message is buffered and sent to any new subscribers (allows to switch on / off the pointclouds in rviz)
 publish_topic_names:
     reference_pointcloud_publish_topic: 'reference_pointcloud'      # sensor_msgs::PointCloud2 | Reference cloud currently being used by the localization system
+    publish_filtered_pointcloud_only_if_there_is_subscribers: true
     publish_aligned_pointcloud_only_if_there_is_subscribers: true
+    filtered_pointcloud_publish_topic: 'filtered_pointcloud'         # sensor_msgs::PointCloud2 | Ambient_pointcloud_topic after applying all the filters and circular buffer
     aligned_pointcloud_publish_topic: 'aligned_pointcloud'          # sensor_msgs::PointCloud2 | Point cloud coming from the ambient_pointcloud_topic after applying the registration correction
     pose_stamped_publish_topic: 'localization_pose'                 # geometry_msgs::PoseStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages or to visualize in rviz)
     pose_with_covariance_stamped_publish_topic: 'localization_pose_with_covariance' # geometry_msgs::PoseWithCovarianceStamped | The localization system can publish poses (besides the tf between map and odom) -> (useful to interact with other packages, such as amcl)
@@ -130,6 +132,8 @@ message_management:
     min_seconds_between_scan_registration: 0.0                          # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
     min_seconds_between_reference_pointcloud_update: 5.0                # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
     minimum_number_of_points_in_ambient_pointcloud: 10
+    circular_buffer_clear_inserted_points_if_registration_fails: false
+    minimum_number_points_ambient_pointcloud_circular_buffer: 5000
     maximum_number_points_ambient_pointcloud_circular_buffer: 0         # If != 0, the ambient pointcloud uses a circular buffer with the specified size of points
     use_odom_when_transforming_cloud_to_map_frame: true
     invert_cloud_to_map_transform: false
