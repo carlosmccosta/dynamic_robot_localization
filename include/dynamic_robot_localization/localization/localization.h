@@ -14,6 +14,7 @@
 // std includes
 #include <string>
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <utility>
 #include <cmath>
@@ -358,9 +359,11 @@ class Localization : public ConfigurableObject {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints_;
 		typename CircularBufferPointCloud<PointT>::Ptr ambient_pointcloud_with_circular_buffer_;
+		bool circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_;
 		bool circular_buffer_clear_inserted_points_if_registration_fails_;
 		int minimum_number_points_ambient_pointcloud_circular_buffer_;
 		size_t last_number_points_inserted_in_circular_buffer_;
+		std::set<std::string> msg_frame_ids_with_data_in_circular_buffer_;
 		typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method_;
 		std::vector< typename CloudFilter<PointT>::Ptr > reference_cloud_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_integration_filters_;

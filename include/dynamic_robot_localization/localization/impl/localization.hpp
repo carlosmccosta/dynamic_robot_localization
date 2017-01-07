@@ -272,9 +272,10 @@ void Localization<PointT>::setupMessageManagement() {
 
 	private_node_handle_->param("message_management/minimum_number_of_points_in_ambient_pointcloud", minimum_number_of_points_in_ambient_pointcloud_, 10);
 
-	int maximum_number_points_ambient_pointcloud_circular_buffer;
+	private_node_handle_->param("message_management/circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration", circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_, false);
 	private_node_handle_->param("message_management/circular_buffer_clear_inserted_points_if_registration_fails", circular_buffer_clear_inserted_points_if_registration_fails_, false);
 	private_node_handle_->param("message_management/minimum_number_points_ambient_pointcloud_circular_buffer", minimum_number_points_ambient_pointcloud_circular_buffer_, 0);
+	int maximum_number_points_ambient_pointcloud_circular_buffer;
 	private_node_handle_->param("message_management/maximum_number_points_ambient_pointcloud_circular_buffer", maximum_number_points_ambient_pointcloud_circular_buffer, 0);
 	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
@@ -1676,6 +1677,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
 	accepted_pose_corrections_.clear();
 	pose_corrections_out = tf2::Transform::getIdentity();
+	std::string ambient_point_cloud_original_frame_id = ambient_pointcloud->header.frame_id;
 
 	if (ambient_pointcloud->size() < minimum_number_of_points_in_ambient_pointcloud_) {
 		return false;
@@ -1736,11 +1738,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_after_filtering = ambient_pointcloud->size();
 	if (ambient_pointcloud_with_circular_buffer_) {
 		ambient_pointcloud_with_circular_buffer_->insert(*ambient_pointcloud);
-		ambient_pointcloud_with_circular_buffer_->getPointCloud()->header = ambient_pointcloud->header;
-		ambient_pointcloud_with_circular_buffer_->getPointCloud()->sensor_origin_ = ambient_pointcloud->sensor_origin_;
-		ambient_pointcloud_with_circular_buffer_->getPointCloud()->sensor_orientation_ = ambient_pointcloud->sensor_orientation_;
+		ambient_pointcloud_with_circular_buffer_->getPointCloud().header = ambient_pointcloud->header;
+		ambient_pointcloud_with_circular_buffer_->getPointCloud().sensor_origin_ = ambient_pointcloud->sensor_origin_;
+		ambient_pointcloud_with_circular_buffer_->getPointCloud().sensor_orientation_ = ambient_pointcloud->sensor_orientation_;
 		last_number_points_inserted_in_circular_buffer_ = ambient_pointcloud->size();
-		ambient_pointcloud = ambient_pointcloud_with_circular_buffer_->getPointCloud();
+		ambient_pointcloud = ambient_pointcloud_with_circular_buffer_->getPointCloudPtr();
 		ROS_DEBUG_STREAM("Ambient pointcloud with circular buffer has " << ambient_pointcloud->size() << " points");
 	}
 
@@ -1755,9 +1757,20 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
-	// ==============================================================  normal estimation
+	// ==============================================================  check point cloud size
+	if (ambient_pointcloud_with_circular_buffer_ && circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_) {
+		msg_frame_ids_with_data_in_circular_buffer_.insert(ambient_point_cloud_original_frame_id);
+		if (msg_frame_ids_with_data_in_circular_buffer_.size() < ambient_pointcloud_subscribers_.size()) {
+			ROS_DEBUG_STREAM("Added frame_id " << ambient_point_cloud_original_frame_id << " to the set containing the received frame_ids with data in the circular buffer");
+			return false;
+		} else {
+			ROS_DEBUG("Received msgs in all the subscribed point cloud topics");
+			msg_frame_ids_with_data_in_circular_buffer_.clear();
+		}
+	}
 	if (ambient_pointcloud->size() < minimum_number_of_points_in_ambient_pointcloud_ || ambient_pointcloud->size() < minimum_number_points_ambient_pointcloud_circular_buffer_) { return false; }
 
+	// ==============================================================  normal estimation
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	bool computed_normals = false;
