@@ -253,6 +253,7 @@ class Localization : public ConfigurableObject {
 
 		// publish topic names
 		std::string reference_pointcloud_publish_topic_;
+		std::string reference_pointcloud_keypoints_publish_topic_;
 		std::string filtered_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
 		std::string pose_stamped_publish_topic_;
@@ -346,6 +347,7 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber costmap_subscriber_;
 		ros::Subscriber reference_pointcloud_subscriber_;
 		ros::Publisher reference_pointcloud_publisher_;
+		ros::Publisher reference_pointcloud_keypoints_publisher_;
 		ros::Publisher filtered_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
 		ros::Publisher pose_with_covariance_stamped_publisher_;
@@ -360,6 +362,7 @@ class Localization : public ConfigurableObject {
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
 		sensor_msgs::PointCloud2Ptr reference_pointcloud_msg_;
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints_;
+		sensor_msgs::PointCloud2Ptr reference_pointcloud_keypoints_msg_;
 		typename CircularBufferPointCloud<PointT>::Ptr ambient_pointcloud_with_circular_buffer_;
 		bool circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_;
 		bool circular_buffer_clear_inserted_points_if_registration_fails_;

@@ -164,6 +164,7 @@ void Localization<PointT>::setupPublishTopicNames() {
 	private_node_handle_->param("publish_topic_names/publish_filtered_pointcloud_only_if_there_is_subscribers", publish_filtered_pointcloud_only_if_there_is_subscribers_, true);
 	private_node_handle_->param("publish_topic_names/publish_aligned_pointcloud_only_if_there_is_subscribers", publish_aligned_pointcloud_only_if_there_is_subscribers_, true);
 	private_node_handle_->param("publish_topic_names/reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
+	private_node_handle_->param("publish_topic_names/reference_pointcloud_keypoints_publish_topic", reference_pointcloud_keypoints_publish_topic_, std::string("reference_pointcloud_keypoints"));
 	private_node_handle_->param("publish_topic_names/filtered_pointcloud_publish_topic", filtered_pointcloud_publish_topic_, std::string("filtered_pointcloud"));
 	private_node_handle_->param("publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
 	private_node_handle_->param("publish_topic_names/pose_with_covariance_stamped_publish_topic", pose_with_covariance_stamped_publish_topic_, std::string("localization_pose_with_covariance"));
@@ -831,6 +832,17 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 		reference_pointcloud_msg_->header.stamp = time_stamp;
 		reference_pointcloud_publisher_.publish(reference_pointcloud_msg_);
 	}
+
+	if (!reference_pointcloud_keypoints_publisher_.getTopic().empty()) {
+		if (!reference_pointcloud_keypoints_msg_ || update_msg) {
+			reference_pointcloud_keypoints_msg_ = sensor_msgs::PointCloud2Ptr(new sensor_msgs::PointCloud2());
+			pcl::toROSMsg(*reference_pointcloud_keypoints_, *reference_pointcloud_keypoints_msg_);
+			reference_pointcloud_keypoints_msg_->header.frame_id = map_frame_id_;
+		}
+
+		reference_pointcloud_keypoints_msg_->header.stamp = time_stamp;
+		reference_pointcloud_keypoints_publisher_.publish(reference_pointcloud_keypoints_msg_);
+	}
 }
 
 
@@ -997,6 +1009,7 @@ void Localization<PointT>::startLocalization() {
 
 		// publishers
 		if (!reference_pointcloud_publish_topic_.empty()) reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 1, true);
+		if (!reference_pointcloud_keypoints_publish_topic_.empty()) reference_pointcloud_keypoints_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_keypoints_publish_topic_, 1, true);
 		if (!filtered_pointcloud_publish_topic_.empty()) filtered_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(filtered_pointcloud_publish_topic_, 1, true);
 		if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 1, true);
 		if (!pose_stamped_publish_topic_.empty()) pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 5, true);

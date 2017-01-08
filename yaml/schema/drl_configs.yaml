@@ -78,6 +78,7 @@ subscribe_topic_names:
 #   Also, topics are published latched, which means the last message is buffered and sent to any new subscribers (allows to switch on / off the pointclouds in rviz)
 publish_topic_names:
     reference_pointcloud_publish_topic: 'reference_pointcloud'      # sensor_msgs::PointCloud2 | Reference cloud currently being used by the localization system
+    reference_pointcloud_keypoints_publish_topic: 'reference_pointcloud_keypoints'
     publish_filtered_pointcloud_only_if_there_is_subscribers: true
     publish_aligned_pointcloud_only_if_there_is_subscribers: true
     filtered_pointcloud_publish_topic: 'filtered_pointcloud'         # sensor_msgs::PointCloud2 | Ambient_pointcloud_topic after applying all the filters and circular buffer
