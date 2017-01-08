@@ -42,6 +42,7 @@
 #define PCL_REGISTRATION_SAMPLE_CONSENSUS_PREREJECTIVE_H_
 
 #include <limits>
+#include <algorithm>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/transformation_validation.h>
@@ -304,12 +305,10 @@ namespace dynamic_robot_localization
         * the sample points' features. From these, select one randomly which will be considered that sample point's 
         * correspondence.
         * \param sample_indices the indices of each sample point
-        * \param similar_features correspondence cache, which is used to read/write already computed correspondences
         * \param corresponding_indices the resulting indices of each sample's corresponding point in the target cloud
         */
       void 
       findSimilarFeatures (const std::vector<int> &sample_indices,
-              std::vector<std::vector<int> >& similar_features,
               std::vector<int> &corresponding_indices);
 
       /** \brief Rigid transformation computation method.

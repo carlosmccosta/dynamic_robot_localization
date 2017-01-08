@@ -103,24 +103,28 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointSource, typename PointTarget, typename FeatureT> void SampleConsensusPrerejective<PointSource, PointTarget, FeatureT>::findSimilarFeatures(
-        const std::vector<int> &sample_indices, std::vector<std::vector<int> >& similar_features, std::vector<int> &corresponding_indices) {
+        const std::vector<int> &sample_indices, std::vector<int> &corresponding_indices) {
 	// Allocate results
-	corresponding_indices.resize(sample_indices.size());
-	std::vector<float> nn_distances(k_correspondences_);
+	corresponding_indices.resize(sample_indices.size(), 0);
+	int k = std::min(k_correspondences_, (int)target_features_->size());
+	std::vector<int> similar_features(k);
+	std::vector<float> nn_distances(k);
 
 	// Loop over the sampled features
 	for (size_t i = 0; i < sample_indices.size(); ++i) {
 		// Current feature index
 		const int idx = sample_indices[i];
 
-		// Find the k nearest feature neighbors to the sampled input feature if they are not in the cache already
-		if (similar_features[idx].empty()) feature_tree_->nearestKSearch(*input_features_, idx, k_correspondences_, similar_features[idx], nn_distances);
+		int number_k_found = feature_tree_->nearestKSearch(*input_features_, idx, k, similar_features, nn_distances);
 
-		// Select one at random and add it to corresponding_indices
-		if (k_correspondences_ == 1)
-			corresponding_indices[i] = similar_features[idx][0];
-		else
-			corresponding_indices[i] = similar_features[idx][getRandomIndex(k_correspondences_)];
+		if (number_k_found > 0) {
+			if (k == 1)
+				corresponding_indices[i] = similar_features[0];
+			else
+				corresponding_indices[i] = similar_features[getRandomIndex(number_k_found)];
+		} else {
+			corresponding_indices[i] = 0;
+		}
 	}
 }
 
@@ -371,14 +375,13 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 		}
 
 		//		if (highest_inlier_fraction < 0.99) {
-			std::vector<std::vector<int> > similar_features(input_->size());
 			std::vector<int> sample_indices, corresponding_indices;
 
 			// Draw nr_samples_ random samples
 			selectSamples(*input_, nr_samples_, sample_indices);
 
 			// Find corresponding features in the target cloud
-			findSimilarFeatures(sample_indices, similar_features, corresponding_indices);
+			findSimilarFeatures(sample_indices, corresponding_indices);
 
 			// Apply prerejection
 			/*if (!correspondence_rejector_poly_->thresholdPolygon (sample_indices, corresponding_indices)) {
