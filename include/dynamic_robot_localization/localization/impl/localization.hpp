@@ -32,6 +32,7 @@ Localization<PointT>::Localization() :
 	localization_detailed_use_degrees_in_rotation_corrections_(true),
 	localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_(true),
 	save_reference_pointclouds_in_binary_format_(true),
+	republish_reference_pointcloud_after_successful_registration_(false),
 	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
@@ -298,6 +299,7 @@ void Localization<PointT>::setupReferencePointCloud() {
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
 	private_node_handle_->param("reference_pointclouds/save_reference_pointclouds_in_binary_format", save_reference_pointclouds_in_binary_format_, true);
+	private_node_handle_->param("reference_pointclouds/republish_reference_pointcloud_after_successful_registration", republish_reference_pointcloud_after_successful_registration_, false);
 	private_node_handle_->param("reference_pointclouds/minimum_number_of_points_in_reference_pointcloud", minimum_number_of_points_in_reference_pointcloud_, 10);
 
 	std::string reference_pointcloud_type;
@@ -740,7 +742,7 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 
 			last_map_received_time_ = ros::Time::now();
 			if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
-			return updateLocalizationPipelineWithNewReferenceCloud();
+			return updateLocalizationPipelineWithNewReferenceCloud(ros::Time::now());
 		}
 	}
 
@@ -772,7 +774,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSPointCloud(const sensor
 				if (!transformCloudToTFFrame(reference_pointcloud_, reference_pointcloud_msg->header.stamp, map_frame_id_)) { return; }
 				if (reference_pointcloud_2d_) { resetPointCloudHeight(*reference_pointcloud_); }
 				if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
-				if (updateLocalizationPipelineWithNewReferenceCloud()) {
+				if (updateLocalizationPipelineWithNewReferenceCloud(reference_pointcloud_msg->header.stamp)) {
 					ROS_INFO_STREAM("Loaded reference point cloud from cloud topic " << reference_pointcloud_topic_ << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 					last_map_received_time_ = ros::Time::now();
 				} else {
@@ -803,7 +805,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 				if (!transformCloudToTFFrame(reference_pointcloud_from_occupancy_grid, occupancy_grid_msg->header.stamp, map_frame_id_)) { return; }
 				reference_pointcloud_ = reference_pointcloud_from_occupancy_grid;
 				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
-				if (updateLocalizationPipelineWithNewReferenceCloud()) {
+				if (updateLocalizationPipelineWithNewReferenceCloud(occupancy_grid_msg->header.stamp)) {
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 					last_map_received_time_ = ros::Time::now();
 					return;
@@ -818,19 +820,22 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 
 
 template<typename PointT>
-void Localization<PointT>::publishReferencePointCloud() {
+void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stamp, bool update_msg) {
 	if (!reference_pointcloud_publisher_.getTopic().empty()) {
-		sensor_msgs::PointCloud2Ptr reference_pointcloud(new sensor_msgs::PointCloud2());
-		pcl::toROSMsg(*reference_pointcloud_, *reference_pointcloud);
-		reference_pointcloud->header.frame_id = map_frame_id_;
-		reference_pointcloud->header.stamp = ros::Time::now();
-		reference_pointcloud_publisher_.publish(reference_pointcloud);
+		if (!reference_pointcloud_msg_ || update_msg) {
+			reference_pointcloud_msg_ = sensor_msgs::PointCloud2Ptr(new sensor_msgs::PointCloud2());
+			pcl::toROSMsg(*reference_pointcloud_, *reference_pointcloud_msg_);
+			reference_pointcloud_msg_->header.frame_id = map_frame_id_;
+		}
+
+		reference_pointcloud_msg_->header.stamp = time_stamp;
+		reference_pointcloud_publisher_.publish(reference_pointcloud_msg_);
 	}
 }
 
 
 template<typename PointT>
-bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
+bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp) {
 	reference_pointcloud_->header.frame_id = map_frame_id_;
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
 
@@ -879,7 +884,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud() {
 			}
 
 			updateMatchersReferenceCloud();
-			publishReferencePointCloud();
+			publishReferencePointCloud(time_stamp, true);
 			reference_pointcloud_received_ = true;
 			return true;
 		}
@@ -1217,6 +1222,8 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 			if (localizationUpdateSuccess) {
 				ambient_pointcloud->header.stamp = ambient_cloud_time.toNSec() / 1000.0;
+				if (republish_reference_pointcloud_after_successful_registration_ && map_update_mode_ == NoIntegration)
+					publishReferencePointCloud(ambient_cloud_time, false);
 
 				if (ignore_height_corrections_) {
 					pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
@@ -2010,11 +2017,11 @@ bool Localization<PointT>::updateReferencePointCloudWithAmbientPointCloud(typena
 		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
 
 		updateMatchersReferenceCloud();
-		publishReferencePointCloud();
+		publishReferencePointCloud(pcl_conversions::fromPCL(pointcloud->header).stamp, true);
 
 		return true;
 	} else {
-		return updateLocalizationPipelineWithNewReferenceCloud();
+		return updateLocalizationPipelineWithNewReferenceCloud(pcl_conversions::fromPCL(pointcloud->header).stamp);
 	}
 
 	return false;

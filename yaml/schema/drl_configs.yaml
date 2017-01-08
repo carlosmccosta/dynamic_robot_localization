@@ -126,7 +126,7 @@ initial_pose:
 # ===================================================================================================================================================
 #   Parameters to control the incoming message flow
 message_management:
-    tf_buffer_duration: 600                                            # Duration of TF buffer in seconds
+    tf_buffer_duration: 600                                             # Duration of TF buffer in seconds
     max_seconds_ambient_pointcloud_age: 3.0                             # Ambient point clouds with age larger than this value will be discarded
     max_seconds_ambient_pointcloud_offset_to_last_estimated_pose: 0.0   # Point clouds that older than this offset in relation to the last [estimated pose / sensor data received] are discarded (useful when there are several sources of sensor data and one has higher update rate -> ex: kinect+lasers)
     min_seconds_between_scan_registration: 0.0                          # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
@@ -168,6 +168,7 @@ reference_pointclouds:
     minimum_number_of_points_in_reference_pointcloud: 10
     use_incremental_map_update: false                               # Incremental SLAM mode will add new registered clouds without preprocessing (if false, it will preprocess the reference cloud after adding the new registered points)
     save_reference_pointclouds_in_binary_format: true
+    republish_reference_pointcloud_after_successful_registration: false
 
 
 # ===================================================================================================================================================

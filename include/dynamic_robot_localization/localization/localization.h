@@ -187,8 +187,8 @@ class Localization : public ConfigurableObject {
 		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename);
 		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
 		void loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg);
-		void publishReferencePointCloud();
-		bool updateLocalizationPipelineWithNewReferenceCloud();
+		void publishReferencePointCloud(const ros::Time& time_stamp, bool update_msg = true);
+		bool updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp);
 		void updateMatchersReferenceCloud();
 
 		void setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
@@ -289,6 +289,7 @@ class Localization : public ConfigurableObject {
 		bool localization_detailed_use_degrees_in_rotation_corrections_;
 		bool localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_;
 		bool save_reference_pointclouds_in_binary_format_;
+		bool republish_reference_pointcloud_after_successful_registration_;
 		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
@@ -357,6 +358,7 @@ class Localization : public ConfigurableObject {
 
 		// localization fields
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_;
+		sensor_msgs::PointCloud2Ptr reference_pointcloud_msg_;
 		typename pcl::PointCloud<PointT>::Ptr reference_pointcloud_keypoints_;
 		typename CircularBufferPointCloud<PointT>::Ptr ambient_pointcloud_with_circular_buffer_;
 		bool circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_;
