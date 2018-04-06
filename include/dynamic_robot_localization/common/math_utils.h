@@ -12,6 +12,9 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <string>
+#include <iomanip>
+
 // ROS includes
 #include <tf2/LinearMath/Transform.h>
 
@@ -51,6 +54,12 @@ PointPosition computePointPosition(float cross_product_z);
 
 bool isTransformValid(const tf2::Transform& transform);
 
+template <typename Scalar>
+bool isTransformValid(const Eigen::Matrix<Scalar, 4, 4>& transform);
+
+template <typename Scalar>
+std::string convertTransformToString(const Eigen::Matrix<Scalar, 4, 4>& transform, const std::string& line_prefix, const std::string& line_suffix,  const std::string& number_separator);
+
 void getRollPitchYawFromMatrix(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out);
 void getRollPitchYawFromMatrixUsigTF2(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out);
 
@@ -58,3 +67,7 @@ void getRollPitchYawFromMatrixUsigTF2(const Eigen::Matrix4f& matrix, double& rol
 } /* namespace math_utils */
 } /* namespace dynamic_robot_localization */
 
+
+#ifdef DRL_NO_PRECOMPILE
+#include <dynamic_robot_localization/common/impl/math_utils.hpp>
+#endif

@@ -34,6 +34,7 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 	} else {
 		if (convergence_rotation_threshold_ > 0.0) { pcl::registration::DefaultConvergenceCriteria<Scalar>::setRotationThreshold(convergence_rotation_threshold_); }
 		bool converged = pcl::registration::DefaultConvergenceCriteria<Scalar>::hasConverged();
+		std::string transform_str = math_utils::convertTransformToString(transformation_, "\n\t\t[ ", " ]", " | ");
 		ROS_DEBUG_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged]:" \
 				<< "\n\t Convergence state: " << getConvergenceStateString() \
 				<< "\n\t Current convergence time: " << elapsed_time \
@@ -41,15 +42,9 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 				<< "\n\t Iteration: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::iterations_ \
 				<< "\n\t CorrespondencesCurrentMeanSquareError: " << pcl::registration::DefaultConvergenceCriteria<Scalar>::correspondences_cur_mse_ \
 				<< "\n\t Current convergence transformation is:" \
-				<< "\n\t\t " << std::setw(18) << transformation_(0, 0) << " " << std::setw(18) <<  transformation_(0, 1) << " " << std::setw(18) <<  transformation_(0, 2) << " " << std::setw(18) <<  transformation_(0, 3) \
-				<< "\n\t\t " << std::setw(18) << transformation_(1, 0) << " " << std::setw(18) <<  transformation_(1, 1) << " " << std::setw(18) <<  transformation_(1, 2) << " " << std::setw(18) <<  transformation_(1, 3) \
-				<< "\n\t\t " << std::setw(18) << transformation_(2, 0) << " " << std::setw(18) <<  transformation_(2, 1) << " " << std::setw(18) <<  transformation_(2, 2) << " " << std::setw(18) <<  transformation_(2, 3) \
-				<< "\n\t\t " << std::setw(18) << transformation_(3, 0) << " " << std::setw(18) <<  transformation_(3, 1) << " " << std::setw(18) <<  transformation_(3, 2) << " " << std::setw(18) <<  transformation_(3, 3) << "\n");
+				<< transform_str << "\n");
 
-		if (!pcl_isfinite(transformation_(0, 0)) || !pcl_isfinite(transformation_(0, 1)) || !pcl_isfinite(transformation_(0, 2)) || !pcl_isfinite(transformation_(0, 3)) ||
-			!pcl_isfinite(transformation_(1, 0)) || !pcl_isfinite(transformation_(1, 1)) || !pcl_isfinite(transformation_(1, 2)) || !pcl_isfinite(transformation_(1, 3)) ||
-			!pcl_isfinite(transformation_(2, 0)) || !pcl_isfinite(transformation_(2, 1)) || !pcl_isfinite(transformation_(2, 2)) || !pcl_isfinite(transformation_(2, 3)) ||
-			!pcl_isfinite(transformation_(3, 0)) || !pcl_isfinite(transformation_(3, 1)) || !pcl_isfinite(transformation_(3, 2)) || !pcl_isfinite(transformation_(3, 3))) {
+		if (!math_utils::isTransformValid<Scalar>(transformation_)) {
 			ROS_WARN("[DefaultConvergenceCriteriaWithTime::hasConverged] Rejected estimated transformation with NaN values!");
 			return true; // a transform with NaNs will cause a crash because of kd-tree search
 		}

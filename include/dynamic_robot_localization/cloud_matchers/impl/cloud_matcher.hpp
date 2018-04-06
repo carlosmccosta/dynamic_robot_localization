@@ -255,10 +255,10 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 	Eigen::Matrix4f final_transformation = cloud_matcher_->getFinalTransformation();
 
-	if (!pcl_isfinite(final_transformation(0, 0)) || !pcl_isfinite(final_transformation(0, 1)) || !pcl_isfinite(final_transformation(0, 2)) || !pcl_isfinite(final_transformation(0, 3)) ||
-		!pcl_isfinite(final_transformation(1, 0)) || !pcl_isfinite(final_transformation(1, 1)) || !pcl_isfinite(final_transformation(1, 2)) || !pcl_isfinite(final_transformation(1, 3)) ||
-		!pcl_isfinite(final_transformation(2, 0)) || !pcl_isfinite(final_transformation(2, 1)) || !pcl_isfinite(final_transformation(2, 2)) || !pcl_isfinite(final_transformation(2, 3)) ||
-		!pcl_isfinite(final_transformation(3, 0)) || !pcl_isfinite(final_transformation(3, 1)) || !pcl_isfinite(final_transformation(3, 2)) || !pcl_isfinite(final_transformation(3, 3))) {
+	std::string final_transform_str = math_utils::convertTransformToString(final_transformation, "\n\t\t[ ", " ]", " | ");
+	ROS_DEBUG_STREAM("Cloud matcher [" << cloud_matcher_->getClassName() << "] transform:" << final_transform_str << "\n");
+
+	if (!math_utils::isTransformValid<float>(final_transformation)) {
 		ROS_WARN("Rejected estimated transformation with NaN values!");
 		return false; // a transform with NaNs will cause a crash because of kd-tree search
 	}

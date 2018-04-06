@@ -292,6 +292,7 @@ void Localization<PointT>::setupMessageManagement() {
 	private_node_handle_->param("message_management/invert_registration_transformation", invert_registration_transformation_, false);
 	private_node_handle_->param("message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
 	private_node_handle_->param("message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
+	private_node_handle_->param("message_management/use_object_frame_when_publishing_initial_poses_array", use_object_frame_when_publishing_initial_poses_array_, false);
 }
 
 
@@ -1219,7 +1220,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 			geometry_msgs::PoseArrayPtr accepted_poses(new geometry_msgs::PoseArray());
 			if (!pose_array_publisher_.getTopic().empty() || !localization_detailed_publisher_.getTopic().empty()) {
-				accepted_poses->header.frame_id = map_frame_id_;
+				accepted_poses->header.frame_id = use_object_frame_when_publishing_initial_poses_array_ ? ambient_cloud_msg->header.frame_id : map_frame_id_;
 				accepted_poses->header.stamp = pose_time;
 				for (size_t i = 0; i < accepted_pose_corrections_.size(); ++i) {
 					geometry_msgs::Pose accepted_pose;

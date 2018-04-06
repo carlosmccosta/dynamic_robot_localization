@@ -6,7 +6,8 @@
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#include <dynamic_robot_localization/common/math_utils.h>
+#include <dynamic_robot_localization/common/common.h>
+#include <dynamic_robot_localization/common/impl/math_utils.hpp>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -76,3 +77,18 @@ void getRollPitchYawFromMatrixUsigTF2(const Eigen::Matrix4f& matrix, double& rol
 
 } /* namespace math_utils */
 } /* namespace dynamic_robot_localization */
+
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <template instantiations>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#ifndef DRL_NO_PRECOMPILE
+#include <pcl/impl/instantiate.hpp>
+#include <pcl/point_types.h>
+
+#define PCL_INSTANTIATE_DRLMathUtilsIsTransformValid(T) template bool dynamic_robot_localization::math_utils::isTransformValid<T>(const Eigen::Matrix<T, 4, 4>&);
+PCL_INSTANTIATE(DRLMathUtilsIsTransformValid, DRL_SCALAR_TYPES)
+
+#define PCL_INSTANTIATE_DRLMathUtilsConvertTransformToString(T) template std::string dynamic_robot_localization::math_utils::convertTransformToString<T>(const Eigen::Matrix<T, 4, 4>&, const std::string&, const std::string&,  const std::string&);
+PCL_INSTANTIATE(DRLMathUtilsConvertTransformToString, DRL_SCALAR_TYPES)
+#endif
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

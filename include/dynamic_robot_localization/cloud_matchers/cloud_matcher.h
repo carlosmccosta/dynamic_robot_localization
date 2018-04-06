@@ -35,6 +35,7 @@
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_publisher.h>
+#include <dynamic_robot_localization/common/math_utils.h>
 #include <dynamic_robot_localization/common/performance_timer.h>
 #include <dynamic_robot_localization/common/registration_visualizer.h>
 #include <dynamic_robot_localization/cloud_matchers/correspondence_estimation.h>

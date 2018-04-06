@@ -28,6 +28,7 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
+#include <dynamic_robot_localization/common/math_utils.h>
 #include <dynamic_robot_localization/common/performance_timer.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

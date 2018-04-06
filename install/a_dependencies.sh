@@ -8,15 +8,15 @@ echo "##########################################################################
 echo "##### Checking and installing dependencies for dynamic_robot_localization ros package"
 echo "####################################################################################################"
 
-sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl -y
-sudo apt-get update
-sudo apt-get upgrade ${install_args}
-sudo apt-get dist-upgrade ${install_args}
+#sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl -y
+#sudo apt-get update
+#sudo apt-get upgrade ${install_args}
+#sudo apt-get dist-upgrade ${install_args}
 
 # required system dependencies
 sudo apt-get install coreutils ${install_args}
 sudo apt-get install git ${install_args}
-sudo apt-get install libpcl-1.7-all-dev ${install_args}
+#sudo apt-get install libpcl-1.7-all-dev ${install_args}
 sudo apt-get install libboost-all-dev ${install_args}
 sudo apt-get install python-wstool ${install_args}
 

@@ -45,6 +45,9 @@ reference_pointclouds:
 #            search_k: 0
 #            search_radius: 0.05
 
+pcl_verbosity_level: 'ERROR'                                    # VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output
+ros_verbosity_level: 'INFO'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
+
 
 tracking_matchers:
     ignore_height_corrections: false
@@ -52,18 +55,28 @@ tracking_matchers:
 #    pose_tracking_timeout: 1.0
 #    pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 0
 #    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 0
+    correspondence_estimation_approach: 'CorrespondenceEstimationLookupTable'   # LookupTable
+    correspondence_estimation_lookup_table:                         # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationOrganizedProjection
+      map_cell_resolution: 0.02                                     # Cell size in meters
+      map_margin_x: 1.0                                             # Margin around map data with extra lookup cells
+      map_margin_y: 1.0                                             # Margin around map data with extra lookup cells
+      map_margin_z: 1.0                                             # Margin around map data with extra lookup cells
+      sensor_cell_resolution: 0.02                                  # Cell size in meters
+      sensor_margin_x: 1.0                                          # Margin around map data with extra lookup cells
+      sensor_margin_y: 1.0                                          # Margin around map data with extra lookup cells
+      sensor_margin_z: 1.0                                          # Margin around map data with extra lookup cells
     point_matchers:
         iterative_closest_point:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_with_normals:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_3d:
-            convergence_time_limit_seconds: 0.300
+            convergence_time_limit_seconds: 3.300
             max_correspondence_distance: 2.5
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 200
-            max_number_of_ransac_iterations: 40
+            max_number_of_ransac_iterations: 0
             ransac_outlier_rejection_threshold: 0.03
             match_only_keypoints: false
             display_cloud_aligment: false
@@ -72,7 +85,7 @@ tracking_matchers:
             rotation_epsilon: 0.002
             correspondence_randomness: 50
             maximum_optimizer_iterations: 100
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
             # ndt 3d
             voxel_grid_resolution: 1.0
             line_search_step_size: 0.1
