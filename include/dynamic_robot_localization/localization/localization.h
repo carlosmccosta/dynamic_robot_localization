@@ -308,7 +308,8 @@ class Localization : public ConfigurableObject {
 		double outliers_angular_distribution_;
 		double last_pose_weighted_mean_filter_;
 		bool use_odom_when_transforming_cloud_to_map_frame_;
-		bool use_object_frame_when_publishing_initial_poses_array_;
+		bool use_base_link_frame_when_publishing_initial_poses_array_;
+		bool apply_cloud_registration_inverse_to_initial_poses_array_;
 		bool invert_cloud_to_map_transform_;
 		bool invert_registration_transformation_;
 		bool invert_initial_poses_from_msgs_;

@@ -292,7 +292,8 @@ void Localization<PointT>::setupMessageManagement() {
 	private_node_handle_->param("message_management/invert_registration_transformation", invert_registration_transformation_, false);
 	private_node_handle_->param("message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
 	private_node_handle_->param("message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
-	private_node_handle_->param("message_management/use_object_frame_when_publishing_initial_poses_array", use_object_frame_when_publishing_initial_poses_array_, false);
+	private_node_handle_->param("message_management/use_base_link_frame_when_publishing_initial_poses_array", use_base_link_frame_when_publishing_initial_poses_array_, false);
+	private_node_handle_->param("message_management/apply_cloud_registration_inverse_to_initial_poses_array", apply_cloud_registration_inverse_to_initial_poses_array_, false);
 }
 
 
@@ -1218,13 +1219,32 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				pose_time = ambient_cloud_time;
 			}
 
+			if (ignore_height_corrections_) {
+				pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
+			}
+			pose_tf_corrected.getRotation().normalize();
+
+			tf2::Transform pose_tf_corrected_to_publish = pose_tf_corrected;
+			if (invert_registration_transformation_) {
+				pose_tf_corrected_to_publish = pose_tf_corrected.inverse();
+				pose_corrections = pose_corrections.inverse();
+			}
+
 			geometry_msgs::PoseArrayPtr accepted_poses(new geometry_msgs::PoseArray());
 			if (!pose_array_publisher_.getTopic().empty() || !localization_detailed_publisher_.getTopic().empty()) {
-				accepted_poses->header.frame_id = use_object_frame_when_publishing_initial_poses_array_ ? ambient_cloud_msg->header.frame_id : map_frame_id_;
+				accepted_poses->header.frame_id = use_base_link_frame_when_publishing_initial_poses_array_ ? ambient_cloud_msg->header.frame_id : map_frame_id_;
 				accepted_poses->header.stamp = pose_time;
+				tf2::Transform pose_tf_corrected_to_publish_inverse = pose_tf_corrected_to_publish.inverse();
 				for (size_t i = 0; i < accepted_pose_corrections_.size(); ++i) {
 					geometry_msgs::Pose accepted_pose;
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(accepted_pose_corrections_[i] * pose_tf_initial_guess, accepted_pose);
+					tf2::Transform accepted_pose_tf;
+
+					if (apply_cloud_registration_inverse_to_initial_poses_array_)
+						accepted_pose_tf = pose_tf_corrected_to_publish_inverse * accepted_pose_corrections_[i] * pose_tf_initial_guess;
+					else
+						accepted_pose_tf = accepted_pose_corrections_[i] * pose_tf_initial_guess;
+
+					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(accepted_pose_tf, accepted_pose);
 					accepted_poses->poses.push_back(accepted_pose);
 				}
 			}
@@ -1238,17 +1258,6 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				ambient_pointcloud->header.stamp = ambient_cloud_time.toNSec() / 1000.0;
 				if (republish_reference_pointcloud_after_successful_registration_ && map_update_mode_ == NoIntegration)
 					publishReferencePointCloud(ambient_cloud_time, false);
-
-				if (ignore_height_corrections_) {
-					pose_tf_corrected.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
-				}
-				pose_tf_corrected.getRotation().normalize();
-
-				tf2::Transform pose_tf_corrected_to_publish = pose_tf_corrected;
-				if (invert_registration_transformation_) {
-					pose_tf_corrected_to_publish = pose_tf_corrected.inverse();
-					pose_corrections = pose_corrections.inverse();
-				}
 
 				last_scan_time_ = pose_time;
 
