@@ -241,6 +241,9 @@ filters:
         covariance_sampling:
             number_of_samples: 250
             filtered_cloud_publish_topic: ''
+        scale:
+            scale_factor: 0.001
+            filtered_cloud_publish_topic: ''
 
 
 # ===================================================================================================================================================
