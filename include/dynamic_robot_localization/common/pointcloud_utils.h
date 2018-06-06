@@ -12,12 +12,15 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <limits>
 #include <vector>
 
 // ROS includes
 
 // PCL includes
+#include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/point_types_conversion.h>
 
 // external libs includes
 
@@ -32,6 +35,9 @@ namespace pointcloud_utils {
 
 template <typename PointT>
 void concatenatePointClouds(std::vector< typename pcl::PointCloud<PointT>::Ptr > pointclouds, typename pcl::PointCloud<PointT>::Ptr pointcloud_out);
+
+template <typename PointT>
+void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud);
 
 } /* namespace pointcloud_utils */
 } /* namespace dynamic_robot_localization */

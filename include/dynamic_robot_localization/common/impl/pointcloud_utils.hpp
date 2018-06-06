@@ -25,5 +25,33 @@ void concatenatePointClouds(std::vector< typename pcl::PointCloud<PointT>::Ptr >
 }
 
 
+template <typename PointT>
+void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud) {
+	float min_curvature = std::numeric_limits<float>::max();
+	float max_curvature = std::numeric_limits<float>::min();
+
+	for (size_t i = 0; i < pointcloud.size(); ++i) {
+		if (pointcloud[i].curvature < min_curvature)
+			min_curvature = pointcloud[i].curvature;
+
+		if (pointcloud[i].curvature > max_curvature)
+			max_curvature = pointcloud[i].curvature;
+	}
+
+	float curvature_scale = 360.0f / (max_curvature - min_curvature);
+
+	for (int i = 0; i < pointcloud.size(); ++i) {
+		pcl::PointXYZHSV hsv;
+		hsv.h = (pointcloud[i].curvature - min_curvature) * curvature_scale;
+		hsv.s = 1.0;
+		hsv.v = 1.0;
+		pcl::PointXYZRGB rgb;
+		pcl::PointXYZHSVtoXYZRGB(hsv, rgb);
+		pointcloud[i].r = rgb.r;
+		pointcloud[i].g = rgb.g;
+		pointcloud[i].b = rgb.b;
+	}
+}
+
 } /* namespace pointcloud_utils */
 } /* namespace dynamic_robot_localization */

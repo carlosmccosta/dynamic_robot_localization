@@ -10,21 +10,18 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // Define all point types that include PointXYZ and Normal data
-#define DRL_POINT_TYPES			\
-	(pcl::PointNormal)				\
-	(pcl::PointXYZINormal)		\
-	(pcl::PointXYZRGBNormal)
-
-
-/*
+#define DRL_POINT_TYPES					\
+  	(pcl::PointXYZRGBNormal)			/*\
+	(pcl::PointNormal)					\
+	(pcl::PointXYZINormal)				\
 	(pcl::PointXYZ)						\ // ->  4 floats
 	(pcl::PointXYZI)					\ // ->  8 floats
-	(pcl::PointXYZRGB)				\ // ->  8 floats
-	(pcl::PointXYZRGBA)				\ // ->  8 floats
-	(pcl::PointNormal)				\ // -> 12 floats
-	(pcl::PointXYZINormal)		\ // -> 12 floats
-	(pcl::PointXYZRGBNormal)	  // -> 12 floats
-*/
+	(pcl::PointXYZRGB)					\ // ->  8 floats
+	(pcl::PointXYZRGBA)					\ // ->  8 floats
+	(pcl::PointNormal)					\ // -> 12 floats
+	(pcl::PointXYZINormal)				\ // -> 12 floats
+	(pcl::PointXYZRGBNormal)	 		  // -> 12 floats*/
+
 
 
 // Define all point types that represent features
@@ -38,8 +35,8 @@
 
 
 #define DRL_SCALAR_TYPES \
-	(float) \
-	(double)
+	(float) /*\
+	(double)*/
 
 #define DRL_UNPACK_ARGS( ... ) __VA_ARGS__
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

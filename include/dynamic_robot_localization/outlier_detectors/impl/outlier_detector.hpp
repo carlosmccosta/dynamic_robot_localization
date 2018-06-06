@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	std::string final_param_name;
-	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "publish_only_if_there_is_subscribers", final_param_name)) {
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "publish_pointclouds_only_if_there_is_subscribers", final_param_name)) {
 		private_node_handle->param(final_param_name, publish_pointclouds_only_if_there_is_subscribers_, true);
 	}
 

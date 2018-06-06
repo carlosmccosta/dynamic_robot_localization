@@ -432,8 +432,8 @@ void Localization<PointT>::updateNormalsEstimationFlags() {
 
 template<typename PointT>
 void Localization<PointT>::setupCurvatureEstimatorsConfigurations() {
-	loadCurvatureEstimatorFromParameterServer(reference_cloud_normal_estimator_, "curvature_estimators/reference_pointcloud/");
-	loadCurvatureEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "curvature_estimators/ambient_pointcloud/");
+	loadCurvatureEstimatorFromParameterServer(reference_cloud_curvature_estimator_, "curvature_estimators/reference_pointcloud/");
+	loadCurvatureEstimatorFromParameterServer(ambient_cloud_curvature_estimator_, "curvature_estimators/ambient_pointcloud/");
 }
 
 
@@ -462,22 +462,18 @@ void Localization<PointT>::loadNormalEstimatorFromParameterServer(typename Norma
 
 
 template<typename PointT>
-void Localization<PointT>::loadCurvatureEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace) {
-	if (normal_estimator) {
-		XmlRpc::XmlRpcValue curvature_estimators;
-		typename CurvatureEstimator<PointT>::Ptr curvature_estimator;
-		if (private_node_handle_->getParam(configuration_namespace, curvature_estimators) && curvature_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
-			for (XmlRpc::XmlRpcValue::iterator it = curvature_estimators.begin(); it != curvature_estimators.end(); ++it) {
-				std::string estimator_name = it->first;
-				if (estimator_name.find("principal_curvatures_estimation") != std::string::npos) {
-					curvature_estimator = typename CurvatureEstimator<PointT>::Ptr(new PrincipalCurvaturesEstimation<PointT>());
-				}
+void Localization<PointT>::loadCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, std::string configuration_namespace) {
+	XmlRpc::XmlRpcValue curvature_estimators;
+	if (private_node_handle_->getParam(configuration_namespace, curvature_estimators) && curvature_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = curvature_estimators.begin(); it != curvature_estimators.end(); ++it) {
+			std::string estimator_name = it->first;
+			if (estimator_name.find("principal_curvatures_estimation") != std::string::npos) {
+				curvature_estimator = typename CurvatureEstimator<PointT>::Ptr(new PrincipalCurvaturesEstimation<PointT>());
+			}
 
-				if (curvature_estimator) {
-					curvature_estimator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + estimator_name + "/");
-					normal_estimator->setCurvatureEstimator(curvature_estimator);
-					return;
-				}
+			if (curvature_estimator) {
+				curvature_estimator->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + estimator_name + "/");
+				return;
 			}
 		}
 	}
@@ -871,8 +867,8 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const
 
 	if (reference_pointcloud_->size() > minimum_number_of_points_in_reference_pointcloud_) {
 		reference_pointcloud_search_method_->setInputCloud(reference_pointcloud_);
-		if (reference_cloud_normal_estimator_) {
-			if (!applyNormalEstimation(reference_cloud_normal_estimator_, reference_pointcloud_, reference_pointcloud_raw, reference_pointcloud_search_method_, true)) { return false; }
+		if (reference_cloud_normal_estimator_ || reference_cloud_curvature_estimator_) {
+			if (!applyNormalEstimation(reference_cloud_normal_estimator_, reference_cloud_curvature_estimator_, reference_pointcloud_, reference_pointcloud_raw, reference_pointcloud_search_method_, true)) { return false; }
 		}
 
 		if (reference_pointcloud_->size() > minimum_number_of_points_in_reference_pointcloud_) {
@@ -1458,9 +1454,9 @@ bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT
 
 
 template<typename PointT>
-bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr& surface,
+bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr& surface,
 		typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method, bool pointcloud_is_map) {
-	if (!normal_estimator) return false;
+	if (!normal_estimator && !curvature_estimator) return false;
 
 	PerformanceTimer performance_timer;
 	performance_timer.start();
@@ -1481,13 +1477,15 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 		typename pcl::search::KdTree<PointT>::Ptr surface_search_method(new pcl::search::KdTree<PointT>());
 		surface_search_method->setInputCloud(surface);
 		size_t number_surface_points = surface_search_method->getInputCloud()->size();
-		normal_estimator->estimateNormals(pointcloud, surface, surface_search_method, sensor_pose_tf_guess, pointcloud);
+		if (normal_estimator) normal_estimator->estimateNormals(pointcloud, surface, surface_search_method, sensor_pose_tf_guess, pointcloud);
+		if (curvature_estimator) curvature_estimator->estimatePointsCurvature(pointcloud, surface_search_method);
 
 		if (number_surface_points != surface_search_method->getInputCloud()->size()) {
 			pointcloud_search_method = surface_search_method; // normal estimator changed the number of pointcloud points and updated the search kd tree
 		}
 	} else {
-		normal_estimator->estimateNormals(pointcloud, pointcloud, pointcloud_search_method, sensor_pose_tf_guess, pointcloud);
+		if (normal_estimator) normal_estimator->estimateNormals(pointcloud, pointcloud, pointcloud_search_method, sensor_pose_tf_guess, pointcloud);
+		if (curvature_estimator) curvature_estimator->estimatePointsCurvature(pointcloud, pointcloud_search_method);
 	}
 
 	localization_times_msg_.surface_normal_estimation_time += performance_timer.getElapsedTimeInMilliSec();
@@ -1807,8 +1805,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	bool computed_normals = false;
 	localization_times_msg_.surface_normal_estimation_time = 0.0;
-	if (compute_normals_when_tracking_pose_ && ambient_cloud_normal_estimator_) {
-		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+	if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
+		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 		computed_normals = true;
 	}
 
@@ -1858,8 +1856,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			ros::Duration time_from_last_pose = ros::Time::now() - last_accepted_pose_time_;
 			if (time_from_last_pose < initial_pose_estimation_timeout_) {
 				ROS_INFO("Performing initial pose recovery");
-				if (!computed_normals && compute_normals_when_estimating_initial_pose_ && ambient_cloud_normal_estimator_) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+				if (!computed_normals && compute_normals_when_estimating_initial_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 					computed_normals = true;
 				}
 
@@ -1884,13 +1882,13 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		performance_timer.restart();
 		localization_times_msg_.pointcloud_registration_time = 0.0;
 
-		if (!applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
+		if ((!tracking_matchers_.empty() || !tracking_recovery_matchers_.empty()) && !applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 			if (tracking_recovery_matchers_.empty()) {
 				return false;
 			} else if (tracking_recovery_reached) {
 				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
-				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 					computed_normals = true;
 				}
 
@@ -1939,8 +1937,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
 			if (!performed_recovery && !tracking_recovery_matchers_.empty() && tracking_recovery_reached) {
-				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && ambient_cloud_normal_estimator_) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
 					computed_normals = true;
 				}
 

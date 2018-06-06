@@ -39,6 +39,8 @@ void PrincipalCurvaturesEstimation<PointT>::setupConfigurationFromParameterServe
 	if (upsample_method_str == "CURVATURE_TYPE_GAUSSIAN") {
 		curvature_type_ = CURVATURE_TYPE_GAUSSIAN;
 	}
+
+	CurvatureEstimator<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 template<typename PointT>
@@ -63,6 +65,10 @@ void PrincipalCurvaturesEstimation<PointT>::estimatePointsCurvature(typename pcl
 			(*pointcloud)[i].normal_z = principal_curvatures[i].principal_curvature_z;
 		}
 	}
+
+	ROS_DEBUG_STREAM("PrincipalCurvaturesEstimation computed curvature information for a point cloud with " << pointcloud->size() << " points");
+
+	CurvatureEstimator<PointT>::estimatePointsCurvature(pointcloud, search_method);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PrincipalCurvaturesEstimation-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

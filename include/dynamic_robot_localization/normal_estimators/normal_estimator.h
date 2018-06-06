@@ -22,15 +22,15 @@
 // PCL includes
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/features/normal_3d.h>
 #include <pcl/search/kdtree.h>
-#include <pcl/visualization/pcl_visualizer.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
-#include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
+#include <dynamic_robot_localization/common/cloud_viewer.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -52,7 +52,6 @@ class NormalEstimator : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		#define VISUALIZER_NORMALS_ID "normals"
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -78,13 +77,11 @@ class NormalEstimator : public ConfigurableObject {
 		double getOccupancyGridAnalysisRadius() const { return occupancy_grid_analysis_radius_; }
 		double getOccupancyGridAnalysisRadiusResolutionPercentage() const { return occupancy_grid_analysis_radius_resolution_percentage_; }
 		nav_msgs::OccupancyGridConstPtr getOccupancyGridMsg() { return occupancy_grid_msg_; }
-		typename CurvatureEstimator<PointT>::Ptr getCurvatureEstimator() { return curvature_estimator_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		void setOccupancyGridMsg(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg) { occupancy_grid_msg_ = occupancy_grid_msg; }
 		void resetOccupancyGridMsg() { occupancy_grid_msg_.reset(); }
-		void setCurvatureEstimator(const typename CurvatureEstimator<PointT>::Ptr& curvature_estimator) { curvature_estimator_ = curvature_estimator; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -96,7 +93,11 @@ class NormalEstimator : public ConfigurableObject {
 		double occupancy_grid_analysis_radius_;
 		double occupancy_grid_analysis_radius_resolution_percentage_;
 		nav_msgs::OccupancyGridConstPtr occupancy_grid_msg_;
-		typename CurvatureEstimator<PointT>::Ptr curvature_estimator_;
+		bool flip_normals_towards_custom_viewpoint_;
+		float normals_viewpoint_px_;
+		float normals_viewpoint_py_;
+		float normals_viewpoint_pz_;
+		CloudViewer<PointT> cloud_viewer_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 

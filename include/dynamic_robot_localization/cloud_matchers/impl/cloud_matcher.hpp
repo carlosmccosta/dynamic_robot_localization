@@ -40,12 +40,12 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
-		double max_correspondence_distance;
-		double transformation_epsilon;
-		double euclidean_fitness_epsilon;
-		int max_number_of_registration_iterations;
-		int max_number_of_ransac_iterations;
-		double ransac_outlier_rejection_threshold;
+		double max_correspondence_distance = 0.1;
+		double transformation_epsilon = 1e-8;
+		double euclidean_fitness_epsilon = 1e-6;
+		int max_number_of_registration_iterations = 250;
+		int max_number_of_ransac_iterations = 250;
+		double ransac_outlier_rejection_threshold = 0.05;
 
 		if (ros::param::search(search_namespace, "max_correspondence_distance", final_param_name)) { private_node_handle->param(final_param_name, max_correspondence_distance, 0.1); }
 		if (ros::param::search(search_namespace, "transformation_epsilon", final_param_name)) { private_node_handle->param(final_param_name, transformation_epsilon, 1e-8); }
@@ -70,7 +70,7 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 
 		correspondence_estimation_ptr_.reset();
-		int correspondence_estimation_k;
+		int correspondence_estimation_k = 10;
 		if (ros::param::search(search_namespace, "correspondence_estimation_k", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_k, 10); }
 
 		std::string correspondence_estimation_method;

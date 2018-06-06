@@ -38,7 +38,7 @@ if(OPENMP_FOUND)
 endif()
 
 find_package(catkin REQUIRED COMPONENTS ${${PROJECT_NAME}_CATKIN_COMPONENTS})
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PCL REQUIRED)
 
@@ -86,7 +86,7 @@ catkin_package(
         ${${PROJECT_NAME}_CATKIN_COMPONENTS}
         message_runtime
     DEPENDS
-        Eigen
+        EIGEN3
         Boost
         PCL
 )
@@ -103,7 +103,7 @@ catkin_package(
 
 include_directories(
     include
-    ${Eigen_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
@@ -119,6 +119,7 @@ add_library(drl_common
     src/common/configurable_object.cpp
     src/common/circular_buffer_pointcloud.cpp
     src/common/cloud_publisher.cpp
+    src/common/cloud_viewer.cpp
     src/common/math_utils.cpp
     src/common/pointcloud_conversions.cpp
     src/common/pointcloud_utils.cpp

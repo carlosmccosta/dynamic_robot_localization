@@ -23,7 +23,7 @@ template<typename PointT, typename FeatureT>
 void FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	std::string final_param_name;
 	std::string search_namespace = private_node_handle->getNamespace() + "/" + configuration_namespace;
-	bool display_feature_matching;
+	bool display_feature_matching = false;
 	if (ros::param::search(search_namespace, "display_feature_matching", final_param_name)) { private_node_handle->param(final_param_name, display_feature_matching, false); }
 	if (ros::param::search(search_namespace, "reference_pointcloud_descriptors_filename", final_param_name)) { private_node_handle->param(final_param_name, reference_pointcloud_descriptors_filename_, std::string("")); }
 	if (ros::param::search(search_namespace, "reference_pointcloud_descriptors_save_filename", final_param_name)) { private_node_handle->param(final_param_name, reference_pointcloud_descriptors_save_filename_, std::string("")); }

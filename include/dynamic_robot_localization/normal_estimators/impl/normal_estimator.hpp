@@ -23,7 +23,11 @@ NormalEstimator<PointT>::NormalEstimator() :
 	display_occupancy_grid_pointcloud_(false),
 	occupancy_grid_analysis_k_(0),
 	occupancy_grid_analysis_radius_(-1.0),
-	occupancy_grid_analysis_radius_resolution_percentage_(4.0) {}
+	occupancy_grid_analysis_radius_resolution_percentage_(4.0),
+	flip_normals_towards_custom_viewpoint_(false),
+	normals_viewpoint_px_(0.0f),
+	normals_viewpoint_py_(0.0f),
+	normals_viewpoint_pz_(0.0f) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -33,6 +37,10 @@ void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 //	if (private_node_handle->searchParam(configuration_namespace + "display_normals", final_param_name)) {
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "display_normals", final_param_name)) {
 		private_node_handle->param(final_param_name, display_normals_, false);
+	}
+
+	if (display_normals_) {
+		cloud_viewer_.setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace + "normals_viewer/");
 	}
 
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "display_occupancy_grid_pointcloud", final_param_name)) {
@@ -50,6 +58,22 @@ void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "occupancy_grid_analysis_radius_resolution_percentage", final_param_name)) {
 		private_node_handle->param(final_param_name, occupancy_grid_analysis_radius_resolution_percentage_, 4.0);
 	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "flip_normals_towards_custom_viewpoint", final_param_name)) {
+		private_node_handle->param(final_param_name, flip_normals_towards_custom_viewpoint_, false);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "normals_viewpoint/px", final_param_name)) {
+		private_node_handle->param(final_param_name, normals_viewpoint_px_, 0.0f);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "normals_viewpoint/py", final_param_name)) {
+		private_node_handle->param(final_param_name, normals_viewpoint_py_, 0.0f);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "normals_viewpoint/pz", final_param_name)) {
+		private_node_handle->param(final_param_name, normals_viewpoint_pz_, 0.0f);
+	}
 }
 
 
@@ -57,8 +81,11 @@ template<typename PointT>
 void NormalEstimator<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 		typename pcl::PointCloud<PointT>::Ptr& surface, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method, tf2::Transform& viewpoint_guess,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals_out) {
-	if (curvature_estimator_) {
-		curvature_estimator_->estimatePointsCurvature(pointcloud_with_normals_out, surface_search_method);
+	if (flip_normals_towards_custom_viewpoint_) {
+		for (size_t i = 0; i < pointcloud_with_normals_out->size(); ++i) {
+			pcl::flipNormalTowardsViewpoint((*pointcloud_with_normals_out)[i], normals_viewpoint_px_, normals_viewpoint_py_, normals_viewpoint_pz_,
+											(*pointcloud_with_normals_out)[i].normal_x, (*pointcloud_with_normals_out)[i].normal_y, (*pointcloud_with_normals_out)[i].normal_z);
+		}
 	}
 
 	if (display_normals_) {
@@ -69,24 +96,7 @@ void NormalEstimator<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::
 
 template<typename PointT>
 void NormalEstimator<PointT>::displayNormals(typename pcl::PointCloud<PointT>::Ptr& pointcloud_with_normals) {
-	pcl::visualization::PCLVisualizer normals_visualizer("Normals");
-	normals_visualizer.setBackgroundColor (0, 0, 0);
-	normals_visualizer.initCameraParameters ();
-	normals_visualizer.setCameraPosition(-6, 0, 0, 0, 0, 1);
-	normals_visualizer.addCoordinateSystem (0.5, 0);
-	normals_visualizer.addPointCloudNormals<PointT>(pointcloud_with_normals, 1, 0.05, VISUALIZER_NORMALS_ID);
-	pcl::visualization::PointCloudColorHandlerGenericField<PointT> color_handler(pointcloud_with_normals, "curvature");
-	normals_visualizer.addPointCloud(pointcloud_with_normals, color_handler, "Cloud points");
-	normals_visualizer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "Cloud points");
-
-//	normals_visualizer_->spinOnce(5, true);
-//	normals_visualizer_->spin();
-
-	while (!normals_visualizer.wasStopped()) {
-		normals_visualizer.spinOnce(100);
-		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-	}
-//	normals_visualizer.close();
+	cloud_viewer_.showPointCloud(pointcloud_with_normals, "Point cloud normals");
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </NormalEstimator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

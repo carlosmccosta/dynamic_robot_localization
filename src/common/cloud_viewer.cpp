@@ -1,4 +1,4 @@
-/**\file pointcloud_utils.cpp
+/**\file cloud_viewer.cpp
  * \brief Description...
  *
  * @version 1.0
@@ -7,7 +7,7 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #include <dynamic_robot_localization/common/common.h>
-#include <dynamic_robot_localization/common/impl/pointcloud_utils.hpp>
+#include <dynamic_robot_localization/common/impl/cloud_viewer.hpp>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -15,11 +15,7 @@
 #ifndef DRL_NO_PRECOMPILE
 #include <pcl/impl/instantiate.hpp>
 #include <pcl/point_types.h>
-
-#define PCL_INSTANTIATE_DRLPointCloudUtilsConcatenatePointClouds(T) template void dynamic_robot_localization::pointcloud_utils::concatenatePointClouds<T>(std::vector< typename pcl::PointCloud<T>::Ptr >, typename pcl::PointCloud<T>::Ptr);
-PCL_INSTANTIATE(DRLPointCloudUtilsConcatenatePointClouds, DRL_POINT_TYPES)
-
-#define PCL_INSTANTIATE_DRLPointCloudUtilsColorizePointCloudWithCurvature(T) template void dynamic_robot_localization::pointcloud_utils::colorizePointCloudWithCurvature<T>(pcl::PointCloud<T>&);
-PCL_INSTANTIATE(DRLPointCloudUtilsColorizePointCloudWithCurvature, DRL_POINT_TYPES)
+#define PCL_INSTANTIATE_DRLCloudViewer(T) template class PCL_EXPORTS dynamic_robot_localization::CloudViewer<T>;
+PCL_INSTANTIATE(DRLCloudViewer, DRL_POINT_TYPES)
 #endif
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

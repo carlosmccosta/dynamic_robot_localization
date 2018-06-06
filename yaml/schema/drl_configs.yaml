@@ -254,6 +254,7 @@ filters:
 #   Bellow is an example of parameter override, in which the display_normals parameter in the normal_estimators/ambient_pointcloud/ namespace is overridden
 # by the same parameter in the normal_estimators/ambient_pointcloud/normal_estimation_omp child namespace.
 normal_estimators:
+    display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
     reference_pointcloud:
         flip_normals_using_occupancy_grid_analysis: true            # Only used in the reference pointcloud
         use_filtered_cloud_as_normal_estimation_surface: true       # Normals can be estimated with the filtered cloud or with the original reference cloud as search surface
@@ -262,7 +263,6 @@ normal_estimators:
         compute_normals_when_recovering_pose_tracking: false        # Some registration algorithms don't require normals. Only activate its calculation when required
         compute_normals_when_estimating_initial_pose: true          # Some registration algorithms don't require normals. Only activate its calculation when required
         use_filtered_cloud_as_normal_estimation_surface: true       # Normals can be estimated with the filtered cloud or with the original ambient cloud as search surface
-        display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
         # If the normals are being computed from a nav_msgs::OccupancyGrid, their orientation can be corrected by flipping them to the side that has more empty space (instead of flipping to the sensor view) (to disable, set k to 0 and both radius to < 0)
         display_occupancy_grid_pointcloud: false                    # Can be overridden in child namespaces | Displays a blocking window with the pointcloud created from the nav_msgs::OccupancyGrid
         occupancy_grid_analysis_k: 0                                # Can be overridden in child namespaces | The number of neighbors to use when fliping normals (<= 0 -> ignore k, > 0 -> will be used instead of the radius specified in the parameters below)
@@ -284,6 +284,23 @@ normal_estimators:
             display_normals: true                                   # Overrides parameter in parent namespace
             search_k: 0                                             # The number of k nearest neighbors to use for the normal estimation. If search_k != 0 search_radius is ignored
             search_radius: 0.12                                     # The sphere radius that will be used to find the nearest neighbors used for the normal estimation
+            flip_normals_towards_custom_viewpoint: false            # Normal flipping can be used in the other normal estimators
+            normals_viewpoint:
+                px: 0.0
+                py: 0.0
+                pz: 0.0
+            normals_viewer:                                         # Viewer can be used in the other normal estimators
+                camera_px: 0.0
+                camera_py: 0.0
+                camera_pz: 2.0
+                camera_up_x: 0.0
+                camera_up_y: -1.0
+                camera_up_z: 0.0
+                normals_size: 0.01
+                axis_size: 0.2
+                background_r: 0.0
+                background_g: 0.0
+                background_b: 0.0
         moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order | Estimates the normal and curvature of points by performing surface fitting and resampling
             compute_normals: true                                   # Set whether the algorithm should also store the normals computed
             polynomial_order: 2                                     # The order of the polynomial to be fit
@@ -298,13 +315,27 @@ normal_estimators:
             dilation_iterations: 1                                  # The number of dilation steps of the voxel grid (used only in the VOXEL_GRID_DILATION upsampling method)
 
 
-curvature_estimators:
+curvature_estimators:                                               # If normals are loaded from CAD files, then they must be normalized (using MeshLab for example) or a normal estimator presented above must be used
     reference_pointcloud:
     ambient_pointcloud:
         principal_curvatures_estimation:
+            colorize_pointcloud_with_curvatures: false
+            display_curvatures: false
+            curvatures_viewer:
+                camera_px: 0.0
+                camera_py: 0.0
+                camera_pz: 2.0
+                camera_up_x: 0.0
+                camera_up_y: -1.0
+                camera_up_z: 0.0
+                normals_size: 0.01
+                axis_size: 0.2
+                background_r: 0.0
+                background_g: 0.0
+                background_b: 0.0
             search_k: 0                                                 # The number of k nearest neighbors to use for the curvature estimation. If search_k != 0 search_radius is ignored
             search_radius: 0.12                                         # The sphere radius that will be used to find the nearest neighbors used for the curvature estimation
-            curvature_type: 'CURVATURE_TYPE_MEAN'                       # Type of curvature to compute from the Principal Curvature estimation k1 and k2 eigen values | Supported types: CURVATURE_TYPE_MEAN |CURVATURE_TYPE_GAUSSIAN
+            curvature_type: 'CURVATURE_TYPE_MEAN'                       # Type of curvature to compute from the Principal Curvature estimation k1 and k2 eigen values | Supported types: CURVATURE_TYPE_MEAN | CURVATURE_TYPE_GAUSSIAN
             update_normals_with_principal_component_directions: false   # If true, it will update the normals with the computed principal directions
 
 

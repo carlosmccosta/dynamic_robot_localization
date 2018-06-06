@@ -99,16 +99,16 @@ int main(int argc, char** argv) {
 
 	std::string type("PointNormal");
 	pcl::console::parse_argument(argc, argv, "-type", type);
-	if (type == "PointNormal") {
+	/*if (type == "PointNormal") {
 		pcl::PointCloud<pcl::PointNormal> pointcloud;
 		if (convertMesh(argv[1], argv[2], binary_output_format, binary_compressed_output_format, pointcloud) != 0) { showUsage(argv[0]); return (-1); }
 	} else if (type == "PointXYZRGBNormal") {
 		pcl::PointCloud<pcl::PointXYZRGBNormal> pointcloud;
 		if (convertMesh(argv[1], argv[2], binary_output_format, binary_compressed_output_format, pointcloud) != 0) { showUsage(argv[0]); return (-1); }
-	} else if (type == "auto") {
+	} else if (type == "auto") {*/
 		pcl::PCLPointCloud2 pointcloud;
 		if (convertMesh(argv[1], argv[2], binary_output_format, binary_compressed_output_format, pointcloud) != 0) { showUsage(argv[0]); return (-1); }
-	}
+	//}
 
 	return 0;
 }

@@ -171,7 +171,7 @@ class Localization : public ConfigurableObject {
 		virtual void updateNormalsEstimationFlags();
 		virtual void setupCurvatureEstimatorsConfigurations();
 		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
-		void loadCurvatureEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
+		void loadCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, std::string configuration_namespace);
 		virtual void setupKeypointDetectors();
 		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
 		virtual void setupCloudMatchersConfigurations();
@@ -206,7 +206,8 @@ class Localization : public ConfigurableObject {
 
 		virtual bool applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud);
 
-		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename CurvatureEstimator<PointT>::Ptr& curvature_estimator,
+			   typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 				typename pcl::PointCloud<PointT>::Ptr& surface,
 				typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method, bool pointcloud_is_map = false);
 
@@ -384,6 +385,8 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_filters_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
+		typename CurvatureEstimator<PointT>::Ptr reference_cloud_curvature_estimator_;
+		typename CurvatureEstimator<PointT>::Ptr ambient_cloud_curvature_estimator_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > reference_cloud_keypoint_detectors_;
 		std::vector< typename KeypointDetector<PointT>::Ptr > ambient_cloud_keypoint_detectors_;
 		std::vector< typename CloudMatcher<PointT>::Ptr > initial_pose_estimators_feature_matchers_;
