@@ -34,6 +34,26 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	if (ros::param::search(search_namespace, "display_cloud_aligment", final_param_name)) { private_node_handle->param(final_param_name, display_cloud_aligment_, false); }
 	if (ros::param::search(search_namespace, "maximum_number_of_displayed_correspondences", final_param_name)) { private_node_handle->param(final_param_name, maximum_number_of_displayed_correspondences_, 0); } // show all
 
+	bool publish_tf = false;
+	bool publish_static_tf = false;
+	if (ros::param::search(search_namespace, "tf_publisher/publish_tf", final_param_name)) { private_node_handle->param(final_param_name, publish_tf, false); }
+	if (ros::param::search(search_namespace, "tf_publisher/publish_static_tf", final_param_name)) { private_node_handle->param(final_param_name, publish_static_tf, false); }
+
+	if (ros::param::search(search_namespace, "tf_publisher/tf_broadcaster_frame_id", final_param_name)) { private_node_handle->param(final_param_name, tf_broadcaster_frame_id_, std::string("")); }
+	if (ros::param::search(search_namespace, "tf_publisher/tf_broadcaster_child_frame_id", final_param_name)) { private_node_handle->param(final_param_name, tf_broadcaster_child_frame_id_, std::string("")); }
+
+	if (ros::param::search(search_namespace, "tf_publisher/update_registered_pointcloud_with_tf_broadcaster_child_frame_id", final_param_name)) { private_node_handle->param(final_param_name, update_registered_pointcloud_with_tf_broadcaster_child_frame_id_, false); }
+
+	if (!tf_broadcaster_frame_id_.empty()) {
+		if (publish_tf)
+			tf_broadcaster_ = boost::shared_ptr< tf2_ros::TransformBroadcaster >(new tf2_ros::TransformBroadcaster());
+
+		if (publish_static_tf) {
+			static_tf_broadcaster_ = CumulativeStaticTransformBroadcaster::getSingleton(node_handle);
+		}
+
+	}
+
 	cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
 	cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "registered_cloud_publish_topic");
 	cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
@@ -265,6 +285,24 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 	laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformMatrixToTF2(final_transformation, best_pose_correction_out);
 
+	if (tf_broadcaster_ || static_tf_broadcaster_) {
+		geometry_msgs::TransformStamped final_transformation_msg;
+		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(best_pose_correction_out.inverse(), final_transformation_msg.transform);
+		pcl_conversions::fromPCL(ambient_pointcloud->header.stamp, final_transformation_msg.header.stamp);
+		final_transformation_msg.header.frame_id = tf_broadcaster_frame_id_;
+		final_transformation_msg.child_frame_id = tf_broadcaster_child_frame_id_;
+
+		if (update_registered_pointcloud_with_tf_broadcaster_child_frame_id_)
+			ambient_pointcloud->header.frame_id = tf_broadcaster_child_frame_id_;
+
+		if (tf_broadcaster_)
+			tf_broadcaster_->sendTransform(final_transformation_msg);
+
+		if (static_tf_broadcaster_)
+			static_tf_broadcaster_->sendTransform(final_transformation_msg);
+	}
+
+
 	if (cloud_matcher_->hasConverged()) {
 		boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4 > > acceptedTransformations = getAcceptedTransformations();
 
@@ -293,9 +331,11 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_keypoints, final_transformation);
 		}
 
+		pointcloud_registered_out->header = ambient_pointcloud->header;
+		pointcloud_keypoints->header = ambient_pointcloud->header;
+
 		// if publisher available, send aligned cloud
 		if (cloud_publisher_ && pointcloud_registered_out) {
-			pointcloud_registered_out->header = ambient_pointcloud->header;
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
 		}
 

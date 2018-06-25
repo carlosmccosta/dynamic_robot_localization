@@ -461,7 +461,7 @@ tracking_matchers:
                 feature_descriptor_radius_search: 0.25              # Overrides parameter in parent namespace
         #   Several feature matchers can be specified. This allows the use of preprocessing matchers for filtering the point descriptors that will be used on matchers later on.
         matchers:
-            registered_cloud_publish_topic: ''                              # Can be overridden in child namespaces
+            registered_cloud_publish_topic: ''                      # Can be overridden in child namespaces
             sample_consensus_initial_alignment_prerejective:        # Allows prefix and postfix of letters to ensure parsing order
                 convergence_time_limit_seconds: -1.0                # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
                 similarity_threshold: 0.8                           # The similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object, where 1 is a perfect match
@@ -469,6 +469,12 @@ tracking_matchers:
                 inlier_rmse: 0.2                                    # Maximum inlier root mean square error
                 number_of_samples: 3                                # Set the number of samples to use during each iteration
                 correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence. A higher value will add more randomness to the feature matching
+                tf_publisher:                                       # The TF publisher can be attached to a feature_matcher or point_matcher for showing the transformation that it computed (using either normal or static TF broadcaster)
+                    publish_tf: false                               # For activating the publishing of TF
+                    publish_static_tf: false                        # For activating the publishing of static TF
+                    tf_broadcaster_frame_id: ''                     # Frame id that will be placed in the geometry_msgs::TransformStamped header
+                    tf_broadcaster_child_frame_id: ''               # Child frame iD that will be placed in the geometry_msgs::TransformStamped
+                    update_registered_pointcloud_with_tf_broadcaster_child_frame_id: false  # Flag for indicating that the registered point cloud frame id should use the tf_broadcaster_child_frame_id specified above
             sample_consensus_initial_alignment:                     # Allows prefix and postfix of letters to ensure parsing order
                 convergence_time_limit_seconds: -1.0                # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
                 min_sample_distance: 1.0                            # The minimum distances between samples

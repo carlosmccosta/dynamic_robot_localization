@@ -16,6 +16,11 @@
 
 // ROS includes
 #include <ros/ros.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+
 
 // PCL includes
 #include <pcl/common/transforms.h>
@@ -33,6 +38,7 @@
 #include <Eigen/Core>
 
 // project includes
+#include <dynamic_robot_localization/common/cumulative_static_transform_broadcaster.h>
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_publisher.h>
 #include <dynamic_robot_localization/common/math_utils.h>
@@ -133,6 +139,12 @@ class CloudMatcher : public ConfigurableObject {
 		bool display_cloud_aligment_;
 		int maximum_number_of_displayed_correspondences_;
 		bool force_no_recompute_reciprocal_;
+
+		boost::shared_ptr< tf2_ros::TransformBroadcaster > tf_broadcaster_;
+		boost::shared_ptr< CumulativeStaticTransformBroadcaster > static_tf_broadcaster_;
+		std::string tf_broadcaster_frame_id_;
+		std::string tf_broadcaster_child_frame_id_;
+		bool update_registered_pointcloud_with_tf_broadcaster_child_frame_id_;
 	// ========================================================================   </private-section>  ==========================================================================
 };
 
