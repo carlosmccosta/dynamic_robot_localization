@@ -133,7 +133,11 @@ class CloudMatcher : public ConfigurableObject {
 		typename pcl::registration::TransformationEstimation<PointT, PointT, float>::Ptr transformation_estimation_ptr_;
 		double cloud_align_time_ms_;
 		typename CloudPublisher<PointT>::Ptr cloud_publisher_;
+		typename CloudPublisher<PointT>::Ptr reference_cloud_publisher_;
 		bool match_only_keypoints_;
+		typename pcl::PointCloud<PointT>::Ptr reference_cloud_;
+		typename pcl::PointCloud<PointT>::Ptr reference_cloud_keypoints_;
+		typename pcl::search::KdTree<PointT>::Ptr search_method_;
 
 		boost::shared_ptr< RegistrationVisualizer<PointT, PointT> > registration_visualizer_;
 		bool display_cloud_aligment_;

@@ -30,6 +30,10 @@ void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHand
 		private_node_handle->param(parameter_server_argument_to_load_topic_name_, cloud_publish_topic_, cloud_publish_topic_);
 	}
 
+	if (!parameter_server_argument_to_load_frame_name_.empty()) {
+		private_node_handle->param(parameter_server_argument_to_load_frame_name_, cloud_publish_frame_, cloud_publish_frame_);
+	}
+
 	if (!cloud_publish_topic_.empty()) {
 		cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(cloud_publish_topic_, 1, true);
 	}
@@ -37,7 +41,7 @@ void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHand
 
 
 template<typename PointT>
-void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
+void CloudPublisher<PointT>::publishPointCloud(const pcl::PointCloud<PointT>& cloud) {
 	if (!cloud_publisher_.getTopic().empty()) {
 		if (publish_pointclouds_only_if_there_is_subscribers_ && cloud_publisher_.getNumSubscribers() == 0) {
 			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << cloud_publisher_.getTopic() << " because there is no subscribers");
@@ -46,6 +50,13 @@ void CloudPublisher<PointT>::publishPointCloud(pcl::PointCloud<PointT>& cloud) {
 
 		sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
 		pcl::toROSMsg(cloud, *cloud_msg);
+
+		if (!parameter_server_argument_to_load_frame_name_.empty())
+			cloud_msg->header.frame_id = cloud_publish_frame_;
+
+		if (override_cloud_stamp_)
+			cloud_msg->header.stamp = pcl_conversions::fromPCL(cloud_publish_stamp_);
+
 		cloud_publisher_.publish(cloud_msg);
 	}
 }

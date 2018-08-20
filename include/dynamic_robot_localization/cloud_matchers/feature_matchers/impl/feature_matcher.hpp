@@ -42,6 +42,10 @@ void FeatureMatcher<PointT, FeatureT>::setupReferenceCloud(typename pcl::PointCl
 		typename pcl::PointCloud<PointT>::Ptr& reference_cloud_keypoints,
 		typename pcl::search::KdTree<PointT>::Ptr& search_method) {
 
+	CloudMatcher<PointT>::reference_cloud_ = reference_cloud;
+	CloudMatcher<PointT>::reference_cloud_keypoints_ = reference_cloud_keypoints;
+	CloudMatcher<PointT>::search_method_ = search_method;
+
 	typename pcl::PointCloud<PointT>::Ptr& reference_cloud_final = reference_cloud_keypoints->empty() ? reference_cloud : reference_cloud_keypoints;
 
 	// subclass must set cloud_matcher_ ptr

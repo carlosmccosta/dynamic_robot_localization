@@ -462,6 +462,8 @@ tracking_matchers:
         #   Several feature matchers can be specified. This allows the use of preprocessing matchers for filtering the point descriptors that will be used on matchers later on.
         matchers:
             registered_cloud_publish_topic: ''                      # Can be overridden in child namespaces
+            reference_cloud_publish_topic: ''                       # Can be overridden in child namespaces
+            reference_cloud_publish_frame: ''                       # Can be overridden in child namespaces
             sample_consensus_initial_alignment_prerejective:        # Allows prefix and postfix of letters to ensure parsing order
                 convergence_time_limit_seconds: -1.0                # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied)
                 similarity_threshold: 0.8                           # The similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object, where 1 is a perfect match
@@ -483,6 +485,8 @@ tracking_matchers:
     #   Several point matchers can be specified. This is useful to have a fast matcher that can achieve a rough registration and other matchers to refine it.
     point_matchers:
         registered_cloud_publish_topic: ''                          # Can be overridden in child namespaces
+        reference_cloud_publish_topic: ''                           # Can be overridden in child namespaces
+        reference_cloud_publish_frame: ''                           # Can be overridden in child namespaces
         iterative_closest_point:                                    # Allows prefix and postfix of letters to ensure parsing order
         iterative_closest_point_2d:                                 # Allows prefix and postfix of letters to ensure parsing order
         iterative_closest_point_non_linear:                         # Allows prefix and postfix of letters to ensure parsing order

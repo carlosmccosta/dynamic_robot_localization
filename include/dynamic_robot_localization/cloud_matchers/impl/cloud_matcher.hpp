@@ -58,6 +58,12 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "registered_cloud_publish_topic");
 	cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 
+	reference_cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
+	reference_cloud_publisher_->setOverrideCloudPublishStamp(true);
+	reference_cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "reference_cloud_publish_topic");
+	reference_cloud_publisher_->setParameterServerArgumentToLoadFrameName(configuration_namespace + "reference_cloud_publish_frame");
+	reference_cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		double max_correspondence_distance = 0.1;
@@ -207,6 +213,11 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 template<typename PointT>
 void CloudMatcher<PointT>::setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::PointCloud<PointT>::Ptr& reference_cloud_keypoints,
 		typename pcl::search::KdTree<PointT>::Ptr& search_method) {
+
+	reference_cloud_ = reference_cloud;
+	reference_cloud_keypoints_ = reference_cloud_keypoints;
+	search_method_ = search_method;
+
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		cloud_matcher_->setInputTarget(reference_cloud);
@@ -337,6 +348,11 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 		// if publisher available, send aligned cloud
 		if (cloud_publisher_ && pointcloud_registered_out) {
 			cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
+		}
+
+		if (reference_cloud_publisher_ && reference_cloud_) {
+			reference_cloud_publisher_->setCloudPublishStamp(ambient_pointcloud->header.stamp);
+			reference_cloud_publisher_->publishPointCloud(*reference_cloud_);
 		}
 
 		return true;

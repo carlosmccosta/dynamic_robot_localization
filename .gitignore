@@ -12,3 +12,5 @@
 *.la
 *.a
 /.pydevproject
+cmake-build-debug
+.idea
