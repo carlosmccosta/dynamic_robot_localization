@@ -119,7 +119,7 @@ bool RegistrationCovarianceEstimator<PointT>::computeRegistrationCovariance(cons
 	pcl::PointCloud<PointT> ambient_cloud_correspondences;
 
 	pcl::transformPointCloudWithNormals(reference_cloud_correspondences_map_frame, reference_cloud_correspondences, transform_from_map_cloud_data_to_base_link);
-	pcl::transformPointCloud(ambient_cloud_correspondences_map_frame, ambient_cloud_correspondences, transform_from_map_cloud_data_to_base_link);
+	pcl::transformPointCloudWithNormals(ambient_cloud_correspondences_map_frame, ambient_cloud_correspondences, transform_from_map_cloud_data_to_base_link);
 
 	reference_cloud_correspondences.header = cloud->header;
 	ambient_cloud_correspondences.header = cloud->header;

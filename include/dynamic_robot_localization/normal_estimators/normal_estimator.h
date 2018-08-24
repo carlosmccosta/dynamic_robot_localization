@@ -97,6 +97,7 @@ class NormalEstimator : public ConfigurableObject {
 		float normals_viewpoint_px_;
 		float normals_viewpoint_py_;
 		float normals_viewpoint_pz_;
+		bool normalize_normals_;
 		CloudViewer<PointT> cloud_viewer_;
 	// ========================================================================   </protected-section>  ========================================================================
 };

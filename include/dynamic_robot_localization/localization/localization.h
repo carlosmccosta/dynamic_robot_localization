@@ -272,6 +272,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_preprocessed_save_filename_;
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
+		bool reference_pointcloud_normalize_normals_;
 		MapUpdateMode map_update_mode_;
 		bool use_incremental_map_update_;
 		std::string map_frame_id_;
@@ -288,6 +289,7 @@ class Localization : public ConfigurableObject {
 		int minimum_number_of_points_in_ambient_pointcloud_;
 		int minimum_number_of_points_in_reference_pointcloud_;
 		bool localization_detailed_use_millimeters_in_root_mean_square_error_inliers_;
+		bool localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_;
 		bool localization_detailed_use_millimeters_in_translation_corrections_;
 		bool localization_detailed_use_degrees_in_rotation_corrections_;
 		bool localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_;

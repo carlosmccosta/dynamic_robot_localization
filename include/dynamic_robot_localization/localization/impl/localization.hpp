@@ -23,13 +23,15 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 Localization<PointT>::Localization() :
+	reference_pointcloud_normalize_normals_(true),
 	map_update_mode_(NoIntegration),
 	use_incremental_map_update_(false),
 	minimum_number_of_points_in_ambient_pointcloud_(10),
 	minimum_number_of_points_in_reference_pointcloud_(10),
-	localization_detailed_use_millimeters_in_root_mean_square_error_inliers_(true),
-	localization_detailed_use_millimeters_in_translation_corrections_(true),
-	localization_detailed_use_degrees_in_rotation_corrections_(true),
+	localization_detailed_use_millimeters_in_root_mean_square_error_inliers_(false),
+	localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_(false),
+	localization_detailed_use_millimeters_in_translation_corrections_(false),
+	localization_detailed_use_degrees_in_rotation_corrections_(false),
 	localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_(true),
 	save_reference_pointclouds_in_binary_format_(true),
 	republish_reference_pointcloud_after_successful_registration_(false),
@@ -284,6 +286,7 @@ void Localization<PointT>::setupMessageManagement() {
 	}
 
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_root_mean_square_error_inliers", localization_detailed_use_millimeters_in_root_mean_square_error_inliers_, false);
+	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences", localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_, false);
 	private_node_handle_->param("message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, false);
 	private_node_handle_->param("message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, false);
 	private_node_handle_->param("message_management/localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs", localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_, true);
@@ -300,6 +303,7 @@ void Localization<PointT>::setupMessageManagement() {
 template<typename PointT>
 void Localization<PointT>::setupReferencePointCloud() {
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
+	private_node_handle_->param("reference_pointclouds/normalize_normals", reference_pointcloud_normalize_normals_, true);
 	private_node_handle_->param("reference_pointclouds/reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
 	private_node_handle_->param("reference_pointclouds/save_reference_pointclouds_in_binary_format", save_reference_pointclouds_in_binary_format_, true);
 	private_node_handle_->param("reference_pointclouds/republish_reference_pointcloud_after_successful_registration", republish_reference_pointcloud_after_successful_registration_, false);
@@ -830,6 +834,7 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 		}
 
 		reference_pointcloud_msg_->header.stamp = time_stamp;
+		++reference_pointcloud_msg_->header.seq;
 		reference_pointcloud_publisher_.publish(reference_pointcloud_msg_);
 	}
 
@@ -841,6 +846,7 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 		}
 
 		reference_pointcloud_keypoints_msg_->header.stamp = time_stamp;
+		++reference_pointcloud_keypoints_msg_->header.seq;
 		reference_pointcloud_keypoints_publisher_.publish(reference_pointcloud_keypoints_msg_);
 	}
 }
@@ -872,6 +878,12 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const
 		}
 
 		if (reference_pointcloud_->size() > minimum_number_of_points_in_reference_pointcloud_) {
+			if (reference_pointcloud_normalize_normals_) {
+				for (size_t i = 0; i < reference_pointcloud_->size(); ++i) {
+					(*reference_pointcloud_)[i].getNormalVector3fMap().normalize();
+				}
+			}
+
 			if (!reference_pointcloud_preprocessed_save_filename_.empty()) {
 				ROS_INFO_STREAM("Saving reference pointcloud preprocessed with " << reference_pointcloud_->size() << " points to file " << reference_pointcloud_preprocessed_save_filename_);
 				pointcloud_conversions::toFile(reference_pointcloud_preprocessed_save_filename_, *reference_pointcloud_, save_reference_pointclouds_in_binary_format_);
@@ -1116,7 +1128,7 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 			return false;
 		}
 
-		pcl::transformPointCloud(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
+		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
 		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id);
 		ambient_pointcloud->header.frame_id = target_frame_id;
 	}
@@ -1370,6 +1382,9 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 
 					localization_detailed_msg.last_matcher_convergence_state = last_matcher_convergence_state_;
 					localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences = root_mean_square_error_of_last_registration_correspondences_;
+					if (localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_) {
+						localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences *= 1000.0;
+					}
 					localization_detailed_msg.initial_pose_estimation_poses = *accepted_poses;
 					localization_detailed_publisher_.publish(localization_detailed_msg);
 				}
@@ -1913,7 +1928,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 
 	if (ambient_pointcloud_integration) {
-		pcl::transformPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_corrections_out));
+		pcl::transformPointCloudWithNormals(*ambient_pointcloud_integration, *ambient_pointcloud_integration, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_corrections_out));
 	}
 
 	// ==============================================================  outlier detection
@@ -1953,7 +1968,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 
 					if (ambient_pointcloud_integration) {
-						pcl::transformPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_corrections_out));
+						pcl::transformPointCloudWithNormals(*ambient_pointcloud_integration, *ambient_pointcloud_integration, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_corrections_out));
 					}
 
 					performance_timer.restart();

@@ -207,7 +207,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 		PointCloudSource input_transformed;
 		input_transformed.resize(input_->size());
-		transformPointCloud(*input_, input_transformed, final_transformation_);
+		transformPointCloudWithNormals(*input_, input_transformed, final_transformation_);
 		getFitness(input_transformed, inliers, error);
 		if (!inliers.empty()){
 			error /= static_cast<double>(inliers.size());
@@ -335,7 +335,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 			// Transform the input dataset using the final transformation
 			PointCloudSource input_transformed;
 			input_transformed.resize(input_->size());
-			transformPointCloud(*input_, input_transformed, rototranslations[i]);
+			transformPointCloudWithNormals(*input_, input_transformed, rototranslations[i]);
 
 			// Transform the input and compute the error (uses input_ and final_transformation_)
 			getFitness(input_transformed, inliers, error);
@@ -426,7 +426,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 				// Transform the input dataset using the final transformation
 				PointCloudSource input_transformed;
-				pcl::transformPointCloud(*input_, input_transformed, transformation);
+				pcl::transformPointCloudWithNormals(*input_, input_transformed, transformation);
 
 				std::vector<int> inliers;
 				double error;
@@ -473,7 +473,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 	// Apply the final transformation
 	output.clear();
-	if (converged_) pcl::transformPointCloud(*input_, output, final_transformation_);
+	if (converged_) pcl::transformPointCloudWithNormals(*input_, output, final_transformation_);
 
 	// Debug output
 	PCL_DEBUG("[pcl::%s::computeTransformation] Accepted %i out of %i generated pose hypotheses.\n", getClassName().c_str(), accepted_transformations_->size(), max_iterations_);

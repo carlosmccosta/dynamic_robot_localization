@@ -27,7 +27,8 @@ NormalEstimator<PointT>::NormalEstimator() :
 	flip_normals_towards_custom_viewpoint_(false),
 	normals_viewpoint_px_(0.0f),
 	normals_viewpoint_py_(0.0f),
-	normals_viewpoint_pz_(0.0f) {}
+	normals_viewpoint_pz_(0.0f),
+	normalize_normals_(true) {}
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -74,6 +75,10 @@ void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "normals_viewpoint/pz", final_param_name)) {
 		private_node_handle->param(final_param_name, normals_viewpoint_pz_, 0.0f);
 	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "normalize_normals", final_param_name)) {
+		private_node_handle->param(final_param_name, normalize_normals_, true);
+	}
 }
 
 
@@ -85,6 +90,12 @@ void NormalEstimator<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::
 		for (size_t i = 0; i < pointcloud_with_normals_out->size(); ++i) {
 			pcl::flipNormalTowardsViewpoint((*pointcloud_with_normals_out)[i], normals_viewpoint_px_, normals_viewpoint_py_, normals_viewpoint_pz_,
 											(*pointcloud_with_normals_out)[i].normal_x, (*pointcloud_with_normals_out)[i].normal_y, (*pointcloud_with_normals_out)[i].normal_z);
+		}
+	}
+
+	if (normalize_normals_) {
+		for (size_t i = 0; i < pointcloud_with_normals_out->size(); ++i) {
+			(*pointcloud_with_normals_out)[i].getNormalVector3fMap().normalize();
 		}
 	}
 

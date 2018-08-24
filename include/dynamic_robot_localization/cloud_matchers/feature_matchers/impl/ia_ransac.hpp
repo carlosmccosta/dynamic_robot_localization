@@ -221,7 +221,7 @@ dynamic_robot_localization::SampleConsensusInitialAlignmentRegistration<PointT, 
   if (!guess.isApprox (Eigen::Matrix4f::Identity (), 0.01f)) 
   {
     // If guess is not the Identity matrix we check it.
-	pcl::transformPointCloud (*input_, input_transformed, final_transformation_);
+	pcl::transformPointCloudWithNormals (*input_, input_transformed, final_transformation_);
     lowest_error = computeErrorMetric (input_transformed, static_cast<float> (corr_dist_threshold_));
     i_iter = 1;
   }
@@ -238,7 +238,7 @@ dynamic_robot_localization::SampleConsensusInitialAlignmentRegistration<PointT, 
     transformation_estimation_->estimateRigidTransformation (*input_, sample_indices, *target_, corresponding_indices, transformation_);
 
     // Tranform the data and compute the error
-    pcl::transformPointCloud (*input_, input_transformed, transformation_);
+    pcl::transformPointCloudWithNormals (*input_, input_transformed, transformation_);
     error = computeErrorMetric (input_transformed, static_cast<float> (corr_dist_threshold_));
 
     // If the new error is lower, update the final transformation
@@ -254,7 +254,7 @@ dynamic_robot_localization::SampleConsensusInitialAlignmentRegistration<PointT, 
   }
 
   // Apply the final transformation
-  pcl::transformPointCloud (*input_, output, final_transformation_);
+  pcl::transformPointCloudWithNormals (*input_, output, final_transformation_);
 }
 
 #endif  //#ifndef IA_RANSAC_HPP_

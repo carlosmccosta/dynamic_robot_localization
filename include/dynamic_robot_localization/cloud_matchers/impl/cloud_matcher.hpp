@@ -96,8 +96,14 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 
 		correspondence_estimation_ptr_.reset();
-		int correspondence_estimation_k = 10;
-		if (ros::param::search(search_namespace, "correspondence_estimation_k", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_k, 10); }
+		int correspondence_estimation_k = 0;
+		if (ros::param::search(search_namespace, "correspondence_estimation_k", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_k, 0); }
+
+		double correspondence_estimation_normals_angle_filtering_threshold = 80.0;
+		if (ros::param::search(search_namespace, "correspondence_estimation_normals_angle_filtering_threshold", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_normals_angle_filtering_threshold, 80.0); }
+
+		double correspondence_estimation_normals_angle_penalty_factor = 4.0;
+		if (ros::param::search(search_namespace, "correspondence_estimation_normals_angle_penalty_factor", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_normals_angle_penalty_factor, 4.0); }
 
 		std::string correspondence_estimation_method;
 		if (ros::param::search(search_namespace, "correspondence_estimation_approach", final_param_name)) { private_node_handle->param(final_param_name, correspondence_estimation_method, std::string("")); }
@@ -145,6 +151,8 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 			correpondence_estimation_approach_ = CorrespondenceEstimationBackProjection;
 			CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>* correspondence_estimation_raw_ptr_ = new CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>();
 			correspondence_estimation_raw_ptr_->setKSearch(correspondence_estimation_k);
+			correspondence_estimation_raw_ptr_->setNormalsAngleFilteringThreshold(correspondence_estimation_normals_angle_filtering_threshold);
+			correspondence_estimation_raw_ptr_->setNormalsAnglePenaltyFactor(correspondence_estimation_normals_angle_penalty_factor);
 			correspondence_estimation_ptr_ = typename pcl::registration::CorrespondenceEstimationBase<PointT, PointT, float>::Ptr(correspondence_estimation_raw_ptr_);
 		} else if (correspondence_estimation_method == "CorrespondenceEstimationNormalShooting") {
 			correpondence_estimation_approach_ = CorrespondenceEstimationNormalShooting;
@@ -329,9 +337,9 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 		}
 
 		if (return_aligned_keypoints && !match_only_keypoints_) {
-			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_registered_out, final_transformation);
+			pcl::transformPointCloudWithNormals(*pointcloud_keypoints, *pointcloud_registered_out, final_transformation);
 		} else if (!return_aligned_keypoints && match_only_keypoints_) {
-			pcl::transformPointCloud(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
+			pcl::transformPointCloudWithNormals(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
 		}
 
 		if (pointcloud_registered_out->size() < 5) {
@@ -339,7 +347,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 		}
 
 		if (pointcloud_keypoints && !pointcloud_keypoints->empty()) {
-			pcl::transformPointCloud(*pointcloud_keypoints, *pointcloud_keypoints, final_transformation);
+			pcl::transformPointCloudWithNormals(*pointcloud_keypoints, *pointcloud_keypoints, final_transformation);
 		}
 
 		pointcloud_registered_out->header = ambient_pointcloud->header;

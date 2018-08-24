@@ -142,9 +142,10 @@ message_management:
     invert_registration_transformation: false
     invert_initial_poses_from_msgs: false
     initial_pose_msg_needs_to_be_in_map_frame: true
-    localization_detailed_use_millimeters_in_root_mean_square_error_inliers: true
-    localization_detailed_use_millimeters_in_translation_corrections: true
-    localization_detailed_use_degrees_in_rotation_corrections: true
+    localization_detailed_use_millimeters_in_root_mean_square_error_inliers: false
+    localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences: false
+    localization_detailed_use_millimeters_in_translation_corrections: false
+    localization_detailed_use_degrees_in_rotation_corrections: false
     localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrixes
 
 
@@ -170,6 +171,7 @@ reference_pointclouds:
     use_incremental_map_update: false                               # Incremental SLAM mode will add new registered clouds without preprocessing (if false, it will preprocess the reference cloud after adding the new registered points)
     save_reference_pointclouds_in_binary_format: true
     republish_reference_pointcloud_after_successful_registration: false
+    normalize_normals: true
 
 
 # ===================================================================================================================================================
@@ -254,7 +256,8 @@ filters:
 #   Bellow is an example of parameter override, in which the display_normals parameter in the normal_estimators/ambient_pointcloud/ namespace is overridden
 # by the same parameter in the normal_estimators/ambient_pointcloud/normal_estimation_omp child namespace.
 normal_estimators:
-    display_normals: false                                      # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
+    display_normals: false                                          # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
+    normalize_normals: true                                         # Can be overridden in child namespaces
     reference_pointcloud:
         flip_normals_using_occupancy_grid_analysis: true            # Only used in the reference pointcloud
         use_filtered_cloud_as_normal_estimation_surface: true       # Normals can be estimated with the filtered cloud or with the original reference cloud as search surface
@@ -267,7 +270,7 @@ normal_estimators:
         display_occupancy_grid_pointcloud: false                    # Can be overridden in child namespaces | Displays a blocking window with the pointcloud created from the nav_msgs::OccupancyGrid
         occupancy_grid_analysis_k: 0                                # Can be overridden in child namespaces | The number of neighbors to use when fliping normals (<= 0 -> ignore k, > 0 -> will be used instead of the radius specified in the parameters below)
         occupancy_grid_analysis_radius: -1.0                        # Can be overridden in child namespaces | The distance radius to use when flipping normals (< 0 -> ignore radius, will not be used if occupancy_grid_analysis_radius_resolution_percentage > 0)
-        occupancy_grid_analysis_radius_resolution_percentage: 4.0   # Can be overridden in child namespaces | The distance radius to use when flipping normals in relation to the nav_msgs::OccupancyGrid resolution (radius = map_resolution * occupancy_grid_analysis_radius_resolution_percentage) (< 0 -> ignore this radius) 
+        occupancy_grid_analysis_radius_resolution_percentage: 4.0   # Can be overridden in child namespaces | The distance radius to use when flipping normals in relation to the nav_msgs::OccupancyGrid resolution (radius = map_resolution * occupancy_grid_analysis_radius_resolution_percentage) (< 0 -> ignore this radius)
         normal_estimator_sac:                                       # Allows prefix and postfix of letters to ensure parsing order | Estimates the normal of points by fitting either a plane or a line in the neighborhood of each point using Sample Consensus methods
             model_type: 'SACMODEL_LINE'                             # The type of geometry model to use. Supported geometry types: SACMODEL_LINE -> for planar pointclouds | SACMODEL_PLANE -> for 3D pointclouds
             method_type: 'SAC_RANSAC'                               # The type of sample consensus method to use. Supported methods: SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC
@@ -391,7 +394,9 @@ tracking_matchers:
     pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose: 5 # When cloud registration fails for more than [this number], the pose tracking recovery algorithms will be activated
     max_correspondence_distance: 0.1                                # Can be overridden in child namespaces | The maximum distance threshold between two correspondent points in source <-> target. If the distance is larger than this threshold, the points will be ignored in the alignment process
     correspondence_estimation_approach: ''                          # Can be overridden in child namespaces | If not specified it will not change the correspondence estimator | [ CorrespondenceEstimation | CorrespondenceEstimationLookupTable | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting | CorrespondenceEstimationOrganizedProjection ]
-    correspondence_estimation_k: 10                                 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: [ CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting ]
+    correspondence_estimation_k: 0                                  # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: [ CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting ]
+    correspondence_estimation_normals_angle_filtering_threshold: 80.0 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: [ CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting ]
+    correspondence_estimation_normals_angle_penalty_factor: 4.0     # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: [ CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting ]
     correspondence_estimation_organized_projection:                 # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationOrganizedProjection
       fx: 525.0
       fy: 525.0
