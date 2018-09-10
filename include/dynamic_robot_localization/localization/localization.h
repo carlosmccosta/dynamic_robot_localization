@@ -145,6 +145,12 @@ class Localization : public ConfigurableObject {
 			InliersIntegration, 	// the inliers of the registered cloud are integrated in the reference map
 			OutliersIntegration 	// the outliers of the registered cloud are integrated in the reference map
 		};
+
+		enum SensorDataProcessingStatus {
+			WaitingForSensorData,
+			SuccessfulPoseEstimation,
+			FailedPoseEstimation
+		};
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -197,7 +203,9 @@ class Localization : public ConfigurableObject {
 		void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
 		void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
 
-		void startLocalization();
+		void startLocalization(bool start_ros_spinner = true);
+		void stopProcessingSensorData();
+		void restartProcessingSensorData();
 
 		bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
@@ -237,6 +245,10 @@ class Localization : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </Localization-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		bool referencePointCloudLoaded() { return reference_pointcloud_loaded_; }
+		SensorDataProcessingStatus getSensorDataProcessingStatus() { return sensor_data_processing_status_; }
+		const std::vector< tf2::Transform >& getAcceptedPoseCorrections() { return accepted_pose_corrections_; }
+		const tf2::Transform& getAcceptedEstimatedPose() { return pose_tf2_transform_corrected_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -329,7 +341,7 @@ class Localization : public ConfigurableObject {
 		int pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
-		bool reference_pointcloud_received_;
+		bool reference_pointcloud_loaded_;
 		bool reference_pointcloud_2d_;
 		bool reference_pointcloud_available_;
 		bool ignore_height_corrections_;
@@ -341,6 +353,8 @@ class Localization : public ConfigurableObject {
 		tf2::Transform last_accepted_pose_base_link_to_map_;
 		tf2::Transform last_accepted_pose_odom_to_map_;
 		std::vector< tf2::Transform > accepted_pose_corrections_;
+		tf2::Transform pose_tf2_transform_corrected_;
+		SensorDataProcessingStatus sensor_data_processing_status_;
 
 		// ros communication fields
 		pose_to_tf_publisher::PoseToTFPublisher::Ptr pose_to_tf_publisher_;
@@ -350,6 +364,7 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber pose_stamped_subscriber_;
 		ros::Subscriber pose_with_covariance_stamped_subscriber_;
 		std::vector< ros::Subscriber > ambient_pointcloud_subscribers_;
+		bool ambient_pointcloud_subscribers_active_;
 		ros::Subscriber costmap_subscriber_;
 		ros::Subscriber reference_pointcloud_subscriber_;
 		ros::Publisher reference_pointcloud_publisher_;
