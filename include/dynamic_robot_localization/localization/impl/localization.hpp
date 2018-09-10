@@ -138,7 +138,7 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 
 	updateNormalsEstimationFlags();
 
-	pose_to_tf_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, "");
+	pose_to_tf_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, "pose_to_tf_publisher/");
 	pose_to_tf_publisher_->setBaseLinkFrameId(base_link_frame_id_);
 	pose_to_tf_publisher_->setOdomFrameId(odom_frame_id_);
 	pose_to_tf_publisher_->setMapFrameId(map_frame_id_);
@@ -251,6 +251,10 @@ void Localization<PointT>::setupInitialPose() {
 		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(last_accepted_pose_base_link_to_map_, pose_msg->pose.pose);
 		pose_with_covariance_stamped_tracking_reset_publisher_.publish(pose_msg);
 	}
+
+	if (publish_tf_map_odom_) {
+		pose_to_tf_publisher_->publishInitialPoseFromParameterServer();
+	}
 }
 
 
@@ -259,6 +263,10 @@ void Localization<PointT>::setupMessageManagement() {
 	double tf_buffer_duration;
 	private_node_handle_->param("message_management/tf_buffer_duration", tf_buffer_duration, 600.0);
 	pose_to_tf_publisher_.reset(new pose_to_tf_publisher::PoseToTFPublisher(ros::Duration(tf_buffer_duration)));
+
+	double tf_timeout;
+	private_node_handle_->param("message_management/tf_timeout", tf_timeout, 0.5);
+	tf_timeout_ = ros::Duration(tf_timeout);
 
 	double max_seconds_ambient_pointcloud_age;
 	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 3.0);
@@ -964,10 +972,10 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 
 		bool tf_available = false;
 		tf2::Transform transform_odom_to_base_link;
-		if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time)) {
+		if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time, tf_timeout_)) {
 			tf_available = true;
 		} else {
-			if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time(0))) {
+			if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time(0), tf_timeout_)) {
 				ROS_WARN_STREAM("Set new initial pose using latest TF because there is no transform from frame [" << base_link_frame_id_ << "] to frame [" << odom_frame_id_ << "] at time " << pose_time);
 				tf_available = true;
 			}
@@ -1062,9 +1070,6 @@ void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 		last_accepted_pose_time_ = ros::Time::now();
 
 		setupInitialPose();
-		if (publish_tf_map_odom_) {
-			pose_to_tf_publisher_->publishInitialPoseFromParameterServer();
-		}
 
 		// subscribers
 		if (!pose_topic_.empty()) pose_subscriber_ = node_handle_->subscribe(pose_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPose, this);
@@ -1138,15 +1143,18 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
 			if (use_odom_when_transforming_cloud_to_map_frame_) {
 				tf2::Transform pose_tf_cloud_to_odom;
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp)) {
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
 					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
 					return false;
 				}
 				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
 			} else {
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp)) {
-					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << target_frame_id << " isn't available");
-					return false;
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
+					if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
+						ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << target_frame_id << " isn't available");
+						return false;
+					} else
+						ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [" << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << "] was not available");
 				}
 			}
 		}
@@ -1215,14 +1223,14 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 				&& scan_age < max_seconds_ambient_pointcloud_age_)) {
 
 			tf2::Transform transform_base_link_to_odom;
-			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_time) || !math_utils::isTransformValid(transform_base_link_to_odom)) {
+			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_time, tf_timeout_) || !math_utils::isTransformValid(transform_base_link_to_odom)) {
 				ROS_WARN_STREAM("Dropping pointcloud because tf between " << base_link_frame_id_ << " and " << odom_frame_id_ << " isn't available");
 				return;
 			}
 
 			if (!use_internal_tracking_) {
 				tf2::Transform transform_odom_to_map;
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_map, map_frame_id_, odom_frame_id_, ambient_cloud_time) || math_utils::isTransformValid(transform_odom_to_map)) {
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_map, map_frame_id_, odom_frame_id_, ambient_cloud_time, tf_timeout_) || math_utils::isTransformValid(transform_odom_to_map)) {
 					ROS_WARN_STREAM("Using internal tracking transform because tf between " << odom_frame_id_ << " and " << map_frame_id_ << " isn't available");
 				} else {
 					last_accepted_pose_odom_to_map_ = transform_odom_to_map;
@@ -1517,7 +1525,7 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 	performance_timer.start();
 
 	tf2::Transform sensor_pose_tf_guess;
-	if (!pointcloud_is_map && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, odom_frame_id_, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
+	if (!pointcloud_is_map && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, odom_frame_id_, sensor_frame_id_, pcl_conversions::fromPCL(pointcloud->header).stamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
 		sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
 	} else {
 		sensor_pose_tf_guess.setIdentity();

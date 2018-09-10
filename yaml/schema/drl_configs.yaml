@@ -128,6 +128,7 @@ initial_pose:
 #   Parameters to control the incoming message flow
 message_management:
     tf_buffer_duration: 600                                             # Duration of TF buffer in seconds
+    tf_timeout: 0.5                                                     # Timeout when looking for TFs
     max_seconds_ambient_pointcloud_age: 3.0                             # Ambient point clouds with age larger than this value will be discarded
     max_seconds_ambient_pointcloud_offset_to_last_estimated_pose: 0.0   # Point clouds that older than this offset in relation to the last [estimated pose / sensor data received] are discarded (useful when there are several sources of sensor data and one has higher update rate -> ex: kinect+lasers)
     min_seconds_between_scan_registration: 0.0                          # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded
@@ -147,6 +148,12 @@ message_management:
     localization_detailed_use_millimeters_in_translation_corrections: false
     localization_detailed_use_degrees_in_rotation_corrections: false
     localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrixes
+
+
+# ===================================================================================================================================================
+#   General configurations
+general_configurations:
+    publish_tf_map_odom: false
 
 
 # ===================================================================================================================================================

@@ -295,6 +295,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_;
 		ros::Duration min_seconds_between_scan_registration_;
 		ros::Duration min_seconds_between_reference_pointcloud_update_;
+		ros::Duration tf_timeout_;
 		ros::Duration pose_tracking_timeout_;
 		ros::Duration pose_tracking_recovery_timeout_;
 		ros::Duration initial_pose_estimation_timeout_;
