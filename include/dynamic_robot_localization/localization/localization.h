@@ -204,6 +204,7 @@ class Localization : public ConfigurableObject {
 		void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
 
 		void startLocalization(bool start_ros_spinner = true);
+		void startROSSpinner();
 		void stopProcessingSensorData();
 		void restartProcessingSensorData();
 

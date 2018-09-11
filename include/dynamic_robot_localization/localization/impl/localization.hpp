@@ -1094,17 +1094,18 @@ void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 		}
 
 		if (start_ros_spinner) {
-			if (publish_tf_map_odom_) {
-				ros::Rate publish_rate(pose_to_tf_publisher_->getPublishRate());
-				while (ros::ok()) {
-					pose_to_tf_publisher_->sendTF();
-					publish_rate.sleep();
-					ros::spinOnce();
-				}
-			} else {
-				ros::spin();
-			}
+			startROSSpinner();
 		}
+	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::startROSSpinner() {
+	if (publish_tf_map_odom_) {
+		pose_to_tf_publisher_->startPublishingTF();
+	} else {
+		ros::spin();
 	}
 }
 
