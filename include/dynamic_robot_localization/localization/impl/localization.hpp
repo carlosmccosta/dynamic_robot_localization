@@ -354,7 +354,9 @@ void Localization<PointT>::setupFiltersConfigurations() {
 	ambient_pointcloud_feature_registration_filters_.clear();
 	ambient_pointcloud_map_frame_feature_registration_filters_.clear();
 	ambient_pointcloud_filters_.clear();
+	ambient_pointcloud_filters_custom_frame_.clear();
 	ambient_pointcloud_filters_map_frame_.clear();
+	ambient_pointcloud_filters_after_normal_estimation_.clear();
 
 	loadFiltersFromParameterServer(reference_cloud_filters_, "filters/reference_pointcloud/");
 	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_, "filters/ambient_pointcloud_integration_filters/");
@@ -365,6 +367,7 @@ void Localization<PointT>::setupFiltersConfigurations() {
 	loadFiltersFromParameterServer(ambient_pointcloud_filters_custom_frame_, "filters/ambient_pointcloud_custom_frame/");
 	private_node_handle_->param("filters/ambient_pointcloud_custom_frame/custom_frame_id", ambient_pointcloud_filters_custom_frame_id_, std::string(""));
 	loadFiltersFromParameterServer(ambient_pointcloud_filters_map_frame_, "filters/ambient_pointcloud_map_frame/");
+	loadFiltersFromParameterServer(ambient_pointcloud_filters_after_normal_estimation_, "filters/ambient_pointcloud_filters_after_normal_estimation/");
 }
 
 
@@ -393,6 +396,8 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 				cloud_filter.reset(new CovarianceSampling<PointT>());
 			} else if (filter_name.find("scale") != std::string::npos) {
 				cloud_filter.reset(new Scale<PointT>());
+			} else if (filter_name.find("plane_segmentation") != std::string::npos) {
+				cloud_filter.reset(new PlaneSegmentation<PointT>());
 			}
 
 			if (cloud_filter) {
@@ -1511,6 +1516,8 @@ bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT
 		filtered_ambient_pointcloud->header = pointcloud->header;
 		cloud_filters[i]->filter(pointcloud, filtered_ambient_pointcloud);
 		pointcloud = filtered_ambient_pointcloud; // switch pointers
+		if (pointcloud->size() <= minimum_number_of_points_in_ambient_pointcloud_)
+			break;
 	}
 
 	return pointcloud->size() > minimum_number_of_points_in_ambient_pointcloud_;
@@ -1840,17 +1847,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		ROS_DEBUG_STREAM("Ambient pointcloud with circular buffer has " << ambient_pointcloud->size() << " points");
 	}
 
-	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
-		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
-			ROS_DEBUG_STREAM("Publishing filtered ambient pointcloud with " << ambient_pointcloud->size() << " points");
-			sensor_msgs::PointCloud2Ptr filtered_pointcloud_msg(new sensor_msgs::PointCloud2());
-			pcl::toROSMsg(*ambient_pointcloud, *filtered_pointcloud_msg);
-			filtered_pointcloud_publisher_.publish(filtered_pointcloud_msg);
-		} else {
-			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << filtered_pointcloud_publisher_.getTopic() << " because there is no subscribers");
-		}
-	}
-
 	// ==============================================================  check point cloud size
 	if (ambient_pointcloud_with_circular_buffer_ && circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_) {
 		msg_frame_ids_with_data_in_circular_buffer_.insert(ambient_point_cloud_original_frame_id);
@@ -1874,6 +1870,18 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		computed_normals = true;
 	}
 
+	if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) { return false; }
+
+	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
+		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
+			ROS_DEBUG_STREAM("Publishing filtered ambient pointcloud with " << ambient_pointcloud->size() << " points");
+			sensor_msgs::PointCloud2Ptr filtered_pointcloud_msg(new sensor_msgs::PointCloud2());
+			pcl::toROSMsg(*ambient_pointcloud, *filtered_pointcloud_msg);
+			filtered_pointcloud_publisher_.publish(filtered_pointcloud_msg);
+		} else {
+			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << filtered_pointcloud_publisher_.getTopic() << " because there is no subscribers");
+		}
+	}
 
 	// ==============================================================  keypoint selection
 	localization_times_msg_.keypoint_selection_time = 0.0;

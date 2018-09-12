@@ -146,6 +146,7 @@ add_library(drl_cloud_filters
     src/cloud_filters/statistical_outlier_removal.cpp
     src/cloud_filters/scale.cpp
     src/cloud_filters/covariance_sampling.cpp
+    src/cloud_filters/plane_segmentation.cpp
 )
 
 add_library(drl_curvature_estimators

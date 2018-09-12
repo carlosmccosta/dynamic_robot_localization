@@ -61,7 +61,6 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	reference_cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
 	reference_cloud_publisher_->setOverrideCloudPublishStamp(true);
 	reference_cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "reference_cloud_publish_topic");
-	reference_cloud_publisher_->setParameterServerArgumentToLoadFrameName(configuration_namespace + "reference_cloud_publish_frame");
 	reference_cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 
 	// subclass must set cloud_matcher_ ptr

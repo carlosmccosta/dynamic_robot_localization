@@ -253,6 +253,21 @@ filters:
         scale:
             scale_factor: 0.001
             filtered_cloud_publish_topic: ''
+    ambient_pointcloud_filters_after_normal_estimation:             # Other filters from above can be used here
+        plane_segmentation:                                         # Segments points above and at a specified range from the largest plane in the point cloud and also within its boundary. It allows the usage of surface normals for improved plane segmentation (if the usage of normals is disabled it can be included in the previous filters categories)
+            sample_consensus_method: "SAC_RANSAC"                   # SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC
+            use_surface_normals: true
+            sample_consensus_maximum_distance_of_sample_to_plane: 0.01
+            sample_consensus_normals_difference_weight: 0.1
+            sample_consensus_number_of_iterations: 1000
+            sample_consensus_probability_of_sample_not_be_an_outlier: 0.5
+            segmentation_minimum_distance_to_plane: 0.01
+            segmentation_maximum_distance_to_plane: 0.42
+            plane_inliers_cloud_publish_topic: ''
+            plane_inliers_cloud_publish_topic_frame_id: ''
+            filtered_cloud_publish_topic: ''
+            filtered_cloud_publish_topic_frame_id: ''
+
 
 
 # ===================================================================================================================================================

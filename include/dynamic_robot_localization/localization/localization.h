@@ -69,6 +69,7 @@
 #include <dynamic_robot_localization/cloud_filters/statistical_outlier_removal.h>
 #include <dynamic_robot_localization/cloud_filters/covariance_sampling.h>
 #include <dynamic_robot_localization/cloud_filters/scale.h>
+#include <dynamic_robot_localization/cloud_filters/plane_segmentation.h>
 
 #include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
 #include <dynamic_robot_localization/curvature_estimators/principal_curvatures_estimation.h>
@@ -402,6 +403,7 @@ class Localization : public ConfigurableObject {
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_map_frame_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_feature_registration_filters_;
 		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_map_frame_feature_registration_filters_;
+		std::vector< typename CloudFilter<PointT>::Ptr > ambient_pointcloud_filters_after_normal_estimation_;
 		typename NormalEstimator<PointT>::Ptr reference_cloud_normal_estimator_;
 		typename NormalEstimator<PointT>::Ptr ambient_cloud_normal_estimator_;
 		typename CurvatureEstimator<PointT>::Ptr reference_cloud_curvature_estimator_;

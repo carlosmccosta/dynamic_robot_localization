@@ -27,15 +27,16 @@ void CloudPublisher<PointT>::setupConfigurationFromParameterServer(ros::NodeHand
 	}
 
 	if (!parameter_server_argument_to_load_topic_name_.empty()) {
-		private_node_handle->param(parameter_server_argument_to_load_topic_name_, cloud_publish_topic_, cloud_publish_topic_);
-	}
+		private_node_handle->param(parameter_server_argument_to_load_topic_name_, cloud_publish_topic_, std::string(""));
 
-	if (!parameter_server_argument_to_load_frame_name_.empty()) {
-		private_node_handle->param(parameter_server_argument_to_load_frame_name_, cloud_publish_frame_, cloud_publish_frame_);
-	}
+		if (!cloud_publish_topic_.empty()) {
+			if (parameter_server_argument_to_load_frame_name_.empty())
+				parameter_server_argument_to_load_frame_name_ = parameter_server_argument_to_load_topic_name_ + "_frame_id";
 
-	if (!cloud_publish_topic_.empty()) {
-		cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(cloud_publish_topic_, 1, true);
+			private_node_handle->param(parameter_server_argument_to_load_frame_name_, cloud_publish_frame_, std::string(""));
+
+			cloud_publisher_ = node_handle->advertise<sensor_msgs::PointCloud2>(cloud_publish_topic_, 1, true);
+		}
 	}
 }
 
@@ -51,7 +52,7 @@ void CloudPublisher<PointT>::publishPointCloud(const pcl::PointCloud<PointT>& cl
 		sensor_msgs::PointCloud2Ptr cloud_msg(new sensor_msgs::PointCloud2());
 		pcl::toROSMsg(cloud, *cloud_msg);
 
-		if (!parameter_server_argument_to_load_frame_name_.empty())
+		if (!cloud_publish_frame_.empty())
 			cloud_msg->header.frame_id = cloud_publish_frame_;
 
 		if (override_cloud_stamp_)
