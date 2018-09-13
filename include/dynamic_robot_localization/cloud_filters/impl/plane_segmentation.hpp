@@ -27,12 +27,17 @@ void PlaneSegmentation<PointT>::setupConfigurationFromParameterServer(ros::NodeH
 	private_node_handle->param(configuration_namespace + "sample_consensus_normals_difference_weight", sample_consensus_normals_difference_weight_, 0.1);
 	private_node_handle->param(configuration_namespace + "sample_consensus_number_of_iterations", sample_consensus_number_of_iterations_, 1000);
 	private_node_handle->param(configuration_namespace + "sample_consensus_probability_of_sample_not_be_an_outlier", sample_consensus_probability_of_sample_not_be_an_outlier_, 0.5);
+	private_node_handle->param(configuration_namespace + "plane_convex_hull_scaling_factor", plane_convex_hull_scaling_factor_, 1.0);
 	private_node_handle->param(configuration_namespace + "segmentation_minimum_distance_to_plane", segmentation_minimum_distance_to_plane_, 0.01);
 	private_node_handle->param(configuration_namespace + "segmentation_maximum_distance_to_plane", segmentation_maximum_distance_to_plane_, 0.42);
 
 	plane_inliers_cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
 	plane_inliers_cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "plane_inliers_cloud_publish_topic");
 	plane_inliers_cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+
+	plane_inliers_convex_hull_cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
+	plane_inliers_convex_hull_cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "plane_inliers_convex_hull_cloud_publish_topic");
+	plane_inliers_convex_hull_cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 
 	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
@@ -108,6 +113,25 @@ void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::P
 		plane_convex_hull_.setInputCloud(plane_inliers_projected_into_plane_model);
 		typename pcl::PointCloud<PointT>::Ptr convex_hull_for_projected_plane_inliers(new pcl::PointCloud<PointT>());
 		plane_convex_hull_.reconstruct(*convex_hull_for_projected_plane_inliers);
+
+		if (plane_convex_hull_scaling_factor_ != 1.0) {
+			Eigen::Vector4f centroid;
+			pcl::compute3DCentroid(*convex_hull_for_projected_plane_inliers, centroid);
+
+			Eigen::Matrix4f centroid_matrix = Eigen::Matrix4f::Identity();
+			centroid_matrix.col(3).head<3>() << centroid(0), centroid(1), centroid(2);
+
+			pcl::transformPointCloudWithNormals<PointT>(*convex_hull_for_projected_plane_inliers, *convex_hull_for_projected_plane_inliers, centroid_matrix.inverse());
+
+			Eigen::Matrix4f scale_matrix = Eigen::Matrix4f(Eigen::Matrix4f::Identity()) * plane_convex_hull_scaling_factor_;
+			pcl::transformPointCloudWithNormals<PointT>(*convex_hull_for_projected_plane_inliers, *convex_hull_for_projected_plane_inliers, scale_matrix);
+
+			pcl::transformPointCloudWithNormals<PointT>(*convex_hull_for_projected_plane_inliers, *convex_hull_for_projected_plane_inliers, centroid_matrix);
+		}
+
+		if (plane_inliers_convex_hull_cloud_publisher_ && !plane_inliers_convex_hull_cloud_publisher_->getCloudPublishTopic().empty()) {
+			plane_inliers_convex_hull_cloud_publisher_->publishPointCloud(*convex_hull_for_projected_plane_inliers);
+		}
 
 		pcl::ExtractPolygonalPrismData<PointT> polygonal_segmentation_;
 		polygonal_segmentation_.setHeightLimits(segmentation_minimum_distance_to_plane_, segmentation_maximum_distance_to_plane_);

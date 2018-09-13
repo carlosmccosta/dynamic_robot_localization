@@ -271,10 +271,13 @@ filters:
             sample_consensus_normals_difference_weight: 0.1
             sample_consensus_number_of_iterations: 1000
             sample_consensus_probability_of_sample_not_be_an_outlier: 0.5
+            plane_convex_hull_scaling_factor: 1.0
             segmentation_minimum_distance_to_plane: 0.01
             segmentation_maximum_distance_to_plane: 0.42
             plane_inliers_cloud_publish_topic: ''
             plane_inliers_cloud_publish_topic_frame_id: ''
+            plane_inliers_convex_hull_cloud_publish_topic: ''
+            plane_inliers_convex_hull_cloud_publish_topic_frame_id: ''
             filtered_cloud_publish_topic: ''
             filtered_cloud_publish_topic_frame_id: ''
 

@@ -22,6 +22,8 @@
 #include <pcl/point_types.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/PointIndices.h>
+#include <pcl/common/centroid.h>
+#include <pcl/common/transforms.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/project_inliers.h>
 #include <pcl/segmentation/sac_segmentation.h>
@@ -87,7 +89,9 @@ class PlaneSegmentation : public CloudFilter<PointT> {
 		double sample_consensus_probability_of_sample_not_be_an_outlier_;
 		double segmentation_minimum_distance_to_plane_;
 		double segmentation_maximum_distance_to_plane_;
+		double plane_convex_hull_scaling_factor_;
 		typename CloudPublisher<PointT>::Ptr plane_inliers_cloud_publisher_;
+		typename CloudPublisher<PointT>::Ptr plane_inliers_convex_hull_cloud_publisher_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
