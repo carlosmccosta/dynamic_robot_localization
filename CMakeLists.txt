@@ -147,6 +147,7 @@ add_library(drl_cloud_filters
     src/cloud_filters/scale.cpp
     src/cloud_filters/covariance_sampling.cpp
     src/cloud_filters/plane_segmentation.cpp
+    src/cloud_filters/euclidean_clustering.cpp
 )
 
 add_library(drl_curvature_estimators

@@ -70,6 +70,7 @@
 #include <dynamic_robot_localization/cloud_filters/covariance_sampling.h>
 #include <dynamic_robot_localization/cloud_filters/scale.h>
 #include <dynamic_robot_localization/cloud_filters/plane_segmentation.h>
+#include <dynamic_robot_localization/cloud_filters/euclidean_clustering.h>
 
 #include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
 #include <dynamic_robot_localization/curvature_estimators/principal_curvatures_estimation.h>

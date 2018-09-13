@@ -253,6 +253,16 @@ filters:
         scale:
             scale_factor: 0.001
             filtered_cloud_publish_topic: ''
+        euclidean_clustering:
+            cluster_tolerance: 0.02
+            min_cluster_size: 25
+            max_cluster_size: INT_MAX                               # Default does not limit the clusters maximum size
+            min_cluster_index: 0                                    # [min,max[ cluster size allows to selected which clusters are selected (the clusters are sorted by the number of points they have and the largest is the first in the vector, at index 0)
+            max_cluster_index: 1                                    # maximum index for the cluster selection (indices start at 0 and do not include the max value -> [min,max[) (if both indexes are negative, all clusters are selected)
+            clusters_colored_cloud_publish_topic: ''
+            clusters_colored_cloud_publish_topic_frame_id: ''
+            filtered_cloud_publish_topic: ''
+            filtered_cloud_publish_topic_frame_id: ''
     ambient_pointcloud_filters_after_normal_estimation:             # Other filters from above can be used here
         plane_segmentation:                                         # Segments points above and at a specified range from the largest plane in the point cloud and also within its boundary. It allows the usage of surface normals for improved plane segmentation (if the usage of normals is disabled it can be included in the previous filters categories)
             sample_consensus_method: "SAC_RANSAC"                   # SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC

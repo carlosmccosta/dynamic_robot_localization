@@ -398,6 +398,8 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 				cloud_filter.reset(new Scale<PointT>());
 			} else if (filter_name.find("plane_segmentation") != std::string::npos) {
 				cloud_filter.reset(new PlaneSegmentation<PointT>());
+			} else if (filter_name.find("euclidean_clustering") != std::string::npos) {
+				cloud_filter.reset(new EuclideanClustering<PointT>());
 			}
 
 			if (cloud_filter) {
