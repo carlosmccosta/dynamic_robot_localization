@@ -259,6 +259,7 @@ filters:
             max_cluster_size: INT_MAX                               # Default does not limit the clusters maximum size
             min_cluster_index: 0                                    # [min,max[ cluster size allows to selected which clusters are selected (the clusters are sorted by the number of points they have and the largest is the first in the vector, at index 0)
             max_cluster_index: 1                                    # maximum index for the cluster selection (indices start at 0 and do not include the max value -> [min,max[) (if both indexes are negative, all clusters are selected)
+            load_clusters_indices_from_parameter_server_before_filtering: true
             clusters_colored_cloud_publish_topic: ''
             clusters_colored_cloud_publish_topic_frame_id: ''
             filtered_cloud_publish_topic: ''

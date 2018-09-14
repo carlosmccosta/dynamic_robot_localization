@@ -21,13 +21,17 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanClustering-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void EuclideanClustering<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+	private_node_handle_ = private_node_handle;
+	configuration_namespace_ = configuration_namespace;
+
 	double cluster_tolerance;
 	int min_cluster_size, max_cluster_size;
 	private_node_handle->param(configuration_namespace + "cluster_tolerance", cluster_tolerance, 0.02);
 	private_node_handle->param(configuration_namespace + "min_cluster_size", min_cluster_size, 25);
 	private_node_handle->param(configuration_namespace + "max_cluster_size", max_cluster_size, std::numeric_limits<int>::max());
-	private_node_handle->param(configuration_namespace + "min_cluster_index", min_cluster_index_, 0);
-	private_node_handle->param(configuration_namespace + "max_cluster_index", max_cluster_index_, 1);
+	loadClustersIndicesFromParameterServer();
+
+	private_node_handle->param(configuration_namespace + "load_clusters_indices_from_parameter_server_before_filtering", load_clusters_indices_from_parameter_server_before_filtering_, true);
 
 	euclidean_cluster_extraction_.setClusterTolerance(cluster_tolerance);
 	euclidean_cluster_extraction_.setMinClusterSize(min_cluster_size);
@@ -40,9 +44,20 @@ void EuclideanClustering<PointT>::setupConfigurationFromParameterServer(ros::Nod
 	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
+
+template<typename PointT>
+void EuclideanClustering<PointT>::loadClustersIndicesFromParameterServer() {
+	private_node_handle_->param(configuration_namespace_ + "min_cluster_index", min_cluster_index_, 0);
+	private_node_handle_->param(configuration_namespace_ + "max_cluster_index", max_cluster_index_, 1);
+}
+
+
 template<typename PointT>
 void EuclideanClustering<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
 	size_t number_of_points_in_input_cloud = input_cloud->size();
+
+	if (load_clusters_indices_from_parameter_server_before_filtering_)
+		loadClustersIndicesFromParameterServer();
 
 	typename pcl::search::KdTree<PointT>::Ptr search_tree(new pcl::search::KdTree<PointT>());
 	search_tree->setInputCloud(input_cloud);

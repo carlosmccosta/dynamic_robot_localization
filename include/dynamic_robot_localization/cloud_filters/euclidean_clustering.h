@@ -63,6 +63,7 @@ class EuclideanClustering : public CloudFilter<PointT> {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanClustering-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void loadClustersIndicesFromParameterServer();
 		virtual void filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanClustering-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -78,7 +79,10 @@ class EuclideanClustering : public CloudFilter<PointT> {
 		pcl::EuclideanClusterExtraction<PointT> euclidean_cluster_extraction_;
 		int min_cluster_index_;
 		int max_cluster_index_;
+		bool load_clusters_indices_from_parameter_server_before_filtering_;
 		typename CloudPublisher<PointT>::Ptr clusters_colored_cloud_publisher_;
+		std::string configuration_namespace_;
+		ros::NodeHandlePtr private_node_handle_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
