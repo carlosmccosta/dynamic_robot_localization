@@ -26,6 +26,7 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_normalize_normals_(true),
 	map_update_mode_(NoIntegration),
 	use_incremental_map_update_(false),
+	override_pointcloud_timestamp_to_current_time_(false),
 	minimum_number_of_points_in_ambient_pointcloud_(10),
 	minimum_number_of_points_in_reference_pointcloud_(10),
 	localization_detailed_use_millimeters_in_root_mean_square_error_inliers_(false),
@@ -267,6 +268,8 @@ void Localization<PointT>::setupMessageManagement() {
 	double tf_timeout;
 	private_node_handle_->param("message_management/tf_timeout", tf_timeout, 0.5);
 	tf_timeout_ = ros::Duration(tf_timeout);
+
+	private_node_handle_->param("message_management/override_pointcloud_timestamp_to_current_time", override_pointcloud_timestamp_to_current_time_, false);
 
 	double max_seconds_ambient_pointcloud_age;
 	private_node_handle_->param("message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 3.0);
@@ -1194,7 +1197,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 		PerformanceTimer performance_timer;
 		performance_timer.start();
 
-		ros::Time ambient_cloud_time = ambient_cloud_msg->header.stamp;
+		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : ambient_cloud_msg->header.stamp);
 		ros::Duration scan_age = ros::Time::now() - ambient_cloud_time;
 		ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
 
@@ -1271,7 +1274,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 			typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
 			ambient_pointcloud_keypoints->header = ambient_pointcloud->header;
 
-			bool localizationUpdateSuccess = updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_msg->header.stamp, pose_tf_initial_guess, pose_tf2_transform_corrected_, pose_corrections, ambient_pointcloud_keypoints) || (!reference_pointcloud_available_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration);
+			bool localizationUpdateSuccess = updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_time, pose_tf_initial_guess, pose_tf2_transform_corrected_, pose_corrections, ambient_pointcloud_keypoints) || (!reference_pointcloud_available_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration);
 
 			ros::Time pose_time;
 			if (add_odometry_displacement_) {

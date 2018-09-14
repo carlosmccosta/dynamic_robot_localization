@@ -129,6 +129,7 @@ initial_pose:
 message_management:
     tf_buffer_duration: 600                                             # Duration of TF buffer in seconds
     tf_timeout: 0.5                                                     # Timeout when looking for TFs
+    override_pointcloud_timestamp_to_current_time: false                # If true, the timestamp of incoming pointclouds will be set to ros::Time::now()
     max_seconds_ambient_pointcloud_age: 3.0                             # Ambient point clouds with age larger than this value will be discarded
     max_seconds_ambient_pointcloud_offset_to_last_estimated_pose: 0.0   # Point clouds that older than this offset in relation to the last [estimated pose / sensor data received] are discarded (useful when there are several sources of sensor data and one has higher update rate -> ex: kinect+lasers)
     min_seconds_between_scan_registration: 0.0                          # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded

@@ -294,6 +294,7 @@ class Localization : public ConfigurableObject {
 		std::string odom_frame_id_;
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;
+		bool override_pointcloud_timestamp_to_current_time_;
 		ros::Duration max_seconds_ambient_pointcloud_age_;
 		ros::Duration max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_;
 		ros::Duration min_seconds_between_scan_registration_;
