@@ -6,16 +6,11 @@ Dynamic Robot Localization
 
 ## Overview
 
-The dynamic\_robot\_localization is a ROS package that offers 3 DOF and 6 DOF localization using PCL and allows dynamic map update using OctoMap.
+The dynamic\_robot\_localization is a [ROS](http://www.ros.org) package that offers 3 DoF and 6 DoF localization using PCL and allows dynamic map update using OctoMap.
 It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](yaml/schema/drl_configs.yaml) and examples of configurations available in [guardian_config](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch) and [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests/tree/hydro-devel/launch/environments)).
 
-Notes:
-- The [hydro-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/hydro-devel) branch can use PCL 1.7.* from [official PPA](http://pointclouds.org/downloads/linux.html)
-- The [kinetic-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/kinetic-devel) branch requires to [compile PCL from source](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php) using branch [master-all-pr](https://github.com/carlosmccosta/pcl/tree/master-all-pr) from [https://github.com/carlosmccosta/pcl](https://github.com/carlosmccosta/pcl) (you can use this [package.xml](https://gist.github.com/carlosmccosta/1ec3e3bdce419441b0b17bf9bb707552) to compile it within a catkin workspace)
-  - To ensure that the same pcl libraries are used in drl and its dependencies, the following packages should also be compiled:
-    - [pcl_conversions](https://github.com/ros-perception/pcl_conversions)
-    - [pcl_msgs](https://github.com/ros-perception/pcl_msgs)
-    - [perception_pcl](https://github.com/ros-perception/perception_pcl)
+Even though this package was developed for robot self-localization, it was implemented as a generic, configurable and extensible point cloud matching library, allowing its usage in related problems such as [estimation of the 6 DoF pose of an object](https://www.youtube.com/watch?v=557vglPW6Ko) and 3D object scanning.
+
 
 ![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
 
@@ -70,6 +65,13 @@ Video 9: Mapping with the Guardian robot in simulated ship interior using the 3 
 [![Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/Us9XkcRx_5I/maxresdefault.jpg)](http://www.youtube.com/watch?v=Us9XkcRx_5I)
 
 Video 10: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+
+
+[![Object pose estimation for assisted assembly operations](http://img.youtube.com/vi/557vglPW6Ko/maxresdefault.jpg)](https://www.youtube.com/watch?v=557vglPW6Ko)
+
+Video 11: Object pose estimation for assisted assembly operations
+
+
 
 
 ## Data sources
@@ -170,8 +172,44 @@ The main tests performed using the dynamic_robot_localization package are availa
 
 ## Installation and package dependencies
 
-Installation scripts can be found in the [install folder.](install/)
+After [installing and setting up ROS](http://wiki.ros.org/ROS/Installation), the installation scripts in the [install folder](install/) can be used to setup this package.
 
+The [install.bash](install/install.bash) has 5 parameters:
+* catkin_ws_path=${1:-"$HOME/catkin_ws_drl"}
+  - The workspace in which this repository and its dependencies will be cloned (in the src folder)
+* number_of_cpu_threads_for_compilation=${2:-2}
+  - The number of CPU threads for using during compilation (if your computer has a low amount of RAM and swap, set this variable to 1)
+* use_catkin_tools=${3:-true}
+  - Flag for indicating if the newer build system [catkin_tools](https://catkin-tools.readthedocs.io/en/latest/migration.html) should be used (if false, the older [catkin_make_isolated](http://www.ros.org/reps/rep-0134.html) command will be used, in order to be able to compile [PCL](https://github.com/PointCloudLibrary/pcl), which is a pure CMake package)
+* ros_version=${4:-"$(rosversion -d)"}
+  - When several ROS distributions are installed, this parameter can be used to specify which ROS version to use (by default the value is retrieved using the command rosversion -d)
+* catkin_ws_path_to_extend=${5:-"/opt/ros/$ros_version"}
+  - Parameter for specifying which workspace should be extended
+  - This is useful when using [catkin overlays](http://wiki.ros.org/catkin/Tutorials/workspace_overlaying) / [workspace chaining](https://catkin-tools.readthedocs.io/en/latest/mechanics.html#workspace-chaining-extending)
+
+The [install.bash](install/install.bash) script will execute the following accompanying scripts in this order:
+* [a_dependencies.bash](install/a_dependencies.bash)
+  - Dependencies that can be installed with apt-get
+* [b_workspace.bash](install/b_workspace.bash)
+  - Setup of the workspace (if an existing workspace is specified, the script will not change the configurations of the workspace)
+* [c_repositories.bash](install/c_repositories.bash)
+  - Cloning of this repository and its dependencies that must be built from source
+* [d_rosped.bash](install/d_rosped.bash)
+  - Any remaining transitive dependencies will be installed using rosdep
+* [e_build.bash](install/e_build.bash)
+  - Building of the packages
+
+It is also provided the [repositories_update.bash](install/repositories_update.bash) script to update the repositories related with this package.
+
+On the other hand, [wstool](http://wiki.ros.org/wstool) can be used since the [c_repositories.bash](install/c_repositories.bash) added the repositories to the .rosintall file
+
+
+**Notes:**
+- The [hydro-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/hydro-devel) branch can use PCL 1.7.* from [official PPA](http://pointclouds.org/downloads/linux.html)
+- The [kinetic-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/kinetic-devel) branch requires to [compile PCL from source](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php) using branch [master-all-pr](https://github.com/carlosmccosta/pcl/tree/master-all-pr) from [https://github.com/carlosmccosta/pcl](https://github.com/carlosmccosta/pcl)
+  - To ensure that the same pcl libraries are used in drl and its dependencies, the following packages should also be compiled from source (already included in the install scripts):
+    - [pcl_msgs](https://github.com/ros-perception/pcl_msgs)
+    - [perception_pcl](https://github.com/ros-perception/perception_pcl)
 
 
 ## List of related git repositories:
