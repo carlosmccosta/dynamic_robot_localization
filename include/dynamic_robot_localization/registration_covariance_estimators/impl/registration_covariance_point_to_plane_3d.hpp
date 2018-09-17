@@ -106,7 +106,7 @@ bool RegistrationCovariancePointToPlane3D<PointT>::computeRegistrationCovariance
 	}
 
 	Eigen::MatrixXd d2J_dZdX(6, 6 * ambient_cloud_orrespondences_size);
-	for (int k = 0; k < ambient_cloud_orrespondences_size; ++k) {
+	for (size_t k = 0; k < ambient_cloud_orrespondences_size; ++k) {
 		double pix = ambient_cloud_orrespondences.points[k].x;
 		double piy = ambient_cloud_orrespondences.points[k].y;
 		double piz = ambient_cloud_orrespondences.points[k].z;

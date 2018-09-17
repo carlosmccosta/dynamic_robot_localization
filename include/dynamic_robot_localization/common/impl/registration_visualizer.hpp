@@ -44,8 +44,8 @@ namespace dynamic_robot_localization {
 template<typename PointSource, typename PointTarget>
 RegistrationVisualizer<PointSource, PointTarget>::RegistrationVisualizer() :
 	cloud_source_(new pcl::PointCloud<PointTarget>()),
-	cloud_target_(new pcl::PointCloud<PointTarget>()),
 	cloud_intermediate_(new pcl::PointCloud<PointTarget>()),
+	cloud_target_(new pcl::PointCloud<PointTarget>()),
 	visualizer_updating_mutex_(),
 	maximum_displayed_correspondences_(0),
 	intermediate_cloud_changed_(false),

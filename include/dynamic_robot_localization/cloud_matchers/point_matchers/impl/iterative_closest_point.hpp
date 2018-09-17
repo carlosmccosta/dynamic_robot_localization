@@ -77,7 +77,7 @@ bool IterativeClosestPoint<PointT>::registerCloud(typename pcl::PointCloud<Point
 		if (convergence_time_limit_seconds_ > 0.0 &&
 				convergence_time_limit_seconds_as_mean_convergence_time_percentage_ > 0.0 &&
 				minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_ > 0 &&
-				number_of_convergence_time_measurements > minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_) {
+				number_of_convergence_time_measurements > (size_t)minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit_) {
 			double updated_convergence_time_limit_seconds = std::min(convergence_time_limit_seconds_, (cumulative_sum_of_convergence_time_ / number_of_convergence_time_measurements) * convergence_time_limit_seconds_as_mean_convergence_time_percentage_);
 			if (updated_convergence_time_limit_seconds > 0.0 && convergence_criteria) {
 				convergence_criteria->setConvergenceTimeLimitSeconds(updated_convergence_time_limit_seconds);

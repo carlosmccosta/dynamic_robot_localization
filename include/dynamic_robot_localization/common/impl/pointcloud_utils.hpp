@@ -40,7 +40,7 @@ void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud) {
 
 	float curvature_scale = 360.0f / (max_curvature - min_curvature);
 
-	for (int i = 0; i < pointcloud.size(); ++i) {
+	for (size_t i = 0; i < pointcloud.size(); ++i) {
 		pcl::PointXYZHSV hsv;
 		hsv.h = (pointcloud[i].curvature - min_curvature) * curvature_scale;
 		hsv.s = 1.0;

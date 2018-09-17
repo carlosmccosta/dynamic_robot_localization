@@ -343,8 +343,7 @@ normal_estimators:
                 background_b: 0.0
         moving_least_squares:                                       # Allows prefix and postfix of letters to ensure parsing order | Estimates the normal and curvature of points by performing surface fitting and resampling
             compute_normals: true                                   # Set whether the algorithm should also store the normals computed
-            polynomial_order: 2                                     # The order of the polynomial to be fit
-            polynomial_fit: true                                    # Sets whether the surface and normal are approximated using a polynomial, or only via tangent estimation
+            polynomial_order: 2                                     # The order of the polynomial to be fit (order > 1 indicates using a polynomial fit)
             search_radius: 0.12                                     # The sphere radius that is to be used for determining the k-nearest neighbors used for surface fitting
             sqr_gauss_param: 0.0144                                 # Set the parameter used for distance based weighting of neighbors (the square of the search radius works best in general)
             upsample_method: 'NONE'                                 # The upsampling method to be used ( NONE | DISTINCT_CLOUD | SAMPLE_LOCAL_PLANE | RANDOM_UNIFORM_DENSITY | VOXEL_GRID_DILATION )

@@ -341,10 +341,10 @@ class Localization : public ConfigurableObject {
 		ros::Time last_map_received_time_;
 		ros::Time last_accepted_pose_time_;
 		bool robot_initial_pose_available_;
-		int pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_;
-		int pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_;
+		int pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_;
+		int pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_;
 		int pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
 		bool reference_pointcloud_loaded_;
 		bool reference_pointcloud_2d_;
@@ -365,6 +365,7 @@ class Localization : public ConfigurableObject {
 		pose_to_tf_publisher::PoseToTFPublisher::Ptr pose_to_tf_publisher_;
 		ros::NodeHandlePtr node_handle_;
 		ros::NodeHandlePtr private_node_handle_;
+		std::string configuration_namespace_;
 		ros::Subscriber pose_subscriber_;
 		ros::Subscriber pose_stamped_subscriber_;
 		ros::Subscriber pose_with_covariance_stamped_subscriber_;

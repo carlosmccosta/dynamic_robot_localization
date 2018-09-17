@@ -74,10 +74,10 @@ class CircularBufferPointCloud {
 		const PointT& operator[](size_t element_index) const { return (*pointcloud_)[element_index]; }
 		PointT& at(size_t element_index) { return pointcloud_->at(element_index); }
 		const PointT& at(size_t element_index) const { return pointcloud_->at(element_index); }
-		PointT& front(size_t element_index) { return pointcloud_->front(); }
-		const PointT& front(size_t element_index) const  { return pointcloud_->front(); }
-		PointT& back(size_t element_index) { return pointcloud_->back(); }
-		const PointT& back(size_t element_index) const { return pointcloud_->back(); }
+		PointT& front() { return pointcloud_->front(); }
+		const PointT& front() const  { return pointcloud_->front(); }
+		PointT& back() { return pointcloud_->back(); }
+		const PointT& back() const { return pointcloud_->back(); }
 
 		bool empty()  { return pointcloud_->empty(); }
 		size_t size() { return pointcloud_->size(); }

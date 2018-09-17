@@ -29,10 +29,6 @@ void MovingLeastSquares<PointT>::setupConfigurationFromParameterServer(ros::Node
 	private_node_handle->param(configuration_namespace + "polynomial_order", polynomial_order, 2);
 	normal_estimator_.setPolynomialOrder(polynomial_order);
 
-	bool polynomial_fit;
-	private_node_handle->param(configuration_namespace + "polynomial_fit", polynomial_fit, true);
-	normal_estimator_.setPolynomialFit(polynomial_fit);
-
 	double search_radius;
 	private_node_handle->param(configuration_namespace + "search_radius", search_radius, 0.12);
 	normal_estimator_.setSearchRadius(search_radius);
