@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
 	<name>dynamic_robot_localization</name>
 	<version>1.0.0</version>
-	<description>The dynamic_robot_localization package offers 3 DOF and 6 DOF localization using PCL</description>
+	<description>The dynamic_robot_localization package offers 3 DoF and 6 DoF robot self-localization along with a set of libraries suitable for generic point cloud alignment</description>
 	<maintainer email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</maintainer>
 	<license>BSD</license>
 	<author email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</author>
@@ -16,68 +16,43 @@
 	<!-- ################################################################## -->
 
 	<!-- developed ros packages -->
-	<build_depend>laserscan_to_pointcloud</build_depend>	<!-- https://github.com/carlosmccosta/laserscan_to_pointcloud -->
-	<build_depend>pose_to_tf_publisher</build_depend>		<!-- https://github.com/carlosmccosta/pose_to_tf_publisher -->
+	<depend>laserscan_to_pointcloud</depend>	<!-- https://github.com/carlosmccosta/laserscan_to_pointcloud -->
+	<depend>pose_to_tf_publisher</depend>		<!-- https://github.com/carlosmccosta/pose_to_tf_publisher -->
 
 	<!-- other ros packages -->
-	<build_depend>angles</build_depend>
-	<build_depend>cmake_modules</build_depend>
-	<build_depend>dynamic_reconfigure</build_depend>
-	<build_depend>geometry_msgs</build_depend>
-	<build_depend>message_generation</build_depend>
-	<build_depend>pcl_conversions</build_depend>
-	<build_depend>pcl_ros</build_depend>
-	<build_depend>roscpp</build_depend>
-	<build_depend>rosconsole</build_depend>
-	<build_depend>rostime</build_depend>
-	<build_depend>sensor_msgs</build_depend>
-	<build_depend>std_msgs</build_depend>
-	<build_depend>tf2</build_depend>
-	<build_depend>tf2_ros</build_depend>
-	<build_depend>xmlrpcpp</build_depend>
+	<depend>angles</depend>
+	<depend>dynamic_reconfigure</depend>
+	<depend>geometry_msgs</depend>
+	<depend>message_generation</depend>
+	<depend>pcl_conversions</depend>
+	<depend>pcl_ros</depend>
+	<depend>roscpp</depend>
+	<depend>rosconsole</depend>
+	<depend>rostime</depend>
+	<depend>sensor_msgs</depend>
+	<depend>std_msgs</depend>
+	<depend>tf2</depend>
+	<depend>tf2_ros</depend>
+	<depend>xmlrpcpp</depend>
 
 	<!-- system dependencies -->
-	<build_depend>Boost</build_depend>
-	<build_depend>eigen</build_depend>
-	<build_depend>libpcl-dev</build_depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
+	<depend>libboost-all-dev</depend>
+	<depend>libeigen3-dev</depend>
+	<depend>PCL</depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
 
 
 	<!-- ################################################################## -->
 	<!-- Run dependencies -->
 	<!-- ################################################################## -->
 
-	<!-- developed ros packages -->
-	<run_depend>laserscan_to_pointcloud</run_depend>
-	<run_depend>pose_to_tf_publisher</run_depend>
-
-	<!-- other ros packages -->
-	<run_depend>angles</run_depend>
-	<run_depend>cmake_modules</run_depend>
-	<run_depend>dynamic_reconfigure</run_depend>
-	<run_depend>geometry_msgs</run_depend>
-	<run_depend>message_generation</run_depend>
-	<run_depend>pcl_conversions</run_depend>
-	<run_depend>pcl_ros</run_depend>
-	<run_depend>roscpp</run_depend>
-	<run_depend>rosconsole</run_depend>
-	<run_depend>rostime</run_depend>
-	<run_depend>sensor_msgs</run_depend>
-	<run_depend>std_msgs</run_depend>
-	<run_depend>tf2</run_depend>
-	<run_depend>tf2_ros</run_depend>
-	<run_depend>xmlrpcpp</run_depend>
-
 	<!-- other ros packages (run only) -->
-	<run_depend>message_runtime</run_depend>
-	<run_depend>map_server</run_depend>
-	<run_depend>octomap_server</run_depend>
-	<run_depend>robot_localization</run_depend>
+	<exec_depend>message_runtime</exec_depend>
+	<exec_depend>map_server</exec_depend>
+	<exec_depend>octomap_server</exec_depend>
+	<exec_depend>robot_localization</exec_depend>
 
 	<!-- system dependencies -->
-	<run_depend>Boost</run_depend>
-	<run_depend>coreutils</run_depend>
-	<run_depend>eigen</run_depend>
-	<run_depend>libpcl-dev</run_depend>
+	<exec_depend>coreutils</exec_depend>
 
 
 	<export>

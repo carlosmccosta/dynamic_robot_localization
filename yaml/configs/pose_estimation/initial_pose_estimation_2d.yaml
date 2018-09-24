@@ -54,8 +54,6 @@ curvature_estimators:
 
 keypoint_detectors:
     reference_pointcloud:
-#        reference_pointcloud_keypoints_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/sift_keypoints.pcd'
-#        reference_pointcloud_keypoints_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/sift_keypoints.pcd'
         sift_3d:
             min_scale: 0.015
             number_octaves: 4
@@ -97,8 +95,6 @@ keypoint_detectors:
 initial_pose_estimators_matchers:
     feature_matchers:
         display_feature_matching: false
-#        reference_pointcloud_descriptors_filename: '$(find dynamic_robot_localization_tests)/maps/crob_lab/planar/cache/fpfh_descriptors.pcd'
-#        reference_pointcloud_descriptors_save_filename: '/home/carloscosta/catkin_ws/src/dynamic_robot_localization_tests/maps/crob_lab/planar/cache/fpfh_descriptors.pcd'
         save_descriptors_in_binary_format : true
         keypoint_descriptors:
             feature_descriptor_k_search: 0

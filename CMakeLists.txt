@@ -7,21 +7,17 @@ project(dynamic_robot_localization)
 ## packages
 #######################################################################################################################
 
-# remove logging (ROSCONSOLE_SEVERITY_NONE=5)
-# set(ROS_COMPILE_FLAGS "-DROSCONSOLE_MIN_SEVERITY=5 ${ROS_COMPILE_FLAGS}")
-
 set(${PROJECT_NAME}_CATKIN_COMPONENTS
-    laserscan_to_pointcloud
-    pose_to_tf_publisher
     angles
-    cmake_modules
     dynamic_reconfigure
     geometry_msgs
+    laserscan_to_pointcloud
     message_generation
     pcl_conversions
     pcl_ros
-    roscpp
+    pose_to_tf_publisher
     rosconsole
+    roscpp
     rostime
     sensor_msgs
     std_msgs
@@ -62,32 +58,28 @@ generate_messages(
    std_msgs
 )
 
-
-# generate_dynamic_reconfigure_options(
-#    cfg/PlanarLocalization.cfg
-# )
-
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
-        drl_common
+        drl_cloud_analyzers
         drl_cloud_filters
+        drl_cloud_matchers
+        drl_common
         drl_convergence_estimators
         drl_curvature_estimators
-        drl_normal_estimators
         drl_keypoint_detectors
-        drl_cloud_matchers
-        drl_transformation_validators
-        drl_outliers_detectors
-        drl_cloud_analyzers
-        drl_registration_covariance_estimators
+        drl_keypoint_descriptors
         drl_localization
+        drl_normal_estimators
+        drl_outliers_detectors
+        drl_registration_covariance_estimators
+        drl_transformation_validators
     CATKIN_DEPENDS
         ${${PROJECT_NAME}_CATKIN_COMPONENTS}
         message_runtime
     DEPENDS
-        EIGEN3
         Boost
+        EIGEN3
         PCL
 )
 
@@ -103,8 +95,8 @@ catkin_package(
 
 include_directories(
     include
-    ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
     ${PCL_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
 )
@@ -242,14 +234,84 @@ add_executable(drl_mesh_to_pcd
 # dependencies
 #==================
 
-# add_dependencies(drl_localization ${PROJECT_NAME}_gencfg)
+add_dependencies(drl_cloud_analyzers
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_cloud_filters
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_cloud_matchers
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_common
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_convergence_estimators
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_curvature_estimators
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_keypoint_detectors
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_keypoint_descriptors
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
 add_dependencies(drl_localization
-    ${PROJECT_NAME}_generate_messages_cpp
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_normal_estimators
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_outliers_detectors
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_registration_covariance_estimators
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_transformation_validators
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_localization_node
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_mesh_to_pcd
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
 )
 
 
 #==================
-# library link
+# libraries link
 #==================
 
 target_link_libraries(drl_common
@@ -338,6 +400,11 @@ target_link_libraries(drl_localization
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
+
+
+#==================
+# executables link
+#==================
 
 target_link_libraries(drl_localization_node
     drl_common
