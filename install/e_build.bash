@@ -31,7 +31,7 @@ fi
 
 source ${devel_file}
 rospack profile
-echo "source ${devel_file}" >> ~/.bashrc
+echo -e "\n\nsource ${devel_file}\n\n" >> ~/.bashrc
 
 echo -e "\n\n"
 echo "----------------------------------------------------------------------------------------------------"
