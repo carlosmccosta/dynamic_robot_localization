@@ -22,5 +22,5 @@ script_dir="$(dirname "$(readlink -e "${BASH_SOURCE[0]}")" && echo X)" && script
 "${script_dir}/a_dependencies.bash" "${ros_version}"
 "${script_dir}/b_workspace.bash" "${catkin_ws_path}" "${use_catkin_tools}" "${ros_version}" "${catkin_ws_path_to_extend}"
 "${script_dir}/c_repositories.bash" "${catkin_ws_path}"
-"${script_dir}/d_rosped.bash" "${catkin_ws_path}" "${ros_version}"
+"${script_dir}/d_rosdep.bash" "${catkin_ws_path}" "${ros_version}"
 "${script_dir}/e_build.bash" "${catkin_ws_path}" "${number_of_cpu_threads_for_compilation}" "${use_catkin_tools}" "${ros_version}" "${catkin_ws_path_to_extend}"
