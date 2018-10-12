@@ -119,7 +119,7 @@ int IterativeClosestPoint<PointT>::getNumberCorrespondencesInLastRegistrationIte
 	if (convergence_criteria) {
 		return convergence_criteria->getNumberCorrespondences();
 	} else {
-		return -1.0;
+		return -1;
 	}
 }
 

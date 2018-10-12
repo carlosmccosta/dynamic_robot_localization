@@ -83,8 +83,8 @@ void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::P
 	sac_segmentation->setInputCloud(input_cloud);
 
 	pcl::PointIndices::Ptr plane_inliers(new pcl::PointIndices());
-	pcl::ModelCoefficients::Ptr plane_coefficients(new pcl::ModelCoefficients());
-	sac_segmentation->segment(*plane_inliers, *plane_coefficients);
+	plane_coefficients_ = pcl::ModelCoefficients::Ptr(new pcl::ModelCoefficients());
+	sac_segmentation->segment(*plane_inliers, *plane_coefficients_);
 
 	if (plane_inliers->indices.size() > 0) {
 		if (plane_inliers_cloud_publisher_ && !plane_inliers_cloud_publisher_->getCloudPublishTopic().empty()) {
@@ -105,7 +105,7 @@ void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::P
 
 		plane_inliers_projection_.setInputCloud(input_cloud);
 		plane_inliers_projection_.setIndices(plane_inliers);
-		plane_inliers_projection_.setModelCoefficients(plane_coefficients);
+		plane_inliers_projection_.setModelCoefficients(plane_coefficients_);
 		typename pcl::PointCloud<PointT>::Ptr plane_inliers_projected_into_plane_model(new pcl::PointCloud<PointT>());
 		plane_inliers_projection_.filter (*plane_inliers_projected_into_plane_model);
 

@@ -73,6 +73,7 @@ class PlaneSegmentation : public CloudFilter<PointT> {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PlaneSegmentation-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		inline pcl::ModelCoefficients::Ptr getPlaneCoefficients() { return plane_coefficients_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -90,6 +91,7 @@ class PlaneSegmentation : public CloudFilter<PointT> {
 		double segmentation_minimum_distance_to_plane_;
 		double segmentation_maximum_distance_to_plane_;
 		double plane_convex_hull_scaling_factor_;
+		pcl::ModelCoefficients::Ptr plane_coefficients_;
 		typename CloudPublisher<PointT>::Ptr plane_inliers_cloud_publisher_;
 		typename CloudPublisher<PointT>::Ptr plane_inliers_convex_hull_cloud_publisher_;
 	// ========================================================================   </protected-section>  ========================================================================
