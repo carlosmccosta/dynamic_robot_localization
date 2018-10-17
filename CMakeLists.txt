@@ -26,6 +26,8 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     xmlrpcpp
 )
 
+add_compile_options(-std=c++11)
+
 find_package(OpenMP)
 
 if(OPENMP_FOUND)

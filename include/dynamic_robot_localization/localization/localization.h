@@ -149,10 +149,49 @@ class Localization : public ConfigurableObject {
 		};
 
 		enum SensorDataProcessingStatus {
-			WaitingForSensorData,
+			ExceptionRaised,
+			FailedInitialPoseEstimation,
+			FailedNormalEstimation,
+			FailedPoseEstimation,
+			FailedTFTransform,
+			FillingCircularBufferWithMsgsFromAllTopics,
+			FirstPointCloudInSlamMode,
+			MinimumElapsedTimeSinceLastPointCloudNotReached,
+			MissingReferencePointCloud,
+			PointCloudAgeHigherThanMaximum,
+			PointCloudDiscarded,
+			PointCloudFilteringFailed,
+			PointCloudOlderThanLastPointCloudReceived,
+			PointCloudSubscribersDisabled,
+			PointCloudWithoutTheMinimumNumberOfRequiredPoints,
+			PoseEstimationRejectedByTransformationValidators,
 			SuccessfulPoseEstimation,
-			FailedPoseEstimation
+			WaitingForSensorData
 		};
+
+		static std::string SensorDataProcessingStatusToStr(const SensorDataProcessingStatus& status) {
+			switch (status) {
+				case ExceptionRaised: return "ExceptionRaised";
+				case FailedInitialPoseEstimation: return "FailedInitialPoseEstimation";
+				case FailedNormalEstimation: return "FailedNormalEstimation";
+				case FailedPoseEstimation: return "FailedPoseEstimation";
+				case FailedTFTransform: return "FailedTFTransform";
+				case FillingCircularBufferWithMsgsFromAllTopics: return "FillingCircularBufferWithMsgsFromAllTopics";
+				case FirstPointCloudInSlamMode: return "FirstPointCloudInSlamMode";
+				case MinimumElapsedTimeSinceLastPointCloudNotReached: return "MinimumElapsedTimeSinceLastPointCloudNotReached";
+				case MissingReferencePointCloud: return "MissingReferencePointCloud";
+				case PointCloudAgeHigherThanMaximum: return "PointCloudAgeHigherThanMaximum";
+				case PointCloudDiscarded: return "PointCloudDiscarded";
+				case PointCloudFilteringFailed: return "PointCloudFilteringFailed";
+				case PointCloudOlderThanLastPointCloudReceived: return "PointCloudOlderThanLastPointCloudReceived";
+				case PointCloudSubscribersDisabled: return "PointCloudSubscribersDisabled";
+				case PointCloudWithoutTheMinimumNumberOfRequiredPoints: return "PointCloudWithoutTheMinimumNumberOfRequiredPoints";
+				case PoseEstimationRejectedByTransformationValidators: return "PoseEstimationRejectedByTransformationValidators";
+				case SuccessfulPoseEstimation: return "SuccessfulPoseEstimation";
+				case WaitingForSensorData: return "WaitingForSensorData";
+			}
+			return "";
+		}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -211,7 +250,9 @@ class Localization : public ConfigurableObject {
 		void restartProcessingSensorData();
 
 		bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
+		bool checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active = true, bool use_ros_console = true);
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
+		bool processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed = true, bool check_if_pointcloud_subscribers_are_active = true);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
 

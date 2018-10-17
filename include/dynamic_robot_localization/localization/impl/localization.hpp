@@ -630,7 +630,7 @@ void Localization<PointT>::setupFeatureCloudMatchersConfigurations(std::vector< 
 				return;
 			}/* else if (descriptor_name.find("spin_image") != std::string::npos) {
 				typename KeypointDescriptor<PointT, pcl::Histogram<153> >::Ptr keypoint_descriptor(new SpinImage< PointT, pcl::Histogram<153> >());
-				loadKeypointMatcherFromParameterServer< pcl::Histogram<153> >(featurecloud_matchers,  keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/", feature_matcher_configuration_namespace);
+				loadKeypointMatcherFromParameterServer< pcl::Histogram<153> >(featurecloud_matchers, keypoint_descriptor, keypoint_descriptor_configuration_namespace + descriptor_name + "/", feature_matcher_configuration_namespace);
 				return;
 			}*/ else if (descriptor_name.find("esf") != std::string::npos) {
 				typename KeypointDescriptor<PointT, pcl::ESFSignature640>::Ptr keypoint_descriptor(new ESF<PointT, pcl::ESFSignature640>());
@@ -1188,319 +1188,341 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 	return true;
 }
 
+template<typename PointT>
+bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active, bool use_ros_console) {
+	bool process_pointcloud = true;
+	ros::Duration scan_age = ros::Time::now() - ambient_cloud_time;
+	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
+	ros::Duration time_offset = last_scan_time_ - ambient_cloud_time;
+
+	if (check_if_pointcloud_subscribers_are_active && !ambient_pointcloud_subscribers_active_) {
+		process_pointcloud = false;
+		sensor_data_processing_status_ = PointCloudSubscribersDisabled;
+		if (use_ros_console)
+			ROS_WARN("Discarded point cloud because the subscribers are not active");
+	} else if ((reference_pointcloud_available_ && (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_) ||
+	            !reference_pointcloud_loaded_ && map_update_mode_ == NoIntegration)) {
+		process_pointcloud = false;
+		sensor_data_processing_status_ = MissingReferencePointCloud;
+		if (use_ros_console)
+			ROS_WARN_STREAM("Discarded cloud because there is no reference cloud to compare to");
+	} else if (number_of_points < minimum_number_of_points_in_ambient_pointcloud_) {
+		process_pointcloud = false;
+		sensor_data_processing_status_ = PointCloudWithoutTheMinimumNumberOfRequiredPoints;
+		if (use_ros_console)
+			ROS_WARN_STREAM("Discarded ambient cloud [ minimum number of points required: " << minimum_number_of_points_in_ambient_pointcloud_ << " | point cloud size: " << number_of_points << " ]");
+	} else if (ambient_cloud_time < last_scan_time_ &&
+		std::abs(time_offset.toSec()) > std::abs(max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_.toSec())) {
+		process_pointcloud = false;
+		sensor_data_processing_status_ = PointCloudOlderThanLastPointCloudReceived;
+		if (use_ros_console)
+			ROS_WARN_STREAM("Discarded ambient cloud because it's timestamp (" << ambient_cloud_time << ") is " << time_offset.toSec() << " seconds older than an already processed ambient cloud (limit for offset: " << max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_ << ")");
+	} else if (elapsed_time_since_last_scan < min_seconds_between_scan_registration_) {
+		process_pointcloud = false;
+		sensor_data_processing_status_ = MinimumElapsedTimeSinceLastPointCloudNotReached;
+		if (use_ros_console)
+			ROS_WARN_STREAM("Discarded cloud with an elapsed_time_since_last_scan [" << elapsed_time_since_last_scan << "] lower than the minimum allowed " << "[" << min_seconds_between_scan_registration_ << "]");
+	} else if (scan_age > max_seconds_ambient_pointcloud_age_) {
+		process_pointcloud = false;
+		sensor_data_processing_status_ = PointCloudAgeHigherThanMaximum;
+		if (use_ros_console)
+			ROS_WARN_STREAM("Discarded cloud with scan_age: [" << scan_age.toSec() << "] higher than the maximum allowed [" << max_seconds_ambient_pointcloud_age_ << "]");
+	}
+
+	return process_pointcloud;
+}
 
 template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
-	if (!ambient_pointcloud_subscribers_active_)
-		return;
+	ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : ambient_cloud_msg->header.stamp);
+	size_t number_points_ambient_pointcloud = ambient_cloud_msg->width * ambient_cloud_msg->height;
 
+	if (checkIfAmbientPointCloudShouldBeProcessed(ambient_cloud_time, number_points_ambient_pointcloud, true, true))
+	{
+		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
+		pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
+		ambient_pointcloud->header.frame_id = ambient_cloud_msg->header.frame_id;
+		processAmbientPointCloud(ambient_pointcloud, false, false);
+	}
+}
+
+template<typename PointT>
+bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed, bool check_if_pointcloud_subscribers_are_active) {
 	try {
 		PerformanceTimer performance_timer;
 		performance_timer.start();
-
-		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : ambient_cloud_msg->header.stamp);
-		ros::Duration scan_age = ros::Time::now() - ambient_cloud_time;
-		ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
-
-		ROS_DEBUG_STREAM("Received pointcloud with sequence number " << ambient_cloud_msg->header.seq << " in frame " << ambient_cloud_msg->header.frame_id << " with " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << " points and with time stamp " << ambient_cloud_time << " (map_frame_id: " << map_frame_id_ << ")");
-
-		if (reference_pointcloud_available_ && !reference_pointcloud_loaded_) {
-			ROS_WARN_STREAM("Discarded cloud because there is no reference cloud to compare to");
-			sensor_data_processing_status_ = FailedPoseEstimation;
-			return;
-		}
-
-		int number_points_ambient_pointcloud = ambient_cloud_msg->width * ambient_cloud_msg->height;
-		if (number_points_ambient_pointcloud < minimum_number_of_points_in_ambient_pointcloud_) {
-			ROS_WARN_STREAM("Discarded ambient cloud [ minimum number of points required: " << minimum_number_of_points_in_ambient_pointcloud_ << " | point cloud size: " << number_points_ambient_pointcloud << " ]");
-			sensor_data_processing_status_ = FailedPoseEstimation;
-			return;
-		}
-
-		if (ambient_cloud_time < last_scan_time_) {
-			ros::Duration time_offset = last_scan_time_ - ambient_cloud_time;
-			if (time_offset > max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_) {
-				ROS_WARN_STREAM("Discarded ambient cloud because it's timestamp (" << ambient_cloud_time << ") is " << time_offset.toSec() << " seconds older than an already processed ambient cloud (limit for offset: " << max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_ << ")");
-				return;
-			} else {
-				ambient_cloud_time = last_scan_time_ + ros::Duration(0.0001);
-			}
-		}
-
 		localization_times_msg_ = LocalizationTimes();
 
-		if ((!reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) ||
-				(reference_pointcloud_loaded_ && reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_
-				&& elapsed_time_since_last_scan > min_seconds_between_scan_registration_
-				&& scan_age < max_seconds_ambient_pointcloud_age_)) {
-
-			tf2::Transform transform_base_link_to_odom;
-			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_time, tf_timeout_) || !math_utils::isTransformValid(transform_base_link_to_odom)) {
-				ROS_WARN_STREAM("Dropping pointcloud because tf between " << base_link_frame_id_ << " and " << odom_frame_id_ << " isn't available");
-				return;
-			}
-
-			if (!use_internal_tracking_) {
-				tf2::Transform transform_odom_to_map;
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_map, map_frame_id_, odom_frame_id_, ambient_cloud_time, tf_timeout_) || math_utils::isTransformValid(transform_odom_to_map)) {
-					ROS_WARN_STREAM("Using internal tracking transform because tf between " << odom_frame_id_ << " and " << map_frame_id_ << " isn't available");
-				} else {
-					last_accepted_pose_odom_to_map_ = transform_odom_to_map;
-				}
-			}
-
-			tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
-
-
-			typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud(new pcl::PointCloud<PointT>());
-			pcl::fromROSMsg(*ambient_cloud_msg, *ambient_pointcloud);
-			ambient_pointcloud->header.frame_id = ambient_cloud_msg->header.frame_id;
-			size_t ambient_pointcloud_size = ambient_pointcloud->size();
-			std::vector<int> indexes;
-			pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
-			indexes.clear();
-			size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
-			if (number_of_nans_in_ambient_pointcloud > 0) {
-				ROS_DEBUG_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
-			}
-
-			tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();
-			ROS_DEBUG_STREAM("Initial pose:" \
-					<< "\tTF position -> [ x: " << pose_tf_initial_guess.getOrigin().getX() << " | y: " << pose_tf_initial_guess.getOrigin().getY() << " | z: " << pose_tf_initial_guess.getOrigin().getZ() << " ]" \
-					<< "\tTF orientation -> [ qx: " << pose_tf_initial_guess_q.getX() << " | qy: " << pose_tf_initial_guess_q.getY() << " | qz: " << pose_tf_initial_guess_q.getZ() << " | qw: " << pose_tf_initial_guess_q.getW() << " ]");
-
-
-			// >>>>> localization pipeline <<<<<
-			tf2::Transform pose_corrections;
-			typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
-			ambient_pointcloud_keypoints->header = ambient_pointcloud->header;
-
-			bool localizationUpdateSuccess = updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_time, pose_tf_initial_guess, pose_tf2_transform_corrected_, pose_corrections, ambient_pointcloud_keypoints) || (!reference_pointcloud_available_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration);
-
-			ros::Time pose_time;
-			if (add_odometry_displacement_) {
-				pose_time = ros::Time::now();
-				pose_to_tf_publisher_->addOdometryDisplacementToTransform(pose_tf2_transform_corrected_, ambient_cloud_time, pose_time);
-			} else {
-				pose_time = ambient_cloud_time;
-			}
-
-			if (ignore_height_corrections_) {
-				pose_tf2_transform_corrected_.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
-			}
-			pose_tf2_transform_corrected_.getRotation().normalize();
-
-			tf2::Transform pose_tf_corrected_to_publish = pose_tf2_transform_corrected_;
-			if (invert_registration_transformation_) {
-				pose_tf_corrected_to_publish = pose_tf2_transform_corrected_.inverse();
-				pose_corrections = pose_corrections.inverse();
-			}
-
-			geometry_msgs::PoseArrayPtr accepted_poses(new geometry_msgs::PoseArray());
-			if (!pose_array_publisher_.getTopic().empty() || !localization_detailed_publisher_.getTopic().empty()) {
-				accepted_poses->header.frame_id = use_base_link_frame_when_publishing_initial_poses_array_ ? ambient_cloud_msg->header.frame_id : map_frame_id_;
-				accepted_poses->header.stamp = pose_time;
-				tf2::Transform pose_tf_corrected_to_publish_inverse = pose_tf_corrected_to_publish.inverse();
-				for (size_t i = 0; i < accepted_pose_corrections_.size(); ++i) {
-					geometry_msgs::Pose accepted_pose;
-					tf2::Transform accepted_pose_tf;
-
-					if (apply_cloud_registration_inverse_to_initial_poses_array_)
-						accepted_pose_tf = pose_tf_corrected_to_publish_inverse * accepted_pose_corrections_[i] * pose_tf_initial_guess;
-					else
-						accepted_pose_tf = accepted_pose_corrections_[i] * pose_tf_initial_guess;
-
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(accepted_pose_tf, accepted_pose);
-					accepted_poses->poses.push_back(accepted_pose);
-				}
-			}
-
-			if (!pose_array_publisher_.getTopic().empty() && !accepted_poses->poses.empty()) {
-				pose_array_publisher_.publish(accepted_poses);
-				ROS_INFO_STREAM("Publishing " << accepted_pose_corrections_.size() << " accepted poses");
-			}
-
-			if (localizationUpdateSuccess) {
-				ambient_pointcloud->header.stamp = ambient_cloud_time.toNSec() / 1000.0;
-				if (republish_reference_pointcloud_after_successful_registration_ && map_update_mode_ == NoIntegration)
-					publishReferencePointCloud(ambient_cloud_time, false);
-
-				last_scan_time_ = pose_time;
-
-				if (!localization_times_publisher_.getTopic().empty()) {
-					localization_times_msg_.header.frame_id = map_frame_id_;
-					localization_times_msg_.header.stamp = ambient_cloud_time;
-					localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
-					localization_times_msg_.correspondence_estimation_time_for_all_matchers = correspondence_estimation_time_for_all_matchers_;
-					localization_times_msg_.transformation_estimation_time_for_all_matchers = transformation_estimation_time_for_all_matchers_;
-					localization_times_msg_.transform_cloud_time_for_all_matchers = transform_cloud_time_for_all_matchers_;
-					localization_times_msg_.cloud_align_time_for_all_matchers = cloud_align_time_for_all_matchers_;
-					localization_times_publisher_.publish(localization_times_msg_);
-				}
-
-				if (publish_tf_map_odom_) {
-					pose_to_tf_publisher_->publishTF(pose_tf_corrected_to_publish, ambient_cloud_time, ambient_cloud_time);
-				}
-
-				last_accepted_pose_odom_to_map_ = pose_tf2_transform_corrected_ * transform_base_link_to_odom.inverse();
-
-				tf2::Quaternion pose_tf_corrected_q = pose_tf_corrected_to_publish.getRotation().normalize();
-				ROS_DEBUG_STREAM("Corrected pose:" \
-						<< "\tTF position -> [ x: " << pose_tf_corrected_to_publish.getOrigin().getX() << " | y: " << pose_tf_corrected_to_publish.getOrigin().getY() << " | z: " << pose_tf_corrected_to_publish.getOrigin().getZ() << " ]" \
-						<< "\tTF orientation -> [ qx: " << pose_tf_corrected_q.getX() << " | qy: " << pose_tf_corrected_q.getY() << " | qz: " << pose_tf_corrected_q.getZ() << " | qw: " << pose_tf_corrected_q.getW() << " ]");
-
-				if (!pose_with_covariance_stamped_publisher_.getTopic().empty() || !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
-					geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
-					pose_corrected_msg->header.frame_id = map_frame_id_;
-					pose_corrected_msg->header.stamp = pose_time;
-
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose.pose);
-					fillPoseCovariance(*pose_corrected_msg, last_accepted_pose_covariance_);
-
-					if (!pose_with_covariance_stamped_publisher_.getTopic().empty()) {
-						pose_with_covariance_stamped_publisher_.publish(pose_corrected_msg);
-					}
-
-					if (last_accepted_pose_performed_tracking_reset_ && !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
-						pose_with_covariance_stamped_tracking_reset_publisher_.publish(pose_corrected_msg);
-					}
-				}
-
-				if (!pose_stamped_publisher_.getTopic().empty()) {
-					geometry_msgs::PoseStampedPtr pose_corrected_msg(new geometry_msgs::PoseStamped());
-					pose_corrected_msg->header.frame_id = map_frame_id_;
-					pose_corrected_msg->header.stamp = pose_time;
-
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose);
-					pose_stamped_publisher_.publish(pose_corrected_msg);
-				}
-
-				if (!localization_detailed_publisher_.getTopic().empty()) {
-					LocalizationDetailed localization_detailed_msg;
-					localization_detailed_msg.header.frame_id = map_frame_id_;
-					localization_detailed_msg.header.stamp = ambient_cloud_time;
-					laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, localization_detailed_msg.pose);
-					localization_detailed_msg.outlier_percentage = outlier_percentage_;
-					localization_detailed_msg.root_mean_square_error_inliers = root_mean_square_error_inliers_;
-					if (localization_detailed_use_millimeters_in_root_mean_square_error_inliers_) {
-						localization_detailed_msg.root_mean_square_error_inliers *= 1000.0;
-					}
-					localization_detailed_msg.number_inliers = number_inliers_;
-					localization_detailed_msg.number_points_registered = ambient_pointcloud->size();
-					localization_detailed_msg.inliers_angular_distribution = inliers_angular_distribution_;
-					localization_detailed_msg.outliers_angular_distribution = outliers_angular_distribution_;
-
-					// translation corrections
-					if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
-						localization_detailed_msg.translation_corrections.x = pose_tf_initial_guess.getOrigin().getX() - pose_tf2_transform_corrected_.getOrigin().getX();
-						localization_detailed_msg.translation_corrections.y = pose_tf_initial_guess.getOrigin().getY() - pose_tf2_transform_corrected_.getOrigin().getY();
-						localization_detailed_msg.translation_corrections.z = pose_tf_initial_guess.getOrigin().getZ() - pose_tf2_transform_corrected_.getOrigin().getZ();
-					} else {
-						localization_detailed_msg.translation_corrections.x = pose_corrections.getOrigin().getX();
-						localization_detailed_msg.translation_corrections.y = pose_corrections.getOrigin().getY();
-						localization_detailed_msg.translation_corrections.z = pose_corrections.getOrigin().getZ();
-					}
-
-					if (localization_detailed_use_millimeters_in_translation_corrections_) {
-						localization_detailed_msg.translation_corrections.x *= 1000.0;
-						localization_detailed_msg.translation_corrections.y *= 1000.0;
-						localization_detailed_msg.translation_corrections.z *= 1000.0;
-					}
-					localization_detailed_msg.translation_correction = std::sqrt((double)(
-							localization_detailed_msg.translation_corrections.x * localization_detailed_msg.translation_corrections.x +
-							localization_detailed_msg.translation_corrections.y * localization_detailed_msg.translation_corrections.y +
-							localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z));
-
-					// rotation corrections
-					tf2::Quaternion rotation_corrections;
-					if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
-						rotation_corrections = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
-					} else {
-						rotation_corrections = pose_corrections.getRotation();
-					}
-					rotation_corrections.normalize();
-					if (rotation_corrections.getW() < 0.0) { rotation_corrections *= -1.0; } // shortest path angle
-					tf2::Vector3 rotation_correction_axis = rotation_corrections.getAxis().normalize();
-					localization_detailed_msg.rotation_correction_angle = rotation_corrections.getAngle();
-					localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
-					localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
-					localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
-
-					if (localization_detailed_use_degrees_in_rotation_corrections_) {
-						localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
-					}
-
-					if (number_of_registration_iterations_for_all_matchers_ > 0) {
-						localization_detailed_msg.number_of_registration_iterations_for_all_matchers = number_of_registration_iterations_for_all_matchers_;
-					} else {
-						localization_detailed_msg.number_of_registration_iterations_for_all_matchers = -1;
-					}
-
-					localization_detailed_msg.last_matcher_convergence_state = last_matcher_convergence_state_;
-					localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences = root_mean_square_error_of_last_registration_correspondences_;
-					if (localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_) {
-						localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences *= 1000.0;
-					}
-					localization_detailed_msg.initial_pose_estimation_poses = *accepted_poses;
-					localization_detailed_publisher_.publish(localization_detailed_msg);
-				}
-
-				if (!localization_diagnostics_publisher_.getTopic().empty()) {
-					localization_diagnostics_msg_.header.frame_id = map_frame_id_;
-					localization_diagnostics_msg_.header.stamp = ambient_cloud_time;
-					localization_diagnostics_msg_.number_correspondences_last_registration_algorithm = number_correspondences_last_registration_algorithm_;
-					localization_diagnostics_publisher_.publish(localization_diagnostics_msg_);
-				}
-
-				if (!aligned_pointcloud_publisher_.getTopic().empty()) {
-					if (!publish_aligned_pointcloud_only_if_there_is_subscribers_ || (publish_aligned_pointcloud_only_if_there_is_subscribers_ && aligned_pointcloud_publisher_.getNumSubscribers() > 0)) {
-						ROS_DEBUG_STREAM("Publishing registered ambient pointcloud with " << ambient_pointcloud->size() << " points");
-						sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
-						pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
-						aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
-					} else {
-						ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << aligned_pointcloud_publisher_.getTopic() << " because there is no subscribers");
-					}
-				}
-
-				performance_timer.restart();
-
-				if (!reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) {
-					if (updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints)) {
-						reference_pointcloud_loaded_ = true;
-					}
-				} else {
-					switch (map_update_mode_) {
-						case FullIntegration: { updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints); break; }
-						case InliersIntegration: { if (registered_inliers_) { updateReferencePointCloudWithAmbientPointCloud(registered_inliers_, ambient_pointcloud_keypoints); } break; }
-						case OutliersIntegration: { if (registered_outliers_) { updateReferencePointCloudWithAmbientPointCloud(registered_outliers_, ambient_pointcloud_keypoints); } break; }
-					}
-				}
-
-				localization_times_msg_.map_update_time = performance_timer.getElapsedTimeInMilliSec();
-				sensor_data_processing_status_ = SuccessfulPoseEstimation;
-			} else {
-				if (ambient_pointcloud_with_circular_buffer_ && circular_buffer_clear_inserted_points_if_registration_fails_) {
-					ambient_pointcloud_with_circular_buffer_->eraseNewest(last_number_points_inserted_in_circular_buffer_);
-				}
-				++pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
-				ROS_WARN_STREAM("Discarded cloud because localization couldn't be calculated");
-				sensor_data_processing_status_ = FailedPoseEstimation;
-			}
-
-			received_external_initial_pose_estimation_ = false;
-			accepted_pose_corrections_.clear();
-		} else {
-			if (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_) {
-				ROS_WARN_STREAM("Discarded cloud because there is no reference cloud to compare to");
-			} else {
-				ROS_WARN_STREAM("Discarded cloud with [scan_age: " << scan_age.toSec() << "] [elapsed_time_since_last_scan: " << elapsed_time_since_last_scan << "] [points: " << (ambient_cloud_msg->width * ambient_cloud_msg->height) << "]");
-			}
-			sensor_data_processing_status_ = FailedPoseEstimation;
+		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : pcl_conversions::fromPCL(ambient_pointcloud->header.stamp));
+		size_t number_points_ambient_pointcloud = ambient_pointcloud->width * ambient_pointcloud->height;
+		if (check_if_pointcloud_should_be_processed) {
+			if (!checkIfAmbientPointCloudShouldBeProcessed(ambient_cloud_time, number_points_ambient_pointcloud, check_if_pointcloud_subscribers_are_active, true))
+				return false;
 		}
+
+		ROS_DEBUG_STREAM("Received pointcloud with sequence number " << ambient_pointcloud->header.seq << " in frame " << ambient_pointcloud->header.frame_id << " with " << (ambient_pointcloud->width * ambient_pointcloud->height) << " points and with time stamp " << ambient_cloud_time << " (map_frame_id: " << map_frame_id_ << ")");
+
+		tf2::Transform transform_base_link_to_odom;
+		if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_base_link_to_odom, odom_frame_id_, base_link_frame_id_, ambient_cloud_time, tf_timeout_) || !math_utils::isTransformValid(transform_base_link_to_odom)) {
+			ROS_WARN_STREAM("Dropping pointcloud because tf between " << base_link_frame_id_ << " and " << odom_frame_id_ << " isn't available");
+			sensor_data_processing_status_ = FailedTFTransform;
+			return false;
+		}
+
+		if (!use_internal_tracking_) {
+			tf2::Transform transform_odom_to_map;
+			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_map, map_frame_id_, odom_frame_id_, ambient_cloud_time, tf_timeout_) || math_utils::isTransformValid(transform_odom_to_map)) {
+				ROS_WARN_STREAM("Using internal tracking transform because tf between " << odom_frame_id_ << " and " << map_frame_id_ << " isn't available");
+			} else {
+				last_accepted_pose_odom_to_map_ = transform_odom_to_map;
+			}
+		}
+
+		tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
+		size_t ambient_pointcloud_size = ambient_pointcloud->size();
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+		indexes.clear();
+		size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
+		if (number_of_nans_in_ambient_pointcloud > 0) {
+			ROS_DEBUG_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
+		}
+
+		tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();
+		ROS_DEBUG_STREAM("Initial pose:" \
+				<< "\tTF position -> [ x: " << pose_tf_initial_guess.getOrigin().getX() << " | y: " << pose_tf_initial_guess.getOrigin().getY() << " | z: " << pose_tf_initial_guess.getOrigin().getZ() << " ]" \
+				<< "\tTF orientation -> [ qx: " << pose_tf_initial_guess_q.getX() << " | qy: " << pose_tf_initial_guess_q.getY() << " | qz: " << pose_tf_initial_guess_q.getZ() << " | qw: " << pose_tf_initial_guess_q.getW() << " ]");
+
+
+		// >>>>> localization pipeline <<<<<
+		tf2::Transform pose_corrections;
+		typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints(new pcl::PointCloud<PointT>());
+		ambient_pointcloud_keypoints->header = ambient_pointcloud->header;
+
+		bool localizationUpdateSuccess = updateLocalizationWithAmbientPointCloud(ambient_pointcloud, ambient_cloud_time, pose_tf_initial_guess, pose_tf2_transform_corrected_, pose_corrections, ambient_pointcloud_keypoints) || (!reference_pointcloud_available_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration);
+
+		ros::Time pose_time;
+		if (add_odometry_displacement_) {
+			pose_time = ros::Time::now();
+			pose_to_tf_publisher_->addOdometryDisplacementToTransform(pose_tf2_transform_corrected_, ambient_cloud_time, pose_time);
+		} else {
+			pose_time = ambient_cloud_time;
+		}
+
+		if (ignore_height_corrections_) {
+			pose_tf2_transform_corrected_.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
+		}
+		pose_tf2_transform_corrected_.getRotation().normalize();
+
+		tf2::Transform pose_tf_corrected_to_publish = pose_tf2_transform_corrected_;
+		if (invert_registration_transformation_) {
+			pose_tf_corrected_to_publish = pose_tf2_transform_corrected_.inverse();
+			pose_corrections = pose_corrections.inverse();
+		}
+
+		geometry_msgs::PoseArrayPtr accepted_poses(new geometry_msgs::PoseArray());
+		if (!pose_array_publisher_.getTopic().empty() || !localization_detailed_publisher_.getTopic().empty()) {
+			accepted_poses->header.frame_id = use_base_link_frame_when_publishing_initial_poses_array_ ? base_link_frame_id_ : map_frame_id_;
+			accepted_poses->header.stamp = pose_time;
+			tf2::Transform pose_tf_corrected_to_publish_inverse = pose_tf_corrected_to_publish.inverse();
+			for (size_t i = 0; i < accepted_pose_corrections_.size(); ++i) {
+				geometry_msgs::Pose accepted_pose;
+				tf2::Transform accepted_pose_tf;
+
+				if (apply_cloud_registration_inverse_to_initial_poses_array_)
+					accepted_pose_tf = pose_tf_corrected_to_publish_inverse * accepted_pose_corrections_[i] * pose_tf_initial_guess;
+				else
+					accepted_pose_tf = accepted_pose_corrections_[i] * pose_tf_initial_guess;
+
+				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(accepted_pose_tf, accepted_pose);
+				accepted_poses->poses.push_back(accepted_pose);
+			}
+		}
+
+		if (!pose_array_publisher_.getTopic().empty() && !accepted_poses->poses.empty()) {
+			pose_array_publisher_.publish(accepted_poses);
+			ROS_INFO_STREAM("Publishing " << accepted_pose_corrections_.size() << " accepted poses");
+		}
+
+		if (localizationUpdateSuccess) {
+			ambient_pointcloud->header.stamp = (pcl::uint64_t)(ambient_cloud_time.toNSec() / 1000.0);
+			if (republish_reference_pointcloud_after_successful_registration_ && map_update_mode_ == NoIntegration)
+				publishReferencePointCloud(ambient_cloud_time, false);
+
+			last_scan_time_ = pose_time;
+
+			if (!localization_times_publisher_.getTopic().empty()) {
+				localization_times_msg_.header.frame_id = map_frame_id_;
+				localization_times_msg_.header.stamp = ambient_cloud_time;
+				localization_times_msg_.global_time = performance_timer.getElapsedTimeInMilliSec();
+				localization_times_msg_.correspondence_estimation_time_for_all_matchers = correspondence_estimation_time_for_all_matchers_;
+				localization_times_msg_.transformation_estimation_time_for_all_matchers = transformation_estimation_time_for_all_matchers_;
+				localization_times_msg_.transform_cloud_time_for_all_matchers = transform_cloud_time_for_all_matchers_;
+				localization_times_msg_.cloud_align_time_for_all_matchers = cloud_align_time_for_all_matchers_;
+				localization_times_publisher_.publish(localization_times_msg_);
+			}
+
+			if (publish_tf_map_odom_) {
+				pose_to_tf_publisher_->publishTF(pose_tf_corrected_to_publish, ambient_cloud_time, ambient_cloud_time);
+			}
+
+			last_accepted_pose_odom_to_map_ = pose_tf2_transform_corrected_ * transform_base_link_to_odom.inverse();
+
+			tf2::Quaternion pose_tf_corrected_q = pose_tf_corrected_to_publish.getRotation().normalize();
+			ROS_DEBUG_STREAM("Corrected pose:" \
+					<< "\tTF position -> [ x: " << pose_tf_corrected_to_publish.getOrigin().getX() << " | y: " << pose_tf_corrected_to_publish.getOrigin().getY() << " | z: " << pose_tf_corrected_to_publish.getOrigin().getZ() << " ]" \
+					<< "\tTF orientation -> [ qx: " << pose_tf_corrected_q.getX() << " | qy: " << pose_tf_corrected_q.getY() << " | qz: " << pose_tf_corrected_q.getZ() << " | qw: " << pose_tf_corrected_q.getW() << " ]");
+
+			if (!pose_with_covariance_stamped_publisher_.getTopic().empty() || !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
+				geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
+				pose_corrected_msg->header.frame_id = map_frame_id_;
+				pose_corrected_msg->header.stamp = pose_time;
+
+				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose.pose);
+				fillPoseCovariance(*pose_corrected_msg, last_accepted_pose_covariance_);
+
+				if (!pose_with_covariance_stamped_publisher_.getTopic().empty()) {
+					pose_with_covariance_stamped_publisher_.publish(pose_corrected_msg);
+				}
+
+				if (last_accepted_pose_performed_tracking_reset_ && !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
+					pose_with_covariance_stamped_tracking_reset_publisher_.publish(pose_corrected_msg);
+				}
+			}
+
+			if (!pose_stamped_publisher_.getTopic().empty()) {
+				geometry_msgs::PoseStampedPtr pose_corrected_msg(new geometry_msgs::PoseStamped());
+				pose_corrected_msg->header.frame_id = map_frame_id_;
+				pose_corrected_msg->header.stamp = pose_time;
+
+				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose);
+				pose_stamped_publisher_.publish(pose_corrected_msg);
+			}
+
+			if (!localization_detailed_publisher_.getTopic().empty()) {
+				LocalizationDetailed localization_detailed_msg;
+				localization_detailed_msg.header.frame_id = map_frame_id_;
+				localization_detailed_msg.header.stamp = ambient_cloud_time;
+				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, localization_detailed_msg.pose);
+				localization_detailed_msg.outlier_percentage = outlier_percentage_;
+				localization_detailed_msg.root_mean_square_error_inliers = root_mean_square_error_inliers_;
+				if (localization_detailed_use_millimeters_in_root_mean_square_error_inliers_) {
+					localization_detailed_msg.root_mean_square_error_inliers *= 1000.0;
+				}
+				localization_detailed_msg.number_inliers = number_inliers_;
+				localization_detailed_msg.number_points_registered = ambient_pointcloud->size();
+				localization_detailed_msg.inliers_angular_distribution = inliers_angular_distribution_;
+				localization_detailed_msg.outliers_angular_distribution = outliers_angular_distribution_;
+
+				// translation corrections
+				if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
+					localization_detailed_msg.translation_corrections.x = pose_tf_initial_guess.getOrigin().getX() - pose_tf2_transform_corrected_.getOrigin().getX();
+					localization_detailed_msg.translation_corrections.y = pose_tf_initial_guess.getOrigin().getY() - pose_tf2_transform_corrected_.getOrigin().getY();
+					localization_detailed_msg.translation_corrections.z = pose_tf_initial_guess.getOrigin().getZ() - pose_tf2_transform_corrected_.getOrigin().getZ();
+				} else {
+					localization_detailed_msg.translation_corrections.x = pose_corrections.getOrigin().getX();
+					localization_detailed_msg.translation_corrections.y = pose_corrections.getOrigin().getY();
+					localization_detailed_msg.translation_corrections.z = pose_corrections.getOrigin().getZ();
+				}
+
+				if (localization_detailed_use_millimeters_in_translation_corrections_) {
+					localization_detailed_msg.translation_corrections.x *= 1000.0;
+					localization_detailed_msg.translation_corrections.y *= 1000.0;
+					localization_detailed_msg.translation_corrections.z *= 1000.0;
+				}
+				localization_detailed_msg.translation_correction = std::sqrt((double)(
+						localization_detailed_msg.translation_corrections.x * localization_detailed_msg.translation_corrections.x +
+						localization_detailed_msg.translation_corrections.y * localization_detailed_msg.translation_corrections.y +
+						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z));
+
+				// rotation corrections
+				tf2::Quaternion rotation_corrections;
+				if (localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_) {
+					rotation_corrections = pose_tf_initial_guess_q * pose_tf_corrected_q.inverse();
+				} else {
+					rotation_corrections = pose_corrections.getRotation();
+				}
+				rotation_corrections.normalize();
+				if (rotation_corrections.getW() < 0.0) { rotation_corrections *= -1.0; } // shortest path angle
+				tf2::Vector3 rotation_correction_axis = rotation_corrections.getAxis().normalize();
+				localization_detailed_msg.rotation_correction_angle = rotation_corrections.getAngle();
+				localization_detailed_msg.rotation_correction_axis.x = rotation_correction_axis.getX();
+				localization_detailed_msg.rotation_correction_axis.y = rotation_correction_axis.getY();
+				localization_detailed_msg.rotation_correction_axis.z = rotation_correction_axis.getZ();
+
+				if (localization_detailed_use_degrees_in_rotation_corrections_) {
+					localization_detailed_msg.rotation_correction_angle = angles::to_degrees(localization_detailed_msg.rotation_correction_angle);
+				}
+
+				if (number_of_registration_iterations_for_all_matchers_ > 0) {
+					localization_detailed_msg.number_of_registration_iterations_for_all_matchers = number_of_registration_iterations_for_all_matchers_;
+				} else {
+					localization_detailed_msg.number_of_registration_iterations_for_all_matchers = -1;
+				}
+
+				localization_detailed_msg.last_matcher_convergence_state = last_matcher_convergence_state_;
+				localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences = root_mean_square_error_of_last_registration_correspondences_;
+				if (localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_) {
+					localization_detailed_msg.root_mean_square_error_of_last_registration_correspondences *= 1000.0;
+				}
+				localization_detailed_msg.initial_pose_estimation_poses = *accepted_poses;
+				localization_detailed_publisher_.publish(localization_detailed_msg);
+			}
+
+			if (!localization_diagnostics_publisher_.getTopic().empty()) {
+				localization_diagnostics_msg_.header.frame_id = map_frame_id_;
+				localization_diagnostics_msg_.header.stamp = ambient_cloud_time;
+				localization_diagnostics_msg_.number_correspondences_last_registration_algorithm = number_correspondences_last_registration_algorithm_;
+				localization_diagnostics_publisher_.publish(localization_diagnostics_msg_);
+			}
+
+			if (!aligned_pointcloud_publisher_.getTopic().empty()) {
+				if (!publish_aligned_pointcloud_only_if_there_is_subscribers_ || (publish_aligned_pointcloud_only_if_there_is_subscribers_ && aligned_pointcloud_publisher_.getNumSubscribers() > 0)) {
+					ROS_DEBUG_STREAM("Publishing registered ambient pointcloud with " << ambient_pointcloud->size() << " points");
+					sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
+					pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
+					aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
+				} else {
+					ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << aligned_pointcloud_publisher_.getTopic() << " because there is no subscribers");
+				}
+			}
+
+			performance_timer.restart();
+
+			if (!reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) {
+				if (updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints)) {
+					reference_pointcloud_loaded_ = true;
+				}
+			} else {
+				switch (map_update_mode_) {
+					case FullIntegration: { updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints); break; }
+					case InliersIntegration: { if (registered_inliers_) { updateReferencePointCloudWithAmbientPointCloud(registered_inliers_, ambient_pointcloud_keypoints); } break; }
+					case OutliersIntegration: { if (registered_outliers_) { updateReferencePointCloudWithAmbientPointCloud(registered_outliers_, ambient_pointcloud_keypoints); } break; }
+				}
+			}
+
+			localization_times_msg_.map_update_time = performance_timer.getElapsedTimeInMilliSec();
+		} else {
+			if (ambient_pointcloud_with_circular_buffer_ && circular_buffer_clear_inserted_points_if_registration_fails_) {
+				ambient_pointcloud_with_circular_buffer_->eraseNewest(last_number_points_inserted_in_circular_buffer_);
+			}
+			++pose_tracking_number_of_failed_registrations_since_last_valid_pose_;
+			ROS_WARN_STREAM("Discarded cloud because localization couldn't be calculated");
+		}
+
+		received_external_initial_pose_estimation_ = false;
+		accepted_pose_corrections_.clear();
 	} catch (std::exception& e) {
 		ROS_ERROR_STREAM("Exception caught in ambient pointcloud callback! Info: [" << e.what() <<"]");
-		sensor_data_processing_status_ = FailedPoseEstimation;
+		sensor_data_processing_status_ = ExceptionRaised;
+	}
+
+	if (sensor_data_processing_status_ == SuccessfulPoseEstimation) {
+		ROS_DEBUG("Successful finished pose estimation");
+		return true;
+	} else {
+		ROS_WARN_STREAM("Failed point cloud processing with error [" << SensorDataProcessingStatusToStr(sensor_data_processing_status_) << "]");
+		return false;
 	}
 }
 
@@ -1787,6 +1809,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	std::string ambient_point_cloud_original_frame_id = ambient_pointcloud->header.frame_id;
 
 	if (ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) {
+		sensor_data_processing_status_ = PointCloudWithoutTheMinimumNumberOfRequiredPoints;
 		return false;
 	}
 
@@ -1806,13 +1829,28 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if (!ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty()) {
 		ROS_DEBUG("Using a pointcloud with different filters for SLAM");
 		ambient_pointcloud_integration = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
-		if (!applyFilters(ambient_pointcloud_integration_filters_, ambient_pointcloud_integration)) { return false; }
-		if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
-			if (!transformCloudToTFFrame(ambient_pointcloud_integration, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) { return false; }
-			if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud_integration)) { return false; }
+		if (!applyFilters(ambient_pointcloud_integration_filters_, ambient_pointcloud_integration)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
+			return false;
 		}
-		if (!transformCloudToTFFrame(ambient_pointcloud_integration, pointcloud_time, map_frame_id_)) { return false; }
-		if (!applyFilters(ambient_pointcloud_integration_filters_map_frame_, ambient_pointcloud_integration)) { return false; }
+		if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
+			if (!transformCloudToTFFrame(ambient_pointcloud_integration, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) {
+				sensor_data_processing_status_ = FailedTFTransform;
+				return false;
+			}
+			if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud_integration)) {
+				sensor_data_processing_status_ = PointCloudFilteringFailed;
+				return false;
+			}
+		}
+		if (!transformCloudToTFFrame(ambient_pointcloud_integration, pointcloud_time, map_frame_id_)) {
+			sensor_data_processing_status_ = FailedTFTransform;
+			return false;
+		}
+		if (!applyFilters(ambient_pointcloud_integration_filters_map_frame_, ambient_pointcloud_integration)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
+			return false;
+		}
 		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_integration); }
 	}
 
@@ -1823,7 +1861,10 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		} else {
 			ROS_DEBUG("Using raw ambient point cloud for normal estimation");
 			ambient_pointcloud_raw = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
-			if (!transformCloudToTFFrame(ambient_pointcloud_raw, pointcloud_time, map_frame_id_)) { return false; }
+			if (!transformCloudToTFFrame(ambient_pointcloud_raw, pointcloud_time, map_frame_id_)) {
+				sensor_data_processing_status_ = FailedTFTransform;
+				return false;
+			}
 			if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
 		}
 	}
@@ -1832,13 +1873,28 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	performance_timer.start();
 	// ==============================================================  filters
 	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
-	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) { return false; }
-	if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
-		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) { return false; }
-		if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) { return false; }
+	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) {
+		sensor_data_processing_status_ = PointCloudFilteringFailed;
+		return false;
 	}
-	if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_)) { return false; }
-	if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) { return false; }
+	if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
+		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) {
+			sensor_data_processing_status_ = FailedTFTransform;
+			return false;
+		}
+		if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
+			return false;
+		}
+	}
+	if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_)) {
+		sensor_data_processing_status_ = FailedTFTransform;
+		return false;
+	}
+	if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) {
+		sensor_data_processing_status_ = PointCloudFilteringFailed;
+		return false;
+	}
 	if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
@@ -1858,13 +1914,17 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		msg_frame_ids_with_data_in_circular_buffer_.insert(ambient_point_cloud_original_frame_id);
 		if (msg_frame_ids_with_data_in_circular_buffer_.size() < ambient_pointcloud_subscribers_.size()) {
 			ROS_DEBUG_STREAM("Added frame_id " << ambient_point_cloud_original_frame_id << " to the set containing the received frame_ids with data in the circular buffer");
+			sensor_data_processing_status_ = FillingCircularBufferWithMsgsFromAllTopics;
 			return false;
 		} else {
 			ROS_DEBUG("Received msgs in all the subscribed point cloud topics");
 			msg_frame_ids_with_data_in_circular_buffer_.clear();
 		}
 	}
-	if (ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ || ambient_pointcloud->size() < (size_t)minimum_number_points_ambient_pointcloud_circular_buffer_) { return false; }
+	if (ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ || ambient_pointcloud->size() < (size_t)minimum_number_points_ambient_pointcloud_circular_buffer_) {
+		sensor_data_processing_status_ = PointCloudWithoutTheMinimumNumberOfRequiredPoints;
+		return false;
+	}
 
 	// ==============================================================  normal estimation
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
@@ -1872,11 +1932,17 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	bool computed_normals = false;
 	localization_times_msg_.surface_normal_estimation_time = 0.0;
 	if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
-		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
+			sensor_data_processing_status_ = FailedNormalEstimation;
+			return false;
+		}
 		computed_normals = true;
 	}
 
-	if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) { return false; }
+	if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) {
+		sensor_data_processing_status_ = PointCloudFilteringFailed;
+		return false;
+	}
 
 	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
 		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
@@ -1910,6 +1976,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		received_external_initial_pose_estimation_ = false;
 		pose_tracking_number_of_failed_registrations_since_last_valid_pose_ = 0;
 
+		sensor_data_processing_status_ = FirstPointCloudInSlamMode;
 		return false; // stop pipeline processing if no reference cloud is available (only before registration to allow preprocessing of the first cloud when performing SLAM)
 	}
 
@@ -1935,7 +2002,10 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			if (time_from_last_pose < initial_pose_estimation_timeout_) {
 				ROS_INFO("Performing initial pose recovery");
 				if (!computed_normals && compute_normals_when_estimating_initial_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
+						sensor_data_processing_status_ = FailedNormalEstimation;
+						return false;
+					}
 					computed_normals = true;
 				}
 
@@ -1944,13 +2014,16 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					computed_keypoints = true;
 				}
 
-				applyCloudRegistration(initial_pose_estimators_feature_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out);
+				applyCloudRegistration(initial_pose_estimators_feature_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out);
 			} else {
 				ROS_DEBUG_STREAM("Timeout of " << initial_pose_estimation_timeout_ << " seconds reached (" << time_from_last_pose << " seconds from last valid pose)");
 			}
 		}
 
-		if (!initial_pose_estimators_point_matchers_.empty() && !applyCloudRegistration(initial_pose_estimators_point_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) { return false; }
+		if (!initial_pose_estimators_point_matchers_.empty() && !applyCloudRegistration(initial_pose_estimators_point_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
+			sensor_data_processing_status_ = FailedInitialPoseEstimation;
+			return false;
+		}
 
 		localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 		last_accepted_pose_performed_tracking_reset_ = true;
@@ -1960,13 +2033,17 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		performance_timer.restart();
 		localization_times_msg_.pointcloud_registration_time = 0.0;
 
-		if ((!tracking_matchers_.empty() || !tracking_recovery_matchers_.empty()) && !applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
+		if ((!tracking_matchers_.empty() || !tracking_recovery_matchers_.empty()) && !applyCloudRegistration(tracking_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 			if (tracking_recovery_matchers_.empty()) {
+				sensor_data_processing_status_ = FailedPoseEstimation;
 				return false;
 			} else if (tracking_recovery_reached) {
 				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
+						sensor_data_processing_status_ = FailedNormalEstimation;
+						return false;
+					}
 					computed_normals = true;
 				}
 
@@ -1976,11 +2053,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 				}
 
 				performance_timer.restart();
-				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
+				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 					ROS_INFO("Successfully performed registration recovery");
 					performed_recovery = true;
 					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 				} else {
+					sensor_data_processing_status_ = FailedPoseEstimation;
 					return false;
 				}
 			}
@@ -2009,14 +2087,20 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_times_msg_.transformation_validators_time = 0.0;
 	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 	if (performed_recovery && !transformation_validators_tracking_recovery_.empty()) {
-		if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
+		if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
+			sensor_data_processing_status_ = PoseEstimationRejectedByTransformationValidators;
+			return false;
+		}
 	} else {
 		if (!applyTransformationValidators(transformation_validators_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
 			if (!performed_recovery && !tracking_recovery_matchers_.empty() && tracking_recovery_reached) {
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
-					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) { return false; }
+					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
+						sensor_data_processing_status_ = FailedNormalEstimation;
+						return false;
+					}
 					computed_normals = true;
 				}
 
@@ -2025,7 +2109,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					computed_keypoints = true;
 				}
 
-				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
+				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 					pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 					ROS_INFO("Successfully applied registration recovery");
 					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
@@ -2043,11 +2127,16 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					localization_times_msg_.registered_points_angular_distribution_analysis_time += performance_timer.getElapsedTimeInMilliSec();
 
 					performance_timer.restart();
-					if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) { return false; }
+					if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
+						sensor_data_processing_status_ = PoseEstimationRejectedByTransformationValidators;
+						return false;
+					}
 				} else {
+					sensor_data_processing_status_ = FailedPoseEstimation;
 					return false;
 				}
 			} else {
+				sensor_data_processing_status_ = FailedPoseEstimation;
 				return false;
 			}
 		}
@@ -2062,9 +2151,9 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	pose_corrections_out.getRotation().normalize();
 
 	localization_times_msg_.transformation_validators_time += performance_timer.getElapsedTimeInMilliSec();
-	ambient_pointcloud->header.stamp = pointcloud_time.toNSec() / 1000.0;
+	ambient_pointcloud->header.stamp = (pcl::uint64_t)(pointcloud_time.toNSec() / 1000.0);
 	if (ambient_pointcloud_integration) {
-		ambient_pointcloud_integration->header.stamp = pointcloud_time.toNSec() / 1000.0;
+		ambient_pointcloud_integration->header.stamp = (pcl::uint64_t)(pointcloud_time.toNSec() / 1000.0);
 	}
 
 	performance_timer.restart();
@@ -2100,6 +2189,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		ambient_pointcloud = ambient_pointcloud_integration;
 	}
 
+	sensor_data_processing_status_ = SuccessfulPoseEstimation;
 	return true;
 }
 
