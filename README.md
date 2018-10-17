@@ -194,7 +194,7 @@ The [install.bash](install/install.bash) script will execute the following accom
   - Setup of the workspace (if an existing workspace is specified, the script will not change the configurations of the workspace)
 * [c_repositories.bash](install/c_repositories.bash)
   - Cloning of this repository and its dependencies that must be built from source
-* [d_rosped.bash](install/d_rosped.bash)
+* [d_rosdep.bash](install/d_rosdep.bash)
   - Any remaining transitive dependencies will be installed using rosdep
 * [e_build.bash](install/e_build.bash)
   - Building of the packages
