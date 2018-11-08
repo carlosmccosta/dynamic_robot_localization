@@ -9,8 +9,23 @@ Dynamic Robot Localization
 The dynamic\_robot\_localization is a [ROS](http://www.ros.org) package that offers 3 DoF and 6 DoF localization using PCL and allows dynamic map update using OctoMap.
 It's a modular localization pipeline, that can be configured using yaml files (detailed configuration layout available in [drl_configs.yaml](yaml/schema/drl_configs.yaml) and examples of configurations available in [guardian_config](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch) and [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests/tree/hydro-devel/launch/environments)).
 
-Even though this package was developed for robot self-localization, it was implemented as a generic, configurable and extensible point cloud matching library, allowing its usage in related problems such as [estimation of the 6 DoF pose of an object](https://www.youtube.com/watch?v=557vglPW6Ko) and 3D object scanning.
+Even though this package was developed for robot self-localization and mapping, it was implemented as a generic, configurable and extensible point cloud matching library, allowing its usage in related problems such as [estimation of the 6 DoF pose of an object](https://www.youtube.com/watch?v=557vglPW6Ko) and 3D object scanning.
 
+### Example of launch files and videos for each use case:
+- 6 DoF localization / mapping of a flying kinect (using the [ethzasl iros dataset](https://projects.asl.ethz.ch/datasets/doku.php?id=kinect:iros2011kinect))
+    * [Launch file](https://github.com/carlosmccosta/dynamic_robot_localization_tests/blob/hydro-devel/launch/environments/asl/ethzasl_kinect_dataset.launch)
+    * [Video](https://www.youtube.com/watch?v=Us9XkcRx_5I)
+- 6 DoF robot localization (map from CAD data)
+    * [Launch file](https://github.com/carlosmccosta/dynamic_robot_localization_tests/blob/hydro-devel/launch/environments/labiomep/labiomep_6dof.launch)
+    * [Robot localization video](https://www.youtube.com/watch?v=VtOv4beLcBM)
+- 6 DoF object pose estimation
+    * [Launch file](https://github.com/carlosmccosta/assembly_projection_mapping_teaching/blob/kinetic-devel/launch/object_recognition.launch)
+    * [Pose estimation video with projection mapping](https://www.youtube.com/watch?v=557vglPW6Ko)
+    * [Pick and place](https://www.youtube.com/watch?v=ic9rhJEr_EE)
+- 3 DoF robot localization / mapping
+    * [Launch file](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch)
+    * [Robot mapping video](https://www.youtube.com/watch?v=GKDG7c61OLo)
+    * [Robot localization video](https://www.youtube.com/watch?v=CIP-QH87z8E)
 
 ![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
 
