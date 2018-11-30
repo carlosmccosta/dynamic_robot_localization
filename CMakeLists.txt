@@ -122,7 +122,6 @@ add_library(drl_common
     src/common/pointcloud_utils.cpp
     src/common/registration_visualizer.cpp
     src/common/time_utils.cpp
-    src/common/transformation_aligner.cpp
     src/common/verbosity_levels.cpp
 )
 
