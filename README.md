@@ -18,10 +18,12 @@ Even though this package was developed for robot self-localization and mapping, 
 - 6 DoF robot localization (map from CAD data)
     * [Launch file](https://github.com/carlosmccosta/dynamic_robot_localization_tests/blob/hydro-devel/launch/environments/labiomep/labiomep_6dof.launch)
     * [Robot localization video](https://www.youtube.com/watch?v=VtOv4beLcBM)
-- 6 DoF object pose estimation
+- 6 DoF object pose estimation for pick and pack operations
+    * [Launch file](https://github.com/carlosmccosta/object_recognition/blob/master/object_recognition_skill_server/launch/object_recognition.launch)
+    * [Pick and pack of objects from a conveyor](https://www.youtube.com/watch?v=ic9rhJEr_EE)
+- 6 DoF object pose estimation for projection mapping
     * [Launch file](https://github.com/carlosmccosta/assembly_projection_mapping_teaching/blob/kinetic-devel/launch/object_recognition.launch)
     * [Pose estimation video with projection mapping](https://www.youtube.com/watch?v=557vglPW6Ko)
-    * [Pick and place](https://www.youtube.com/watch?v=ic9rhJEr_EE)
 - 3 DoF robot localization / mapping
     * [Launch file](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch)
     * [Robot mapping video](https://www.youtube.com/watch?v=GKDG7c61OLo)
@@ -86,6 +88,11 @@ Video 10: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 
 
 Video 11: Object pose estimation for assisted assembly operations
 
+
+
+[![Object pose estimation for pick and pack operations](http://img.youtube.com/vi/ic9rhJEr_EE/maxresdefault.jpg)](https://www.youtube.com/watch?v=ic9rhJEr_EE)
+
+Video 12: Object pose estimation for pick and pack operations
 
 
 
@@ -236,6 +243,7 @@ On the other hand, [wstool](http://wiki.ros.org/wstool) can be used since the [c
 * [robot_localization_tools](https://github.com/carlosmccosta/robot_localization_tools)
 * [crob_gazebo_models](https://github.com/carlosmccosta/crob_gazebo_models)
 * [octomap_mapping](https://github.com/carlosmccosta/octomap_mapping)
+* [object_recognition](https://github.com/carlosmccosta/object_recognition)
 
 
 
