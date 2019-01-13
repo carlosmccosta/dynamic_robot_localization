@@ -20,7 +20,7 @@ Even though this package was developed for robot self-localization and mapping, 
     * [Robot localization video](https://www.youtube.com/watch?v=VtOv4beLcBM)
 - 6 DoF object pose estimation for pick and pack operations
     * [Launch file](https://github.com/carlosmccosta/object_recognition/blob/master/object_recognition_skill_server/launch/object_recognition.launch)
-    * [Pick and pack of objects from a conveyor](https://www.youtube.com/watch?v=ic9rhJEr_EE)
+    * [Pick and pack of objects from a conveyor](https://www.youtube.com/watch?v=GRR2e6lvnEs)
 - 6 DoF object pose estimation for projection mapping
     * [Launch file](https://github.com/carlosmccosta/assembly_projection_mapping_teaching/blob/kinetic-devel/launch/object_recognition.launch)
     * [Pose estimation video with projection mapping](https://www.youtube.com/watch?v=557vglPW6Ko)
@@ -90,7 +90,7 @@ Video 11: Object pose estimation for assisted assembly operations
 
 
 
-[![Object pose estimation for pick and pack operations](http://img.youtube.com/vi/ic9rhJEr_EE/maxresdefault.jpg)](https://www.youtube.com/watch?v=ic9rhJEr_EE)
+[![Object pose estimation for pick and pack operations](http://img.youtube.com/vi/GRR2e6lvnEs/maxresdefault.jpg)](https://www.youtube.com/watch?v=GRR2e6lvnEs)
 
 Video 12: Object pose estimation for pick and pack operations
 
