@@ -64,6 +64,7 @@ Localization<PointT>::Localization() :
 	reference_pointcloud_loaded_(false),
 	reference_pointcloud_2d_(false),
 	reference_pointcloud_available_(true),
+	reference_pointcloud_required_(true),
 	ignore_height_corrections_(false),
 	last_accepted_pose_valid_(false),
 	last_accepted_pose_performed_tracking_reset_(false),
@@ -332,6 +333,7 @@ void Localization<PointT>::setupReferencePointCloud() {
 	}
 
 	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_available", reference_pointcloud_available_, true);
+	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_required", reference_pointcloud_required_, true);
 
 	std::string reference_pointcloud_update_mode;
 	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_update_mode", reference_pointcloud_update_mode, std::string("NoIntegration"));
@@ -589,6 +591,8 @@ void Localization<PointT>::setupPointCloudMatchersConfigurations(std::vector< ty
 				cloud_matcher.reset(new NormalDistributionsTransform2D<PointT>());
 			} else if (matcher_name.find("normal_distributions_transform_3d") != std::string::npos) {
 				cloud_matcher.reset(new NormalDistributionsTransform3D<PointT>());
+			} else if (matcher_name.find("principal_component_analysis") != std::string::npos) {
+				cloud_matcher.reset(new PrincipalComponentAnalysis<PointT>());
 			}
 
 			if (cloud_matcher) {
@@ -1054,26 +1058,28 @@ void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 		if (!localization_times_publish_topic_.empty()) localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 5, true);
 
 		// reference map
-		if (reference_pointcloud_filename_.empty()) {
-			if (!reference_pointcloud_topic_.empty()) {
-				reference_pointcloud_subscriber_ = node_handle_->subscribe(reference_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSPointCloud, this);
-			} else {
-				if (!reference_costmap_topic_.empty()) {
-					costmap_subscriber_ = node_handle_->subscribe(reference_costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
+		if (reference_pointcloud_available_) {
+			if (reference_pointcloud_filename_.empty()) {
+				if (!reference_pointcloud_topic_.empty()) {
+					reference_pointcloud_subscriber_ = node_handle_->subscribe(reference_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSPointCloud, this);
 				} else {
+					if (!reference_costmap_topic_.empty()) {
+						costmap_subscriber_ = node_handle_->subscribe(reference_costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
+					} else {
+						ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
+						return;
+					}
+				}
+			} else {
+				if (!loadReferencePointCloudFromFile(reference_pointcloud_filename_)) {
 					ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
 					return;
 				}
 			}
-		} else {
-			if (!loadReferencePointCloudFromFile(reference_pointcloud_filename_)) {
-				ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
-				return;
-			}
 		}
 
 		// initial pose setup might block while waiting for valid TF
-		while (!ros::Time::isValid() || (reference_pointcloud_available_ && !reference_pointcloud_loaded_)) {
+		while (!ros::Time::isValid() || (reference_pointcloud_required_ && reference_pointcloud_available_ && !reference_pointcloud_loaded_)) {
 			ROS_DEBUG_THROTTLE(1.0, "Waiting for valid time...");
 			ros::spinOnce(); // allows to setup reference map before tf is available (which happens when playing bag files with --pause option)
 		}
@@ -1200,8 +1206,9 @@ bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::
 		sensor_data_processing_status_ = PointCloudSubscribersDisabled;
 		if (use_ros_console)
 			ROS_WARN("Discarded point cloud because the subscribers are not active");
-	} else if ((reference_pointcloud_available_ && (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_) ||
-	            !reference_pointcloud_loaded_ && map_update_mode_ == NoIntegration)) {
+	} else if (reference_pointcloud_required_ && reference_pointcloud_available_ &&
+				((!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_) ||
+				(!reference_pointcloud_loaded_ && map_update_mode_ == NoIntegration))) {
 		process_pointcloud = false;
 		sensor_data_processing_status_ = MissingReferencePointCloud;
 		if (use_ros_console)
@@ -1430,10 +1437,10 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 					localization_detailed_msg.translation_corrections.y *= 1000.0;
 					localization_detailed_msg.translation_corrections.z *= 1000.0;
 				}
-				localization_detailed_msg.translation_correction = std::sqrt((double)(
+				localization_detailed_msg.translation_correction = std::sqrt(
 						localization_detailed_msg.translation_corrections.x * localization_detailed_msg.translation_corrections.x +
 						localization_detailed_msg.translation_corrections.y * localization_detailed_msg.translation_corrections.y +
-						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z));
+						localization_detailed_msg.translation_corrections.z * localization_detailed_msg.translation_corrections.z);
 
 				// rotation corrections
 				tf2::Quaternion rotation_corrections;
@@ -1489,7 +1496,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 
 			performance_timer.restart();
 
-			if (!reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) {
+			if (reference_pointcloud_required_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) {
 				if (updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints)) {
 					reference_pointcloud_loaded_ = true;
 				}
@@ -1666,7 +1673,7 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 	detected_inliers_.clear();
 	root_mean_square_error_inliers_ = std::numeric_limits<double>::max();
 	number_inliers_ = 0;
-	if (ambient_pointcloud->size() <= 0 || ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) { return 1.0; }
+	if (ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ || reference_pointcloud_->size() < minimum_number_of_points_in_reference_pointcloud_) { return 1.0; }
 
 	size_t number_outliers = 0;
 	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
@@ -1818,7 +1825,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			|| ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_)
 			|| (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_);
 
-	if (!reference_pointcloud_available_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) { lost_tracking = false; }
+	if (reference_pointcloud_required_ && !reference_pointcloud_available_ && !reference_pointcloud_loaded_ && map_update_mode_ != NoIntegration) { lost_tracking = false; }
 
 	if (lost_tracking) {
 		ROS_ERROR("Lost tracking!");
@@ -1944,6 +1951,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false;
 	}
 
+	std::vector<int> indexes;
+	pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+	indexes.clear();
+	pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+	indexes.clear();
+
 	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
 		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
 			ROS_DEBUG_STREAM("Publishing filtered ambient pointcloud with " << ambient_pointcloud->size() << " points");
@@ -1963,7 +1976,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		computed_keypoints = true;
 	}
 
-	if (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_) {
+	if (reference_pointcloud_required_ && (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_)) {
 		if (ambient_pointcloud_integration) {
 			ROS_DEBUG("Switching SLAM cloud");
 			ambient_pointcloud = ambient_pointcloud_integration;

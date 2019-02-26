@@ -47,7 +47,7 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 		convergence_criteria->setMaximumIterationsSimilarTransforms(convergence_max_iterations_similar_transforms_);
 	}
 
-	ROS_DEBUG_STREAM("Setting a registration time limit of " << convergence_time_limit_seconds << " seconds to " << CloudMatcher<PointT>::cloud_matcher_->getClassName() << " algorithm");
+	ROS_DEBUG_STREAM("Setting a registration time limit of " << convergence_time_limit_seconds << " seconds to " << CloudMatcher<PointT>::getCloudMatcherName() << " algorithm");
 
 	bool use_reciprocal_correspondences;
 	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, false);
@@ -71,7 +71,9 @@ bool IterativeClosestPoint<PointT>::registerCloud(typename pcl::PointCloud<Point
 	}
 
 	if (CloudMatcher<PointT>::registerCloud(ambient_pointcloud, ambient_pointcloud_search_method, pointcloud_keypoints, best_pose_correction_out, accepted_pose_corrections_out, pointcloud_registered_out, return_aligned_keypoints)) {
-		cumulative_sum_of_convergence_time_ += convergence_criteria->getConvergenceElaspedTime();
+		if (convergence_criteria)
+			cumulative_sum_of_convergence_time_ += convergence_criteria->getConvergenceElaspedTime();
+
 		++number_of_convergence_time_measurements;
 
 		if (convergence_time_limit_seconds_ > 0.0 &&
@@ -81,7 +83,7 @@ bool IterativeClosestPoint<PointT>::registerCloud(typename pcl::PointCloud<Point
 			double updated_convergence_time_limit_seconds = std::min(convergence_time_limit_seconds_, (cumulative_sum_of_convergence_time_ / number_of_convergence_time_measurements) * convergence_time_limit_seconds_as_mean_convergence_time_percentage_);
 			if (updated_convergence_time_limit_seconds > 0.0 && convergence_criteria) {
 				convergence_criteria->setConvergenceTimeLimitSeconds(updated_convergence_time_limit_seconds);
-				ROS_DEBUG_STREAM("Updating " << CloudMatcher<PointT>::cloud_matcher_->getClassName()  << " convergence time limit to " << updated_convergence_time_limit_seconds);
+				ROS_DEBUG_STREAM("Updating " << CloudMatcher<PointT>::getCloudMatcherName()  << " convergence time limit to " << updated_convergence_time_limit_seconds);
 			}
 		}
 		return true;

@@ -76,6 +76,9 @@ class CloudMatcher : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void setupTFConfigurationsFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void setupReferencePointCloudPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void setupAlignedPointCloudPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
 		virtual void setupReferenceCloud(typename pcl::PointCloud<PointT>::Ptr& reference_cloud, typename pcl::PointCloud<PointT>::Ptr& reference_cloud_keypoints,
 				typename pcl::search::KdTree<PointT>::Ptr& search_method);
 
@@ -83,6 +86,7 @@ class CloudMatcher : public ConfigurableObject {
 				typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
+		virtual bool postProcessRegistrationMatrix(typename pcl::PointCloud<PointT>::Ptr &ambient_pointcloud, const Eigen::Matrix4f &final_transformation, tf2::Transform &best_pose_correction_out);
 
 		virtual void initializeKeypointProcessing() {}
 		virtual void processKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
@@ -103,6 +107,7 @@ class CloudMatcher : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		inline typename pcl::Registration<PointT, PointT>::Ptr getCloudMatcher() { return cloud_matcher_; }
+		virtual std::string getCloudMatcherName() { return (cloud_matcher_ != nullptr ? cloud_matcher_->getClassName() : "[]"); }
 		inline bool getMatchOnlyKeypoints() const { return match_only_keypoints_; }
 		inline typename CloudPublisher<PointT>::Ptr getCloudPublisher() { return cloud_publisher_; }
 		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }

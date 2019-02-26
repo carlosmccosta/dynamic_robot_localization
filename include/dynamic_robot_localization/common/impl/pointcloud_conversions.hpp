@@ -41,8 +41,8 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 			for (unsigned int x = 0; x < map_width; ++x) {
 				if (occupancy_grid.data[data_position] > threshold_for_map_cell_as_obstacle) {
 					x_map = (float)x * map_resolution;
-					new_point.x = static_cast<float> (transform (0, 0) * x_map + transform (0, 1) * y_map + transform (0, 3));
-					new_point.y = static_cast<float> (transform (1, 0) * x_map + transform (1, 1) * y_map + transform (1, 3));
+					new_point.x = transform (0, 0) * x_map + transform (0, 1) * y_map + transform (0, 3);
+					new_point.y = transform (1, 0) * x_map + transform (1, 1) * y_map + transform (1, 3);
 					pointcloud.push_back(new_point);
 
 					if (occupancy_grid_values) {
@@ -174,7 +174,7 @@ bool fromFile(const std::string& filename, PointCloudT& pointcloud) {
 
 template<typename PointCloudT>
 bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format) {
-	std::string::size_type index = filename.rfind(".");
+	std::string::size_type index = filename.rfind('.');
 	if (index == std::string::npos) return false;
 
 	std::string extension = filename.substr(index + 1);

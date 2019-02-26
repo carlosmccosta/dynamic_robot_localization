@@ -188,6 +188,7 @@ add_library(drl_cloud_matchers
     src/cloud_matchers/point_matchers/iterative_closest_point_with_normals.cpp
     src/cloud_matchers/point_matchers/normal_distributions_transform_2d.cpp
     src/cloud_matchers/point_matchers/normal_distributions_transform_3d.cpp
+    src/cloud_matchers/point_matchers/principal_component_analysis.cpp
 )
 
 add_library(drl_transformation_validators

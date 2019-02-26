@@ -99,6 +99,7 @@
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point_generalized.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/normal_distributions_transform_2d.h>
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/normal_distributions_transform_3d.h>
+#include <dynamic_robot_localization/cloud_matchers/point_matchers/principal_component_analysis.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment.h>
 #include <dynamic_robot_localization/cloud_matchers/feature_matchers/sample_consensus_initial_alignment_prerejective.h>
 
@@ -290,6 +291,7 @@ class Localization : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		bool referencePointCloudLoaded() { return reference_pointcloud_loaded_; }
+		bool referencePointCloudRequired() { return reference_pointcloud_required_; }
 		SensorDataProcessingStatus getSensorDataProcessingStatus() { return sensor_data_processing_status_; }
 		const std::vector< tf2::Transform >& getAcceptedPoseCorrections() { return accepted_pose_corrections_; }
 		const tf2::Transform& getAcceptedEstimatedPose() { return pose_tf2_transform_corrected_; }
@@ -390,6 +392,7 @@ class Localization : public ConfigurableObject {
 		bool reference_pointcloud_loaded_;
 		bool reference_pointcloud_2d_;
 		bool reference_pointcloud_available_;
+		bool reference_pointcloud_required_;
 		bool ignore_height_corrections_;
 		bool last_accepted_pose_valid_;
 		bool last_accepted_pose_performed_tracking_reset_;
