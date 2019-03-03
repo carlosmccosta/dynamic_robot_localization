@@ -68,6 +68,7 @@ catkin_package(
         drl_cloud_matchers
         drl_common
         drl_convergence_estimators
+        drl_cluster_selectors
         drl_curvature_estimators
         drl_keypoint_descriptors
         drl_keypoint_detectors
@@ -139,9 +140,15 @@ add_library(drl_cloud_filters
     src/cloud_filters/plane_segmentation.cpp
     src/cloud_filters/radius_outlier_removal.cpp
     src/cloud_filters/random_sample.cpp
+    src/cloud_filters/region_growing.cpp
     src/cloud_filters/scale.cpp
     src/cloud_filters/statistical_outlier_removal.cpp
     src/cloud_filters/voxel_grid.cpp
+)
+
+add_library(drl_cluster_selectors
+    src/cluster_selectors/cluster_selector.cpp
+    src/cluster_selectors/cluster_sorters.cpp
 )
 
 add_library(drl_curvature_estimators
@@ -262,6 +269,11 @@ add_dependencies(drl_convergence_estimators
     ${catkin_EXPORTED_TARGETS}
 )
 
+add_dependencies(drl_cluster_selectors
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
 add_dependencies(drl_curvature_estimators
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
@@ -327,8 +339,15 @@ target_link_libraries(drl_convergence_estimators
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_cluster_selectors
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_cloud_filters
     drl_common
+    drl_cluster_selectors
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )

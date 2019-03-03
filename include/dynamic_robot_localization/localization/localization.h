@@ -71,6 +71,7 @@
 #include <dynamic_robot_localization/cloud_filters/scale.h>
 #include <dynamic_robot_localization/cloud_filters/plane_segmentation.h>
 #include <dynamic_robot_localization/cloud_filters/euclidean_clustering.h>
+#include <dynamic_robot_localization/cloud_filters/region_growing.h>
 
 #include <dynamic_robot_localization/curvature_estimators/curvature_estimator.h>
 #include <dynamic_robot_localization/curvature_estimators/principal_curvatures_estimation.h>
@@ -334,6 +335,7 @@ class Localization : public ConfigurableObject {
 		MapUpdateMode map_update_mode_;
 		bool use_incremental_map_update_;
 		std::string map_frame_id_;
+		std::string map_frame_id_for_publishing_pointclouds_;
 		std::string odom_frame_id_;
 		std::string base_link_frame_id_;
 		std::string sensor_frame_id_;

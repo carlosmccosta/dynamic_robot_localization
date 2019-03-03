@@ -13,6 +13,7 @@
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
 #include <string>
+#include <utility>
 #include <iomanip>
 
 // ROS includes
@@ -59,6 +60,12 @@ bool isTransformValid(const Eigen::Matrix<Scalar, 4, 4>& transform);
 
 template <typename Scalar>
 std::string convertTransformToString(const Eigen::Matrix<Scalar, 4, 4>& transform, const std::string& line_prefix, const std::string& line_suffix,  const std::string& number_separator);
+
+template <typename PairFirst, typename PairSecond>
+bool sortFunctionForPairSecondValueAscendingOrder(const std::pair<PairFirst, PairSecond> &left, const std::pair<PairFirst, PairSecond> &right) { return left.second < right.second; }
+
+template <typename PairFirst, typename PairSecond>
+bool sortFunctionForPairSecondValueDescendingOrder(const std::pair<PairFirst, PairSecond> &left, const std::pair<PairFirst, PairSecond> &right) { return left.second > right.second; }
 
 void getRollPitchYawFromMatrix(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out);
 void getRollPitchYawFromMatrixUsigTF2(const Eigen::Matrix4f& matrix, double& roll_out, double& pitch_out, double& yaw_out);

@@ -98,6 +98,7 @@ publish_topic_names:
 #   The sensor_frame_id is used in the surface normal estimation.
 frame_ids:
     map_frame_id: 'map'
+    map_frame_id_for_publishing_pointclouds: 'map' # override for the frame_id of published point clouds in the map frame
     odom_frame_id: 'odom'
     base_link_frame_id: 'base_footprint'
     sensor_frame_id: 'hokuyo_front_laser_link'
@@ -183,6 +184,16 @@ reference_pointclouds:
 
 
 # ===================================================================================================================================================
+#   Some algorithms support the selection of a given cluster from the point cloud (such as [ euclidean_clustering | region_growing ])
+cluster_selector:
+    load_clusters_indices_from_parameter_server_before_filtering: true
+    sorting_algorithm: "MaxClusterSizeSorter"                           # Available sorters: [ MinClusterSizeSorter | MaxClusterSizeSorter | MinDistanceToOriginSorter | MaxDistanceToOriginSorter | MinAxisValueSorter | MaxAxisValueSorter ]
+    sorting_axis: "Z"                                                   # Available axis: [ X | Y | Z ] -> only used with [ MinAxisValueSorter | MaxAxisValueSorter ]
+    clusters_colored_cloud_publish_topic: ''
+    clusters_colored_cloud_publish_topic_frame_id: ''
+
+
+# ===================================================================================================================================================
 #   Several filters can be specified for the reference_pointcloud and ambient_pointcloud.
 #   Filters are not shared between reference_pointcloud and ambient_pointcloud.
 #   Bellow they are specified only in the ambient_pointcloud namespace to avoid repetition.
@@ -261,10 +272,13 @@ filters:
             min_cluster_index: 0                                    # [min,max[ cluster size allows to selected which clusters are selected (the clusters are sorted by the number of points they have and the largest is the first in the vector, at index 0)
             max_cluster_index: 1                                    # maximum index for the cluster selection (indices start at 0 and do not include the max value -> [min,max[) (if both indexes are negative, all clusters are selected)
             load_clusters_indices_from_parameter_server_before_filtering: true
-            clusters_colored_cloud_publish_topic: ''
-            clusters_colored_cloud_publish_topic_frame_id: ''
             filtered_cloud_publish_topic: ''
             filtered_cloud_publish_topic_frame_id: ''
+            cluster_selector:
+                sorting_algorithm: "MaxClusterSizeSorter"           # Available sorters: [ MinClusterSizeSorter | MaxClusterSizeSorter | MinDistanceToOriginSorter | MaxDistanceToOriginSorter | MinAxisValueSorter | MaxAxisValueSorter ]
+                sorting_axis: "Z"                                                   # Available axis: [ X | Y | Z ] -> only used with [ MinAxisValueSorter | MaxAxisValueSorter ]
+                clusters_colored_cloud_publish_topic: ''
+                clusters_colored_cloud_publish_topic_frame_id: ''
     ambient_pointcloud_filters_after_normal_estimation:             # Other filters from above can be used here
         plane_segmentation:                                         # Segments points above and at a specified range from the largest plane in the point cloud and also within its boundary. It allows the usage of surface normals for improved plane segmentation (if the usage of normals is disabled it can be included in the previous filters categories)
             sample_consensus_method: "SAC_RANSAC"                   # SAC_RANSAC | SAC_LMEDS | SAC_MSAC | SAC_RRANSAC | SAC_RMSAC | SAC_MLESAC | SAC_PROSAC
@@ -282,6 +296,36 @@ filters:
             plane_inliers_convex_hull_cloud_publish_topic_frame_id: ''
             filtered_cloud_publish_topic: ''
             filtered_cloud_publish_topic_frame_id: ''
+        region_growing:
+            use_pointcloud_rgb_information: false                   # If true, [pcl::RegionGrowingRGB] will be used. Otherwise [pcl::RegionGrowing]
+            min_cluster_size: 100                                   # Regions with less than [min_cluster_size] will be discarded
+            max_cluster_size: 2147483647                            # std::numeric_limits<int>::max()
+            use_smoothness_constraint: true                         # If true, the comparison of normals will use the current seed normal instead of the initial seed normal that started the current region. This allows the growing of the current region as long as it is locally smooth.
+                                                                    # If true, a point will belong to a growing region if [abs(current_seed_neighbor_normal.dot(current_seed_normal)) > cos_deg(smoothness_threshold_in_degrees)].
+                                                                    # Otherwise, [abs(current_seed_neighbor_normal.dot(initial_seed_normal)) > cos_deg(smoothness_threshold_in_degrees)]
+            use_curvature_test: true                                # Curvature test allows to avoid marking regions with high curvature / normal variability as seeds (usually associated with surface borders or when there is high sensor noise)
+                                                                    # If true, a given seed neighboring point will only be considered as a possible seed if [current_seed_neighbor.curvature < curvature_threshold]
+            use_residual_test: true                                 # Residual test serves to avoid marking border points or parallel surfaces as seeds
+                                                                    # If true, a given seed neighboring point will only be considered as a possible seed if [current_seed_normal.dot(current_seed_point - current_seed_neighbor_point) < cos_deg(residual_threshold_in_degrees)]
+            smoothness_threshold_in_degrees: 70.0
+            residual_threshold_in_degrees: 10.0
+            curvature_threshold: 0.2
+            number_of_neighbors: 50                                 # Number of neighbors when looking for new seeds around a current seed
+            filtered_cloud_publish_topic: ''
+            filtered_cloud_publish_topic_frame_id: ''
+            cluster_selector:
+                sorting_algorithm: "MinDistanceToOriginSorter"      # Available sorters: [ MinClusterSizeSorter | MaxClusterSizeSorter | MinDistanceToOriginSorter | MaxDistanceToOriginSorter | MinAxisValueSorter | MaxAxisValueSorter ]
+                sorting_axis: "Z"                                   # Available axis: [ X | Y | Z ] -> only used with [ MinAxisValueSorter | MaxAxisValueSorter ]
+                clusters_colored_cloud_publish_topic: ''
+                clusters_colored_cloud_publish_topic_frame_id: ''
+            # Extra parameters when using pcl::RegionGrowingRGB
+            point_color_threshold: 1200.0                           # A seed neighbor is considered as belonging to the current growing region if [color_difference_squared(current_seed, current_seed_neighbor) < (point_color_threshold * point_color_threshold)]
+                                                                    # Color difference is computed as the squared distance of the rgb fields of the 2 points
+            region_color_threshold: 1200.0                          # Two regions will be merged together if a region has a point that has in its neighborhood (computed using [number_of_region_neighbors]) a point of the other region that is at a distance lower than [distance_threshold] while also having a similar mean cluster color [color_difference_squared(region1_mean_color, region2_mean_color) < (region_color_threshold * region_color_threshold)]
+            distance_threshold: 0.01
+            number_of_region_neighbors: 50                          # Overrides [number_of_neighbors] of class pcl::RegionGrowing
+            use_normal_test: false                                  # If true, the angle between the normals will be used for testing if a point belongs to a growing region (using the [smoothness_threshold_in_degrees])
+
 
 
 

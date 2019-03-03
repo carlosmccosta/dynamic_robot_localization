@@ -187,6 +187,7 @@ void Localization<PointT>::setupPublishTopicNames() {
 template<typename PointT>
 void Localization<PointT>::setupFrameIds() {
 	private_node_handle_->param(configuration_namespace_ + "frame_ids/map_frame_id", map_frame_id_, std::string("map"));
+	private_node_handle_->param(configuration_namespace_ + "frame_ids/map_frame_id_for_publishing_pointclouds", map_frame_id_for_publishing_pointclouds_, map_frame_id_);
 	private_node_handle_->param(configuration_namespace_ + "frame_ids/odom_frame_id", odom_frame_id_, std::string("odom"));
 	private_node_handle_->param(configuration_namespace_ + "frame_ids/base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
 	private_node_handle_->param(configuration_namespace_ + "frame_ids/sensor_frame_id", sensor_frame_id_, std::string("hokuyo_front_laser_link"));
@@ -406,6 +407,8 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 				cloud_filter.reset(new PlaneSegmentation<PointT>());
 			} else if (filter_name.find("euclidean_clustering") != std::string::npos) {
 				cloud_filter.reset(new EuclideanClustering<PointT>());
+			} else if (filter_name.find("region_growing") != std::string::npos) {
+				cloud_filter.reset(new RegionGrowing<PointT>());
 			}
 
 			if (cloud_filter) {
@@ -1188,7 +1191,11 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 
 		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
 		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id);
-		ambient_pointcloud->header.frame_id = target_frame_id;
+
+		if (target_frame_id == map_frame_id_ && !map_frame_id_for_publishing_pointclouds_.empty())
+			ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
+		else
+			ambient_pointcloud->header.frame_id = target_frame_id;
 	}
 
 	return true;
@@ -1544,7 +1551,7 @@ void Localization<PointT>::resetPointCloudHeight(pcl::PointCloud<PointT>& pointc
 
 template<typename PointT>
 bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
-	ROS_DEBUG_STREAM("Filtering cloud in " << pointcloud->header.frame_id << " with " << pointcloud->size() << " points");
+	ROS_DEBUG_STREAM("Filtering cloud in " << pointcloud->header.frame_id << " frame with " << pointcloud->size() << " points");
 
 	for (size_t i = 0; i < cloud_filters.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
