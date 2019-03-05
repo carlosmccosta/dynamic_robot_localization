@@ -6,12 +6,6 @@
  */
 
 
-
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-//#define ROSCONSOLE_MIN_SEVERITY ROSCONSOLE_SEVERITY_NONE
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #include <ros/ros.h>
 #include <dynamic_robot_localization/localization/localization.h>
@@ -38,7 +32,9 @@ int main(int argc, char** argv) {
 	std::string localization_point_type;
 	private_node_handle->param("localization_point_type", localization_point_type, std::string("PointXYZRGBNormal"));
 
-//	if (localization_point_type == "PointXYZRGBNormal") {
+	// Note: Given that PointXYZRGBNormal is the most common used point cloud type, the other 2 were disabled to speedup compilation
+	// For enabling them, update DRL_POINT_TYPES in common/common.h and uncomment the lines below
+	//if (localization_point_type == "PointXYZRGBNormal") {
 		ROS_INFO("Localization system using PointXYZRGBNormal point type");
 		dynamic_robot_localization::Localization<pcl::PointXYZRGBNormal> localization;
 		localization.setupConfigurationFromParameterServer(node_handle, private_node_handle);

@@ -14,16 +14,12 @@
 
 
 namespace dynamic_robot_localization {
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <imports>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </imports>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-
-
 // =============================================================================  <public-section>  ============================================================================
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 Localization<PointT>::Localization() :
 	reference_pointcloud_normalize_normals_(true),
+	flip_normals_using_occupancy_grid_analysis_(true),
 	map_update_mode_(NoIntegration),
 	use_incremental_map_update_(false),
 	override_pointcloud_timestamp_to_current_time_(false),
@@ -106,107 +102,231 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	configuration_namespace_ = configuration_namespace;
 
 	// general configurations
-	setupMessageManagement();
-	setupGeneralConfigurations();
-	setupSubcriptionTopicNames();
-	setupPublishTopicNames();
-	setupFrameIds();
+	setupMessageManagement(configuration_namespace);
+	setupGeneralConfigurations(configuration_namespace);
+	setupSubscribeTopicNames(configuration_namespace);
+	setupServiceServersNames(configuration_namespace);
+	setupPublishTopicNames(configuration_namespace);
+	setupFrameIds(configuration_namespace);
 
 	// localization pipeline configurations
-	setupReferencePointCloud();
-	setupFiltersConfigurations();
-	setupNormalEstimatorsConfigurations();
-	setupCurvatureEstimatorsConfigurations();
-	setupKeypointDetectors();
-	setupCloudMatchersConfigurations();
+	setupReferencePointCloud(configuration_namespace);
+	setupFiltersConfigurations(configuration_namespace);
+	setupNormalEstimatorsConfigurations(configuration_namespace);
+	setupCurvatureEstimatorsConfigurations(configuration_namespace);
+	setupKeypointDetectors(configuration_namespace);
+	setupCloudMatchersConfigurations(configuration_namespace);
+	setupInitialPoseEstimatorsFeatureMatchers(configuration_namespace);
+	setupInitialPoseEstimatorsPointMatchers(configuration_namespace);
+	setupTrackingMatchers(configuration_namespace);
+	setupTrackingRecoveryMatchers(configuration_namespace);
+	setupTransformationValidatorsForTracking(configuration_namespace);
+	setupTransformationValidatorsForTrackingRecovery(configuration_namespace);
+	setupOutlierDetectorsConfigurations(configuration_namespace);
+	setupCloudAnalyzersConfigurations(configuration_namespace);
+	setupRegistrationCovarianceEstimatorsConfigurations(configuration_namespace);
+	setupTFPublisher(configuration_namespace);
+	updateNormalsEstimationFlags();
+	loadReferencePointCloud();
+}
 
-	initial_pose_estimators_feature_matchers_.clear();
-	initial_pose_estimators_point_matchers_.clear();
-	setupFeatureCloudMatchersConfigurations(initial_pose_estimators_feature_matchers_, "initial_pose_estimators_matchers/feature_matchers/");
-	setupPointCloudMatchersConfigurations(initial_pose_estimators_point_matchers_, "initial_pose_estimators_matchers/point_matchers/");
 
-	tracking_matchers_.clear();
-	setupFeatureCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/feature_matchers/");
-	setupPointCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/point_matchers/");
+template<typename PointT>
+bool Localization<PointT>::reloadConfigurationFromParameterServerServiceCallback(dynamic_robot_localization::ReloadLocalizationConfiguration::Request& request, dynamic_robot_localization::ReloadLocalizationConfiguration::Response& response) {
+	bool status = reloadConfigurationFromParameterServer(request.localization_configuration);
+	response.status = status;
+	return status;
+}
 
-	tracking_recovery_matchers_.clear();
-	setupFeatureCloudMatchersConfigurations(tracking_recovery_matchers_, "tracking_recovery_matchers/feature_matchers/");
-	setupPointCloudMatchersConfigurations(tracking_recovery_matchers_, "tracking_recovery_matchers/point_matchers/");
 
-	setupTransformationValidatorsConfigurations(transformation_validators_, "transformation_validators/");
-	setupTransformationValidatorsConfigurations(transformation_validators_tracking_recovery_, "transformation_validators_tracking_recovery/");
-	setupOutlierDetectorsConfigurations();
-	setupCloudAnalyzersConfigurations();
-	setupRegistrationCovarianceEstimatorsConfigurations();
+template<typename PointT>
+bool Localization<PointT>::reloadConfigurationFromParameterServer(const dynamic_robot_localization::LocalizationConfiguration& localization_configuration) {
+	std::string parsed_string;
+
+	if (parseConfigurationNamespace(localization_configuration.message_management, parsed_string))
+		setupMessageManagement(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.general_configurations, parsed_string))
+		setupGeneralConfigurations(parsed_string);
+
+	bool setup_subscribe_topic_names = parseConfigurationNamespace(localization_configuration.subscribe_topic_names, parsed_string);
+	if (setup_subscribe_topic_names)
+		setupSubscribeTopicNames(parsed_string);
+
+	bool setup_service_servers_names = parseConfigurationNamespace(localization_configuration.service_servers_names, parsed_string);
+	if (setup_service_servers_names)
+		setupServiceServersNames(parsed_string);
+
+	bool setup_publish_topic_names = parseConfigurationNamespace(localization_configuration.publish_topic_names, parsed_string);
+	if (setup_publish_topic_names)
+		setupPublishTopicNames(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.frame_ids, parsed_string))
+		setupFrameIds(parsed_string);
+
+	bool setup_reference_cloud = parseConfigurationNamespace(localization_configuration.reference_pointcloud, parsed_string);
+	if (setup_reference_cloud)
+		setupReferencePointCloud(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.filters, parsed_string))
+		setupFiltersConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.normal_estimators, parsed_string))
+		setupNormalEstimatorsConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.curvature_estimators, parsed_string))
+		setupCurvatureEstimatorsConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.keypoint_detectors, parsed_string))
+		setupKeypointDetectors(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.cloud_matchers_configurations, parsed_string))
+		setupCloudMatchersConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.initial_pose_estimators_feature_matchers, parsed_string))
+		setupInitialPoseEstimatorsFeatureMatchers(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.initial_pose_estimators_point_matchers, parsed_string))
+		setupInitialPoseEstimatorsPointMatchers(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.tracking_matchers, parsed_string))
+		setupTrackingMatchers(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.tracking_recovery_matchers, parsed_string))
+		setupTrackingRecoveryMatchers(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking, parsed_string))
+		setupTransformationValidatorsForTracking(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking_recovery, parsed_string))
+		setupTransformationValidatorsForTrackingRecovery(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.outlier_detectors, parsed_string))
+		setupOutlierDetectorsConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.cloud_analyzers, parsed_string))
+		setupCloudAnalyzersConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.registration_covariance_estimators, parsed_string))
+		setupRegistrationCovarianceEstimatorsConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.tf_publisher, parsed_string))
+		setupTFPublisher(parsed_string);
 
 	updateNormalsEstimationFlags();
 
-	pose_to_tf_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, "pose_to_tf_publisher/");
-	pose_to_tf_publisher_->setBaseLinkFrameId(base_link_frame_id_);
-	pose_to_tf_publisher_->setOdomFrameId(odom_frame_id_);
-	pose_to_tf_publisher_->setMapFrameId(map_frame_id_);
+	bool status = true;
+	if (setup_reference_cloud)
+		status = loadReferencePointCloud();
+
+	if (setup_publish_topic_names) {
+		startPublishers();
+		startReferenceCloudSubscribers();
+	}
+
+	if (setup_subscribe_topic_names)
+		startSubscribers();
+
+	if (setup_service_servers_names)
+		startServiceServers();
+
+	return status;
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupGeneralConfigurations() {
-	private_node_handle_->param(configuration_namespace_ + "general_configurations/publish_tf_map_odom", publish_tf_map_odom_, false);
-	private_node_handle_->param(configuration_namespace_ + "general_configurations/add_odometry_displacement", add_odometry_displacement_, false);
+bool Localization<PointT>::parseConfigurationNamespace(const std::string& configuration_namespace, std::string& configuration_namespace_parsed_out) {
+	configuration_namespace_parsed_out.clear();
+
+	if (configuration_namespace.empty())
+		return false;
+
+	if (configuration_namespace == "~") {
+		return true;
+	}
+
+	configuration_namespace_parsed_out = configuration_namespace;
+	if (configuration_namespace.back() != '/') {
+		configuration_namespace_parsed_out += '/';
+	}
+
+	return true;
+}
+
+template<typename PointT>
+void Localization<PointT>::setupGeneralConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [general_configurations] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "general_configurations/publish_tf_map_odom", publish_tf_map_odom_, false);
+	private_node_handle_->param(configuration_namespace + "general_configurations/add_odometry_displacement", add_odometry_displacement_, false);
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupSubcriptionTopicNames() {
-	private_node_handle_->param(configuration_namespace_ + "subscribe_topic_names/pose_topic", pose_topic_, std::string("initial_pose"));
-	private_node_handle_->param(configuration_namespace_ + "subscribe_topic_names/pose_stamped_topic", pose_stamped_topic_, std::string("initial_pose_stamped"));
-	private_node_handle_->param(configuration_namespace_ + "subscribe_topic_names/pose_with_covariance_stamped_topic", pose_with_covariance_stamped_topic_, std::string("/initialpose"));
-	private_node_handle_->param(configuration_namespace_ + "subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topics_, std::string("ambient_pointcloud"));
-	private_node_handle_->param(configuration_namespace_ + "subscribe_topic_names/reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
-	private_node_handle_->param(configuration_namespace_ + "subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
+void Localization<PointT>::setupSubscribeTopicNames(const std::string &configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [subscribe_topic_names] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/pose_topic", pose_topic_, std::string("initial_pose"));
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/pose_stamped_topic", pose_stamped_topic_, std::string("initial_pose_stamped"));
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/pose_with_covariance_stamped_topic", pose_with_covariance_stamped_topic_, std::string("/initialpose"));
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topics_, std::string("ambient_pointcloud"));
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
+}
+
+template<typename PointT>
+void Localization<PointT>::setupServiceServersNames(const std::string &configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [service_servers_names] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "service_servers_names/reload_localization_configuration_service_server_name", reload_localization_configuration_service_server_name_, std::string("reload_localization_configuration"));
+}
+
+template<typename PointT>
+void Localization<PointT>::setupPublishTopicNames(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [publish_topic_names] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/publish_filtered_pointcloud_only_if_there_is_subscribers", publish_filtered_pointcloud_only_if_there_is_subscribers_, true);
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/publish_aligned_pointcloud_only_if_there_is_subscribers", publish_aligned_pointcloud_only_if_there_is_subscribers_, true);
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/reference_pointcloud_keypoints_publish_topic", reference_pointcloud_keypoints_publish_topic_, std::string("reference_pointcloud_keypoints"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/filtered_pointcloud_publish_topic", filtered_pointcloud_publish_topic_, std::string("filtered_pointcloud"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/pose_with_covariance_stamped_publish_topic", pose_with_covariance_stamped_publish_topic_, std::string("localization_pose_with_covariance"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/pose_with_covariance_stamped_tracking_reset_publish_topic", pose_with_covariance_stamped_tracking_reset_publish_topic_, std::string("initial_pose_with_covariance"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/pose_stamped_publish_topic", pose_stamped_publish_topic_, std::string("localization_pose"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/pose_array_publish_topic", pose_array_publish_topic_, std::string("localization_initial_pose_estimations"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/localization_detailed_publish_topic", localization_detailed_publish_topic_, std::string("localization_detailed"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/localization_diagnostics_publish_topic", localization_diagnostics_publish_topic_, std::string("diagnostics"));
+	private_node_handle_->param(configuration_namespace + "publish_topic_names/localization_times_publish_topic", localization_times_publish_topic_, std::string("localization_times"));
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupPublishTopicNames() {
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/publish_filtered_pointcloud_only_if_there_is_subscribers", publish_filtered_pointcloud_only_if_there_is_subscribers_, true);
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/publish_aligned_pointcloud_only_if_there_is_subscribers", publish_aligned_pointcloud_only_if_there_is_subscribers_, true);
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/reference_pointcloud_publish_topic", reference_pointcloud_publish_topic_, std::string("reference_pointcloud"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/reference_pointcloud_keypoints_publish_topic", reference_pointcloud_keypoints_publish_topic_, std::string("reference_pointcloud_keypoints"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/filtered_pointcloud_publish_topic", filtered_pointcloud_publish_topic_, std::string("filtered_pointcloud"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/aligned_pointcloud_publish_topic", aligned_pointcloud_publish_topic_, std::string("aligned_pointcloud"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/pose_with_covariance_stamped_publish_topic", pose_with_covariance_stamped_publish_topic_, std::string("localization_pose_with_covariance"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/pose_with_covariance_stamped_tracking_reset_publish_topic", pose_with_covariance_stamped_tracking_reset_publish_topic_, std::string("initial_pose_with_covariance"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/pose_stamped_publish_topic", pose_stamped_publish_topic_, std::string("localization_pose"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/pose_array_publish_topic", pose_array_publish_topic_, std::string("localization_initial_pose_estimations"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/localization_detailed_publish_topic", localization_detailed_publish_topic_, std::string("localization_detailed"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/localization_diagnostics_publish_topic", localization_diagnostics_publish_topic_, std::string("diagnostics"));
-	private_node_handle_->param(configuration_namespace_ + "publish_topic_names/localization_times_publish_topic", localization_times_publish_topic_, std::string("localization_times"));
-}
-
-
-template<typename PointT>
-void Localization<PointT>::setupFrameIds() {
-	private_node_handle_->param(configuration_namespace_ + "frame_ids/map_frame_id", map_frame_id_, std::string("map"));
-	private_node_handle_->param(configuration_namespace_ + "frame_ids/map_frame_id_for_publishing_pointclouds", map_frame_id_for_publishing_pointclouds_, map_frame_id_);
-	private_node_handle_->param(configuration_namespace_ + "frame_ids/odom_frame_id", odom_frame_id_, std::string("odom"));
-	private_node_handle_->param(configuration_namespace_ + "frame_ids/base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
-	private_node_handle_->param(configuration_namespace_ + "frame_ids/sensor_frame_id", sensor_frame_id_, std::string("hokuyo_front_laser_link"));
+void Localization<PointT>::setupFrameIds(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [frame_ids] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "frame_ids/map_frame_id", map_frame_id_, std::string("map"));
+	private_node_handle_->param(configuration_namespace + "frame_ids/map_frame_id_for_publishing_pointclouds", map_frame_id_for_publishing_pointclouds_, map_frame_id_);
+	private_node_handle_->param(configuration_namespace + "frame_ids/odom_frame_id", odom_frame_id_, std::string("odom"));
+	private_node_handle_->param(configuration_namespace + "frame_ids/base_link_frame_id", base_link_frame_id_, std::string("base_footprint"));
+	private_node_handle_->param(configuration_namespace + "frame_ids/sensor_frame_id", sensor_frame_id_, std::string("hokuyo_front_laser_link"));
 }
 
 
 template<typename PointT>
 void Localization<PointT>::setupInitialPose() {
+	setupInitialPose(configuration_namespace_);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupInitialPose(const std::string& configuration_namespace) {
 	double x, y, z, roll, pitch ,yaw, qx, qy, qz, qw;
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/position/x", x, 0.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/position/y", y, 0.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/position/z", z, 0.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_rpy/roll", roll, 0.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_rpy/pitch", pitch, 0.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_rpy/yaw", yaw, 0.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_quaternion/x", qx, -1.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_quaternion/y", qy, -1.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_quaternion/z", qz, -1.0);
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/orientation_quaternion/w", qw, -1.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/position/x", x, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/position/y", y, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/position/z", z, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_rpy/roll", roll, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_rpy/pitch", pitch, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_rpy/yaw", yaw, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/x", qx, -1.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/y", qy, -1.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/z", qz, -1.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/w", qw, -1.0);
 
 	last_accepted_pose_base_link_to_map_.setOrigin(tf2::Vector3(x, y, z));
 
@@ -227,9 +347,9 @@ void Localization<PointT>::setupInitialPose() {
 	ros::Time::waitForValid();
 
 	bool robot_initial_pose_in_base_to_map;
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/robot_initial_pose_in_base_to_map", robot_initial_pose_in_base_to_map, false);
+	private_node_handle_->param(configuration_namespace + "initial_pose/robot_initial_pose_in_base_to_map", robot_initial_pose_in_base_to_map, false);
 
-	private_node_handle_->param(configuration_namespace_ + "initial_pose/robot_initial_pose_available", robot_initial_pose_available_, true);
+	private_node_handle_->param(configuration_namespace + "initial_pose/robot_initial_pose_available", robot_initial_pose_available_, true);
 
 	tf2::Transform transform_odom_to_base_link;
 	ROS_DEBUG_STREAM("Looking for TF [ " << base_link_frame_id_ << " -> " << odom_frame_id_ << " ]");
@@ -263,81 +383,94 @@ void Localization<PointT>::setupInitialPose() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupMessageManagement() {
-	double tf_buffer_duration;
-	private_node_handle_->param(configuration_namespace_ + "message_management/tf_buffer_duration", tf_buffer_duration, 600.0);
-	pose_to_tf_publisher_.reset(new pose_to_tf_publisher::PoseToTFPublisher(ros::Duration(tf_buffer_duration)));
-
-	double tf_timeout;
-	private_node_handle_->param(configuration_namespace_ + "message_management/tf_timeout", tf_timeout, 0.5);
-	tf_timeout_ = ros::Duration(tf_timeout);
-
-	private_node_handle_->param(configuration_namespace_ + "message_management/override_pointcloud_timestamp_to_current_time", override_pointcloud_timestamp_to_current_time_, false);
-
-	double max_seconds_ambient_pointcloud_age;
-	private_node_handle_->param(configuration_namespace_ + "message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 3.0);
-	max_seconds_ambient_pointcloud_age_.fromSec(max_seconds_ambient_pointcloud_age);
-
-	double max_seconds_ambient_pointcloud_offset_to_last_estimated_pose;
-	private_node_handle_->param(configuration_namespace_ + "message_management/max_seconds_ambient_pointcloud_offset_to_last_estimated_pose", max_seconds_ambient_pointcloud_offset_to_last_estimated_pose, 0.0);
-	max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_.fromSec(max_seconds_ambient_pointcloud_offset_to_last_estimated_pose);
-
-	double min_seconds_between_scan_registration;
-	private_node_handle_->param(configuration_namespace_ + "message_management/min_seconds_between_scan_registration", min_seconds_between_scan_registration, 0.0);
-	min_seconds_between_scan_registration_.fromSec(min_seconds_between_scan_registration);
-
-	double min_seconds_between_reference_pointcloud_update;
-	private_node_handle_->param(configuration_namespace_ + "message_management/min_seconds_between_reference_pointcloud_update", min_seconds_between_reference_pointcloud_update, 5.0);
-	min_seconds_between_reference_pointcloud_update_.fromSec(min_seconds_between_reference_pointcloud_update);
-
-	private_node_handle_->param(configuration_namespace_ + "message_management/minimum_number_of_points_in_ambient_pointcloud", minimum_number_of_points_in_ambient_pointcloud_, 10);
-
-	private_node_handle_->param(configuration_namespace_ + "message_management/circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration", circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/circular_buffer_clear_inserted_points_if_registration_fails", circular_buffer_clear_inserted_points_if_registration_fails_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/minimum_number_points_ambient_pointcloud_circular_buffer", minimum_number_points_ambient_pointcloud_circular_buffer_, 0);
-	int maximum_number_points_ambient_pointcloud_circular_buffer;
-	private_node_handle_->param(configuration_namespace_ + "message_management/maximum_number_points_ambient_pointcloud_circular_buffer", maximum_number_points_ambient_pointcloud_circular_buffer, 0);
-	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
-		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
-	}
-
-	private_node_handle_->param(configuration_namespace_ + "message_management/localization_detailed_use_millimeters_in_root_mean_square_error_inliers", localization_detailed_use_millimeters_in_root_mean_square_error_inliers_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences", localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs", localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_, true);
-	private_node_handle_->param(configuration_namespace_ + "message_management/use_odom_when_transforming_cloud_to_map_frame", use_odom_when_transforming_cloud_to_map_frame_, true);
-	private_node_handle_->param(configuration_namespace_ + "message_management/invert_cloud_to_map_transform", invert_cloud_to_map_transform_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/invert_registration_transformation", invert_registration_transformation_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
-	private_node_handle_->param(configuration_namespace_ + "message_management/use_base_link_frame_when_publishing_initial_poses_array", use_base_link_frame_when_publishing_initial_poses_array_, false);
-	private_node_handle_->param(configuration_namespace_ + "message_management/apply_cloud_registration_inverse_to_initial_poses_array", apply_cloud_registration_inverse_to_initial_poses_array_, false);
+void Localization<PointT>::setupTFPublisher(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [tf_publisher] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	pose_to_tf_publisher_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + "pose_to_tf_publisher/");
+	pose_to_tf_publisher_->setBaseLinkFrameId(base_link_frame_id_);
+	pose_to_tf_publisher_->setOdomFrameId(odom_frame_id_);
+	pose_to_tf_publisher_->setMapFrameId(map_frame_id_);
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupReferencePointCloud() {
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/normalize_normals", reference_pointcloud_normalize_normals_, true);
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/save_reference_pointclouds_in_binary_format", save_reference_pointclouds_in_binary_format_, true);
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/republish_reference_pointcloud_after_successful_registration", republish_reference_pointcloud_after_successful_registration_, false);
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/minimum_number_of_points_in_reference_pointcloud", minimum_number_of_points_in_reference_pointcloud_, 10);
+void Localization<PointT>::setupMessageManagement(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [message_management] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+
+	double tf_buffer_duration;
+	private_node_handle_->param(configuration_namespace + "message_management/tf_buffer_duration", tf_buffer_duration, 600.0);
+	pose_to_tf_publisher_.reset(new pose_to_tf_publisher::PoseToTFPublisher(ros::Duration(tf_buffer_duration)));
+
+	double tf_timeout;
+	private_node_handle_->param(configuration_namespace + "message_management/tf_timeout", tf_timeout, 0.5);
+	tf_timeout_ = ros::Duration(tf_timeout);
+
+	private_node_handle_->param(configuration_namespace + "message_management/override_pointcloud_timestamp_to_current_time", override_pointcloud_timestamp_to_current_time_, false);
+
+	double max_seconds_ambient_pointcloud_age;
+	private_node_handle_->param(configuration_namespace + "message_management/max_seconds_ambient_pointcloud_age", max_seconds_ambient_pointcloud_age, 3.0);
+	max_seconds_ambient_pointcloud_age_.fromSec(max_seconds_ambient_pointcloud_age);
+
+	double max_seconds_ambient_pointcloud_offset_to_last_estimated_pose;
+	private_node_handle_->param(configuration_namespace + "message_management/max_seconds_ambient_pointcloud_offset_to_last_estimated_pose", max_seconds_ambient_pointcloud_offset_to_last_estimated_pose, 0.0);
+	max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_.fromSec(max_seconds_ambient_pointcloud_offset_to_last_estimated_pose);
+
+	double min_seconds_between_scan_registration;
+	private_node_handle_->param(configuration_namespace + "message_management/min_seconds_between_scan_registration", min_seconds_between_scan_registration, 0.0);
+	min_seconds_between_scan_registration_.fromSec(min_seconds_between_scan_registration);
+
+	double min_seconds_between_reference_pointcloud_update;
+	private_node_handle_->param(configuration_namespace + "message_management/min_seconds_between_reference_pointcloud_update", min_seconds_between_reference_pointcloud_update, 5.0);
+	min_seconds_between_reference_pointcloud_update_.fromSec(min_seconds_between_reference_pointcloud_update);
+
+	private_node_handle_->param(configuration_namespace + "message_management/minimum_number_of_points_in_ambient_pointcloud", minimum_number_of_points_in_ambient_pointcloud_, 10);
+
+	private_node_handle_->param(configuration_namespace + "message_management/circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration", circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/circular_buffer_clear_inserted_points_if_registration_fails", circular_buffer_clear_inserted_points_if_registration_fails_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/minimum_number_points_ambient_pointcloud_circular_buffer", minimum_number_points_ambient_pointcloud_circular_buffer_, 0);
+	int maximum_number_points_ambient_pointcloud_circular_buffer;
+	private_node_handle_->param(configuration_namespace + "message_management/maximum_number_points_ambient_pointcloud_circular_buffer", maximum_number_points_ambient_pointcloud_circular_buffer, 0);
+	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
+		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
+	}
+
+	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_millimeters_in_root_mean_square_error_inliers", localization_detailed_use_millimeters_in_root_mean_square_error_inliers_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences", localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_millimeters_in_translation_corrections", localization_detailed_use_millimeters_in_translation_corrections_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs", localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_, true);
+	private_node_handle_->param(configuration_namespace + "message_management/use_odom_when_transforming_cloud_to_map_frame", use_odom_when_transforming_cloud_to_map_frame_, true);
+	private_node_handle_->param(configuration_namespace + "message_management/invert_cloud_to_map_transform", invert_cloud_to_map_transform_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/invert_registration_transformation", invert_registration_transformation_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
+	private_node_handle_->param(configuration_namespace + "message_management/use_base_link_frame_when_publishing_initial_poses_array", use_base_link_frame_when_publishing_initial_poses_array_, false);
+	private_node_handle_->param(configuration_namespace + "message_management/apply_cloud_registration_inverse_to_initial_poses_array", apply_cloud_registration_inverse_to_initial_poses_array_, false);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupReferencePointCloud(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [reference_pointcloud] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/normalize_normals", reference_pointcloud_normalize_normals_, true);
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/save_reference_pointclouds_in_binary_format", save_reference_pointclouds_in_binary_format_, true);
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/republish_reference_pointcloud_after_successful_registration", republish_reference_pointcloud_after_successful_registration_, false);
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/minimum_number_of_points_in_reference_pointcloud", minimum_number_of_points_in_reference_pointcloud_, 10);
 
 	std::string reference_pointcloud_type;
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_type", reference_pointcloud_type, std::string("3D"));
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_type", reference_pointcloud_type, std::string("3D"));
 	if (reference_pointcloud_type == "2D") {
 		reference_pointcloud_2d_ = true;
 	} else if (reference_pointcloud_type == "3D") {
 		reference_pointcloud_2d_ = false;
 	}
 
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_available", reference_pointcloud_available_, true);
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_required", reference_pointcloud_required_, true);
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_available", reference_pointcloud_available_, true);
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_required", reference_pointcloud_required_, true);
 
 	std::string reference_pointcloud_update_mode;
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/reference_pointcloud_update_mode", reference_pointcloud_update_mode, std::string("NoIntegration"));
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_update_mode", reference_pointcloud_update_mode, std::string("NoIntegration"));
 	if (reference_pointcloud_update_mode == "NoIntegration") {
 		map_update_mode_ = NoIntegration;
 	} else if (reference_pointcloud_update_mode == "FullIntegration") {
@@ -348,13 +481,27 @@ void Localization<PointT>::setupReferencePointCloud() {
 		map_update_mode_ = OutliersIntegration;
 	}
 
-	private_node_handle_->param(configuration_namespace_ + "reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
 	reference_pointcloud_->header.frame_id = map_frame_id_;
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupFiltersConfigurations() {
+bool Localization<PointT>::loadReferencePointCloud() {
+	if (reference_pointcloud_required_ && reference_pointcloud_available_ && !reference_pointcloud_filename_.empty()) {
+		if (!loadReferencePointCloudFromFile(reference_pointcloud_filename_)) {
+			ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
+			return false;
+		}
+	}
+	return true;
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupFiltersConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [filters] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+
 	reference_cloud_filters_.clear();
 	ambient_pointcloud_integration_filters_.clear();
 	ambient_pointcloud_integration_filters_map_frame_.clear();
@@ -365,16 +512,16 @@ void Localization<PointT>::setupFiltersConfigurations() {
 	ambient_pointcloud_filters_map_frame_.clear();
 	ambient_pointcloud_filters_after_normal_estimation_.clear();
 
-	loadFiltersFromParameterServer(reference_cloud_filters_, "filters/reference_pointcloud/");
-	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_, "filters/ambient_pointcloud_integration_filters/");
-	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_map_frame_, "filters/ambient_pointcloud_integration_filters_map_frame/");
-	loadFiltersFromParameterServer(ambient_pointcloud_feature_registration_filters_, "filters/ambient_pointcloud_feature_registration/");
-	loadFiltersFromParameterServer(ambient_pointcloud_map_frame_feature_registration_filters_, "filters/ambient_pointcloud_map_frame_feature_registration/");
-	loadFiltersFromParameterServer(ambient_pointcloud_filters_, "filters/ambient_pointcloud/");
-	loadFiltersFromParameterServer(ambient_pointcloud_filters_custom_frame_, "filters/ambient_pointcloud_custom_frame/");
-	private_node_handle_->param(configuration_namespace_ + "filters/ambient_pointcloud_custom_frame/custom_frame_id", ambient_pointcloud_filters_custom_frame_id_, std::string(""));
-	loadFiltersFromParameterServer(ambient_pointcloud_filters_map_frame_, "filters/ambient_pointcloud_map_frame/");
-	loadFiltersFromParameterServer(ambient_pointcloud_filters_after_normal_estimation_, "filters/ambient_pointcloud_filters_after_normal_estimation/");
+	loadFiltersFromParameterServer(reference_cloud_filters_, configuration_namespace + "filters/reference_pointcloud/");
+	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_, configuration_namespace + "filters/ambient_pointcloud_integration_filters/");
+	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_map_frame_, configuration_namespace + "filters/ambient_pointcloud_integration_filters_map_frame/");
+	loadFiltersFromParameterServer(ambient_pointcloud_feature_registration_filters_, configuration_namespace + "filters/ambient_pointcloud_feature_registration/");
+	loadFiltersFromParameterServer(ambient_pointcloud_map_frame_feature_registration_filters_, configuration_namespace + "filters/ambient_pointcloud_map_frame_feature_registration/");
+	loadFiltersFromParameterServer(ambient_pointcloud_filters_, configuration_namespace + "filters/ambient_pointcloud/");
+	loadFiltersFromParameterServer(ambient_pointcloud_filters_custom_frame_, configuration_namespace + "filters/ambient_pointcloud_custom_frame/");
+	private_node_handle_->param(configuration_namespace + "filters/ambient_pointcloud_custom_frame/custom_frame_id", ambient_pointcloud_filters_custom_frame_id_, std::string(""));
+	loadFiltersFromParameterServer(ambient_pointcloud_filters_map_frame_, configuration_namespace + "filters/ambient_pointcloud_map_frame/");
+	loadFiltersFromParameterServer(ambient_pointcloud_filters_after_normal_estimation_, configuration_namespace + "filters/ambient_pointcloud_filters_after_normal_estimation/");
 }
 
 
@@ -421,12 +568,14 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 
 
 template<typename PointT>
-void Localization<PointT>::setupNormalEstimatorsConfigurations() {
-	private_node_handle_->param(configuration_namespace_ + "normal_estimators/ambient_pointcloud/compute_normals_when_tracking_pose", compute_normals_when_tracking_pose_, false);
-	private_node_handle_->param(configuration_namespace_ + "normal_estimators/ambient_pointcloud/compute_normals_when_recovering_pose_tracking", compute_normals_when_recovering_pose_tracking_, false);
-	private_node_handle_->param(configuration_namespace_ + "normal_estimators/ambient_pointcloud/compute_normals_when_estimating_initial_pose", compute_normals_when_estimating_initial_pose_, true);
-	private_node_handle_->param(configuration_namespace_ + "normal_estimators/reference_pointcloud/use_filtered_cloud_as_normal_estimation_surface", use_filtered_cloud_as_normal_estimation_surface_reference_, false);
-	private_node_handle_->param(configuration_namespace_ + "normal_estimators/ambient_pointcloud/use_filtered_cloud_as_normal_estimation_surface", use_filtered_cloud_as_normal_estimation_surface_ambient_, false);
+void Localization<PointT>::setupNormalEstimatorsConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [normal_estimators] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "normal_estimators/ambient_pointcloud/compute_normals_when_tracking_pose", compute_normals_when_tracking_pose_, false);
+	private_node_handle_->param(configuration_namespace + "normal_estimators/ambient_pointcloud/compute_normals_when_recovering_pose_tracking", compute_normals_when_recovering_pose_tracking_, false);
+	private_node_handle_->param(configuration_namespace + "normal_estimators/ambient_pointcloud/compute_normals_when_estimating_initial_pose", compute_normals_when_estimating_initial_pose_, true);
+	private_node_handle_->param(configuration_namespace + "normal_estimators/reference_pointcloud/use_filtered_cloud_as_normal_estimation_surface", use_filtered_cloud_as_normal_estimation_surface_reference_, false);
+	private_node_handle_->param(configuration_namespace + "normal_estimators/reference_pointcloud/flip_normals_using_occupancy_grid_analysis", flip_normals_using_occupancy_grid_analysis_, true);
+	private_node_handle_->param(configuration_namespace + "normal_estimators/ambient_pointcloud/use_filtered_cloud_as_normal_estimation_surface", use_filtered_cloud_as_normal_estimation_surface_ambient_, false);
 	loadNormalEstimatorFromParameterServer(reference_cloud_normal_estimator_, "normal_estimators/reference_pointcloud/");
 	loadNormalEstimatorFromParameterServer(ambient_cloud_normal_estimator_, "normal_estimators/ambient_pointcloud/");
 }
@@ -461,9 +610,10 @@ void Localization<PointT>::updateNormalsEstimationFlags() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupCurvatureEstimatorsConfigurations() {
-	loadCurvatureEstimatorFromParameterServer(reference_cloud_curvature_estimator_, "curvature_estimators/reference_pointcloud/");
-	loadCurvatureEstimatorFromParameterServer(ambient_cloud_curvature_estimator_, "curvature_estimators/ambient_pointcloud/");
+void Localization<PointT>::setupCurvatureEstimatorsConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [curvature_estimators] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	loadCurvatureEstimatorFromParameterServer(reference_cloud_curvature_estimator_, configuration_namespace + "curvature_estimators/reference_pointcloud/");
+	loadCurvatureEstimatorFromParameterServer(ambient_cloud_curvature_estimator_, configuration_namespace + "curvature_estimators/ambient_pointcloud/");
 }
 
 
@@ -511,18 +661,20 @@ void Localization<PointT>::loadCurvatureEstimatorFromParameterServer(typename Cu
 
 
 template<typename PointT>
-void Localization<PointT>::setupKeypointDetectors() {
+void Localization<PointT>::setupKeypointDetectors(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [keypoint_detectors] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+
 	reference_cloud_keypoint_detectors_.clear();
 	ambient_cloud_keypoint_detectors_.clear();
 
-	private_node_handle_->param(configuration_namespace_ + "keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
-	private_node_handle_->param(configuration_namespace_ + "keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
-	private_node_handle_->param(configuration_namespace_ + "keypoint_detectors/ambient_pointcloud/compute_keypoints_when_tracking_pose", compute_keypoints_when_tracking_pose_, false);
-	private_node_handle_->param(configuration_namespace_ + "keypoint_detectors/ambient_pointcloud/compute_keypoints_when_recovering_pose_tracking", compute_keypoints_when_recovering_pose_tracking_, false);
-	private_node_handle_->param(configuration_namespace_ + "keypoint_detectors/ambient_pointcloud/compute_keypoints_when_estimating_initial_pose", compute_keypoints_when_estimating_initial_pose_, true);
+	private_node_handle_->param(configuration_namespace + "keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_filename", reference_pointcloud_keypoints_filename_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "keypoint_detectors/reference_pointcloud/reference_pointcloud_keypoints_save_filename", reference_pointcloud_keypoints_save_filename_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "keypoint_detectors/ambient_pointcloud/compute_keypoints_when_tracking_pose", compute_keypoints_when_tracking_pose_, false);
+	private_node_handle_->param(configuration_namespace + "keypoint_detectors/ambient_pointcloud/compute_keypoints_when_recovering_pose_tracking", compute_keypoints_when_recovering_pose_tracking_, false);
+	private_node_handle_->param(configuration_namespace + "keypoint_detectors/ambient_pointcloud/compute_keypoints_when_estimating_initial_pose", compute_keypoints_when_estimating_initial_pose_, true);
 
-	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, "keypoint_detectors/reference_pointcloud/");
-	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, "keypoint_detectors/ambient_pointcloud/");
+	loadKeypointDetectorsFromParameterServer(reference_cloud_keypoint_detectors_, configuration_namespace + "keypoint_detectors/reference_pointcloud/");
+	loadKeypointDetectorsFromParameterServer(ambient_cloud_keypoint_detectors_, configuration_namespace + "keypoint_detectors/ambient_pointcloud/");
 }
 
 
@@ -549,27 +701,63 @@ void Localization<PointT>::loadKeypointDetectorsFromParameterServer(std::vector<
 
 
 template<typename PointT>
-void Localization<PointT>::setupCloudMatchersConfigurations() {
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/ignore_height_corrections", ignore_height_corrections_, false);
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/use_internal_tracking", use_internal_tracking_, true);
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/last_pose_weighted_mean_filter", last_pose_weighted_mean_filter_, -1.0);
+void Localization<PointT>::setupCloudMatchersConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [cloud_matchers_configurations] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/ignore_height_corrections", ignore_height_corrections_, false);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/use_internal_tracking", use_internal_tracking_, true);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/last_pose_weighted_mean_filter", last_pose_weighted_mean_filter_, -1.0);
 
 	double pose_tracking_timeout;
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/pose_tracking_timeout", pose_tracking_timeout, 30.0);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/pose_tracking_timeout", pose_tracking_timeout, 30.0);
 	pose_tracking_timeout_.fromSec(pose_tracking_timeout);
 
 	double pose_tracking_recovery_timeout;
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/pose_tracking_recovery_timeout", pose_tracking_recovery_timeout, 0.5);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/pose_tracking_recovery_timeout", pose_tracking_recovery_timeout, 0.5);
 	pose_tracking_recovery_timeout_.fromSec(pose_tracking_recovery_timeout);
 
 	double initial_pose_estimation_timeout;
-	private_node_handle_->param(configuration_namespace_ + "initial_pose_estimators_matchers/initial_pose_estimation_timeout", initial_pose_estimation_timeout, 600.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose_estimators_matchers/initial_pose_estimation_timeout", initial_pose_estimation_timeout, 600.0);
 	initial_pose_estimation_timeout_.fromSec(initial_pose_estimation_timeout);
 
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_, 25);
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_, 50);
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_, 3);
-	private_node_handle_->param(configuration_namespace_ + "tracking_matchers/pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_, 5);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose_, 25);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose_, 50);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_, 3);
+	private_node_handle_->param(configuration_namespace + "tracking_matchers/pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose", pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_, 5);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupInitialPoseEstimatorsFeatureMatchers(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [initial_pose_estimators_feature_matchers] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	initial_pose_estimators_feature_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(initial_pose_estimators_feature_matchers_, configuration_namespace + "initial_pose_estimators_matchers/feature_matchers/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupInitialPoseEstimatorsPointMatchers(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [initial_pose_estimators_point_matchers] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	initial_pose_estimators_point_matchers_.clear();
+	setupPointCloudMatchersConfigurations(initial_pose_estimators_point_matchers_, configuration_namespace + "initial_pose_estimators_matchers/point_matchers/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupTrackingMatchers(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [tracking_matchers] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	tracking_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/feature_matchers/");
+	setupPointCloudMatchersConfigurations(tracking_matchers_, "tracking_matchers/point_matchers/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupTrackingRecoveryMatchers(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [tracking_recovery_matchers] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	tracking_recovery_matchers_.clear();
+	setupFeatureCloudMatchersConfigurations(tracking_recovery_matchers_, "tracking_recovery_matchers/feature_matchers/");
+	setupPointCloudMatchersConfigurations(tracking_recovery_matchers_, "tracking_recovery_matchers/point_matchers/");
 }
 
 
@@ -697,12 +885,27 @@ void Localization<PointT>::setupTransformationValidatorsConfigurations(std::vect
 
 
 template<typename PointT>
-void Localization<PointT>::setupOutlierDetectorsConfigurations() {
+void Localization<PointT>::setupTransformationValidatorsForTracking(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [transformation_validators_for_tracking] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	setupTransformationValidatorsConfigurations(transformation_validators_, "transformation_validators/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupTransformationValidatorsForTrackingRecovery(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [transformation_validators_for_tracking_recovery] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	setupTransformationValidatorsConfigurations(transformation_validators_tracking_recovery_, "transformation_validators_tracking_recovery/");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupOutlierDetectorsConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [outlier_detectors] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
 	outlier_detectors_.clear();
 
-	std::string configuration_namespace = "outlier_detectors/";
+	std::string configuration_namespace_detectors = configuration_namespace + "outlier_detectors/";
 	XmlRpc::XmlRpcValue outlier_detectors;
-	if (private_node_handle_->getParam(configuration_namespace, outlier_detectors) && outlier_detectors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+	if (private_node_handle_->getParam(configuration_namespace_detectors, outlier_detectors) && outlier_detectors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
 		for (XmlRpc::XmlRpcValue::iterator it = outlier_detectors.begin(); it != outlier_detectors.end(); ++it) {
 			std::string detector_name = it->first;
 			typename OutlierDetector<PointT>::Ptr outlier_detector;
@@ -711,7 +914,7 @@ void Localization<PointT>::setupOutlierDetectorsConfigurations() {
 			}
 
 			if (outlier_detector) {
-				outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + detector_name + "/");
+				outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_detectors + detector_name + "/");
 				outlier_detectors_.push_back(outlier_detector);
 			}
 		}
@@ -720,13 +923,14 @@ void Localization<PointT>::setupOutlierDetectorsConfigurations() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupCloudAnalyzersConfigurations() {
-	private_node_handle_->param(configuration_namespace_ + "cloud_analyzers/compute_inliers_angular_distribution", compute_inliers_angular_distribution_, true);
-	private_node_handle_->param(configuration_namespace_ + "cloud_analyzers/compute_outliers_angular_distribution", compute_outliers_angular_distribution_, true);
+void Localization<PointT>::setupCloudAnalyzersConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [cloud_analyzers] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	std::string configuration_namespace_analyzers = configuration_namespace + "cloud_analyzers/";
+	private_node_handle_->param(configuration_namespace_analyzers + "compute_inliers_angular_distribution", compute_inliers_angular_distribution_, true);
+	private_node_handle_->param(configuration_namespace_analyzers + "compute_outliers_angular_distribution", compute_outliers_angular_distribution_, true);
 
-	std::string configuration_namespace = "cloud_analyzers/";
 	XmlRpc::XmlRpcValue cloud_analyzers;
-	if (private_node_handle_->getParam(configuration_namespace, cloud_analyzers) && cloud_analyzers.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+	if (private_node_handle_->getParam(configuration_namespace_analyzers, cloud_analyzers) && cloud_analyzers.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
 		for (XmlRpc::XmlRpcValue::iterator it = cloud_analyzers.begin(); it != cloud_analyzers.end(); ++it) {
 			std::string cloud_analyzer_name = it->first;
 			if (cloud_analyzer_name.find("angular_distribution_analyzer") != std::string::npos) {
@@ -734,7 +938,7 @@ void Localization<PointT>::setupCloudAnalyzersConfigurations() {
 			}
 
 			if (cloud_analyzer_) {
-				cloud_analyzer_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + cloud_analyzer_name + "/");
+				cloud_analyzer_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_analyzers + cloud_analyzer_name + "/");
 			}
 		}
 	}
@@ -742,11 +946,12 @@ void Localization<PointT>::setupCloudAnalyzersConfigurations() {
 
 
 template<typename PointT>
-void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations() {
-	std::string configuration_namespace = "registration_covariance_estimator/";
+void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [registration_covariance_estimators] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	std::string configuration_namespace_estimators = configuration_namespace + "registration_covariance_estimator/";
 
 	std::string covariance_error_metric;
-	private_node_handle_->param(configuration_namespace + "error_metric", covariance_error_metric, std::string("None"));
+	private_node_handle_->param(configuration_namespace_estimators + "error_metric", covariance_error_metric, std::string("None"));
 
 	if (covariance_error_metric == "PointToPointPM3D") {
 		registration_covariance_estimator_.reset(new RegistrationCovariancePointToPointPM3D<PointT>());
@@ -760,7 +965,7 @@ void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations()
 		return;
 	}
 
-	registration_covariance_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace);
+	registration_covariance_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_estimators);
 }
 
 
@@ -833,11 +1038,9 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 		if (pointcloud_conversions::fromROSMsg(*occupancy_grid_msg, *reference_pointcloud_from_occupancy_grid)) {
 			if (reference_pointcloud_from_occupancy_grid->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
 				reference_pointcloud_2d_ = true;
-				bool flip_normals_using_occupancy_grid_analysis;
-				private_node_handle_->param(configuration_namespace_ + "normal_estimators/reference_pointcloud/flip_normals_using_occupancy_grid_analysis", flip_normals_using_occupancy_grid_analysis, true);
 				if (occupancy_grid_msg->header.frame_id != map_frame_id_ && !transformCloudToTFFrame(reference_pointcloud_from_occupancy_grid, occupancy_grid_msg->header.stamp, map_frame_id_)) { return; }
 				reference_pointcloud_ = reference_pointcloud_from_occupancy_grid;
-				if (flip_normals_using_occupancy_grid_analysis && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
+				if (flip_normals_using_occupancy_grid_analysis_ && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud(occupancy_grid_msg->header.stamp)) {
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 					last_map_received_time_ = ros::Time::now();
@@ -1043,75 +1246,151 @@ void Localization<PointT>::setInitialPoseFromPoseWithCovarianceStamped(const geo
 
 
 template<typename PointT>
+void Localization<PointT>::startPublishers() {
+	if (!reference_pointcloud_publish_topic_.empty())
+		reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 1, true);
+	else
+		reference_pointcloud_publisher_.shutdown();
+
+	if (!reference_pointcloud_keypoints_publish_topic_.empty())
+		reference_pointcloud_keypoints_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_keypoints_publish_topic_, 1, true);
+	else
+		reference_pointcloud_keypoints_publisher_.shutdown();
+
+	if (!filtered_pointcloud_publish_topic_.empty())
+		filtered_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(filtered_pointcloud_publish_topic_, 1, true);
+	else
+		filtered_pointcloud_publisher_.shutdown();
+
+	if (!aligned_pointcloud_publish_topic_.empty())
+		aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 1, true);
+	else
+		aligned_pointcloud_publisher_.shutdown();
+
+	if (!pose_stamped_publish_topic_.empty())
+		pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 5, true);
+	else
+		pose_stamped_publisher_.shutdown();
+
+	if (!pose_with_covariance_stamped_publish_topic_.empty())
+		pose_with_covariance_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_publish_topic_, 5, true);
+	else
+		pose_with_covariance_stamped_publisher_.shutdown();
+
+	if (!pose_with_covariance_stamped_tracking_reset_publish_topic_.empty())
+		pose_with_covariance_stamped_tracking_reset_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_tracking_reset_publish_topic_, 5, true);
+	else
+		pose_with_covariance_stamped_tracking_reset_publisher_.shutdown();
+
+	if (!pose_array_publish_topic_.empty())
+		pose_array_publisher_ = node_handle_->advertise<geometry_msgs::PoseArray>(pose_array_publish_topic_, 1, true);
+	else
+		pose_array_publisher_.shutdown();
+
+	if (!localization_detailed_publish_topic_.empty())
+		localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_publish_topic_, 5, true);
+	else
+		localization_detailed_publisher_.shutdown();
+
+	if (!localization_diagnostics_publish_topic_.empty())
+		localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_publish_topic_, 5, true);
+	else
+		localization_diagnostics_publisher_.shutdown();
+
+	if (!localization_times_publish_topic_.empty())
+		localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 5, true);
+	else
+		localization_times_publisher_.shutdown();
+}
+
+
+template<typename PointT>
+void Localization<PointT>::startReferenceCloudSubscribers() {
+	if (reference_pointcloud_topic_.empty())
+		reference_pointcloud_subscriber_.shutdown();
+
+	if (reference_costmap_topic_.empty())
+		costmap_subscriber_.shutdown();
+
+	if (reference_pointcloud_required_ && reference_pointcloud_available_) {
+		if (!reference_pointcloud_topic_.empty()) {
+			reference_pointcloud_subscriber_ = node_handle_->subscribe(reference_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSPointCloud, this);
+		} else {
+			if (!reference_costmap_topic_.empty()) {
+				costmap_subscriber_ = node_handle_->subscribe(reference_costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
+			} else if (reference_pointcloud_filename_.empty()) {
+				ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
+			}
+		}
+	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::startSubscribers() {
+	if (!pose_topic_.empty())
+		pose_subscriber_ = node_handle_->subscribe(pose_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPose, this);
+	else
+		pose_subscriber_.shutdown();
+
+	if (!pose_stamped_topic_.empty())
+		pose_stamped_subscriber_ = node_handle_->subscribe(pose_stamped_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPoseStamped, this);
+	else
+		pose_stamped_subscriber_.shutdown();
+
+	if (!pose_with_covariance_stamped_topic_.empty())
+		pose_with_covariance_stamped_subscriber_ = node_handle_->subscribe(pose_with_covariance_stamped_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPoseWithCovarianceStamped, this);
+	else
+		pose_with_covariance_stamped_subscriber_.shutdown();
+
+	ambient_pointcloud_subscribers_.clear();
+	if (ambient_pointcloud_topics_.empty()) {
+		ROS_ERROR("Ambient point cloud topic for localization system must be provided!");
+		return;
+	} else {
+		std::replace(ambient_pointcloud_topics_.begin(), ambient_pointcloud_topics_.end(), '+', ' ');
+
+		std::stringstream ss(ambient_pointcloud_topics_);
+		std::string topic_name;
+
+		while (ss >> topic_name && !topic_name.empty()) {
+			ambient_pointcloud_subscribers_.push_back(node_handle_->subscribe(topic_name, 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this));
+			ROS_INFO_STREAM("Adding " << topic_name << " to the list of sensor_msgs::PointCloud2 topics to use in localization");
+		}
+
+		ambient_pointcloud_subscribers_active_ = true;
+	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::startServiceServers() {
+	if (!reload_localization_configuration_service_server_name_.empty()) {
+		reload_localization_configuration_service_server_ = node_handle_->advertiseService(reload_localization_configuration_service_server_name_, &dynamic_robot_localization::Localization<PointT>::reloadConfigurationFromParameterServerServiceCallback, this);
+	} else {
+		reload_localization_configuration_service_server_.shutdown();
+	}
+}
+
+
+template<typename PointT>
 void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 	if (node_handle_ && private_node_handle_) {
 		ROS_DEBUG("Starting self-localization...");
 
-		// publishers
-		if (!reference_pointcloud_publish_topic_.empty()) reference_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_publish_topic_, 1, true);
-		if (!reference_pointcloud_keypoints_publish_topic_.empty()) reference_pointcloud_keypoints_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(reference_pointcloud_keypoints_publish_topic_, 1, true);
-		if (!filtered_pointcloud_publish_topic_.empty()) filtered_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(filtered_pointcloud_publish_topic_, 1, true);
-		if (!aligned_pointcloud_publish_topic_.empty()) aligned_pointcloud_publisher_ = node_handle_->advertise<sensor_msgs::PointCloud2>(aligned_pointcloud_publish_topic_, 1, true);
-		if (!pose_stamped_publish_topic_.empty()) pose_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseStamped>(pose_stamped_publish_topic_, 5, true);
-		if (!pose_with_covariance_stamped_publish_topic_.empty()) pose_with_covariance_stamped_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_publish_topic_, 5, true);
-		if (!pose_with_covariance_stamped_tracking_reset_publish_topic_.empty()) pose_with_covariance_stamped_tracking_reset_publisher_ = node_handle_->advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_with_covariance_stamped_tracking_reset_publish_topic_, 5, true);
-		if (!pose_array_publish_topic_.empty()) pose_array_publisher_ = node_handle_->advertise<geometry_msgs::PoseArray>(pose_array_publish_topic_, 1, true);
-		if (!localization_detailed_publish_topic_.empty()) localization_detailed_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDetailed>(localization_detailed_publish_topic_, 5, true);
-		if (!localization_diagnostics_publish_topic_.empty()) localization_diagnostics_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationDiagnostics>(localization_diagnostics_publish_topic_, 5, true);
-		if (!localization_times_publish_topic_.empty()) localization_times_publisher_ = node_handle_->advertise<dynamic_robot_localization::LocalizationTimes>(localization_times_publish_topic_, 5, true);
-
-		// reference map
-		if (reference_pointcloud_available_) {
-			if (reference_pointcloud_filename_.empty()) {
-				if (!reference_pointcloud_topic_.empty()) {
-					reference_pointcloud_subscriber_ = node_handle_->subscribe(reference_pointcloud_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSPointCloud, this);
-				} else {
-					if (!reference_costmap_topic_.empty()) {
-						costmap_subscriber_ = node_handle_->subscribe(reference_costmap_topic_, 1, &dynamic_robot_localization::Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid, this);
-					} else {
-						ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
-						return;
-					}
-				}
-			} else {
-				if (!loadReferencePointCloudFromFile(reference_pointcloud_filename_)) {
-					ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
-					return;
-				}
-			}
-		}
+		startPublishers();
+		startReferenceCloudSubscribers();
 
 		// initial pose setup might block while waiting for valid TF
 		while (!ros::Time::isValid() || (reference_pointcloud_required_ && reference_pointcloud_available_ && !reference_pointcloud_loaded_)) {
 			ROS_DEBUG_THROTTLE(1.0, "Waiting for valid time...");
 			ros::spinOnce(); // allows to setup reference map before tf is available (which happens when playing bag files with --pause option)
 		}
-
 		last_accepted_pose_time_ = ros::Time::now();
 
-		setupInitialPose();
-
-		// subscribers
-		if (!pose_topic_.empty()) pose_subscriber_ = node_handle_->subscribe(pose_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPose, this);
-		if (!pose_stamped_topic_.empty()) pose_stamped_subscriber_ = node_handle_->subscribe(pose_stamped_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPoseStamped, this);
-		if (!pose_with_covariance_stamped_topic_.empty()) pose_with_covariance_stamped_subscriber_ = node_handle_->subscribe(pose_with_covariance_stamped_topic_, 1, &dynamic_robot_localization::Localization<PointT>::setInitialPoseFromPoseWithCovarianceStamped, this);
-
-		if (ambient_pointcloud_topics_.empty()) {
-			ROS_ERROR("Ambient point cloud topic for localization system must be provided!");
-			return;
-		} else {
-			std::replace(ambient_pointcloud_topics_.begin(), ambient_pointcloud_topics_.end(), '+', ' ');
-
-			std::stringstream ss(ambient_pointcloud_topics_);
-			std::string topic_name;
-
-			while (ss >> topic_name && !topic_name.empty()) {
-				ambient_pointcloud_subscribers_.push_back(node_handle_->subscribe(topic_name, 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this));
-				ROS_INFO_STREAM("Adding " << topic_name << " to the list of sensor_msgs::PointCloud2 topics to use in localization");
-			}
-
-			ambient_pointcloud_subscribers_active_ = true;
-		}
+		setupInitialPose(configuration_namespace_);
+		startSubscribers();
+		startServiceServers();
 
 		if (start_ros_spinner) {
 			startROSSpinner();

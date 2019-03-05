@@ -72,6 +72,9 @@ subscribe_topic_names:
     reference_costmap_topic: '/map'                                             # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
     reference_pointcloud_topic: ''                                              # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'reference_pointcloud_update'
 
+service_servers_names:
+    reload_localization_configuration_service_server_name: "reload_localization_configuration"
+
 
 # ===================================================================================================================================================
 #   To avoid remaps in the launch file and collision with other nodes topics, the topic names in which the localization system publishes messages can be specified.
@@ -189,6 +192,10 @@ cluster_selector:
     load_clusters_indices_from_parameter_server_before_filtering: true
     sorting_algorithm: "MaxClusterSizeSorter"                           # Available sorters: [ MinClusterSizeSorter | MaxClusterSizeSorter | MinDistanceToOriginSorter | MaxDistanceToOriginSorter | MinAxisValueSorter | MaxAxisValueSorter ]
     sorting_axis: "Z"                                                   # Available axis: [ X | Y | Z ] -> only used with [ MinAxisValueSorter | MaxAxisValueSorter ]
+    # Indices for picking the sorted clusters -> [min_cluster_index, max_cluster_index[ (they start at 0 and do not include the last)
+    # Both indices can be set here or in any parent namespace since they are searched from this namespace up to the root using ros::param::search
+    min_cluster_index: 0                                                # First cluster index to pick after sorting (it will be overridden as 0 if [min_cluster_index < 0])
+    max_cluster_index: 1                                                # Last cluster index to pick after sorting (it will be overridden as [number_of_clusters] if [max_cluster_index < 0] or [max_cluster_index > number_of_clusters])
     clusters_colored_cloud_publish_topic: ''
     clusters_colored_cloud_publish_topic_frame_id: ''
 

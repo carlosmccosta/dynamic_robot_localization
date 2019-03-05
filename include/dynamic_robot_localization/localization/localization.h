@@ -126,6 +126,8 @@
 #include <dynamic_robot_localization/LocalizationDetailed.h>
 #include <dynamic_robot_localization/LocalizationDiagnostics.h>
 #include <dynamic_robot_localization/LocalizationTimes.h>
+#include <dynamic_robot_localization/LocalizationConfiguration.h>
+#include <dynamic_robot_localization/ReloadLocalizationConfiguration.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -206,33 +208,46 @@ class Localization : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <Localization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
-		void setupGeneralConfigurations();
-		void setupSubcriptionTopicNames();
-		void setupPublishTopicNames();
-		void setupFrameIds();
+		bool reloadConfigurationFromParameterServerServiceCallback(dynamic_robot_localization::ReloadLocalizationConfiguration::Request& request, dynamic_robot_localization::ReloadLocalizationConfiguration::Response& response);
+		bool reloadConfigurationFromParameterServer(const dynamic_robot_localization::LocalizationConfiguration& localization_configuration);
+		bool parseConfigurationNamespace(const std::string& configuration_namespace, std::string& configuration_namespace_parsed_out);
+		void setupGeneralConfigurations(const std::string& configuration_namespace);
+		void setupSubscribeTopicNames(const std::string &configuration_namespace);
+		void setupServiceServersNames(const std::string &configuration_namespace);
+		void setupPublishTopicNames(const std::string& configuration_namespace);
+		void setupFrameIds(const std::string& configuration_namespace);
 		void setupInitialPose();
-		void setupMessageManagement();
-		void setupReferencePointCloud();
+		void setupInitialPose(const std::string& configuration_namespace);
+		void setupTFPublisher(const std::string& configuration_namespace);
+		void setupMessageManagement(const std::string& configuration_namespace);
+		void setupReferencePointCloud(const std::string& configuration_namespace);
+		bool loadReferencePointCloud();
 
-		virtual void setupFiltersConfigurations();
+		virtual void setupFiltersConfigurations(const std::string& configuration_namespace);
 		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
-		virtual void setupNormalEstimatorsConfigurations();
+		virtual void setupNormalEstimatorsConfigurations(const std::string& configuration_namespace);
 		virtual void updateNormalsEstimationFlags();
-		virtual void setupCurvatureEstimatorsConfigurations();
+		virtual void setupCurvatureEstimatorsConfigurations(const std::string& configuration_namespace);
 		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
 		void loadCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, std::string configuration_namespace);
-		virtual void setupKeypointDetectors();
+		virtual void setupKeypointDetectors(const std::string& configuration_namespace);
 		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
-		virtual void setupCloudMatchersConfigurations();
+		virtual void setupCloudMatchersConfigurations(const std::string& configuration_namespace);
+		virtual void setupInitialPoseEstimatorsFeatureMatchers(const std::string& configuration_namespace);
+		virtual void setupInitialPoseEstimatorsPointMatchers(const std::string& configuration_namespace);
+		virtual void setupTrackingMatchers(const std::string& configuration_namespace);
+		virtual void setupTrackingRecoveryMatchers(const std::string& configuration_namespace);
 		virtual void setupPointCloudMatchersConfigurations(std::vector< typename CloudMatcher<PointT>::Ptr >& pointcloud_matchers, const std::string& configuration_namespace);
 		virtual void setupFeatureCloudMatchersConfigurations(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, const std::string& configuration_namespace);
 		template <typename DescriptorT>
 		void loadKeypointMatcherFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor,
 				const std::string& keypoint_descriptor_configuration_namespace, const std::string& feature_matcher_configuration_namespace);
+		virtual void setupTransformationValidatorsForTracking(const std::string& configuration_namespace);
+		virtual void setupTransformationValidatorsForTrackingRecovery(const std::string& configuration_namespace);
 		virtual void setupTransformationValidatorsConfigurations(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace);
-		virtual void setupOutlierDetectorsConfigurations();
-		virtual void setupCloudAnalyzersConfigurations();
-		virtual void setupRegistrationCovarianceEstimatorsConfigurations();
+		virtual void setupOutlierDetectorsConfigurations(const std::string& configuration_namespace);
+		virtual void setupCloudAnalyzersConfigurations(const std::string& configuration_namespace);
+		virtual void setupRegistrationCovarianceEstimatorsConfigurations(const std::string& configuration_namespace);
 
 		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename);
 		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
@@ -246,6 +261,10 @@ class Localization : public ConfigurableObject {
 		void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
 		void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
 
+		void startPublishers();
+		void startReferenceCloudSubscribers();
+		void startSubscribers();
+		void startServiceServers();
 		void startLocalization(bool start_ros_spinner = true);
 		void startROSSpinner();
 		void stopProcessingSensorData();
@@ -312,6 +331,9 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_topic_;
 		std::string reference_costmap_topic_;
 
+		// service servers
+		std::string reload_localization_configuration_service_server_name_;
+
 		// publish topic names
 		std::string reference_pointcloud_publish_topic_;
 		std::string reference_pointcloud_keypoints_publish_topic_;
@@ -332,6 +354,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
 		bool reference_pointcloud_normalize_normals_;
+		bool flip_normals_using_occupancy_grid_analysis_;
 		MapUpdateMode map_update_mode_;
 		bool use_incremental_map_update_;
 		std::string map_frame_id_;
@@ -415,6 +438,7 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber pose_subscriber_;
 		ros::Subscriber pose_stamped_subscriber_;
 		ros::Subscriber pose_with_covariance_stamped_subscriber_;
+		ros::ServiceServer reload_localization_configuration_service_server_;
 		std::vector< ros::Subscriber > ambient_pointcloud_subscribers_;
 		bool ambient_pointcloud_subscribers_active_;
 		ros::Subscriber costmap_subscriber_;

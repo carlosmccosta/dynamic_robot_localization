@@ -67,8 +67,10 @@ void ClusterSelector<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 
 template<typename PointT>
 void ClusterSelector<PointT>::loadClustersIndicesFromParameterServer() {
-	private_node_handle_->param(configuration_namespace_ + "min_cluster_index", min_cluster_index_, 0);
-	private_node_handle_->param(configuration_namespace_ + "max_cluster_index", max_cluster_index_, 1);
+	std::string search_namespace = private_node_handle_->getNamespace() + "/" + configuration_namespace_;
+	std::string final_param_name;
+	if (ros::param::search(search_namespace, "min_cluster_index", final_param_name)) { private_node_handle_->param(final_param_name, min_cluster_index_, 0); }
+	if (ros::param::search(search_namespace, "max_cluster_index", final_param_name)) { private_node_handle_->param(final_param_name, max_cluster_index_, 1); }
 }
 
 template<typename PointT>

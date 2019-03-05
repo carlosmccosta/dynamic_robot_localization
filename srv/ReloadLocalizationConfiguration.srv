@@ -1,0 +1,3 @@
+dynamic_robot_localization/LocalizationConfiguration localization_configuration
+---
+bool status
