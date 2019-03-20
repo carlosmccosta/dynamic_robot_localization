@@ -95,6 +95,10 @@ Video 11: Object pose estimation for assisted assembly operations
 Video 12: Object pose estimation for pick and pack operations
 
 
+[![Bin picking using region growing and principal component analysis](http://img.youtube.com/vi/6BgnQP4TeJM/maxresdefault.jpg)](http://www.youtube.com/watch?v=6BgnQP4TeJM)
+
+Video 13: 6 DoF pose estimation of the vacuum grasp pose for smooth objects inside bins using region growing and principal component analysis
+
 
 ## Data sources
 
