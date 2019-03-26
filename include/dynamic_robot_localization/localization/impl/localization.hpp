@@ -71,6 +71,8 @@ Localization<PointT>::Localization() :
 	sensor_data_processing_status_(WaitingForSensorData),
 	pose_to_tf_publisher_(new pose_to_tf_publisher::PoseToTFPublisher(ros::Duration(600))),
 	ambient_pointcloud_subscribers_active_(false),
+	limit_of_pointclouds_to_process_(-1),
+	number_of_processed_pointclouds_(0),
 	reference_pointcloud_(new pcl::PointCloud<PointT>()),
 	reference_pointcloud_keypoints_(new pcl::PointCloud<PointT>()),
 	last_number_points_inserted_in_circular_buffer_(0),
@@ -432,6 +434,7 @@ void Localization<PointT>::setupMessageManagement(const std::string& configurati
 	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
 	}
+	private_node_handle_->param(configuration_namespace + "message_management/limit_of_pointclouds_to_process", limit_of_pointclouds_to_process_, -1);
 
 	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_millimeters_in_root_mean_square_error_inliers", localization_detailed_use_millimeters_in_root_mean_square_error_inliers_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences", localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences_, false);
@@ -1420,6 +1423,7 @@ void Localization<PointT>::stopProcessingSensorData() {
 
 template<typename PointT>
 void Localization<PointT>::restartProcessingSensorData() {
+	resetNumberOfProcessedPointclouds();
 	ambient_pointcloud_subscribers_active_ = true;
 	sensor_data_processing_status_ = WaitingForSensorData;
 	std::vector<std::string> topic_names;
@@ -1433,6 +1437,12 @@ void Localization<PointT>::restartProcessingSensorData() {
 	for (size_t i = 0; i < topic_names.size(); ++i) {
 		ambient_pointcloud_subscribers_.push_back(node_handle_->subscribe(topic_names[i], 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this));
 	}
+}
+
+
+template<typename PointT>
+void Localization<PointT>::resetNumberOfProcessedPointclouds() {
+	number_of_processed_pointclouds_ = 0;
 }
 
 
@@ -1527,6 +1537,10 @@ bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::
 
 template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
+	if (limit_of_pointclouds_to_process_ > 0 && number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
+		return;
+	}
+
 	ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : ambient_cloud_msg->header.stamp);
 	size_t number_points_ambient_pointcloud = ambient_cloud_msg->width * ambient_cloud_msg->height;
 
@@ -1542,6 +1556,10 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 template<typename PointT>
 bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed, bool check_if_pointcloud_subscribers_are_active) {
 	try {
+		if (limit_of_pointclouds_to_process_ > 0 && number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
+			return false;
+		}
+
 		PerformanceTimer performance_timer;
 		performance_timer.start();
 		localization_times_msg_ = LocalizationTimes();
@@ -1551,6 +1569,10 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		if (check_if_pointcloud_should_be_processed) {
 			if (!checkIfAmbientPointCloudShouldBeProcessed(ambient_cloud_time, number_points_ambient_pointcloud, check_if_pointcloud_subscribers_are_active, true))
 				return false;
+		}
+
+		if (limit_of_pointclouds_to_process_ > 0) {
+			++number_of_processed_pointclouds_;
 		}
 
 		ROS_DEBUG_STREAM("Received pointcloud with sequence number " << ambient_pointcloud->header.seq << " in frame " << ambient_pointcloud->header.frame_id << " with " << (ambient_pointcloud->width * ambient_pointcloud->height) << " points and with time stamp " << ambient_cloud_time << " (map_frame_id: " << map_frame_id_ << ")");

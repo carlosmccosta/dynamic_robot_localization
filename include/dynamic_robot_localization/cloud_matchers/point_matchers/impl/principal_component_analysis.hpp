@@ -1,4 +1,4 @@
-/**\file principal_component_analysis.cpp
+/**\file principal_component_analysis.hpp
  * \brief Description...
  *
  * @version 1.0

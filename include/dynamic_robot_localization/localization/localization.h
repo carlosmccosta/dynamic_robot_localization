@@ -269,6 +269,7 @@ class Localization : public ConfigurableObject {
 		void startROSSpinner();
 		void stopProcessingSensorData();
 		void restartProcessingSensorData();
+		void resetNumberOfProcessedPointclouds();
 
 		bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
 		bool checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active = true, bool use_ros_console = true);
@@ -441,6 +442,8 @@ class Localization : public ConfigurableObject {
 		ros::ServiceServer reload_localization_configuration_service_server_;
 		std::vector< ros::Subscriber > ambient_pointcloud_subscribers_;
 		bool ambient_pointcloud_subscribers_active_;
+		int limit_of_pointclouds_to_process_;
+		size_t number_of_processed_pointclouds_;
 		ros::Subscriber costmap_subscriber_;
 		ros::Subscriber reference_pointcloud_subscriber_;
 		ros::Publisher reference_pointcloud_publisher_;
