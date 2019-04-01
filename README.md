@@ -29,9 +29,13 @@ Even though this package was developed for robot self-localization and mapping, 
     * [Robot mapping video](https://www.youtube.com/watch?v=GKDG7c61OLo)
     * [Robot localization video](https://www.youtube.com/watch?v=CIP-QH87z8E)
 
-![Localization system processing pipeline](docs/overview.png "Localization system processing pipeline")
+![Overview of the modules available in each processing stage](docs/system-modules.png "Overview of the modules available in each processing stage")
 
-Figure 1: Localization system processing pipeline
+Figure 1: Overview of the modules available in each processing stage
+
+![Overview of the data flows from the main processing stages](docs/overview.png "Overview of the data flows from the main processing stages")
+
+Figure 2: Overview of the data flows from the main processing stages
 
 
 [![3 DoF localization system tests with the Guardian platform in the CROB lab](http://img.youtube.com/vi/Rl6utteku8k/maxresdefault.jpg)](http://www.youtube.com/watch?v=Rl6utteku8k)
