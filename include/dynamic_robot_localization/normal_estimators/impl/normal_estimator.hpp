@@ -21,6 +21,7 @@ template<typename PointT>
 NormalEstimator<PointT>::NormalEstimator() :
 	display_normals_(false),
 	display_occupancy_grid_pointcloud_(false),
+	colorize_pointcloud_with_curvatures_(false),
 	occupancy_grid_analysis_k_(0),
 	occupancy_grid_analysis_radius_(-1.0),
 	occupancy_grid_analysis_radius_resolution_percentage_(4.0),
@@ -46,6 +47,10 @@ void NormalEstimator<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "display_occupancy_grid_pointcloud", final_param_name)) {
 		private_node_handle->param(final_param_name, display_occupancy_grid_pointcloud_, false);
+	}
+
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "colorize_pointcloud_with_curvatures", final_param_name)) {
+		private_node_handle->param(final_param_name, colorize_pointcloud_with_curvatures_, false);
 	}
 
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "occupancy_grid_analysis_k", final_param_name)) {
@@ -97,6 +102,10 @@ void NormalEstimator<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::
 		for (size_t i = 0; i < pointcloud_with_normals_out->size(); ++i) {
 			(*pointcloud_with_normals_out)[i].getNormalVector3fMap().normalize();
 		}
+	}
+
+	if (colorize_pointcloud_with_curvatures_) {
+		pointcloud_utils::colorizePointCloudWithCurvature(*pointcloud);
 	}
 
 	if (display_normals_) {

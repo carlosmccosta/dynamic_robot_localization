@@ -381,6 +381,8 @@ void Localization<PointT>::setupInitialPose(const std::string& configuration_nam
 	if (publish_tf_map_odom_) {
 		pose_to_tf_publisher_->publishInitialPoseFromParameterServer();
 	}
+
+	last_accepted_pose_time_ = ros::Time::now();
 }
 
 

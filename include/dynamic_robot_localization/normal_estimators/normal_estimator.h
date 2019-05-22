@@ -31,7 +31,7 @@
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
 #include <dynamic_robot_localization/common/cloud_viewer.h>
-
+#include <dynamic_robot_localization/common/pointcloud_utils.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -89,6 +89,7 @@ class NormalEstimator : public ConfigurableObject {
 	protected:
 		bool display_normals_;
 		bool display_occupancy_grid_pointcloud_;
+		bool colorize_pointcloud_with_curvatures_;
 		int occupancy_grid_analysis_k_;
 		double occupancy_grid_analysis_radius_;
 		double occupancy_grid_analysis_radius_resolution_percentage_;

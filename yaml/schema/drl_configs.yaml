@@ -351,6 +351,7 @@ filters:
 normal_estimators:
     display_normals: false                                          # Can be overridden in child namespaces | Displays a blocking window with the estimated normals
     normalize_normals: true                                         # Can be overridden in child namespaces
+    colorize_pointcloud_with_curvatures: false
     reference_pointcloud:
         flip_normals_using_occupancy_grid_analysis: true            # Only used in the reference pointcloud
         use_filtered_cloud_as_normal_estimation_surface: true       # Normals can be estimated with the filtered cloud or with the original reference cloud as search surface
