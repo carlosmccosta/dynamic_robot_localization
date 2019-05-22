@@ -38,6 +38,7 @@
 
 // project includes
 #include <dynamic_robot_localization/common/math_utils.h>
+#include <dynamic_robot_localization/common/pointcloud_utils.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -59,7 +60,7 @@ template <typename PointT>
 size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int search_k, float search_radius, bool show_occupancy_grid_pointcloud = false);
 
 template <typename PointCloudT>
-bool fromFile(const std::string& filename, PointCloudT& pointcloud);
+bool fromFile(PointCloudT& pointcloud, const std::string& filename, const std::string& folder = std::string(""));
 
 template <typename PointCloudT>
 bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format);

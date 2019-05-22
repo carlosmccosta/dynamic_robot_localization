@@ -58,7 +58,7 @@ int convertMesh(char* input, char* output, bool binary_output_format, bool binar
 	dynamic_robot_localization::PerformanceTimer performance_timer;
 	performance_timer.start();
 
-	if (dynamic_robot_localization::pointcloud_conversions::fromFile(std::string(input), pointcloud)) {
+	if (dynamic_robot_localization::pointcloud_conversions::fromFile(pointcloud, std::string(input))) {
 		pcl::console::print_highlight(" +> Loaded %d points in %s\n", (pointcloud.width * pointcloud.height), performance_timer.getElapsedTimeFormated().c_str());
 		pcl::console::print_highlight(" +> Pointcloud fields: %s\n\n", pcl::getFieldsList(pointcloud).c_str());
 		std::string save_type = (binary_output_format ? "binary" : "ascii");

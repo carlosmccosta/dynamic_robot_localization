@@ -145,16 +145,22 @@ size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occ
 
 
 template<typename PointCloudT>
-bool fromFile(const std::string& filename, PointCloudT& pointcloud) {
-	std::string::size_type index = filename.rfind(".");
-	if (index == std::string::npos) return false;
+bool fromFile(PointCloudT& pointcloud, const std::string& filename, const std::string& folder) {
+	if (filename.empty()) return false;
+	std::string extension = pointcloud_utils::getFileExtension(filename);
+	std::string filepath = pointcloud_utils::parseFilePath(filename, folder);
+	if (filepath.empty()) return false;
+	if (extension.empty()) {
+		extension = std::string("ply");
+		filepath += ".ply";
+	}
 
-	std::string extension = filename.substr(index + 1);
+	ROS_INFO_STREAM("Loading point cloud with extension [" << extension << "] from file path [" << filepath << "]");
 
 	if (extension == "pcd") {
-		if (pcl::io::loadPCDFile(filename, pointcloud) == 0 && !pointcloud.empty()) return true;
+		if (pcl::io::loadPCDFile(filepath, pointcloud) == 0 && !pointcloud.empty()) return true;
 	} else if (extension == "ply") {
-		if (pcl::io::loadPLYFile(filename, pointcloud) == 0 && !pointcloud.empty()) {
+		if (pcl::io::loadPLYFile(filepath, pointcloud) == 0 && !pointcloud.empty()) {
 			// fix PLYReader import
 			pointcloud.sensor_origin_ = Eigen::Vector4f::Zero();
 			pointcloud.sensor_orientation_ = Eigen::Quaternionf::Identity();
@@ -162,9 +168,9 @@ bool fromFile(const std::string& filename, PointCloudT& pointcloud) {
 		}
 	} else {
 		pcl::PolygonMesh mesh;
-		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .ply .stl
+		if (pcl::io::loadPolygonFile(filepath, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .stl
 			pcl::fromPCLPointCloud2(mesh.cloud, pointcloud);
-			return !pointcloud.empty();
+			return true;
 		}
 	}
 

@@ -454,6 +454,7 @@ void Localization<PointT>::setupMessageManagement(const std::string& configurati
 template<typename PointT>
 void Localization<PointT>::setupReferencePointCloud(const std::string& configuration_namespace) {
 	ROS_DEBUG_STREAM("Loading [reference_pointcloud] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	private_node_handle_->param(configuration_namespace + "reference_pointclouds_database_folder_path", reference_pointclouds_database_folder_path_, std::string(""));
 	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_filename", reference_pointcloud_filename_, std::string(""));
 	private_node_handle_->param(configuration_namespace + "reference_pointclouds/normalize_normals", reference_pointcloud_normalize_normals_, true);
 	private_node_handle_->param(configuration_namespace + "reference_pointclouds/reference_pointcloud_preprocessed_save_filename", reference_pointcloud_preprocessed_save_filename_, std::string(""));
@@ -486,18 +487,6 @@ void Localization<PointT>::setupReferencePointCloud(const std::string& configura
 
 	private_node_handle_->param(configuration_namespace + "reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
 	reference_pointcloud_->header.frame_id = map_frame_id_;
-}
-
-
-template<typename PointT>
-bool Localization<PointT>::loadReferencePointCloud() {
-	if (reference_pointcloud_required_ && reference_pointcloud_available_ && !reference_pointcloud_filename_.empty()) {
-		if (!loadReferencePointCloudFromFile(reference_pointcloud_filename_)) {
-			ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
-			return false;
-		}
-	}
-	return true;
 }
 
 
@@ -973,10 +962,22 @@ void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations(c
 
 
 template<typename PointT>
-bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename) {
+bool Localization<PointT>::loadReferencePointCloud() {
+	if (reference_pointcloud_required_ && reference_pointcloud_available_ && !reference_pointcloud_filename_.empty()) {
+		if (!loadReferencePointCloudFromFile(reference_pointcloud_filename_, reference_pointclouds_database_folder_path_)) {
+			ROS_ERROR("Reference point cloud topic or file for localization system must be provided!");
+			return false;
+		}
+	}
+	return true;
+}
+
+
+template<typename PointT>
+bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename, const std::string& reference_pointclouds_database_folder_path) {
 	PerformanceTimer performance_timer;
 	performance_timer.start();
-	if (pointcloud_conversions::fromFile(reference_pointcloud_filename, *reference_pointcloud_)) {
+	if (pointcloud_conversions::fromFile(*reference_pointcloud_, reference_pointcloud_filename, (reference_pointclouds_database_folder_path.empty() ? reference_pointclouds_database_folder_path_ : reference_pointclouds_database_folder_path))) {
 		if (reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
 			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
 			reference_pointcloud_->header.frame_id = map_frame_id_;
@@ -1124,7 +1125,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const
 			}
 
 			if (!reference_cloud_keypoint_detectors_.empty()) {
-				if (reference_pointcloud_keypoints_filename_.empty() || !pointcloud_conversions::fromFile(reference_pointcloud_keypoints_filename_, *reference_pointcloud_keypoints_)) {
+				if (reference_pointcloud_keypoints_filename_.empty() || !pointcloud_conversions::fromFile(*reference_pointcloud_keypoints_, reference_pointcloud_keypoints_filename_, reference_pointclouds_database_folder_path_)) {
 					applyKeypointDetection(reference_cloud_keypoint_detectors_, reference_pointcloud_, reference_pointcloud_search_method_, reference_pointcloud_keypoints_);
 
 					if (!reference_pointcloud_keypoints_save_filename_.empty()) {
@@ -1430,6 +1431,7 @@ void Localization<PointT>::restartProcessingSensorData() {
 
 	for (size_t i = 0; i < ambient_pointcloud_subscribers_.size(); ++i) {
 		topic_names.push_back(ambient_pointcloud_subscribers_[i].getTopic());
+		ambient_pointcloud_subscribers_[i].shutdown();
 	}
 
 	ambient_pointcloud_subscribers_.clear();
@@ -1494,8 +1496,8 @@ template<typename PointT>
 bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active, bool use_ros_console) {
 	bool process_pointcloud = true;
 	ros::Duration scan_age = ros::Time::now() - ambient_cloud_time;
-	ros::Duration elapsed_time_since_last_scan = ros::Time::now() - last_scan_time_;
-	ros::Duration time_offset = last_scan_time_ - ambient_cloud_time;
+	ros::Duration elapsed_time_since_last_scan = last_scan_time_.toNSec() > 0 ? ros::Time::now() - last_scan_time_ : ros::Duration(0.0);
+	ros::Duration time_offset = last_scan_time_.toNSec() > 0 ? (last_scan_time_ - ambient_cloud_time) : ros::Duration(0.0);
 
 	if (check_if_pointcloud_subscribers_are_active && !ambient_pointcloud_subscribers_active_) {
 		process_pointcloud = false;
@@ -1537,6 +1539,8 @@ bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::
 
 template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
+	ROS_DEBUG_STREAM("Received ROS point cloud message with " << ambient_cloud_msg->width * ambient_cloud_msg->height << " points");
+
 	if (limit_of_pointclouds_to_process_ > 0 && number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
 		return;
 	}

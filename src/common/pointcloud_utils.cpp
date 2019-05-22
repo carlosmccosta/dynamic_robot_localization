@@ -33,3 +33,36 @@ PCL_INSTANTIATE(DRLPointCloudUtilsDistanceSquaredToOrigin, DRL_POINT_TYPES)
 
 #endif
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </template instantiations>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+namespace dynamic_robot_localization {
+namespace pointcloud_utils {
+
+std::string getFileExtension(const std::string& filename) {
+	std::string extension;
+	if (!filename.empty()) {
+		std::string::size_type index = filename.rfind('.');
+		if (index != std::string::npos) {
+			extension = filename.substr(index + 1);
+		}
+	}
+
+	return extension;
+}
+
+std::string parseFilePath(const std::string& filename, const std::string& folder) {
+	std::string filepath;
+	if (!filename.empty()) {
+		if (filename.front() != '/' && !folder.empty()) {
+			filepath = folder;
+			if (folder.back() != '/' && filename.back() != '/')
+				filepath += '/';
+		}
+
+		filepath += filename;
+	}
+
+	return filepath;
+}
+
+}
+}

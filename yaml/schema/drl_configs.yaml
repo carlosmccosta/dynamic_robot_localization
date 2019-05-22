@@ -174,6 +174,10 @@ general_configurations:
 #   If there are dynamic objects in the scene, OctoMap can be used to performed cloud integration (much more computation intensive)
 #       -> The rate of map update from the point cloud topic can be configured with the parameter [message_management/min_seconds_between_reference_pointcloud_update]
 #       -> The dynamic objects won't stay in the map due to the raytracing operations marking the cells between the sensor pose and cloud points as free
+
+# For avoiding specifying the full path in each reference point cloud to load / save, a folder database path can be specified
+reference_pointclouds_database_folder_path: ''
+
 reference_pointclouds:
     reference_pointcloud_filename: ''
     reference_pointcloud_preprocessed_save_filename: ''

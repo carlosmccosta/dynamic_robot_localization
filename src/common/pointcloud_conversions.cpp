@@ -22,7 +22,7 @@ PCL_INSTANTIATE(DRLPointcloudConversionsFromROSMsg, DRL_POINT_TYPES)
 #define PCL_INSTANTIATE_DRLPointcloudConversionsFlipPointCloudNormalsUsingOccpancyGrid(T) template size_t dynamic_robot_localization::pointcloud_conversions::flipPointCloudNormalsUsingOccpancyGrid<T>(const nav_msgs::OccupancyGrid&, pcl::PointCloud<T>&, int, float, bool);
 PCL_INSTANTIATE(DRLPointcloudConversionsFlipPointCloudNormalsUsingOccpancyGrid, DRL_POINT_TYPES)
 
-#define PCL_INSTANTIATE_DRLPointcloudConversionsFromFile(T) template bool dynamic_robot_localization::pointcloud_conversions::fromFile< pcl::PointCloud<T> >(const std::string&, pcl::PointCloud<T>&);
+#define PCL_INSTANTIATE_DRLPointcloudConversionsFromFile(T) template bool dynamic_robot_localization::pointcloud_conversions::fromFile< pcl::PointCloud<T> >(pcl::PointCloud<T>&, const std::string&, const std::string&);
 PCL_INSTANTIATE(DRLPointcloudConversionsFromFile, DRL_POINT_TYPES)
 PCL_INSTANTIATE(DRLPointcloudConversionsFromFile, DRL_DESCRIPTOR_TYPES)
 
@@ -36,11 +36,11 @@ namespace pointcloud_conversions {
 
 
 template<>
-bool fromFile(const std::string& filename, pcl::PCLPointCloud2& pointcloud) {
-	std::string::size_type index = filename.rfind(".");
-	if (index == std::string::npos) return false;
-
-	std::string extension = filename.substr(index + 1);
+bool fromFile(pcl::PCLPointCloud2& pointcloud, const std::string& filename, const std::string& folder) {
+	if (filename.empty()) return false;
+	std::string extension = pointcloud_utils::getFileExtension(filename);
+	std::string filepath = pointcloud_utils::parseFilePath(filename, folder);
+	if (filepath.empty()) return false;
 
 	if (extension == "pcd") {
 		if (pcl::io::loadPCDFile(filename, pointcloud) == 0 && !pointcloud.data.empty()) return true;
@@ -48,9 +48,9 @@ bool fromFile(const std::string& filename, pcl::PCLPointCloud2& pointcloud) {
 		if (pcl::io::loadPLYFile(filename, pointcloud) == 0 && !pointcloud.data.empty()) return true;
 	} else {
 		pcl::PolygonMesh mesh;
-		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .ply .stl
+		if (pcl::io::loadPolygonFile(filename, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .stl
 			pointcloud = mesh.cloud;
-			return !pointcloud.data.empty();
+			return true;
 		}
 	}
 

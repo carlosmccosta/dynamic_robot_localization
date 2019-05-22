@@ -221,7 +221,6 @@ class Localization : public ConfigurableObject {
 		void setupTFPublisher(const std::string& configuration_namespace);
 		void setupMessageManagement(const std::string& configuration_namespace);
 		void setupReferencePointCloud(const std::string& configuration_namespace);
-		bool loadReferencePointCloud();
 
 		virtual void setupFiltersConfigurations(const std::string& configuration_namespace);
 		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
@@ -249,7 +248,8 @@ class Localization : public ConfigurableObject {
 		virtual void setupCloudAnalyzersConfigurations(const std::string& configuration_namespace);
 		virtual void setupRegistrationCovarianceEstimatorsConfigurations(const std::string& configuration_namespace);
 
-		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename);
+		bool loadReferencePointCloud();
+		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename, const std::string& reference_pointclouds_database_folder_path = std::string(""));
 		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
 		void loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg);
 		void publishReferencePointCloud(const ros::Time& time_stamp, bool update_msg = true);
@@ -350,6 +350,7 @@ class Localization : public ConfigurableObject {
 
 
 		// configuration fields
+		std::string reference_pointclouds_database_folder_path_;
 		std::string reference_pointcloud_filename_;
 		std::string reference_pointcloud_preprocessed_save_filename_;
 		std::string reference_pointcloud_keypoints_filename_;

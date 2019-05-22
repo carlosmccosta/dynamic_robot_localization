@@ -50,6 +50,10 @@ void extractPointCloudClusters(const pcl::PointCloud<PointT>& pointcloud, const 
 template <typename PointT>
 float distanceSquaredToOrigin(const PointT& point);
 
+std::string getFileExtension(const std::string& filename);
+
+std::string parseFilePath(const std::string& filename, const std::string& folder);
+
 } /* namespace pointcloud_utils */
 } /* namespace dynamic_robot_localization */
 
