@@ -226,6 +226,14 @@ filters:
             min_value: -5.0
             max_value: 5.0
             filtered_cloud_publish_topic: ''
+        hsv_segmentation:                                           # Allows prefix and postfix of letters to ensure parsing order
+            minimum_hue: 0.0                                        # If the minimum_hue > maximum_hue, then the color segmentation will use the hue from [minimum_hue, 360] and [0, maximum_hue]
+            maximum_hue: 360.0
+            minimum_saturation: 0.0
+            maximum_saturation: 1.0
+            minimum_value: 0.0
+            maximum_value: 1.0
+            invert_segmentation: false
         voxel_grid:                                                 # Allows prefix and postfix of letters to ensure parsing order
             leaf_size_x: 0.01
             leaf_size_y: 0.01

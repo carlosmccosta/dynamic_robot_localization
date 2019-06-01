@@ -550,6 +550,8 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 				cloud_filter.reset(new EuclideanClustering<PointT>());
 			} else if (filter_name.find("region_growing") != std::string::npos) {
 				cloud_filter.reset(new RegionGrowing<PointT>());
+			} else if (filter_name.find("hsv_segmentation") != std::string::npos) {
+				cloud_filter.reset(new HSVSegmentation<PointT>());
 			}
 
 			if (cloud_filter) {

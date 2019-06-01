@@ -142,6 +142,7 @@ add_library(drl_cloud_filters
     src/cloud_filters/covariance_sampling.cpp
     src/cloud_filters/crop_box.cpp
     src/cloud_filters/euclidean_clustering.cpp
+    src/cloud_filters/hsv_segmentation.cpp
     src/cloud_filters/pass_through.cpp
     src/cloud_filters/plane_segmentation.cpp
     src/cloud_filters/radius_outlier_removal.cpp
