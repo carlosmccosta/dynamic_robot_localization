@@ -27,12 +27,12 @@ void OutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 	}
 
 	std::string aligned_pointcloud_outliers_publish_topic;
-	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "aligned_pointcloud_outliers_publish_topic", final_param_name)) {
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, topics_configuration_prefix_ + "pointcloud_outliers_publish_topic", final_param_name)) {
 		private_node_handle->param(final_param_name, aligned_pointcloud_outliers_publish_topic, std::string(""));
 	}
 
 	std::string aligned_pointcloud_inliers_publish_topic;
-	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "aligned_pointcloud_inliers_publish_topic", final_param_name)) {
+	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, topics_configuration_prefix_ + "pointcloud_inliers_publish_topic", final_param_name)) {
 		private_node_handle->param(final_param_name, aligned_pointcloud_inliers_publish_topic, std::string(""));
 	}
 

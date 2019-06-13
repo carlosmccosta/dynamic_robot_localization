@@ -242,10 +242,13 @@ class Localization : public ConfigurableObject {
 		template <typename DescriptorT>
 		void loadKeypointMatcherFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor,
 				const std::string& keypoint_descriptor_configuration_namespace, const std::string& feature_matcher_configuration_namespace);
+		virtual void setupTransformationValidatorsForInitialAlignment(const std::string& configuration_namespace);
 		virtual void setupTransformationValidatorsForTracking(const std::string& configuration_namespace);
 		virtual void setupTransformationValidatorsForTrackingRecovery(const std::string& configuration_namespace);
 		virtual void setupTransformationValidatorsConfigurations(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace);
 		virtual void setupOutlierDetectorsConfigurations(const std::string& configuration_namespace);
+		virtual void setupOutlierDetectorsConfigurationsReferencePointCloud(const std::string& configuration_namespace);
+		virtual void setupOutlierDetectorsConfigurations(std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors, const std::string& configuration_namespace_detectors, const std::string& topics_configuration_prefix);
 		virtual void setupCloudAnalyzersConfigurations(const std::string& configuration_namespace);
 		virtual void setupRegistrationCovarianceEstimatorsConfigurations(const std::string& configuration_namespace);
 
@@ -295,13 +298,18 @@ class Localization : public ConfigurableObject {
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				tf2::Transform& pointcloud_pose_in_out);
 
-		virtual double applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
+		virtual double applyOutlierDetection(std::vector< typename OutlierDetector<PointT>::Ptr >& detectors,
+																				 typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+																				 std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
+																				 double& root_mean_square_error_inliers, size_t& number_inliers);
+		virtual void applyAmbientPointCloudOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
+		virtual void applyReferencePointCloudOutlierDetection(typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& reference_pointcloud);
 		virtual bool applyCloudAnalysis(const tf2::Transform& estimated_pose);
 		virtual void publishDetectedOutliers();
 		virtual void publishDetectedInliers();
 
 		virtual bool applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators,
-				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage);
+				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage, double max_outlier_percentage_reference_pointcloud);
 
 		virtual void fillPoseCovariance(geometry_msgs::PoseWithCovarianceStamped& pose_corrected_msg, Eigen::MatrixXd& covariance_matrix);
 
@@ -383,7 +391,6 @@ class Localization : public ConfigurableObject {
 		bool localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_;
 		bool save_reference_pointclouds_in_binary_format_;
 		bool republish_reference_pointcloud_after_successful_registration_;
-		double max_outliers_percentage_;
 		bool publish_tf_map_odom_;
 		bool add_odometry_displacement_;
 		bool use_filtered_cloud_as_normal_estimation_surface_ambient_;
@@ -500,9 +507,11 @@ class Localization : public ConfigurableObject {
 		std::string last_matcher_convergence_state_;
 		double root_mean_square_error_of_last_registration_correspondences_;
 		int number_correspondences_last_registration_algorithm_;
+		std::vector< TransformationValidator::Ptr > transformation_validators_initial_alignment_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_;
 		std::vector< TransformationValidator::Ptr > transformation_validators_tracking_recovery_;
 		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_;
+		std::vector< typename OutlierDetector<PointT>::Ptr > outlier_detectors_reference_pointcloud_;
 		typename CloudAnalyzer<PointT>::Ptr cloud_analyzer_;
 		typename RegistrationCovarianceEstimator<PointT>::Ptr registration_covariance_estimator_;
 		typename pcl::PointCloud<PointT>::Ptr registered_inliers_;
@@ -510,8 +519,13 @@ class Localization : public ConfigurableObject {
 		double outlier_percentage_;
 		size_t number_inliers_;
 		double root_mean_square_error_inliers_;
+		double outlier_percentage_reference_pointcloud_;
+		size_t number_inliers_reference_pointcloud_;
+		double root_mean_square_error_inliers_reference_pointcloud_;
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_outliers_;
 		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_inliers_;
+		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_outliers_reference_pointcloud_;
+		std::vector< typename pcl::PointCloud<PointT>::Ptr > detected_inliers_reference_pointcloud_;
 		LocalizationDiagnostics localization_diagnostics_msg_;
 		LocalizationTimes localization_times_msg_;
 		bool publish_filtered_pointcloud_only_if_there_is_subscribers_;

@@ -32,7 +32,6 @@ Localization<PointT>::Localization() :
 	localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_(true),
 	save_reference_pointclouds_in_binary_format_(true),
 	republish_reference_pointcloud_after_successful_registration_(false),
-	max_outliers_percentage_(0.6),
 	publish_tf_map_odom_(false),
 	add_odometry_displacement_(false),
 	use_filtered_cloud_as_normal_estimation_surface_ambient_(false),
@@ -87,6 +86,9 @@ Localization<PointT>::Localization() :
 	outlier_percentage_(0.0),
 	number_inliers_(0),
 	root_mean_square_error_inliers_(0.0),
+	outlier_percentage_reference_pointcloud_(0.0),
+	number_inliers_reference_pointcloud_(0),
+	root_mean_square_error_inliers_reference_pointcloud_(0.0),
 	publish_filtered_pointcloud_only_if_there_is_subscribers_(true),
 	publish_aligned_pointcloud_only_if_there_is_subscribers_(true) {}
 
@@ -122,9 +124,11 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupInitialPoseEstimatorsPointMatchers(configuration_namespace);
 	setupTrackingMatchers(configuration_namespace);
 	setupTrackingRecoveryMatchers(configuration_namespace);
+	setupTransformationValidatorsForInitialAlignment(configuration_namespace);
 	setupTransformationValidatorsForTracking(configuration_namespace);
 	setupTransformationValidatorsForTrackingRecovery(configuration_namespace);
 	setupOutlierDetectorsConfigurations(configuration_namespace);
+	setupOutlierDetectorsConfigurationsReferencePointCloud(configuration_namespace);
 	setupCloudAnalyzersConfigurations(configuration_namespace);
 	setupRegistrationCovarianceEstimatorsConfigurations(configuration_namespace);
 	setupTFPublisher(configuration_namespace);
@@ -197,6 +201,9 @@ bool Localization<PointT>::reloadConfigurationFromParameterServer(const dynamic_
 	if (parseConfigurationNamespace(localization_configuration.tracking_recovery_matchers, parsed_string))
 		setupTrackingRecoveryMatchers(parsed_string);
 
+	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_initial_alignment, parsed_string))
+		setupTransformationValidatorsForInitialAlignment(parsed_string);
+
 	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking, parsed_string))
 		setupTransformationValidatorsForTracking(parsed_string);
 
@@ -205,6 +212,9 @@ bool Localization<PointT>::reloadConfigurationFromParameterServer(const dynamic_
 
 	if (parseConfigurationNamespace(localization_configuration.outlier_detectors, parsed_string))
 		setupOutlierDetectorsConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.outlier_detectors_reference_pointcloud, parsed_string))
+		setupOutlierDetectorsConfigurationsReferencePointCloud(parsed_string);
 
 	if (parseConfigurationNamespace(localization_configuration.cloud_analyzers, parsed_string))
 		setupCloudAnalyzersConfigurations(parsed_string);
@@ -881,6 +891,13 @@ void Localization<PointT>::setupTransformationValidatorsConfigurations(std::vect
 
 
 template<typename PointT>
+void Localization<PointT>::setupTransformationValidatorsForInitialAlignment(const std::string& configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [transformation_validators_for_initial_alignment] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	setupTransformationValidatorsConfigurations(transformation_validators_initial_alignment_, "transformation_validators_initial_alignment/");
+}
+
+
+template<typename PointT>
 void Localization<PointT>::setupTransformationValidatorsForTracking(const std::string& configuration_namespace) {
 	ROS_DEBUG_STREAM("Loading [transformation_validators_for_tracking] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
 	setupTransformationValidatorsConfigurations(transformation_validators_, "transformation_validators/");
@@ -896,22 +913,32 @@ void Localization<PointT>::setupTransformationValidatorsForTrackingRecovery(cons
 
 template<typename PointT>
 void Localization<PointT>::setupOutlierDetectorsConfigurations(const std::string& configuration_namespace) {
-	ROS_DEBUG_STREAM("Loading [outlier_detectors] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
-	outlier_detectors_.clear();
+	setupOutlierDetectorsConfigurations(outlier_detectors_, configuration_namespace + "outlier_detectors/", "aligned_");
+}
 
-	std::string configuration_namespace_detectors = configuration_namespace + "outlier_detectors/";
-	XmlRpc::XmlRpcValue outlier_detectors;
-	if (private_node_handle_->getParam(configuration_namespace_detectors, outlier_detectors) && outlier_detectors.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
-		for (XmlRpc::XmlRpcValue::iterator it = outlier_detectors.begin(); it != outlier_detectors.end(); ++it) {
+
+template<typename PointT>
+void Localization<PointT>::setupOutlierDetectorsConfigurationsReferencePointCloud(const std::string& configuration_namespace) {
+	setupOutlierDetectorsConfigurations(outlier_detectors_reference_pointcloud_, configuration_namespace + "outlier_detectors_reference_pointcloud/", "reference_");
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupOutlierDetectorsConfigurations(std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors, const std::string& configuration_namespace_detectors, const std::string& topics_configuration_prefix) {
+	ROS_DEBUG_STREAM("Loading [outlier_detectors] configurations from parameter server namespace [" << (configuration_namespace_detectors.empty() ? "~" : configuration_namespace_detectors) << "]");
+	outlier_detectors.clear();
+	XmlRpc::XmlRpcValue outlier_detectors_rpc;
+	if (private_node_handle_->getParam(configuration_namespace_detectors, outlier_detectors_rpc) && outlier_detectors_rpc.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+		for (XmlRpc::XmlRpcValue::iterator it = outlier_detectors_rpc.begin(); it != outlier_detectors_rpc.end(); ++it) {
 			std::string detector_name = it->first;
 			typename OutlierDetector<PointT>::Ptr outlier_detector;
 			if (detector_name.find("euclidean_outlier_detector") != std::string::npos) {
-				outlier_detector.reset(new EuclideanOutlierDetector<PointT>());
+				outlier_detector.reset(new EuclideanOutlierDetector<PointT>(topics_configuration_prefix));
 			}
 
 			if (outlier_detector) {
 				outlier_detector->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_detectors + detector_name + "/");
-				outlier_detectors_.push_back(outlier_detector);
+				outlier_detectors.push_back(outlier_detector);
 			}
 		}
 	}
@@ -1094,6 +1121,7 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp) {
 	reference_pointcloud_->header.frame_id = map_frame_id_;
+	reference_pointcloud_->header.stamp = pcl_conversions::toPCL(time_stamp);
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
 
 	std::vector<int> indexes;
@@ -1728,11 +1756,15 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 				localization_detailed_msg.header.stamp = ambient_cloud_time;
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, localization_detailed_msg.pose);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
+				localization_detailed_msg.outlier_percentage_reference_pointcloud = outlier_percentage_reference_pointcloud_;
 				localization_detailed_msg.root_mean_square_error_inliers = root_mean_square_error_inliers_;
+				localization_detailed_msg.root_mean_square_error_inliers_reference_pointcloud = root_mean_square_error_inliers_reference_pointcloud_;
 				if (localization_detailed_use_millimeters_in_root_mean_square_error_inliers_) {
 					localization_detailed_msg.root_mean_square_error_inliers *= 1000.0;
+					localization_detailed_msg.root_mean_square_error_inliers_reference_pointcloud *= 1000.0;
 				}
 				localization_detailed_msg.number_inliers = number_inliers_;
+				localization_detailed_msg.number_inliers_reference_pointcloud = number_inliers_reference_pointcloud_;
 				localization_detailed_msg.number_points_registered = ambient_pointcloud->size();
 				localization_detailed_msg.inliers_angular_distribution = inliers_angular_distribution_;
 				localization_detailed_msg.outliers_angular_distribution = outliers_angular_distribution_;
@@ -1984,42 +2016,45 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 
 
 template<typename PointT>
-double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
-	detected_outliers_.clear();
-	detected_inliers_.clear();
-	root_mean_square_error_inliers_ = std::numeric_limits<double>::max();
-	number_inliers_ = 0;
-	if (ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_ || reference_pointcloud_->size() < minimum_number_of_points_in_reference_pointcloud_) { return 1.0; }
+double Localization<PointT>::applyOutlierDetection(std::vector< typename OutlierDetector<PointT>::Ptr >& detectors,
+		typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+		std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
+		double& root_mean_square_error_inliers, size_t& number_inliers) {
+	detected_outliers.clear();
+	detected_inliers.clear();
+	root_mean_square_error_inliers = std::numeric_limits<double>::max();
+	number_inliers = 0;
 
 	size_t number_outliers = 0;
-	for (size_t i = 0; i < outlier_detectors_.size(); ++i) {
+	for (size_t i = 0; i < detectors.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr outliers;
 		typename pcl::PointCloud<PointT>::Ptr inliers;
 
-		if (outlier_detectors_[i]->isPublishingOutliers() || compute_outliers_angular_distribution_) {
+		if (detectors[i]->isPublishingOutliers() || compute_outliers_angular_distribution_) {
 			outliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-			outliers->header = ambient_pointcloud->header;
+			outliers->header = pointcloud->header;
 		}
 
-		if (outlier_detectors_[i]->isPublishingInliers() || compute_inliers_angular_distribution_) {
+		if (detectors[i]->isPublishingInliers() || compute_inliers_angular_distribution_) {
 			inliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-			inliers->header = ambient_pointcloud->header;
+			inliers->header = pointcloud->header;
 		}
 
-		number_outliers += outlier_detectors_[i]->detectOutliers(reference_pointcloud_search_method_, *ambient_pointcloud, outliers, inliers, root_mean_square_error_inliers_);
-		detected_outliers_.push_back(outliers);
-		detected_inliers_.push_back(inliers);
+		number_outliers += detectors[i]->detectOutliers(reference_pointcloud_search_method, *pointcloud, outliers, inliers, root_mean_square_error_inliers);
+		detected_outliers.push_back(outliers);
+		detected_inliers.push_back(inliers);
 	}
 
-	if (detected_outliers_.size() > 1) {
-		registered_outliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-		pointcloud_utils::concatenatePointClouds<PointT>(detected_outliers_, registered_outliers_);
-	} else if (detected_outliers_.size() == 1) {
-		registered_outliers_ = detected_outliers_[0];
-	} else {
-		if (registered_outliers_) registered_outliers_->clear();
-	}
+	number_inliers = pointcloud->size() - number_outliers;
+	double outlier_ratio = (double)number_outliers / (double) (pointcloud->size());
+	if (outlier_ratio < 0.0 || outlier_ratio > 1.0) { outlier_ratio = 1.0; }
+	return outlier_ratio;
+}
 
+
+template<typename PointT>
+void Localization<PointT>::applyAmbientPointCloudOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
+	outlier_percentage_ = applyOutlierDetection(outlier_detectors_, reference_pointcloud_search_method_, ambient_pointcloud, detected_outliers_, detected_inliers_, root_mean_square_error_inliers_, number_inliers_);
 	if (detected_inliers_.size() > 1) {
 		registered_inliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
 		pointcloud_utils::concatenatePointClouds<PointT>(detected_inliers_, registered_inliers_);
@@ -2028,11 +2063,12 @@ double Localization<PointT>::applyOutlierDetection(typename pcl::PointCloud<Poin
 	} else {
 		if (registered_inliers_) registered_inliers_->clear();
 	}
+}
 
-	number_inliers_ = ambient_pointcloud->size() - number_outliers;
-	double outlier_ratio = (double)number_outliers / (double) (ambient_pointcloud->size());
-	if (outlier_ratio < 0.0 || outlier_ratio > 1.0) { outlier_ratio = 1.0; }
-	return outlier_ratio;
+
+template<typename PointT>
+void Localization<PointT>::applyReferencePointCloudOutlierDetection(typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& reference_pointcloud) {
+	outlier_percentage_reference_pointcloud_ = applyOutlierDetection(outlier_detectors_reference_pointcloud_, ambient_pointcloud_search_method, reference_pointcloud, detected_outliers_reference_pointcloud_, detected_inliers_reference_pointcloud_, root_mean_square_error_inliers_reference_pointcloud_, number_inliers_reference_pointcloud_);
 }
 
 
@@ -2068,7 +2104,14 @@ void Localization<PointT>::publishDetectedOutliers() {
 		}
 	}
 
+	if (outlier_detectors_reference_pointcloud_.size() == detected_outliers_reference_pointcloud_.size()) {
+		for (size_t i = 0; i < detected_outliers_reference_pointcloud_.size(); ++i) {
+			outlier_detectors_reference_pointcloud_[i]->publishOutliers(detected_outliers_reference_pointcloud_[i]);
+		}
+	}
+
 	detected_outliers_.clear();
+	detected_outliers_reference_pointcloud_.clear();
 }
 
 
@@ -2080,20 +2123,27 @@ void Localization<PointT>::publishDetectedInliers() {
 		}
 	}
 
+	if (outlier_detectors_reference_pointcloud_.size() == detected_inliers_reference_pointcloud_.size()) {
+		for (size_t i = 0; i < detected_inliers_reference_pointcloud_.size(); ++i) {
+			outlier_detectors_reference_pointcloud_[i]->publishInliers(detected_inliers_reference_pointcloud_[i]);
+		}
+	}
+
 	detected_inliers_.clear();
+	detected_inliers_reference_pointcloud_.clear();
 }
 
 
 template<typename PointT>
-bool Localization<PointT>::applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage) {
+bool Localization<PointT>::applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators, const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage, double max_outlier_percentage_reference_pointcloud) {
 	for (size_t i = 0; i < transformation_validators.size(); ++i) {
 		if (last_accepted_pose_valid_ && (ros::Time::now() - last_accepted_pose_time_ < pose_tracking_timeout_)) {
-			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_base_link_to_map_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage, inliers_angular_distribution_, outliers_angular_distribution_)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(last_accepted_pose_base_link_to_map_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, root_mean_square_error_inliers_reference_pointcloud_, max_outlier_percentage, max_outlier_percentage_reference_pointcloud, inliers_angular_distribution_, outliers_angular_distribution_)) {
 				return false;
 			}
 		} else {
 			// lost tracking -> ignore last pose filtering -> use only rmse and outlier percentage
-			if (!transformation_validators[i]->validateNewLocalizationPose(pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, max_outlier_percentage, inliers_angular_distribution_, outliers_angular_distribution_)) {
+			if (!transformation_validators[i]->validateNewLocalizationPose(pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, pointcloud_pose_corrected_in_out, root_mean_square_error_inliers_, root_mean_square_error_inliers_reference_pointcloud_, max_outlier_percentage, max_outlier_percentage_reference_pointcloud, inliers_angular_distribution_, outliers_angular_distribution_)) {
 				return false;
 			}
 		}
@@ -2130,6 +2180,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	accepted_pose_corrections_.clear();
 	pose_corrections_out = tf2::Transform::getIdentity();
 	std::string ambient_point_cloud_original_frame_id = ambient_pointcloud->header.frame_id;
+	reference_pointcloud_->header.frame_id = map_frame_id_;
+	reference_pointcloud_->header.stamp = pcl_conversions::toPCL(pointcloud_time);
 
 	if (ambient_pointcloud->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) {
 		sensor_data_processing_status_ = PointCloudWithoutTheMinimumNumberOfRequiredPoints;
@@ -2403,7 +2455,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  outlier detection
 	performance_timer.restart();
-	outlier_percentage_ = applyOutlierDetection(ambient_pointcloud_integration ? ambient_pointcloud_integration : ambient_pointcloud);
+	applyAmbientPointCloudOutlierDetection(ambient_pointcloud_integration ? ambient_pointcloud_integration : ambient_pointcloud);
+	applyReferencePointCloudOutlierDetection(ambient_search_method, reference_pointcloud_);
 	localization_times_msg_.outlier_detection_time = performance_timer.getElapsedTimeInMilliSec();
 
 
@@ -2416,12 +2469,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_times_msg_.transformation_validators_time = 0.0;
 	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 	if (performed_recovery && !transformation_validators_tracking_recovery_.empty()) {
-		if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
+		if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_, outlier_percentage_reference_pointcloud_)) {
 			sensor_data_processing_status_ = PoseEstimationRejectedByTransformationValidators;
 			return false;
 		}
 	} else {
-		if (!applyTransformationValidators(transformation_validators_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
+		if (!applyTransformationValidators(lost_tracking ? transformation_validators_initial_alignment_ : transformation_validators_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_, outlier_percentage_reference_pointcloud_)) {
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
 			if (!performed_recovery && !tracking_recovery_matchers_.empty() && tracking_recovery_reached) {
@@ -2448,7 +2501,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					}
 
 					performance_timer.restart();
-					outlier_percentage_ = applyOutlierDetection(ambient_pointcloud_integration ? ambient_pointcloud_integration : ambient_pointcloud);
+					applyAmbientPointCloudOutlierDetection(ambient_pointcloud_integration ? ambient_pointcloud_integration : ambient_pointcloud);
+					applyReferencePointCloudOutlierDetection(ambient_search_method, reference_pointcloud_);
 					localization_times_msg_.outlier_detection_time += performance_timer.getElapsedTimeInMilliSec();
 
 					performance_timer.restart();
@@ -2456,7 +2510,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					localization_times_msg_.registered_points_angular_distribution_analysis_time += performance_timer.getElapsedTimeInMilliSec();
 
 					performance_timer.restart();
-					if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_)) {
+					if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_, outlier_percentage_reference_pointcloud_)) {
 						sensor_data_processing_status_ = PoseEstimationRejectedByTransformationValidators;
 						return false;
 					}

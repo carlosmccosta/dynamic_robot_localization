@@ -671,6 +671,17 @@ outlier_detectors:
 
 
 # ===================================================================================================================================================
+#   Several detectors can be used. This processing step is applied after cloud registration, and will only be used to validate the registration in the transformation_validators stage.
+#   It is also useful to perform dynamic map update, since the outliers pointcloud can be published and used in OctoMap.
+outlier_detectors_reference_pointcloud:
+    publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
+    euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
+        max_inliers_distance: 0.01                                  # A point in the ambient cloud will be considered outlier if it does't have a point in the reference cloud within a sphere with this radius
+        reference_pointcloud_outliers_publish_topic: ''             # Pointcloud topic for the registered outliers. OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched
+        reference_pointcloud_inliers_publish_topic: ''              # Pointcloud topic for the registered inliers. If empty, messages will not be dispatched
+
+
+# ===================================================================================================================================================
 #   The inliers and outliers angular point distribution can be computed using one of the supported methods.
 #   It is useful for supervisers to analyze the confidence of the localization estimate.
 cloud_analyzers:
@@ -705,6 +716,7 @@ registration_covariance_estimator:
 #     - The <transformation_validators> are applied when the registration matchers perform as expected.
 #     - The <transformation_validators_recovery> will override the first and will only be applied when the recovery matchers were successfully applied (if not specified, the <transformation_validators> will be used instead)
 #   If the inliers RMSE is lower than [min_overriding_root_mean_square_error] and the outliers percentage is lower than [max_outliers_percentage], then the other validation parameters are ignored
+transformation_validators_initial_alignment:
 transformation_validators:
 transformation_validators_tracking_recovery:
     euclidean_transformation_validator:                             # Allows prefix and postfix of letters to ensure parsing order
@@ -712,9 +724,12 @@ transformation_validators_tracking_recovery:
         max_transformation_distance: 0.04                           # Pose corrections with a translation greater than this value will be rejected
         max_new_pose_diff_angle: 0.6                                # Pose recovery with a angle greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
         max_new_pose_diff_distance: 0.2                             # Pose recovery with a translation greater than this value will be rejected (will be used after cloud registration have failed for <pose_tracking_timeout> seconds)
-        max_root_mean_square_error: 0.05                            # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected
+        max_root_mean_square_error: 0.05                            # Pose corrections which have a cloud registration fitnesss greater than this value will be rejected (negative -> disabled)
+        max_root_mean_square_error_reference_pointcloud: -1.0       # Pose corrections which have a reference point cloud overlap fitnesss greater than this value will be rejected (negative -> disabled)
         min_overriding_root_mean_square_error: 0.01
         max_outliers_percentage: 0.7                                # Pose corrections which have a cloud registration outlier percentage [0-1] greater than this value will be rejected
+        max_outliers_percentage_reference_pointcloud: -1.0          # Pose corrections which have a cloud registration outlier percentage [0-1] greater than this value will be rejected (overlap between reference point cloud and ambient point cloud)
         min_overriding_outliers_percentage: 0.1
+        min_overriding_outliers_percentage_reference_pointcloud: 0.1
         min_inliers_angular_distribution: 0.125                     # Minimum angular distribution [0-1] that the inliers must occupy around the robot (0 -> 0º | 360º  -> 1)
         max_outliers_angular_distribution: 0.875                    # Maximum angular distribution [0-1] that the outliers are allowed to occupy around the robot (0 -> 0º | 360º -> 1)

@@ -55,7 +55,7 @@ class EuclideanTransformationValidator : public TransformationValidator {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanTransformationValidator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
 		virtual bool validateNewLocalizationPose(const tf2::Transform& last_accepted_pose, const tf2::Transform& initial_guess, tf2::Transform& new_pose,
-				double root_mean_square_error = 0.05, double outliers_percentage = 0.6, double inliers_angular_distribution = 0.125, double outliers_angular_distribution = 0.875);
+				double root_mean_square_error = 0.05, double root_mean_square_error_reference_pointcloud = -1.0, double outliers_percentage = 0.6, double outliers_percentage_reference_pointcloud = -1.0, double inliers_angular_distribution = 0.125, double outliers_angular_distribution = 0.875);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanTransformationValidator-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -72,9 +72,12 @@ class EuclideanTransformationValidator : public TransformationValidator {
 		double max_new_pose_diff_angle_;
 		double max_new_pose_diff_distance_;
 		double max_root_mean_square_error_;
+		double max_root_mean_square_error_reference_pointcloud_;
 		double min_overriding_root_mean_square_error_;
 		double max_outliers_percentage_;
+		double max_outliers_percentage_reference_pointcloud_;
 		double min_overriding_outliers_percentage_;
+		double min_overriding_outliers_percentage_reference_pointcloud_;
 		double min_inliers_angular_distribution_;
 		double max_outliers_angular_distribution_;
 	// ========================================================================   </protected-section>  ========================================================================

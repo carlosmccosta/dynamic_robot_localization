@@ -52,7 +52,9 @@ class OutlierDetector : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		OutlierDetector() : publish_pointclouds_only_if_there_is_subscribers_(true) {}
+		explicit OutlierDetector(const std::string& topics_configuration_prefix = "aligned_") :
+			topics_configuration_prefix_(topics_configuration_prefix),
+			publish_pointclouds_only_if_there_is_subscribers_(true) {}
 		virtual ~OutlierDetector() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -75,7 +77,7 @@ class OutlierDetector : public ConfigurableObject {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-		// ros communication fields
+		std::string topics_configuration_prefix_;
 		bool publish_pointclouds_only_if_there_is_subscribers_;
 		ros::Publisher outliers_publisher_;
 		ros::Publisher inliers_publisher_;
