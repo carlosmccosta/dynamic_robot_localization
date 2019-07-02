@@ -1518,7 +1518,7 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 		}
 
 		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
-		ROS_DEBUG_STREAM("Transformed pointcloud from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id);
+		ROS_DEBUG_STREAM("Transformed pointcloud with " << ambient_pointcloud->size() << " points from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id);
 
 		if (target_frame_id == map_frame_id_ && !map_frame_id_for_publishing_pointclouds_.empty())
 			ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;

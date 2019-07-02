@@ -73,8 +73,10 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
 	bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_;
-	bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_flip_axis_;
-	Eigen::Vector3d custom_flip_axis_;
+	bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_;
+	bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_;
+	Eigen::Vector3d custom_z_flip_axis_;
+	Eigen::Vector3d custom_x_flip_axis_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
