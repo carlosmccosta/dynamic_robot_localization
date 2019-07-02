@@ -2,7 +2,7 @@
 
 reset_ws=${1:-true}
 catkin_ws_path=${2:-"$HOME/catkin_ws_drl"}
-repositories_dirs=${3:-"dynamic_robot_localization pose_to_tf_publisher laserscan_to_pointcloud octomap_mapping mesh_to_pointcloud pcl pcl_msgs perception_pcl"}
+repositories_dirs=${3:-"dynamic_robot_localization pose_to_tf_publisher laserscan_to_pointcloud mesh_to_pointcloud pcl pcl_msgs perception_pcl"}
 
 
 echo -e "\n\n"

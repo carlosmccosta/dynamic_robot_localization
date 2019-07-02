@@ -9,7 +9,6 @@ repositories=${2:-$(cat <<-END
 	https://github.com/carlosmccosta|dynamic_robot_localization
 	https://github.com/carlosmccosta|pose_to_tf_publisher
 	https://github.com/carlosmccosta|laserscan_to_pointcloud
-	https://github.com/carlosmccosta|octomap_mapping
 	https://github.com/carlosmccosta|mesh_to_pointcloud
 	https://github.com/carlosmccosta|pcl
 	https://github.com/ros-perception|pcl_msgs
