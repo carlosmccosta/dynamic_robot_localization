@@ -277,6 +277,7 @@ class Localization : public ConfigurableObject {
 
 		bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
 		bool checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active = true, bool use_ros_console = true);
+		bool checkIfTrackingIsLost();
 		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
 		bool processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed = true, bool check_if_pointcloud_subscribers_are_active = true);
 		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
@@ -369,6 +370,7 @@ class Localization : public ConfigurableObject {
 		MapUpdateMode map_update_mode_;
 		bool use_incremental_map_update_;
 		std::string map_frame_id_;
+		std::string map_frame_id_for_transforming_pointclouds_;
 		std::string map_frame_id_for_publishing_pointclouds_;
 		std::string odom_frame_id_;
 		std::string base_link_frame_id_;
@@ -392,6 +394,7 @@ class Localization : public ConfigurableObject {
 		bool save_reference_pointclouds_in_binary_format_;
 		bool republish_reference_pointcloud_after_successful_registration_;
 		bool publish_tf_map_odom_;
+		bool publish_tf_when_resetting_initial_pose_;
 		bool add_odometry_displacement_;
 		bool use_filtered_cloud_as_normal_estimation_surface_ambient_;
 		bool use_filtered_cloud_as_normal_estimation_surface_reference_;
@@ -413,6 +416,7 @@ class Localization : public ConfigurableObject {
 		bool invert_registration_transformation_;
 		bool invert_initial_poses_from_msgs_;
 		bool initial_pose_msg_needs_to_be_in_map_frame_;
+		bool reset_initial_pose_when_tracking_is_lost_;
 
 		// state fields
 		ros::Time last_scan_time_;

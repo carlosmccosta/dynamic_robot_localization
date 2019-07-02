@@ -101,7 +101,8 @@ publish_topic_names:
 #   The sensor_frame_id is used in the surface normal estimation.
 frame_ids:
     map_frame_id: 'map'
-    map_frame_id_for_publishing_pointclouds: 'map' # override for the frame_id of published point clouds in the map frame
+    map_frame_id_for_transforming_pointclouds: 'map' # override for the frame_id that will be used to transform the point clouds to the map coordinate system
+    map_frame_id_for_publishing_pointclouds: 'map'   # override for the frame_id of published point clouds in the map frame
     odom_frame_id: 'odom'
     base_link_frame_id: 'base_footprint'
     sensor_frame_id: 'hokuyo_front_laser_link'
@@ -111,6 +112,7 @@ frame_ids:
 #   Initial pose of the robot [ base_link_frame_id -> map_frame_id ]
 #   The orientation can be specified using RPY angles or a quaternion (if both are specified, the quaternion will be used)
 initial_pose:
+    reset_initial_pose_when_tracking_is_lost: false
     robot_initial_pose_in_base_to_map: false
     robot_initial_pose_available: true
     position: # Robot position in meters
@@ -160,6 +162,7 @@ message_management:
 #   General configurations
 general_configurations:
     publish_tf_map_odom: false
+    publish_tf_when_resetting_initial_pose: false
 
 
 # ===================================================================================================================================================
