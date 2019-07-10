@@ -24,6 +24,8 @@ Even though this package was developed for robot self-localization and mapping, 
 - 6 DoF object pose estimation for projection mapping
     * [Launch file](https://github.com/carlosmccosta/assembly_projection_mapping_teaching/blob/kinetic-devel/launch/object_recognition.launch)
     * [Pose estimation video with projection mapping](https://www.youtube.com/watch?v=557vglPW6Ko)
+- 6 DoF object pose estimation using Principal Component Analysis (PCA)
+    * [Repository](https://github.com/carlosmccosta/principal_component_analysis_tracking)
 - 3 DoF robot localization / mapping
     * [Launch file](https://github.com/inesc-tec-robotics/guardian_config/blob/hydro-devel/localization/guardian_localization.launch)
     * [Robot mapping video](https://www.youtube.com/watch?v=GKDG7c61OLo)
