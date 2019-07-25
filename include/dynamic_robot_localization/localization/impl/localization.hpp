@@ -1662,6 +1662,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
 		size_t ambient_pointcloud_size = ambient_pointcloud->size();
 		std::vector<int> indexes;
+		ambient_pointcloud->is_dense = false;
 		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
 		indexes.clear();
 		size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
