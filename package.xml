@@ -48,11 +48,11 @@
 	<!-- other ros packages (run only) -->
 	<exec_depend>message_runtime</exec_depend>
 	<exec_depend>map_server</exec_depend>
-	<exec_depend>octomap_server</exec_depend>
-	<exec_depend>robot_localization</exec_depend>
+	<!-- <exec_depend>octomap_server</exec_depend> -->
+	<!-- <exec_depend>robot_localization</exec_depend> -->
 
 	<!-- system dependencies -->
-	<exec_depend>coreutils</exec_depend>
+	<!-- <exec_depend>coreutils</exec_depend> -->
 
 
 	<export>
