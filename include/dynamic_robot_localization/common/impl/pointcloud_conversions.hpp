@@ -179,16 +179,22 @@ bool fromFile(PointCloudT& pointcloud, const std::string& filename, const std::s
 
 
 template<typename PointCloudT>
-bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format) {
-	std::string::size_type index = filename.rfind('.');
-	if (index == std::string::npos) return false;
+bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format, const std::string& folder) {
+	if (filename.empty()) return false;
+	std::string extension = pointcloud_utils::getFileExtension(filename);
+	std::string filepath = pointcloud_utils::parseFilePath(filename, folder);
+	if (filepath.empty()) return false;
+	if (extension.empty()) {
+		extension = std::string("ply");
+		filepath += ".ply";
+	}
 
-	std::string extension = filename.substr(index + 1);
+	ROS_INFO_STREAM("Saving point cloud with " << pointcloud.size() << " points and extension [" << extension << "] to file path [" << filepath << "]");
 
 	if (extension == "pcd") {
-		if (pcl::io::savePCDFile(filename, pointcloud, save_in_binary_format) == 0) return true;
+		if (pcl::io::savePCDFile(filepath, pointcloud, save_in_binary_format) == 0) return true;
 	} else if (extension == "ply") {
-		if (pcl::io::savePLYFile(filename, pointcloud, save_in_binary_format) == 0) return true;
+		if (pcl::io::savePLYFile(filepath, pointcloud, save_in_binary_format) == 0) return true;
 	}
 
 	return false;

@@ -63,7 +63,7 @@ template <typename PointCloudT>
 bool fromFile(PointCloudT& pointcloud, const std::string& filename, const std::string& folder = std::string(""));
 
 template <typename PointCloudT>
-bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format);
+bool toFile(const std::string& filename, const PointCloudT& pointcloud, bool save_in_binary_format, const std::string& folder = std::string(""));
 
 } /* namespace pointcloud_conversions */
 } /* namespace dynamic_robot_localization */
