@@ -463,6 +463,7 @@ void Localization<PointT>::setupMessageManagement(const std::string& configurati
 	private_node_handle_->param(configuration_namespace + "message_management/invert_registration_transformation", invert_registration_transformation_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/initial_pose_msg_needs_to_be_in_map_frame", initial_pose_msg_needs_to_be_in_map_frame_, true);
+	private_node_handle_->param(configuration_namespace + "message_management/use_base_link_frame_when_publishing_registration_pose", use_base_link_frame_when_publishing_registration_pose_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/use_base_link_frame_when_publishing_initial_poses_array", use_base_link_frame_when_publishing_initial_poses_array_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/apply_cloud_registration_inverse_to_initial_poses_array", apply_cloud_registration_inverse_to_initial_poses_array_, false);
 }
@@ -1757,7 +1758,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 
 			if (!pose_with_covariance_stamped_publisher_.getTopic().empty() || !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
 				geometry_msgs::PoseWithCovarianceStampedPtr pose_corrected_msg(new geometry_msgs::PoseWithCovarianceStamped());
-				pose_corrected_msg->header.frame_id = map_frame_id_;
+				pose_corrected_msg->header.frame_id = use_base_link_frame_when_publishing_registration_pose_ ? base_link_frame_id_ : map_frame_id_;;
 				pose_corrected_msg->header.stamp = pose_time;
 
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose.pose);
@@ -1774,7 +1775,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 
 			if (!pose_stamped_publisher_.getTopic().empty()) {
 				geometry_msgs::PoseStampedPtr pose_corrected_msg(new geometry_msgs::PoseStamped());
-				pose_corrected_msg->header.frame_id = map_frame_id_;
+				pose_corrected_msg->header.frame_id = use_base_link_frame_when_publishing_registration_pose_ ? base_link_frame_id_ : map_frame_id_;
 				pose_corrected_msg->header.stamp = pose_time;
 
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, pose_corrected_msg->pose);
@@ -1783,7 +1784,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 
 			if (!localization_detailed_publisher_.getTopic().empty()) {
 				LocalizationDetailed localization_detailed_msg;
-				localization_detailed_msg.header.frame_id = map_frame_id_;
+				localization_detailed_msg.header.frame_id = use_base_link_frame_when_publishing_registration_pose_ ? base_link_frame_id_ : map_frame_id_;
 				localization_detailed_msg.header.stamp = ambient_cloud_time;
 				laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(pose_tf_corrected_to_publish, localization_detailed_msg.pose);
 				localization_detailed_msg.outlier_percentage = outlier_percentage_;
