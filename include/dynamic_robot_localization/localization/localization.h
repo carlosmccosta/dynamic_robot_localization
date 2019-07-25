@@ -326,9 +326,12 @@ class Localization : public ConfigurableObject {
 		SensorDataProcessingStatus getSensorDataProcessingStatus() { return sensor_data_processing_status_; }
 		const std::vector< tf2::Transform >& getAcceptedPoseCorrections() { return accepted_pose_corrections_; }
 		const tf2::Transform& getAcceptedEstimatedPose() { return pose_tf2_transform_corrected_; }
+		const MapUpdateMode getMapUpdateMode() { return map_update_mode_; }
+		const bool ambientPointcloudIntegrationActive() { return !ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty(); }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		void setAmbientPointcloudIntegrationFiltersPreprocessedPointcloudSaveFilename(const std::string& filename) { ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_ = filename; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -365,6 +368,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_preprocessed_save_filename_;
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
+		std::string ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_;
 		bool reference_pointcloud_normalize_normals_;
 		bool flip_normals_using_occupancy_grid_analysis_;
 		MapUpdateMode map_update_mode_;

@@ -218,6 +218,7 @@ cluster_selector:
 #   The ambient cloud can be filtered in the original TF frame or after being transformed into the map_frame_id (useful for pass through / crop box filters)
 filters:
     publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
+    ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename: ''
     reference_pointcloud:                                           # Filters that will be applied to the reference point cloud
     ambient_pointcloud_integration_filters:                         # Filters that will be applied to the original point cloud (with the registration corrections) when performing pointcloud integration (SLAM)
     ambient_pointcloud_integration_filters_map_frame:               # Filters that will be applied to the original point cloud in the map frame (with the registration corrections) when performing pointcloud integration (SLAM) (outlier detection will be performed in this filtered cloud)

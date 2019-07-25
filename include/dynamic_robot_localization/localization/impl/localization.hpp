@@ -522,6 +522,8 @@ void Localization<PointT>::setupFiltersConfigurations(const std::string& configu
 	ambient_pointcloud_filters_map_frame_.clear();
 	ambient_pointcloud_filters_after_normal_estimation_.clear();
 
+	private_node_handle_->param(configuration_namespace + "ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename", ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_, std::string(""));
+
 	loadFiltersFromParameterServer(reference_cloud_filters_, configuration_namespace + "filters/reference_pointcloud/");
 	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_, configuration_namespace + "filters/ambient_pointcloud_integration_filters/");
 	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_map_frame_, configuration_namespace + "filters/ambient_pointcloud_integration_filters_map_frame/");
@@ -1159,7 +1161,7 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const
 
 			if (!reference_pointcloud_preprocessed_save_filename_.empty()) {
 				ROS_INFO_STREAM("Saving reference pointcloud preprocessed with " << reference_pointcloud_->size() << " points to file " << reference_pointcloud_preprocessed_save_filename_);
-				pointcloud_conversions::toFile(reference_pointcloud_preprocessed_save_filename_, *reference_pointcloud_, save_reference_pointclouds_in_binary_format_);
+				pointcloud_conversions::toFile(reference_pointcloud_preprocessed_save_filename_, *reference_pointcloud_, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
 			}
 
 			if (!reference_cloud_keypoint_detectors_.empty()) {
@@ -2223,6 +2225,24 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_accepted_pose_performed_tracking_reset_ = false;
 	bool lost_tracking = checkIfTrackingIsLost();
 
+	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
+	if (ambient_cloud_normal_estimator_ && (compute_normals_when_tracking_pose_ || compute_normals_when_estimating_initial_pose_ || compute_normals_when_recovering_pose_tracking_)) {
+		if (use_filtered_cloud_as_normal_estimation_surface_ambient_) {
+			ROS_DEBUG("Using filtered ambient point cloud for normal estimation");
+		} else {
+			ROS_DEBUG("Using raw ambient point cloud for normal estimation");
+			ambient_pointcloud_raw = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
+			if (!transformCloudToTFFrame(ambient_pointcloud_raw, pointcloud_time, map_frame_id_for_transforming_pointclouds_)) {
+				sensor_data_processing_status_ = FailedTFTransform;
+				return false;
+			}
+			if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
+		}
+	}
+
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+	// ==============================================================  filters
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_integration;
 	if (!ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty()) {
 		ROS_DEBUG("Using a pointcloud with different filters for SLAM");
@@ -2252,48 +2272,32 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_integration); }
 	}
 
-	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
-	if (ambient_cloud_normal_estimator_ && (compute_normals_when_tracking_pose_ || compute_normals_when_estimating_initial_pose_ || compute_normals_when_recovering_pose_tracking_)) {
-		if (use_filtered_cloud_as_normal_estimation_surface_ambient_) {
-			ROS_DEBUG("Using filtered ambient point cloud for normal estimation");
-		} else {
-			ROS_DEBUG("Using raw ambient point cloud for normal estimation");
-			ambient_pointcloud_raw = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
-			if (!transformCloudToTFFrame(ambient_pointcloud_raw, pointcloud_time, map_frame_id_for_transforming_pointclouds_)) {
-				sensor_data_processing_status_ = FailedTFTransform;
-				return false;
-			}
-			if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_raw); }
-		}
-	}
-
-	PerformanceTimer performance_timer;
-	performance_timer.start();
-	// ==============================================================  filters
-	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
-	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) {
-		sensor_data_processing_status_ = PointCloudFilteringFailed;
-		return false;
-	}
-	if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
-		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) {
-			sensor_data_processing_status_ = FailedTFTransform;
-			return false;
-		}
-		if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) {
+	if (reference_pointcloud_required_ && reference_pointcloud_loaded_ && reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
+		localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
+		if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) {
 			sensor_data_processing_status_ = PointCloudFilteringFailed;
 			return false;
 		}
+		if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
+			if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) {
+				sensor_data_processing_status_ = FailedTFTransform;
+				return false;
+			}
+			if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) {
+				sensor_data_processing_status_ = PointCloudFilteringFailed;
+				return false;
+			}
+		}
+		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_for_transforming_pointclouds_)) {
+			sensor_data_processing_status_ = FailedTFTransform;
+			return false;
+		}
+		if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
+			return false;
+		}
+		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	}
-	if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_for_transforming_pointclouds_)) {
-		sensor_data_processing_status_ = FailedTFTransform;
-		return false;
-	}
-	if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) {
-		sensor_data_processing_status_ = PointCloudFilteringFailed;
-		return false;
-	}
-	if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_after_filtering = ambient_pointcloud->size();
@@ -2329,24 +2333,26 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	bool computed_normals = false;
 	localization_times_msg_.surface_normal_estimation_time = 0.0;
-	if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
-		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
-			sensor_data_processing_status_ = FailedNormalEstimation;
+	if (reference_pointcloud_required_ && reference_pointcloud_loaded_ && reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
+		if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
+			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
+				sensor_data_processing_status_ = FailedNormalEstimation;
+				return false;
+			}
+			computed_normals = true;
+		}
+
+		if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
 			return false;
 		}
-		computed_normals = true;
-	}
 
-	if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) {
-		sensor_data_processing_status_ = PointCloudFilteringFailed;
-		return false;
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+		indexes.clear();
+		pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+		indexes.clear();
 	}
-
-	std::vector<int> indexes;
-	pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
-	indexes.clear();
-	pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
-	indexes.clear();
 
 	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
 		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
@@ -2359,14 +2365,34 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
-	// ==============================================================  keypoint selection
-	localization_times_msg_.keypoint_selection_time = 0.0;
-	bool computed_keypoints = false;
-	if (compute_keypoints_when_tracking_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
-		applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out);
-		computed_keypoints = true;
+	if (ambient_pointcloud_integration) {
+		typename pcl::search::KdTree<PointT>::Ptr ambient_integration_search_method(new pcl::search::KdTree<PointT>());
+		ambient_integration_search_method->setInputCloud(ambient_pointcloud_integration);
+
+		if (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_) {
+			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud_integration, ambient_pointcloud_raw, ambient_integration_search_method)) {
+				sensor_data_processing_status_ = FailedNormalEstimation;
+				return false;
+			}
+		}
+
+		if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud_integration)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
+			return false;
+		}
+
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, indexes);
+		indexes.clear();
+		pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, indexes);
+		indexes.clear();
+
+		if (!ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_.empty()) {
+			pointcloud_conversions::toFile(ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_, *ambient_pointcloud_integration, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
+		}
 	}
 
+	// ==============================================================  FirstPointCloudInSlamMode
 	if (reference_pointcloud_required_ && (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_)) {
 		if (ambient_pointcloud_integration) {
 			ROS_DEBUG("Switching SLAM cloud");
@@ -2384,6 +2410,13 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false; // stop pipeline processing if no reference cloud is available (only before registration to allow preprocessing of the first cloud when performing SLAM)
 	}
 
+	// ==============================================================  keypoint selection
+	localization_times_msg_.keypoint_selection_time = 0.0;
+	bool computed_keypoints = false;
+	if (compute_keypoints_when_tracking_pose_ && !ambient_cloud_keypoint_detectors_.empty()) {
+		applyKeypointDetection(ambient_cloud_keypoint_detectors_, ambient_pointcloud, ambient_search_method, ambient_pointcloud_keypoints_out);
+		computed_keypoints = true;
+	}
 
 	// ==============================================================  initial pose estimation when tracking is lost
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
