@@ -523,6 +523,7 @@ void Localization<PointT>::setupFiltersConfigurations(const std::string& configu
 	ambient_pointcloud_filters_after_normal_estimation_.clear();
 
 	private_node_handle_->param(configuration_namespace + "ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename", ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud", ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud_, true);
 
 	loadFiltersFromParameterServer(reference_cloud_filters_, configuration_namespace + "filters/reference_pointcloud/");
 	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_, configuration_namespace + "filters/ambient_pointcloud_integration_filters/");
@@ -2248,6 +2249,11 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_integration;
 	if (!ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty()) {
 		ROS_DEBUG("Using a pointcloud with different filters for SLAM");
+
+		if (ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud_ && !ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_.empty()) {
+			pointcloud_conversions::toFile(ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_ + "_raw", *ambient_pointcloud, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
+		}
+
 		ambient_pointcloud_integration = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>(*ambient_pointcloud));
 		if (!applyFilters(ambient_pointcloud_integration_filters_, ambient_pointcloud_integration)) {
 			sensor_data_processing_status_ = PointCloudFilteringFailed;

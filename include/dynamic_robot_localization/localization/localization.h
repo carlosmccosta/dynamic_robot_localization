@@ -369,6 +369,7 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_keypoints_filename_;
 		std::string reference_pointcloud_keypoints_save_filename_;
 		std::string ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_;
+		bool ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud_;
 		bool reference_pointcloud_normalize_normals_;
 		bool flip_normals_using_occupancy_grid_analysis_;
 		MapUpdateMode map_update_mode_;

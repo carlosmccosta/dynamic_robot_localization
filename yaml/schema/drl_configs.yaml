@@ -219,6 +219,7 @@ cluster_selector:
 filters:
     publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
     ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename: ''
+    ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud: true
     reference_pointcloud:                                           # Filters that will be applied to the reference point cloud
     ambient_pointcloud_integration_filters:                         # Filters that will be applied to the original point cloud (with the registration corrections) when performing pointcloud integration (SLAM)
     ambient_pointcloud_integration_filters_map_frame:               # Filters that will be applied to the original point cloud in the map frame (with the registration corrections) when performing pointcloud integration (SLAM) (outlier detection will be performed in this filtered cloud)
