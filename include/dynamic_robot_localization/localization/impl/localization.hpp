@@ -2297,32 +2297,30 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_integration); }
 	}
 
-	if (reference_pointcloud_required_ && reference_pointcloud_loaded_ && reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
-		localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
-		if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) {
-			sensor_data_processing_status_ = PointCloudFilteringFailed;
-			return false;
-		}
-		if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
-			if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) {
-				sensor_data_processing_status_ = FailedTFTransform;
-				return false;
-			}
-			if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) {
-				sensor_data_processing_status_ = PointCloudFilteringFailed;
-				return false;
-			}
-		}
-		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_for_transforming_pointclouds_)) {
+	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
+	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) {
+		sensor_data_processing_status_ = PointCloudFilteringFailed;
+		return false;
+	}
+	if (!ambient_pointcloud_filters_custom_frame_id_.empty()) {
+		if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, ambient_pointcloud_filters_custom_frame_id_)) {
 			sensor_data_processing_status_ = FailedTFTransform;
 			return false;
 		}
-		if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) {
+		if (!applyFilters(ambient_pointcloud_filters_custom_frame_, ambient_pointcloud)) {
 			sensor_data_processing_status_ = PointCloudFilteringFailed;
 			return false;
 		}
-		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	}
+	if (!transformCloudToTFFrame(ambient_pointcloud, pointcloud_time, map_frame_id_for_transforming_pointclouds_)) {
+		sensor_data_processing_status_ = FailedTFTransform;
+		return false;
+	}
+	if (!applyFilters(lost_tracking ? ambient_pointcloud_map_frame_feature_registration_filters_ : ambient_pointcloud_filters_map_frame_, ambient_pointcloud)) {
+		sensor_data_processing_status_ = PointCloudFilteringFailed;
+		return false;
+	}
+	if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
 	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_after_filtering = ambient_pointcloud->size();
@@ -2358,26 +2356,24 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	ambient_search_method->setInputCloud(ambient_pointcloud);
 	bool computed_normals = false;
 	localization_times_msg_.surface_normal_estimation_time = 0.0;
-	if (reference_pointcloud_required_ && reference_pointcloud_loaded_ && reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
-		if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
-			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
-				sensor_data_processing_status_ = FailedNormalEstimation;
-				return false;
-			}
-			computed_normals = true;
-		}
-
-		if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) {
-			sensor_data_processing_status_ = PointCloudFilteringFailed;
+	if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
+		if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
+			sensor_data_processing_status_ = FailedNormalEstimation;
 			return false;
 		}
-
-		std::vector<int> indexes;
-		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
-		indexes.clear();
-		pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
-		indexes.clear();
+		computed_normals = true;
 	}
+
+	if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud)) {
+		sensor_data_processing_status_ = PointCloudFilteringFailed;
+		return false;
+	}
+
+	std::vector<int> indexes;
+	pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+	indexes.clear();
+	pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
+	indexes.clear();
 
 	if (!filtered_pointcloud_publisher_.getTopic().empty()) {
 		if (!publish_filtered_pointcloud_only_if_there_is_subscribers_ || (publish_filtered_pointcloud_only_if_there_is_subscribers_ && filtered_pointcloud_publisher_.getNumSubscribers() > 0)) {
