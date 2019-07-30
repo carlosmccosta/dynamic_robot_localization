@@ -21,6 +21,8 @@ Even though this package was developed for robot self-localization and mapping, 
 - 6 DoF object pose estimation for pick and pack operations
     * [Launch file](https://github.com/carlosmccosta/object_recognition/blob/master/object_recognition_skill_server/launch/object_recognition.launch)
     * [Pick and pack of objects from a conveyor](https://www.youtube.com/watch?v=GRR2e6lvnEs)
+- 6 DoF point cloud registration using scanned reference point clouds
+    * [Repository](https://github.com/carlosmccosta/pointcloud_registration)
 - 6 DoF object pose estimation for projection mapping
     * [Launch file](https://github.com/carlosmccosta/assembly_projection_mapping_teaching/blob/kinetic-devel/launch/object_recognition.launch)
     * [Pose estimation video with projection mapping](https://www.youtube.com/watch?v=557vglPW6Ko)
