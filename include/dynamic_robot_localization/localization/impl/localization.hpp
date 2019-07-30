@@ -504,7 +504,7 @@ void Localization<PointT>::setupReferencePointCloud(const std::string& configura
 	}
 
 	private_node_handle_->param(configuration_namespace + "reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
-	reference_pointcloud_->header.frame_id = map_frame_id_;
+	reference_pointcloud_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
 }
 
 
@@ -1020,7 +1020,7 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 	if (pointcloud_conversions::fromFile(*reference_pointcloud_, reference_pointcloud_filename, (reference_pointclouds_database_folder_path.empty() ? reference_pointclouds_database_folder_path_ : reference_pointclouds_database_folder_path))) {
 		if (reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
 			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
-			reference_pointcloud_->header.frame_id = map_frame_id_;
+			reference_pointcloud_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
 
 			last_map_received_time_ = ros::Time::now();
 			if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
@@ -1105,9 +1105,9 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 		if (!reference_pointcloud_msg_ || update_msg) {
 			reference_pointcloud_msg_ = sensor_msgs::PointCloud2Ptr(new sensor_msgs::PointCloud2());
 			pcl::toROSMsg(*reference_pointcloud_, *reference_pointcloud_msg_);
-			reference_pointcloud_msg_->header.frame_id = map_frame_id_;
 		}
 
+		reference_pointcloud_msg_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
 		reference_pointcloud_msg_->header.stamp = time_stamp;
 		++reference_pointcloud_msg_->header.seq;
 		reference_pointcloud_publisher_.publish(reference_pointcloud_msg_);
@@ -1117,9 +1117,9 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 		if (!reference_pointcloud_keypoints_msg_ || update_msg) {
 			reference_pointcloud_keypoints_msg_ = sensor_msgs::PointCloud2Ptr(new sensor_msgs::PointCloud2());
 			pcl::toROSMsg(*reference_pointcloud_keypoints_, *reference_pointcloud_keypoints_msg_);
-			reference_pointcloud_keypoints_msg_->header.frame_id = map_frame_id_;
 		}
 
+		reference_pointcloud_keypoints_msg_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
 		reference_pointcloud_keypoints_msg_->header.stamp = time_stamp;
 		++reference_pointcloud_keypoints_msg_->header.seq;
 		reference_pointcloud_keypoints_publisher_.publish(reference_pointcloud_keypoints_msg_);
@@ -1129,7 +1129,7 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp) {
-	reference_pointcloud_->header.frame_id = map_frame_id_;
+	reference_pointcloud_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
 	reference_pointcloud_->header.stamp = pcl_conversions::toPCL(time_stamp);
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
 
@@ -1871,6 +1871,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 					ROS_DEBUG_STREAM("Publishing registered ambient pointcloud with " << ambient_pointcloud->size() << " points");
 					sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
 					pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
+					aligned_pointcloud_msg->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 					aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
 				} else {
 					ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << aligned_pointcloud_publisher_.getTopic() << " because there is no subscribers");
@@ -2070,11 +2071,13 @@ double Localization<PointT>::applyOutlierDetection(std::vector< typename Outlier
 		if (detectors[i]->isPublishingOutliers() || compute_outliers_angular_distribution_) {
 			outliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
 			outliers->header = pointcloud->header;
+			outliers->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 		}
 
 		if (detectors[i]->isPublishingInliers() || compute_inliers_angular_distribution_) {
 			inliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
 			inliers->header = pointcloud->header;
+			inliers->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 		}
 
 		number_outliers += detectors[i]->detectOutliers(reference_pointcloud_search_method, *pointcloud, outliers, inliers, root_mean_square_error_inliers);
@@ -2091,6 +2094,11 @@ double Localization<PointT>::applyOutlierDetection(std::vector< typename Outlier
 
 template<typename PointT>
 void Localization<PointT>::applyAmbientPointCloudOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
+	if (!reference_pointcloud_search_method_ || (reference_pointcloud_search_method_ && !(reference_pointcloud_search_method_->getInputCloud()))) {
+		ROS_WARN("Missing reference point cloud for computing ambient point cloud outliers");
+		return;
+	}
+
 	outlier_percentage_ = applyOutlierDetection(outlier_detectors_, reference_pointcloud_search_method_, ambient_pointcloud, detected_outliers_, detected_inliers_, root_mean_square_error_inliers_, number_inliers_);
 	if (detected_inliers_.size() > 1) {
 		registered_inliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
@@ -2105,6 +2113,11 @@ void Localization<PointT>::applyAmbientPointCloudOutlierDetection(typename pcl::
 
 template<typename PointT>
 void Localization<PointT>::applyReferencePointCloudOutlierDetection(typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& reference_pointcloud) {
+	if (!reference_pointcloud_) {
+		ROS_WARN("Missing reference point cloud for computing reference point cloud outliers");
+		return;
+	}
+
 	outlier_percentage_reference_pointcloud_ = applyOutlierDetection(outlier_detectors_reference_pointcloud_, ambient_pointcloud_search_method, reference_pointcloud, detected_outliers_reference_pointcloud_, detected_inliers_reference_pointcloud_, root_mean_square_error_inliers_reference_pointcloud_, number_inliers_reference_pointcloud_);
 }
 
@@ -2367,6 +2380,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			ROS_DEBUG_STREAM("Publishing filtered ambient pointcloud with " << ambient_pointcloud->size() << " points");
 			sensor_msgs::PointCloud2Ptr filtered_pointcloud_msg(new sensor_msgs::PointCloud2());
 			pcl::toROSMsg(*ambient_pointcloud, *filtered_pointcloud_msg);
+			filtered_pointcloud_msg->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 			filtered_pointcloud_publisher_.publish(filtered_pointcloud_msg);
 		} else {
 			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << filtered_pointcloud_publisher_.getTopic() << " because there is no subscribers");
