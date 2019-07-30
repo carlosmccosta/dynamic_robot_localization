@@ -18,6 +18,8 @@
 
 // PCL includes
 #include <pcl/common/centroid.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 // external libs includes
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -25,6 +27,7 @@
 
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/cloud_matcher.h>
+#include <dynamic_robot_localization/common/math_utils.h>
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -59,6 +62,7 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints, tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
+		virtual void computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PrincipalComponentAnalysis-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -72,11 +76,12 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-	bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_;
-	bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_;
-	bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_;
-	Eigen::Vector3d custom_z_flip_axis_;
-	Eigen::Vector3d custom_x_flip_axis_;
+		bool compute_offset_to_reference_pointcloud_pca_;
+		bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_;
+		bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_;
+		bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_;
+		Eigen::Vector3d custom_z_flip_axis_;
+		Eigen::Vector3d custom_x_flip_axis_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 

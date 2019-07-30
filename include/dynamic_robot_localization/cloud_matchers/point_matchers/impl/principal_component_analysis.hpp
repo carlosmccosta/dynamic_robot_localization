@@ -19,7 +19,9 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void PrincipalComponentAnalysis<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+	CloudMatcher<PointT>::setupReferencePointCloudPublisher(node_handle, private_node_handle, configuration_namespace);
 	CloudMatcher<PointT>::setupAlignedPointCloudPublisher(node_handle, private_node_handle, configuration_namespace);
+	private_node_handle->param(configuration_namespace + "compute_offset_to_reference_pointcloud_pca", compute_offset_to_reference_pointcloud_pca_, false);
 	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_, true);
 	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_, false);
 	private_node_handle->param(configuration_namespace + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_, true);
@@ -43,6 +45,45 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 	PerformanceTimer performance_timer;
 	performance_timer.start();
 
+	Eigen::Matrix4f pca_transformation;
+	computePCA(ambient_pointcloud, pca_transformation);
+
+	if (compute_offset_to_reference_pointcloud_pca_) {
+		if (CloudMatcher<PointT>::reference_cloud_) {
+			Eigen::Matrix4f pca_transformation_reference;
+			computePCA(CloudMatcher<PointT>::reference_cloud_, pca_transformation_reference);
+			Eigen::Matrix4f offset_to_reference_pointcloud;
+			math_utils::computeTransformationFromMatrices(pca_transformation_reference, pca_transformation, offset_to_reference_pointcloud);
+			pca_transformation = offset_to_reference_pointcloud;
+		} else {
+			ROS_WARN("Missing reference point cloud for PCA initial alignment");
+		}
+	}
+
+	Eigen::Matrix4f final_transformation = pca_transformation.inverse();
+	CloudMatcher<PointT>::cloud_align_time_ms_ = performance_timer.getElapsedTimeInMilliSec();
+
+	if (CloudMatcher<PointT>::postProcessRegistrationMatrix(ambient_pointcloud, final_transformation, best_pose_correction_out)) {
+		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
+		pointcloud_registered_out->header = ambient_pointcloud->header;
+
+		if (CloudMatcher<PointT>::cloud_publisher_ && pointcloud_registered_out) {
+			CloudMatcher<PointT>::cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
+		}
+
+		if (CloudMatcher<PointT>::reference_cloud_publisher_ && CloudMatcher<PointT>::reference_cloud_) {
+			CloudMatcher<PointT>::reference_cloud_publisher_->setCloudPublishStamp(ambient_pointcloud->header.stamp);
+			CloudMatcher<PointT>::reference_cloud_publisher_->publishPointCloud(*CloudMatcher<PointT>::reference_cloud_);
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+template<typename PointT>
+void PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix) {
 	PointT centroid_with_normal;
 	pcl::computeCentroid(*ambient_pointcloud, centroid_with_normal);
 	Eigen::Vector4f centroid(centroid_with_normal.x, centroid_with_normal.y, centroid_with_normal.z, 1.0f);
@@ -57,9 +98,9 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 
 	if (flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_) {
 		double dot_product_between_centroid_normal_and_z_eigen_vector =
-				centroid_normal(0) * eigen_vectors(0,0) +
-				centroid_normal(1) * eigen_vectors(1,0) +
-				centroid_normal(2) * eigen_vectors(2,0);
+				centroid_normal(0) * eigen_vectors(0, 0) +
+				centroid_normal(1) * eigen_vectors(1, 0) +
+				centroid_normal(2) * eigen_vectors(2, 0);
 		if (dot_product_between_centroid_normal_and_z_eigen_vector < 0.0) {
 			// align the z eigen vector with the centroid normal by rotating 180º around X when the diff_angle_vectors > 180º --> cos(diff_angle_vectors) < 0
 			// useful for ensuring that the PCA Z axis is always pointing to the objects surface outside
@@ -71,9 +112,9 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 
 	if (flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_) {
 		double dot_product_between_custom_z_flip_axis_and_z_eigen_vector =
-				custom_z_flip_axis_(0) * eigen_vectors(0,0) +
-				custom_z_flip_axis_(1) * eigen_vectors(1,0) +
-				custom_z_flip_axis_(2) * eigen_vectors(2,0);
+				custom_z_flip_axis_(0) * eigen_vectors(0, 0) +
+				custom_z_flip_axis_(1) * eigen_vectors(1, 0) +
+				custom_z_flip_axis_(2) * eigen_vectors(2, 0);
 		if (dot_product_between_custom_z_flip_axis_and_z_eigen_vector < 0.0) {
 			// align the z eigen vector with a given custom axis by rotating 180º around X when the diff_angle_vectors > 180º --> cos(diff_angle_vectors) < 0
 			// useful for ensuring that the PCA Z axis is always pointing along a given direction
@@ -85,9 +126,9 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 
 	if (flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_) {
 		double dot_product_between_custom_x_flip_axis_and_x_eigen_vector =
-				custom_x_flip_axis_(0) * eigen_vectors(0,2) +
-				custom_x_flip_axis_(1) * eigen_vectors(1,2) +
-				custom_x_flip_axis_(2) * eigen_vectors(2,2);
+				custom_x_flip_axis_(0) * eigen_vectors(0, 2) +
+				custom_x_flip_axis_(1) * eigen_vectors(1, 2) +
+				custom_x_flip_axis_(2) * eigen_vectors(2, 2);
 		if (dot_product_between_custom_x_flip_axis_and_x_eigen_vector < 0.0) {
 			// align the x eigen vector with a given custom axis by rotating 180º around Z when the diff_angle_vectors > 180º --> cos(diff_angle_vectors) < 0
 			// useful for ensuring that the PCA X axis is always pointing along a given direction
@@ -97,21 +138,10 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 		}
 	}
 
-	Eigen::Matrix4f final_transformation_pca;
-	final_transformation_pca << eigen_vectors(0,2), eigen_vectors(0,1), eigen_vectors(0,0), centroid(0),
-								eigen_vectors(1,2), eigen_vectors(1,1), eigen_vectors(1,0), centroid(1),
-								eigen_vectors(2,2), eigen_vectors(2,1), eigen_vectors(2,0), centroid(2),
-								0.0f, 0.0f, 0.0f, 1.0f;
-	Eigen::Matrix4f final_transformation = final_transformation_pca.inverse();
-
-	CloudMatcher<PointT>::cloud_align_time_ms_ = performance_timer.getElapsedTimeInMilliSec();
-	pcl::transformPointCloudWithNormals(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
-	pointcloud_registered_out->header = ambient_pointcloud->header;
-	if (CloudMatcher<PointT>::cloud_publisher_ && pointcloud_registered_out) {
-		CloudMatcher<PointT>::cloud_publisher_->publishPointCloud(*pointcloud_registered_out);
-	}
-
-	return CloudMatcher<PointT>::postProcessRegistrationMatrix(ambient_pointcloud, final_transformation, best_pose_correction_out);
+	pca_matrix << eigen_vectors(0, 2), eigen_vectors(0, 1), eigen_vectors(0, 0), centroid(0),
+			eigen_vectors(1, 2), eigen_vectors(1, 1), eigen_vectors(1, 0), centroid(1),
+			eigen_vectors(2, 2), eigen_vectors(2, 1), eigen_vectors(2, 0), centroid(2),
+			0.0f, 0.0f, 0.0f, 1.0f;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PrincipalComponentAnalysis-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================
