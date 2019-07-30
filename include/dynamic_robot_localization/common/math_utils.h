@@ -21,6 +21,10 @@
 
 // PCL includes
 #include <pcl/pcl_macros.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/common/transforms.h>
+#include <pcl/registration/transformation_estimation_3point.h>
 
 // external libs includes
 #include <Eigen/Core>
@@ -51,6 +55,8 @@ PointPosition computePointPositionInRelationToLine(
 		float query_point_x, float query_point_y);
 
 PointPosition computePointPosition(float cross_product_z);
+
+void computeTransformationFromMatrices(const Eigen::Matrix4f& source_matrix, const Eigen::Matrix4f& target_matrix, Eigen::Matrix4f& transformation_matrix);
 
 
 bool isTransformValid(const tf2::Transform& transform);

@@ -46,6 +46,22 @@ PointPosition computePointPosition(float cross_product_z) {
 }
 
 
+void computeTransformationFromMatrices(const Eigen::Matrix4f& source_matrix, const Eigen::Matrix4f& target_matrix, Eigen::Matrix4f& transformation_matrix) {
+	pcl::PointCloud<pcl::PointXYZ> axis_points;
+	axis_points.push_back(pcl::PointXYZ(1,0,0));
+	axis_points.push_back(pcl::PointXYZ(0,1,0));
+	axis_points.push_back(pcl::PointXYZ(0,0,1));
+
+	pcl::PointCloud<pcl::PointXYZ> source_points;
+	pcl::PointCloud<pcl::PointXYZ> target_points;
+	pcl::transformPointCloud(axis_points, source_points, source_matrix);
+	pcl::transformPointCloud(axis_points, target_points, target_matrix);
+
+	pcl::registration::TransformationEstimation3Point<pcl::PointXYZ, pcl::PointXYZ, float> transformation_estimation;
+	transformation_estimation.estimateRigidTransformation(source_points, target_points, transformation_matrix);
+}
+
+
 bool isTransformValid(const tf2::Transform& transform) {
 	tf2::Vector3 position = transform.getOrigin();
 	tf2::Quaternion orientation = transform.getRotation();
