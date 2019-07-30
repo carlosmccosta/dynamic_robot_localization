@@ -2094,31 +2094,35 @@ double Localization<PointT>::applyOutlierDetection(std::vector< typename Outlier
 
 template<typename PointT>
 void Localization<PointT>::applyAmbientPointCloudOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud) {
-	if (!reference_pointcloud_search_method_ || (reference_pointcloud_search_method_ && !(reference_pointcloud_search_method_->getInputCloud()))) {
-		ROS_WARN("Missing reference point cloud for computing ambient point cloud outliers");
-		return;
-	}
+	if (!outlier_detectors_.empty()) {
+		if (!reference_pointcloud_search_method_ || (reference_pointcloud_search_method_ && !(reference_pointcloud_search_method_->getInputCloud()))) {
+			ROS_WARN("Missing reference point cloud for computing ambient point cloud outliers");
+			return;
+		}
 
-	outlier_percentage_ = applyOutlierDetection(outlier_detectors_, reference_pointcloud_search_method_, ambient_pointcloud, detected_outliers_, detected_inliers_, root_mean_square_error_inliers_, number_inliers_);
-	if (detected_inliers_.size() > 1) {
-		registered_inliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
-		pointcloud_utils::concatenatePointClouds<PointT>(detected_inliers_, registered_inliers_);
-	} else if (detected_inliers_.size() == 1) {
-		registered_inliers_ = detected_inliers_[0];
-	} else {
-		if (registered_inliers_) registered_inliers_->clear();
+		outlier_percentage_ = applyOutlierDetection(outlier_detectors_, reference_pointcloud_search_method_, ambient_pointcloud, detected_outliers_, detected_inliers_, root_mean_square_error_inliers_, number_inliers_);
+		if (detected_inliers_.size() > 1) {
+			registered_inliers_ = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
+			pointcloud_utils::concatenatePointClouds<PointT>(detected_inliers_, registered_inliers_);
+		} else if (detected_inliers_.size() == 1) {
+			registered_inliers_ = detected_inliers_[0];
+		} else {
+			if (registered_inliers_) registered_inliers_->clear();
+		}
 	}
 }
 
 
 template<typename PointT>
 void Localization<PointT>::applyReferencePointCloudOutlierDetection(typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& reference_pointcloud) {
-	if (!reference_pointcloud_) {
-		ROS_WARN("Missing reference point cloud for computing reference point cloud outliers");
-		return;
-	}
+	if (!outlier_detectors_reference_pointcloud_.empty()) {
+		if (!reference_pointcloud_) {
+			ROS_WARN("Missing reference point cloud for computing reference point cloud outliers");
+			return;
+		}
 
-	outlier_percentage_reference_pointcloud_ = applyOutlierDetection(outlier_detectors_reference_pointcloud_, ambient_pointcloud_search_method, reference_pointcloud, detected_outliers_reference_pointcloud_, detected_inliers_reference_pointcloud_, root_mean_square_error_inliers_reference_pointcloud_, number_inliers_reference_pointcloud_);
+		outlier_percentage_reference_pointcloud_ = applyOutlierDetection(outlier_detectors_reference_pointcloud_, ambient_pointcloud_search_method, reference_pointcloud, detected_outliers_reference_pointcloud_, detected_inliers_reference_pointcloud_, root_mean_square_error_inliers_reference_pointcloud_, number_inliers_reference_pointcloud_);
+	}
 }
 
 
