@@ -46,12 +46,12 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 	performance_timer.start();
 
 	Eigen::Matrix4f pca_transformation;
-	computePCA(ambient_pointcloud, pca_transformation);
+	if (!computePCA(ambient_pointcloud, pca_transformation)) { return false; }
 
 	if (compute_offset_to_reference_pointcloud_pca_) {
 		if (CloudMatcher<PointT>::reference_cloud_) {
 			Eigen::Matrix4f pca_transformation_reference;
-			computePCA(CloudMatcher<PointT>::reference_cloud_, pca_transformation_reference);
+			if (!computePCA(CloudMatcher<PointT>::reference_cloud_, pca_transformation_reference)) { return false; }
 			Eigen::Matrix4f offset_to_reference_pointcloud;
 			math_utils::computeTransformationFromMatrices(pca_transformation_reference, pca_transformation, offset_to_reference_pointcloud);
 			pca_transformation = offset_to_reference_pointcloud;
@@ -61,10 +61,15 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 	}
 
 	Eigen::Matrix4f final_transformation = pca_transformation.inverse();
+	if (!math_utils::isTransformValid<float>(final_transformation)) {
+		ROS_WARN("PCA rejected transformation with NaN values!");
+		return false;
+	}
+
+	pcl::transformPointCloudWithNormals(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
 	CloudMatcher<PointT>::cloud_align_time_ms_ = performance_timer.getElapsedTimeInMilliSec();
 
 	if (CloudMatcher<PointT>::postProcessRegistrationMatrix(ambient_pointcloud, final_transformation, best_pose_correction_out)) {
-		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
 		pointcloud_registered_out->header = ambient_pointcloud->header;
 
 		if (CloudMatcher<PointT>::cloud_publisher_ && pointcloud_registered_out) {
@@ -83,20 +88,36 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 }
 
 template<typename PointT>
-void PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix) {
+bool PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix) {
 	PointT centroid_with_normal;
 	pcl::computeCentroid(*ambient_pointcloud, centroid_with_normal);
+
 	Eigen::Vector4f centroid(centroid_with_normal.x, centroid_with_normal.y, centroid_with_normal.z, 1.0f);
+	if (centroid.hasNaN()) {
+		ROS_WARN_STREAM("PCA detected NaN in point cloud centroid");
+		return false;
+	}
+
 	Eigen::Vector3f centroid_normal(centroid_with_normal.normal_x, centroid_with_normal.normal_y, centroid_with_normal.normal_z);
 	centroid_normal.normalize();
+	if (centroid_normal.hasNaN()) {
+		ROS_WARN_STREAM("PCA detected NaN in point cloud centroid normal");
+		return false;
+	}
 
 	Eigen::Matrix3f covariance_matrix;
 	pcl::computeCovarianceMatrixNormalized(*ambient_pointcloud, centroid, covariance_matrix);
 	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> solver(covariance_matrix, Eigen::ComputeEigenvectors);
 	Eigen::Matrix3f eigen_vectors = solver.eigenvectors(); // eigen vectors are already normalized and sorted from min to max eigen value
+	if (eigen_vectors.hasNaN()) {
+		ROS_WARN_STREAM("PCA detected NaN in point cloud eigen vectors");
+		return false;
+	}
+
 	eigen_vectors.col(0) = eigen_vectors.col(2).cross(eigen_vectors.col(1));
 
 	if (flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_) {
+		ROS_DEBUG_STREAM("Cluster centroid Z normal: [" << centroid_normal(0) << ", " << centroid_normal(1) << ", " << centroid_normal(2) << "]");
 		double dot_product_between_centroid_normal_and_z_eigen_vector =
 				centroid_normal(0) * eigen_vectors(0, 0) +
 				centroid_normal(1) * eigen_vectors(1, 0) +
@@ -106,7 +127,7 @@ void PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<Poi
 			// useful for ensuring that the PCA Z axis is always pointing to the objects surface outside
 			eigen_vectors.col(0) *= -1.0f;
 			eigen_vectors.col(1) *= -1.0f;
-			ROS_DEBUG_STREAM("Flipped PCA Z axis for aligning it to the cluster centroid Z normal [" << centroid_normal(0) << ", " << centroid_normal(1) << ", " << centroid_normal(2) << "]");
+			ROS_DEBUG_STREAM("Flipped PCA Z axis for aligning it to the cluster centroid Z normal");
 		}
 	}
 
@@ -138,10 +159,18 @@ void PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<Poi
 		}
 	}
 
-	pca_matrix << eigen_vectors(0, 2), eigen_vectors(0, 1), eigen_vectors(0, 0), centroid(0),
+	pca_matrix <<
+			eigen_vectors(0, 2), eigen_vectors(0, 1), eigen_vectors(0, 0), centroid(0),
 			eigen_vectors(1, 2), eigen_vectors(1, 1), eigen_vectors(1, 0), centroid(1),
 			eigen_vectors(2, 2), eigen_vectors(2, 1), eigen_vectors(2, 0), centroid(2),
 			0.0f, 0.0f, 0.0f, 1.0f;
+
+	if (!math_utils::isTransformValid<float>(pca_matrix)) {
+		ROS_WARN("PCA rejected estimated transformation with NaN values!");
+		return false;
+	}
+
+	return true;
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PrincipalComponentAnalysis-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // =============================================================================  </public-section>  ===========================================================================

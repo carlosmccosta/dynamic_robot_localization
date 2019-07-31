@@ -62,7 +62,7 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints, tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
-		virtual void computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix);
+		virtual bool computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PrincipalComponentAnalysis-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
