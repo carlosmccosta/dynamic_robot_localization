@@ -2026,6 +2026,8 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 			registration_successful = true;
 			ambient_pointcloud = ambient_pointcloud_aligned; // switch pointers
 			surface_search_method->setInputCloud(ambient_pointcloud);
+		} else {
+			registration_successful = false;
 		}
 
 		int number_registration_iterations = matchers[i]->getNumberOfRegistrationIterations();
