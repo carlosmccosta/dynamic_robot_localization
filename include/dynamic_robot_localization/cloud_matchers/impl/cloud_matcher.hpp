@@ -267,6 +267,11 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 		return false;
 	}
 
+	if (!cloud_matcher_->getInputTarget() || (cloud_matcher_->getInputTarget() && cloud_matcher_->getInputTarget()->size() < 3)) {
+		ROS_WARN("Discarded ambient cloud because there is no reference point cloud for performing registration.");
+		return false;
+	}
+
 	if (ambient_pointcloud->size() != ambient_pointcloud_search_method->getInputCloud()->size()) {
 		ambient_pointcloud_search_method->setInputCloud(ambient_pointcloud);
 	}
