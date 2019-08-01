@@ -1497,17 +1497,17 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 			if (use_odom_when_transforming_cloud_to_map_frame_) {
 				tf2::Transform pose_tf_cloud_to_odom;
 				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
-					ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " isn't available");
+					ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << odom_frame_id_ << " ] was not available");
 					return false;
 				}
 				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
 			} else {
 				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
 					if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
-						ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << target_frame_id << " isn't available");
+						ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
 						return false;
 					} else
-						ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [" << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << "] was not available");
+						ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
 				}
 			}
 		}
@@ -1517,7 +1517,7 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 		}
 
 		if (!math_utils::isTransformValid(pose_tf_cloud_to_map)) {
-			ROS_WARN_STREAM("Dropping pointcloud because TF between " << ambient_pointcloud->header.frame_id << " and " << odom_frame_id_ << " had NaN values");
+			ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << odom_frame_id_ << " ] had NaN values");
 			return false;
 		}
 
