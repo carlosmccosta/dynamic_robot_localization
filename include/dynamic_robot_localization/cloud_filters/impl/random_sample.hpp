@@ -32,6 +32,8 @@ void RandomSample<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	private_node_handle->param(configuration_namespace + "invert_sampling", invert_sampling, false);
 	filter->setNegative(invert_sampling);
 
+	private_node_handle->param(configuration_namespace + "reinitialize_seed_before_filtering", reinitialize_seed_before_filtering_, true);
+
 	CloudFilter<PointT>::setFilter(filter_base);
 	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
@@ -41,6 +43,11 @@ void RandomSample<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& i
 	size_t number_of_points_in_input_cloud = input_cloud->size();
 
 	typename pcl::RandomSample<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::RandomSample<PointT> >(CloudFilter<PointT>::filter_);
+
+	if (reinitialize_seed_before_filtering_) {
+		filter->setSeed(time(NULL));
+	}
+
 	if (filter->getSample() >= number_of_points_in_input_cloud) {
 		if (filter->getNegative()) {
 			output_cloud = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());

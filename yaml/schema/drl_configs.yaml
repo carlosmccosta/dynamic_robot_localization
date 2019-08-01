@@ -281,6 +281,7 @@ filters:
         random_sample:                                              # Allows prefix and postfix of letters to ensure parsing order
             number_of_random_samples: 250
             invert_sampling: false                                  # If false = cloud_size - number_of_random_samples
+            reinitialize_seed_before_filtering: true
             filtered_cloud_publish_topic: ''
         statistical_outlier_removal:
             number_of_neighbors_for_mean_distance_estimation: 4     # The number of points to use for mean distance estimation
