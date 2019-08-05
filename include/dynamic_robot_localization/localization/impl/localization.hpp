@@ -1908,7 +1908,10 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		sensor_data_processing_status_ = ExceptionRaised;
 	}
 
-	if (sensor_data_processing_status_ == SuccessfulPoseEstimation) {
+	if (sensor_data_processing_status_ == SuccessfulPreprocessing) {
+		ROS_DEBUG("Successful finished point cloud preprocessing");
+		return true;
+	} else if (sensor_data_processing_status_ == SuccessfulPoseEstimation) {
 		ROS_DEBUG("Successful finished pose estimation");
 		return true;
 	} else {
@@ -1930,6 +1933,9 @@ template<typename PointT>
 bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud) {
 	ROS_DEBUG_STREAM("Filtering cloud in " << pointcloud->header.frame_id << " frame with " << pointcloud->size() << " points");
 
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+
 	for (size_t i = 0; i < cloud_filters.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
 		filtered_ambient_pointcloud->header = pointcloud->header;
@@ -1938,6 +1944,8 @@ bool Localization<PointT>::applyFilters(std::vector< typename CloudFilter<PointT
 		if (pointcloud->size() <= (size_t)minimum_number_of_points_in_ambient_pointcloud_)
 			break;
 	}
+
+	localization_times_msg_.filtering_time += performance_timer.getElapsedTimeInMilliSec();
 
 	return pointcloud->size() > (size_t)minimum_number_of_points_in_ambient_pointcloud_;
 }
@@ -2232,6 +2240,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform& pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out) {
 	last_number_points_inserted_in_circular_buffer_ = 0;
 	localization_diagnostics_msg_.number_keypoints_ambient_pointcloud = 0;
+	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
 	pointcloud_pose_corrected_out = pointcloud_pose_initial_guess;
 	accepted_pose_corrections_.clear();
 	pose_corrections_out = tf2::Transform::getIdentity();
@@ -2262,9 +2271,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
-	PerformanceTimer performance_timer;
-	performance_timer.start();
-	// ==============================================================  filters
+	// ==============================================================  filters integration
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_integration;
 	if (!ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty()) {
 		ROS_DEBUG("Using a pointcloud with different filters for SLAM");
@@ -2299,7 +2306,60 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud_integration); }
 	}
 
-	localization_diagnostics_msg_.number_points_ambient_pointcloud = ambient_pointcloud->size();
+	// ==============================================================  normal estimation integration
+	if (ambient_pointcloud_integration) {
+		typename pcl::search::KdTree<PointT>::Ptr ambient_integration_search_method(new pcl::search::KdTree<PointT>());
+		ambient_integration_search_method->setInputCloud(ambient_pointcloud_integration);
+
+		if (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_) {
+			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud_integration, ambient_pointcloud_raw, ambient_integration_search_method)) {
+				sensor_data_processing_status_ = FailedNormalEstimation;
+				return false;
+			}
+		}
+
+		if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud_integration)) {
+			sensor_data_processing_status_ = PointCloudFilteringFailed;
+			return false;
+		}
+
+		std::vector<int> indexes;
+		pcl::removeNaNFromPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, indexes);
+		indexes.clear();
+		pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, indexes);
+		indexes.clear();
+
+		if (!ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_.empty()) {
+			pointcloud_conversions::toFile(ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_, *ambient_pointcloud_integration, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
+		}
+	}
+
+	// ==============================================================  FirstPointCloudInSlamMode
+	if ((reference_pointcloud_required_ && (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_)) ||
+			!cloudMatchersActive()) {
+		if (ambient_pointcloud_integration) {
+			ROS_DEBUG("Switching SLAM cloud");
+			ambient_pointcloud = ambient_pointcloud_integration;
+		}
+
+		last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
+		last_accepted_pose_time_ = ros::Time::now();
+		last_accepted_pose_valid_ = true;
+		robot_initial_pose_available_ = true;
+		received_external_initial_pose_estimation_ = false;
+		pose_tracking_number_of_failed_registrations_since_last_valid_pose_ = 0;
+
+		if (cloudMatchersActive()) {
+			sensor_data_processing_status_ = FirstPointCloudInSlamMode;
+			return false;
+		} else {
+			sensor_data_processing_status_ = SuccessfulPreprocessing;
+			return true;
+		}
+		// stop pipeline processing if no reference cloud is available (only before registration to allow preprocessing of the first cloud when performing SLAM)
+	}
+
+	// ==============================================================  filters
 	if (!applyFilters(lost_tracking ? ambient_pointcloud_feature_registration_filters_ : ambient_pointcloud_filters_, ambient_pointcloud)) {
 		sensor_data_processing_status_ = PointCloudFilteringFailed;
 		return false;
@@ -2323,7 +2383,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		return false;
 	}
 	if (reference_pointcloud_2d_) { resetPointCloudHeight(*ambient_pointcloud); }
-	localization_times_msg_.filtering_time = performance_timer.getElapsedTimeInMilliSec();
 
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_after_filtering = ambient_pointcloud->size();
 	if (ambient_pointcloud_with_circular_buffer_) {
@@ -2389,51 +2448,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
-	if (ambient_pointcloud_integration) {
-		typename pcl::search::KdTree<PointT>::Ptr ambient_integration_search_method(new pcl::search::KdTree<PointT>());
-		ambient_integration_search_method->setInputCloud(ambient_pointcloud_integration);
-
-		if (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_) {
-			if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud_integration, ambient_pointcloud_raw, ambient_integration_search_method)) {
-				sensor_data_processing_status_ = FailedNormalEstimation;
-				return false;
-			}
-		}
-
-		if (!applyFilters(ambient_pointcloud_filters_after_normal_estimation_, ambient_pointcloud_integration)) {
-			sensor_data_processing_status_ = PointCloudFilteringFailed;
-			return false;
-		}
-
-		std::vector<int> indexes;
-		pcl::removeNaNFromPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, indexes);
-		indexes.clear();
-		pcl::removeNaNNormalsFromPointCloud(*ambient_pointcloud_integration, *ambient_pointcloud_integration, indexes);
-		indexes.clear();
-
-		if (!ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_.empty()) {
-			pointcloud_conversions::toFile(ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_, *ambient_pointcloud_integration, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
-		}
-	}
-
-	// ==============================================================  FirstPointCloudInSlamMode
-	if (reference_pointcloud_required_ && (!reference_pointcloud_loaded_ || reference_pointcloud_->size() < (size_t)minimum_number_of_points_in_reference_pointcloud_)) {
-		if (ambient_pointcloud_integration) {
-			ROS_DEBUG("Switching SLAM cloud");
-			ambient_pointcloud = ambient_pointcloud_integration;
-		}
-
-		last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
-		last_accepted_pose_time_ = ros::Time::now();
-		last_accepted_pose_valid_ = true;
-		robot_initial_pose_available_ = true;
-		received_external_initial_pose_estimation_ = false;
-		pose_tracking_number_of_failed_registrations_since_last_valid_pose_ = 0;
-
-		sensor_data_processing_status_ = FirstPointCloudInSlamMode;
-		return false; // stop pipeline processing if no reference cloud is available (only before registration to allow preprocessing of the first cloud when performing SLAM)
-	}
-
 	// ==============================================================  keypoint selection
 	localization_times_msg_.keypoint_selection_time = 0.0;
 	bool computed_keypoints = false;
@@ -2444,7 +2458,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  initial pose estimation when tracking is lost
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
-	performance_timer.restart();
+	PerformanceTimer performance_timer;
+	performance_timer.start();
 
 	bool tracking_recovery_reached = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_recovery_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_) || (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_);
 	bool performed_recovery = false;

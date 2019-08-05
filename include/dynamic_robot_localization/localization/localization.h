@@ -170,6 +170,7 @@ class Localization : public ConfigurableObject {
 			PointCloudSubscribersDisabled,
 			PointCloudWithoutTheMinimumNumberOfRequiredPoints,
 			PoseEstimationRejectedByTransformationValidators,
+			SuccessfulPreprocessing,
 			SuccessfulPoseEstimation,
 			WaitingForSensorData
 		};
@@ -192,6 +193,7 @@ class Localization : public ConfigurableObject {
 				case PointCloudSubscribersDisabled: return "PointCloudSubscribersDisabled";
 				case PointCloudWithoutTheMinimumNumberOfRequiredPoints: return "PointCloudWithoutTheMinimumNumberOfRequiredPoints";
 				case PoseEstimationRejectedByTransformationValidators: return "PoseEstimationRejectedByTransformationValidators";
+				case SuccessfulPreprocessing: return "SuccessfulPreprocessing";
 				case SuccessfulPoseEstimation: return "SuccessfulPoseEstimation";
 				case WaitingForSensorData: return "WaitingForSensorData";
 			}
@@ -327,7 +329,8 @@ class Localization : public ConfigurableObject {
 		const std::vector< tf2::Transform >& getAcceptedPoseCorrections() { return accepted_pose_corrections_; }
 		const tf2::Transform& getAcceptedEstimatedPose() { return pose_tf2_transform_corrected_; }
 		const MapUpdateMode getMapUpdateMode() { return map_update_mode_; }
-		const bool ambientPointcloudIntegrationActive() { return !ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty(); }
+		bool ambientPointcloudIntegrationActive() { return !ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty(); }
+		bool cloudMatchersActive() { return !initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty() || !tracking_matchers_.empty() || !tracking_recovery_matchers_.empty(); }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
