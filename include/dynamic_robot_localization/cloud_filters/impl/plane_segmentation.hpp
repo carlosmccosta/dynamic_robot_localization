@@ -120,8 +120,9 @@ void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::P
 
 			Eigen::Matrix4f centroid_matrix = Eigen::Matrix4f::Identity();
 			centroid_matrix.col(3).head<3>() << centroid(0), centroid(1), centroid(2);
+			Eigen::Matrix4f centroid_matrix_inverse = centroid_matrix.inverse();
 
-			pcl::transformPointCloudWithNormals<PointT>(*convex_hull_for_projected_plane_inliers, *convex_hull_for_projected_plane_inliers, centroid_matrix.inverse());
+			pcl::transformPointCloudWithNormals<PointT>(*convex_hull_for_projected_plane_inliers, *convex_hull_for_projected_plane_inliers, centroid_matrix_inverse);
 
 			Eigen::Matrix4f scale_matrix = Eigen::Matrix4f(Eigen::Matrix4f::Identity()) * plane_convex_hull_scaling_factor_;
 			pcl::transformPointCloudWithNormals<PointT>(*convex_hull_for_projected_plane_inliers, *convex_hull_for_projected_plane_inliers, scale_matrix);
