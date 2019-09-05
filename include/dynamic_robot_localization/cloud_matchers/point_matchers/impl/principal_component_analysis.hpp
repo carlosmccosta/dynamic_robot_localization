@@ -23,16 +23,27 @@ void PrincipalComponentAnalysis<PointT>::setupConfigurationFromParameterServer(r
 	CloudMatcher<PointT>::setupAlignedPointCloudPublisher(node_handle, private_node_handle, configuration_namespace);
 	private_node_handle->param(configuration_namespace + "compute_offset_to_reference_pointcloud_pca", compute_offset_to_reference_pointcloud_pca_, false);
 	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_, true);
+	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud_, flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_);
 	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_, false);
+	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud_, flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_);
 	private_node_handle->param(configuration_namespace + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_, true);
+	private_node_handle->param(configuration_namespace + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud_, flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_);
 	private_node_handle->param(configuration_namespace + "custom_z_flip_axis/x", custom_z_flip_axis_(0), 0.0);
 	private_node_handle->param(configuration_namespace + "custom_z_flip_axis/y", custom_z_flip_axis_(1), 0.0);
 	private_node_handle->param(configuration_namespace + "custom_z_flip_axis/z", custom_z_flip_axis_(2), 1.0);
+	private_node_handle->param(configuration_namespace + "custom_z_flip_axis_reference_pointcloud/x", custom_z_flip_axis_reference_pointcloud_(0), custom_z_flip_axis_(0));
+	private_node_handle->param(configuration_namespace + "custom_z_flip_axis_reference_pointcloud/y", custom_z_flip_axis_reference_pointcloud_(1), custom_z_flip_axis_(1));
+	private_node_handle->param(configuration_namespace + "custom_z_flip_axis_reference_pointcloud/z", custom_z_flip_axis_reference_pointcloud_(2), custom_z_flip_axis_(2));
 	private_node_handle->param(configuration_namespace + "custom_x_flip_axis/x", custom_x_flip_axis_(0), 0.0);
 	private_node_handle->param(configuration_namespace + "custom_x_flip_axis/y", custom_x_flip_axis_(1), 0.0);
 	private_node_handle->param(configuration_namespace + "custom_x_flip_axis/z", custom_x_flip_axis_(2), 1.0);
+	private_node_handle->param(configuration_namespace + "custom_x_flip_axis_reference_pointcloud/x", custom_x_flip_axis_reference_pointcloud_(0), custom_x_flip_axis_(0));
+	private_node_handle->param(configuration_namespace + "custom_x_flip_axis_reference_pointcloud/y", custom_x_flip_axis_reference_pointcloud_(1), custom_x_flip_axis_(1));
+	private_node_handle->param(configuration_namespace + "custom_x_flip_axis_reference_pointcloud/z", custom_x_flip_axis_reference_pointcloud_(2), custom_x_flip_axis_(2));
 	custom_z_flip_axis_.normalize();
+	custom_z_flip_axis_reference_pointcloud_.normalize();
 	custom_x_flip_axis_.normalize();
+	custom_x_flip_axis_reference_pointcloud_.normalize();
 }
 
 template<typename PointT>
@@ -46,12 +57,22 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 	performance_timer.start();
 
 	Eigen::Matrix4f pca_transformation;
-	if (!computePCA(ambient_pointcloud, pca_transformation)) { return false; }
+	if (!computePCA(ambient_pointcloud, pca_transformation,
+			flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_,
+			flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_,
+			flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_,
+			custom_z_flip_axis_,
+			custom_x_flip_axis_)) { return false; }
 
 	if (compute_offset_to_reference_pointcloud_pca_) {
 		if (CloudMatcher<PointT>::reference_cloud_) {
 			Eigen::Matrix4f pca_transformation_reference;
-			if (!computePCA(CloudMatcher<PointT>::reference_cloud_, pca_transformation_reference)) { return false; }
+			if (!computePCA(CloudMatcher<PointT>::reference_cloud_, pca_transformation_reference,
+					flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud_,
+					flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud_,
+					flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud_,
+					custom_z_flip_axis_reference_pointcloud_,
+					custom_x_flip_axis_reference_pointcloud_)) { return false; }
 			Eigen::Matrix4f offset_to_reference_pointcloud;
 			math_utils::computeTransformationFromMatrices(pca_transformation_reference, pca_transformation, offset_to_reference_pointcloud);
 			pca_transformation = offset_to_reference_pointcloud;
@@ -88,7 +109,11 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 }
 
 template<typename PointT>
-bool PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix) {
+bool PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix,
+		bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal,
+		bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis,
+		bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis,
+		Eigen::Vector3d custom_z_flip_axis, Eigen::Vector3d custom_x_flip_axis) {
 	PointT centroid_with_normal;
 	pcl::computeCentroid(*ambient_pointcloud, centroid_with_normal);
 
@@ -116,7 +141,7 @@ bool PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<Poi
 
 	eigen_vectors.col(0) = eigen_vectors.col(2).cross(eigen_vectors.col(1));
 
-	if (flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_) {
+	if (flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal) {
 		ROS_DEBUG_STREAM("Cluster centroid Z normal: [" << centroid_normal(0) << ", " << centroid_normal(1) << ", " << centroid_normal(2) << "]");
 		double dot_product_between_centroid_normal_and_z_eigen_vector =
 				centroid_normal(0) * eigen_vectors(0, 0) +
@@ -131,31 +156,31 @@ bool PrincipalComponentAnalysis<PointT>::computePCA(typename pcl::PointCloud<Poi
 		}
 	}
 
-	if (flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_) {
+	if (flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis) {
 		double dot_product_between_custom_z_flip_axis_and_z_eigen_vector =
-				custom_z_flip_axis_(0) * eigen_vectors(0, 0) +
-				custom_z_flip_axis_(1) * eigen_vectors(1, 0) +
-				custom_z_flip_axis_(2) * eigen_vectors(2, 0);
+				custom_z_flip_axis(0) * eigen_vectors(0, 0) +
+				custom_z_flip_axis(1) * eigen_vectors(1, 0) +
+				custom_z_flip_axis(2) * eigen_vectors(2, 0);
 		if (dot_product_between_custom_z_flip_axis_and_z_eigen_vector < 0.0) {
 			// align the z eigen vector with a given custom axis by rotating 180º around X when the diff_angle_vectors > 180º --> cos(diff_angle_vectors) < 0
 			// useful for ensuring that the PCA Z axis is always pointing along a given direction
 			eigen_vectors.col(0) *= -1.0f;
 			eigen_vectors.col(1) *= -1.0f;
-			ROS_DEBUG_STREAM("Flipped PCA Z axis for aligning it to the custom axis [" << custom_z_flip_axis_(0) << ", " << custom_z_flip_axis_(1) << ", " << custom_z_flip_axis_(2) << "]");
+			ROS_DEBUG_STREAM("Flipped PCA Z axis for aligning it to the custom axis [" << custom_z_flip_axis(0) << ", " << custom_z_flip_axis(1) << ", " << custom_z_flip_axis(2) << "]");
 		}
 	}
 
-	if (flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_) {
+	if (flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis) {
 		double dot_product_between_custom_x_flip_axis_and_x_eigen_vector =
-				custom_x_flip_axis_(0) * eigen_vectors(0, 2) +
-				custom_x_flip_axis_(1) * eigen_vectors(1, 2) +
-				custom_x_flip_axis_(2) * eigen_vectors(2, 2);
+				custom_x_flip_axis(0) * eigen_vectors(0, 2) +
+				custom_x_flip_axis(1) * eigen_vectors(1, 2) +
+				custom_x_flip_axis(2) * eigen_vectors(2, 2);
 		if (dot_product_between_custom_x_flip_axis_and_x_eigen_vector < 0.0) {
 			// align the x eigen vector with a given custom axis by rotating 180º around Z when the diff_angle_vectors > 180º --> cos(diff_angle_vectors) < 0
 			// useful for ensuring that the PCA X axis is always pointing along a given direction
 			eigen_vectors.col(2) *= -1.0f;
 			eigen_vectors.col(1) *= -1.0f;
-			ROS_DEBUG_STREAM("Flipped PCA X axis for aligning it to the custom axis [" << custom_x_flip_axis_(0) << ", " << custom_x_flip_axis_(1) << ", " << custom_x_flip_axis_(2) << "]");
+			ROS_DEBUG_STREAM("Flipped PCA X axis for aligning it to the custom axis [" << custom_x_flip_axis(0) << ", " << custom_x_flip_axis(1) << ", " << custom_x_flip_axis(2) << "]");
 		}
 	}
 

@@ -62,7 +62,11 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints, tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
-		virtual bool computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix);
+		virtual bool computePCA(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, Eigen::Matrix4f& pca_matrix,
+				bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal,
+				bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis,
+				bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis,
+				Eigen::Vector3d custom_z_flip_axis, Eigen::Vector3d custom_x_flip_axis);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </PrincipalComponentAnalysis-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -78,10 +82,15 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 	protected:
 		bool compute_offset_to_reference_pointcloud_pca_;
 		bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_;
+		bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud_;
 		bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_;
+		bool flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud_;
 		bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_;
+		bool flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud_;
 		Eigen::Vector3d custom_z_flip_axis_;
+		Eigen::Vector3d custom_z_flip_axis_reference_pointcloud_;
 		Eigen::Vector3d custom_x_flip_axis_;
+		Eigen::Vector3d custom_x_flip_axis_reference_pointcloud_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
