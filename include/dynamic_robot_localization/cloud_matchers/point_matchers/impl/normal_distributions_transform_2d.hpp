@@ -25,7 +25,7 @@ void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServ
 	typename pcl::NormalDistributionsTransform2D<PointT, PointT>::Ptr matcher = boost::static_pointer_cast< typename pcl::NormalDistributionsTransform2D<PointT, PointT> >(matcher_base);
 
 	double transformation_rotation_epsilon;
-	private_node_handle->param(configuration_namespace + "transformation_rotation_epsilon", transformation_rotation_epsilon, 0.001);
+	private_node_handle->param(configuration_namespace + "transformation_rotation_epsilon", transformation_rotation_epsilon, 0.0);
 	matcher_base->setTransformationRotationEpsilon(transformation_rotation_epsilon);
 
 	double grid_center_x, grid_center_y;

@@ -608,7 +608,7 @@ tracking_matchers:
         iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order | Cannot be used for 3 DoF because the PCL implementation of pcl::registration::TransformationEstimationPointToPlaneLLS::estimateRigidTransformation will produce a 6x6 matrix that cannot be inverted (singular), and will result in a transformation estimation with NaNs
             # the next set of parameters applies to the 4 icp algorithms mentioned above (iterative_closest_point | iterative_closest_point_2d | iterative_closest_point_non_linear | iterative_closest_point_with_normals)
             convergence_absolute_mse_threshold: 1e-12               # (correspondences_cur_mse_ - correspondences_prev_mse_) < mse_threshold_absolute_)
-            convergence_rotation_threshold: 0.0                     # Only applied if > 0 | cos_angle = 0.5 * (transformation_.coeff (0, 0) + transformation_.coeff (1, 1) + transformation_.coeff (2, 2) - 1) || cos_angle >= rotation_threshold || (epsilon is the cos(angle) in a axis-angle representation)
+            convergence_rotation_threshold: 0.0                     # Only applied if > 0 | cos_angle = 0.5 * (transformation_.coeff (0, 0) + transformation_.coeff (1, 1) + transformation_.coeff (2, 2) - 1) || cos_angle >= rotation_threshold || (epsilon is the cos(angle) in a axis-angle representation) -> cos_angle = 0.99999 -> 0.256 degrees threshold
             convergence_max_iterations_similar_transforms: 0        # The maximum number of iterations that the internal rotation, translation, and MSE differences are allowed to be similar
             convergence_time_limit_seconds: -1.0                    # Allows to define a time limit for the point clod registration (if < 0.0 no time limit is applied, if > 0 this value will be the maximum time limit, even when using the percentage of the mean convergence time)
             convergence_time_limit_seconds_as_mean_convergence_time_percentage: 3.0                 # Allows to update the convergence time limit value based on the percentage of the mean convergence time [1 -> 100%] (if < 0, the time limit isn't updated)
@@ -621,7 +621,7 @@ tracking_matchers:
             correspondence_randomness: 20                           # The number of neighbors used when selecting a point neighborhood to compute covariances
             maximum_optimizer_iterations: 20                        # Number of iterations at the optimization step
         normal_distributions_transform_2d:                          # Allows prefix and postfix of letters to ensure parsing order
-            transformation_rotation_epsilon: 0.001                  # Only used if > 0 | Maximum allowable rotation difference between two consecutive transformations) in order for an optimization to be considered as having converged to the final solution (epsilon is the cos(angle) in a axis-angle representation)
+            transformation_rotation_epsilon: 0.0                    # Only used if > 0 | Maximum allowable rotation difference between two consecutive transformations) in order for an optimization to be considered as having converged to the final solution (epsilon is the cos(angle) in a axis-angle representation) -> cos_angle = 0.99999 -> 0.256 degrees threshold
             grid_center_x: 0.0                                      # X center of the ndt grid (target coordinate system)
             grid_center_y: 0.0                                      # Y center of the ndt grid (target coordinate system)
             grid_step_x: 1.0                                        # Grid spacing (x step) of the NDT grid
@@ -632,7 +632,7 @@ tracking_matchers:
             grid_optimization_step_size_y: 1.0                      # Lambda y step size: 1 is simple newton optimization, smaller values may improve convergence
             grid_optimization_step_size_theta: 1.0                  # Lambda theta  size: 1 is simple newton optimization, smaller values may improve convergence
         normal_distributions_transform_3d:                          # Allows prefix and postfix of letters to ensure parsing order
-            transformation_rotation_epsilon: 0.001                  # Only used if > 0 | Maximum allowable rotation difference between two consecutive transformations) in order for an optimization to be considered as having converged to the final solution (epsilon is the cos(angle) in a axis-angle representation)
+            transformation_rotation_epsilon: 0.0                    # Only used if > 0 | Maximum allowable rotation difference between two consecutive transformations) in order for an optimization to be considered as having converged to the final solution (epsilon is the cos(angle) in a axis-angle representation) -> cos_angle = 0.99999 -> 0.256 degrees threshold
             voxel_grid_resolution: 1.0                              # Resolution side length of voxels
             line_search_step_size: 0.1                              # The newton line search maximum step length
             outlier_ratio: 0.55                                     # Point cloud outlier ratio
