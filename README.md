@@ -82,30 +82,39 @@ Video 7: Rotations test with Kinect in the ETHZ RGB-D dataset using the 6 DoF lo
 Video 8: 3 DoF localization system tests with the Guardian platform in Labiomep dataset
 
 
+[![Mapping with the Guardian robot in the lab using the 3 DoF localization system](http://img.youtube.com/vi/GKDG7c61OLo/maxresdefault.jpg)](http://www.youtube.com/watch?v=GKDG7c61OLo)
+
+Video 9: Mapping with the Guardian robot in the lab using the 3 DoF localization system
+
+
 [![Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system](http://img.youtube.com/vi/p4JaE6i7NqM/maxresdefault.jpg)](http://www.youtube.com/watch?v=p4JaE6i7NqM)
 
-Video 9: Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system
+Video 10: Mapping with the Guardian robot in simulated ship interior using the 3 DoF localization system
+
+
+[![Mapping with the Guardian robot in a ship interior using the 3 DoF localization system](http://img.youtube.com/vi/GJcru84VSN4/maxresdefault.jpg)](http://www.youtube.com/watch?v=GJcru84VSN4)
+
+Video 11: Mapping with the Guardian robot in a ship interior using the 6 DoF localization system
 
 
 [![Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system](http://img.youtube.com/vi/Us9XkcRx_5I/maxresdefault.jpg)](http://www.youtube.com/watch?v=Us9XkcRx_5I)
 
-Video 10: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
+Video 12: Free fly mapping test with Kinect in the ETHZ RGB-D dataset using the 6 DoF localization system
 
 
 [![Object pose estimation for assisted assembly operations](http://img.youtube.com/vi/557vglPW6Ko/maxresdefault.jpg)](https://www.youtube.com/watch?v=557vglPW6Ko)
 
-Video 11: Object pose estimation for assisted assembly operations
-
+Video 13: Object pose estimation for assisted assembly operations
 
 
 [![Object pose estimation for pick and pack operations](http://img.youtube.com/vi/GRR2e6lvnEs/maxresdefault.jpg)](https://www.youtube.com/watch?v=GRR2e6lvnEs)
 
-Video 12: Object pose estimation for pick and pack operations
+Video 14: Object pose estimation for pick and pack operations
 
 
 [![Bin picking using region growing and principal component analysis](http://img.youtube.com/vi/6BgnQP4TeJM/maxresdefault.jpg)](http://www.youtube.com/watch?v=6BgnQP4TeJM)
 
-Video 13: 6 DoF pose estimation of the vacuum grasp pose for smooth objects inside bins using region growing and principal component analysis
+Video 15: 6 DoF pose estimation of the vacuum grasp pose for smooth objects inside bins using region growing and principal component analysis
 
 
 ## Data sources
