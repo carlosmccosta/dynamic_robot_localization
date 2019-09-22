@@ -3,9 +3,9 @@ project(dynamic_robot_localization)
 
 
 
-#######################################################################################################################
-## packages
-#######################################################################################################################
+##############
+## packages ##
+##############
 
 set(${PROJECT_NAME}_CATKIN_COMPONENTS
     angles
@@ -35,39 +35,40 @@ if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 endif()
 
-find_package(catkin REQUIRED COMPONENTS ${${PROJECT_NAME}_CATKIN_COMPONENTS})
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
+find_package(catkin REQUIRED COMPONENTS ${${PROJECT_NAME}_CATKIN_COMPONENTS})
 
 
-#######################################################################################################################
-## catkin specific configuration
-#######################################################################################################################
 
+###################################
+## catkin specific configuration ##
+###################################
 
 add_message_files(
-  FILES
-    LocalizationDetailed.msg
-    LocalizationDiagnostics.msg
-    LocalizationTimes.msg
-    LocalizationConfiguration.msg
+    FILES
+        LocalizationDetailed.msg
+        LocalizationDiagnostics.msg
+        LocalizationTimes.msg
+        LocalizationConfiguration.msg
 )
 
 add_service_files(
-  FILES
-    ReloadLocalizationConfiguration.srv
+    FILES
+        ReloadLocalizationConfiguration.srv
 )
 
 generate_messages(
-   DEPENDENCIES
-   geometry_msgs
-   sensor_msgs
-   std_msgs
+    DEPENDENCIES
+        geometry_msgs
+        sensor_msgs
+        std_msgs
 )
 
 catkin_package(
-    INCLUDE_DIRS include
+    INCLUDE_DIRS
+        include
     LIBRARIES
         drl_cloud_analyzers
         drl_cloud_filters
@@ -94,13 +95,13 @@ catkin_package(
 
 
 
-#######################################################################################################################
-## build
-#######################################################################################################################
+###########
+## Build ##
+###########
 
-#==================
-# includes
-#==================
+#===========
+# includes =
+#===========
 
 include_directories(
     include
@@ -112,9 +113,9 @@ include_directories(
 
 
 
-#==================
-# libraries
-#==================
+#============
+# libraries =
+#============
 
 add_library(drl_common
     src/common/circular_buffer_pointcloud.cpp
@@ -234,9 +235,9 @@ add_library(drl_localization
 
 
 
-#==================
-# executables
-#==================
+#==============
+# executables =
+#==============
 
 add_executable(drl_localization_node
     src/localization/localization_node.cpp
@@ -247,21 +248,27 @@ add_executable(drl_mesh_to_pcd
 )
 
 
-#==================
-# dependencies
-#==================
+#===============
+# dependencies =
+#===============
 
 add_dependencies(drl_cloud_analyzers
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_cloud_filters
+    drl_common
+    drl_cluster_selectors
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_cloud_matchers
+    drl_common
+    drl_keypoint_descriptors
+    drl_convergence_estimators
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
@@ -271,82 +278,96 @@ add_dependencies(drl_common
     ${catkin_EXPORTED_TARGETS}
 )
 
-add_dependencies(drl_convergence_estimators
+add_dependencies(drl_cluster_selectors
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
-add_dependencies(drl_cluster_selectors
+add_dependencies(drl_convergence_estimators
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_curvature_estimators
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS}
-)
-
-add_dependencies(drl_keypoint_detectors
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_keypoint_descriptors
+    drl_common
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS}
+)
+
+add_dependencies(drl_keypoint_detectors
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_localization
+    drl_cloud_analyzers
+    drl_cloud_filters
+    drl_cloud_matchers
+    drl_common
+    drl_curvature_estimators
+    drl_keypoint_descriptors
+    drl_keypoint_detectors
+    drl_normal_estimators
+    drl_outliers_detectors
+    drl_registration_covariance_estimators
+    drl_transformation_validators
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_normal_estimators
+    drl_common
+    drl_curvature_estimators
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_outliers_detectors
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_registration_covariance_estimators
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_transformation_validators
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_localization_node
+    drl_common
+    drl_localization
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 add_dependencies(drl_mesh_to_pcd
+    drl_common
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS}
 )
 
 
-#==================
-# libraries link
-#==================
+#=================
+# libraries link =
+#=================
 
-target_link_libraries(drl_common
-    ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_convergence_estimators
-    ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_cluster_selectors
+target_link_libraries(drl_cloud_analyzers
     drl_common
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -359,20 +380,32 @@ target_link_libraries(drl_cloud_filters
     ${catkin_LIBRARIES}
 )
 
+target_link_libraries(drl_cloud_matchers
+    drl_common
+    drl_keypoint_descriptors
+    drl_convergence_estimators
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(drl_cluster_selectors
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(drl_convergence_estimators
+    drl_common
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
 target_link_libraries(drl_curvature_estimators
-    drl_common
-    ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_normal_estimators
-    drl_common
-    drl_curvature_estimators
-    ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_keypoint_detectors
     drl_common
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -384,26 +417,36 @@ target_link_libraries(drl_keypoint_descriptors
     ${catkin_LIBRARIES}
 )
 
-target_link_libraries(drl_cloud_matchers
+target_link_libraries(drl_keypoint_detectors
     drl_common
-    drl_convergence_estimators
-    drl_keypoint_descriptors
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
-target_link_libraries(drl_transformation_validators
+target_link_libraries(drl_localization
+    drl_cloud_analyzers
+    drl_cloud_filters
+    drl_cloud_matchers
     drl_common
+    drl_curvature_estimators
+    drl_keypoint_descriptors
+    drl_keypoint_detectors
+    drl_normal_estimators
+    drl_outliers_detectors
+    drl_registration_covariance_estimators
+    drl_transformation_validators
+    ${PCL_LIBRARIES}
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(drl_normal_estimators
+    drl_common
+    drl_curvature_estimators
+    ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
 target_link_libraries(drl_outliers_detectors
-    drl_common
-    ${PCL_LIBRARIES}
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(drl_cloud_analyzers
     drl_common
     ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
@@ -415,25 +458,15 @@ target_link_libraries(drl_registration_covariance_estimators
     ${catkin_LIBRARIES}
 )
 
-target_link_libraries(drl_localization
+target_link_libraries(drl_transformation_validators
     drl_common
-    drl_cloud_filters
-    drl_normal_estimators
-    drl_keypoint_detectors
-    drl_keypoint_descriptors
-    drl_cloud_matchers
-    drl_transformation_validators
-    drl_outliers_detectors
-    drl_cloud_analyzers
-    drl_registration_covariance_estimators
-    ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
 
-#==================
-# executables link
-#==================
+#===================
+# executables link =
+#===================
 
 target_link_libraries(drl_localization_node
     drl_common
@@ -447,3 +480,68 @@ target_link_libraries(drl_mesh_to_pcd
     ${catkin_LIBRARIES}
 )
 
+
+
+#############
+## Install ##
+#############
+
+#============================
+# Libraries and executables =
+#============================
+
+install(
+    TARGETS
+        drl_cloud_analyzers
+        drl_cloud_filters
+        drl_cloud_matchers
+        drl_common
+        drl_convergence_estimators
+        drl_cluster_selectors
+        drl_curvature_estimators
+        drl_keypoint_descriptors
+        drl_keypoint_detectors
+        drl_localization
+        drl_normal_estimators
+        drl_outliers_detectors
+        drl_registration_covariance_estimators
+        drl_transformation_validators
+        drl_localization_node
+        drl_mesh_to_pcd
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+#===============
+# Header files =
+#===============
+
+install(
+    DIRECTORY
+        include/${PROJECT_NAME}/
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
+
+#===============
+# Launch files =
+#===============
+
+install(
+    DIRECTORY
+        launch/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)
+
+
+#========
+# yamls =
+#========
+
+install(
+    DIRECTORY
+        yaml/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/yaml
+)

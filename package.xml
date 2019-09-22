@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
 	<name>dynamic_robot_localization</name>
-	<version>1.0.0</version>
+	<version>1.2.0</version>
 	<description>The dynamic_robot_localization package offers 3 DoF and 6 DoF robot self-localization along with a set of libraries suitable for generic point cloud alignment</description>
 	<maintainer email="carloscosta.cmcc@gmail.com">Carlos Miguel Correia da Costa</maintainer>
 	<license>BSD</license>
@@ -36,8 +36,8 @@
 	<depend>xmlrpcpp</depend>
 
 	<!-- system dependencies -->
-	<depend>libboost-all-dev</depend>
-	<depend>libeigen3-dev</depend>
+	<depend>boost</depend>
+	<depend>eigen</depend>
 	<depend>PCL</depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
 
 
