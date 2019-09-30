@@ -109,7 +109,7 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 		return false;
 	}
 
-	if (max_new_pose_diff_angle_ > 0 && new_pose_angle < max_new_pose_diff_angle_) {
+	if (max_new_pose_diff_angle_ > 0 && new_pose_angle > max_new_pose_diff_angle_) {
 		ROS_WARN_STREAM("EuclideanTransformationValidator rejected new pose at time " << ros::Time::now() << " due to max_new_pose_diff_angle -> " << validation_info.str());
 		return false;
 	}
