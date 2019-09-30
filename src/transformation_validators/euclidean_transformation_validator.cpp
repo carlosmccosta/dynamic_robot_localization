@@ -57,15 +57,15 @@ bool EuclideanTransformationValidator::validateNewLocalizationPose(const tf2::Tr
 
 	std::stringstream validation_info;
 	validation_info << "\n\t correction translation: " 								<< transform_distance << " | (max_transformation_distance: " << max_transformation_distance_ << ")"  \
-					<< "\n\t correction rotation: " 													<< transform_angle << " | (max_transformation_angle_: " << max_transformation_angle_ << ")"  \
-					<< "\n\t new pose diff translation: " 										<< new_pose_distance << " | (max_new_pose_diff_distance_: " << max_new_pose_diff_distance_ << ")"  \
-					<< "\n\t new pose diff rotation: " 												<< new_pose_angle << " | (max_new_pose_diff_angle_: " << max_new_pose_diff_angle_ << ")"  \
-					<< "\n\t root_mean_square_error: " 												<< root_mean_square_error << " | (max_root_mean_square_error_: " << max_root_mean_square_error_ << ")"  \
-					<< "\n\t root_mean_square_error_reference_pointcloud: " 	<< root_mean_square_error_reference_pointcloud << " | (max_root_mean_square_error_reference_pointcloud_: " << max_root_mean_square_error_reference_pointcloud_ << ")"  \
-					<< "\n\t outliers_percentage: "														<< outliers_percentage << " | (max_outliers_percentage_: " << max_outliers_percentage_ << ")"  \
-					<< "\n\t outliers_percentage_reference_pointcloud: "			<< outliers_percentage_reference_pointcloud << " | (max_outliers_percentage_reference_pointcloud_: " << max_outliers_percentage_reference_pointcloud_ << ")"  \
-					<< "\n\t inliers_angular_distribution: "									<< inliers_angular_distribution << " | (min_inliers_angular_distribution_: " << min_inliers_angular_distribution_ << ")"  \
-					<< "\n\t outliers_angular_distribution: "									<< outliers_angular_distribution << " | (max_outliers_angular_distribution_: " << max_outliers_angular_distribution_ << ")";
+					<< "\n\t correction rotation: " 													<< transform_angle << " | (max_transformation_angle: " << max_transformation_angle_ << ")"  \
+					<< "\n\t new pose diff translation: " 										<< new_pose_distance << " | (max_new_pose_diff_distance: " << max_new_pose_diff_distance_ << ")"  \
+					<< "\n\t new pose diff rotation: " 												<< new_pose_angle << " | (max_new_pose_diff_angle: " << max_new_pose_diff_angle_ << ")"  \
+					<< "\n\t root_mean_square_error: " 												<< root_mean_square_error << " | (max_root_mean_square_error: " << max_root_mean_square_error_ << ")"  \
+					<< "\n\t root_mean_square_error_reference_pointcloud: " 	<< root_mean_square_error_reference_pointcloud << " | (max_root_mean_square_error_reference_pointcloud: " << max_root_mean_square_error_reference_pointcloud_ << ")"  \
+					<< "\n\t outliers_percentage: "														<< outliers_percentage << " | (max_outliers_percentage: " << max_outliers_percentage_ << ")"  \
+					<< "\n\t outliers_percentage_reference_pointcloud: "			<< outliers_percentage_reference_pointcloud << " | (max_outliers_percentage_reference_pointcloud: " << max_outliers_percentage_reference_pointcloud_ << ")"  \
+					<< "\n\t inliers_angular_distribution: "									<< inliers_angular_distribution << " | (min_inliers_angular_distribution: " << min_inliers_angular_distribution_ << ")"  \
+					<< "\n\t outliers_angular_distribution: "									<< outliers_angular_distribution << " | (max_outliers_angular_distribution: " << max_outliers_angular_distribution_ << ")";
 
 	if (root_mean_square_error < min_overriding_root_mean_square_error_ &&
 			outliers_percentage < min_overriding_outliers_percentage_ &&
