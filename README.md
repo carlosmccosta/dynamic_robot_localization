@@ -213,9 +213,43 @@ The dynamic_robot_localization node publishes in latched topics (if required, as
 The main tests performed using the dynamic_robot_localization package are available in [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests).
 
 
-## Installation and package dependencies
 
-After [installing and setting up ROS](http://wiki.ros.org/ROS/Installation), the installation scripts in the [install folder](install/) can be used to setup this package.
+## Installation
+
+After [installing and setting up ROS](http://wiki.ros.org/ROS/Installation), the installation of this package can be done from pre-compiled debian files or from source.
+
+In the future, I will release drl into the ROS build farm, making it easier to install (using apt).
+
+
+### Installation from debian files
+
+drl and its dependencies are available in pre-compiled debian files available in the releases tab of the associated github repositories.
+
+For installing from the debian files:
+* Run the [a_dependencies.bash](install/a_dependencies.bash) script to install the drl dependencies that are available from official pre-compiled debian files
+* Download the debian files associated with drl and its dependencies that were developed and compiled by me:
+  * [my fork of pcl](https://github.com/carlosmccosta/pcl/releases)
+  * [laserscan_to_pointcloud](https://github.com/carlosmccosta/laserscan_to_pointcloud/releases)
+  * [pose_to_tf_publisher](https://github.com/carlosmccosta/pose_to_tf_publisher/releases)
+  * [dynamic_robot_localization](https://github.com/carlosmccosta/dynamic_robot_localization/releases)
+* Then, install each deb, in the order specified above, by running:
+  ```
+  sudo dpkg -i absolute_path_to_deb_file.deb
+  ```
+* For confirming that the installation finished correctly, run:
+  ```
+  source /opt/ros/$(rosversion -d)/setup.bash
+  rospack profile
+  rospack find package_name_from_list_above
+  ```
+* Then, you can run the launch files available in each package
+
+If your OS or ROS distribution does not yet have pre-compiled debian files of drl, you can follow [this tutorial](https://github.com/carlosmccosta/ros_development_tools/blob/master/catkin/create_deb_files_for_ros_packages.md) for generating then once, and then you can quickly and easily install drl and its dependencies in other machines (with the same OS and ROS distribution).
+
+
+### Installation from source
+
+If you want the latest developments, you need to compile drl (and its dependencies) from source using the installation scripts in the [install folder](install/).
 
 The [install.bash](install/install.bash) has 5 parameters:
 * catkin_ws_path=${1:-"$HOME/catkin_ws_drl"}
@@ -253,6 +287,7 @@ On the other hand, [wstool](http://wiki.ros.org/wstool) can be used since the [c
   - To ensure that the same pcl libraries are used in drl and its dependencies, the following packages should also be compiled from source (already included in the install scripts):
     - [pcl_msgs](https://github.com/ros-perception/pcl_msgs)
     - [perception_pcl](https://github.com/ros-perception/perception_pcl)
+
 
 
 ## List of related git repositories:
