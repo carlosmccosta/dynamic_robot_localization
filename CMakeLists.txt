@@ -14,7 +14,6 @@ set(${PROJECT_NAME}_CATKIN_COMPONENTS
     laserscan_to_pointcloud
     message_generation
     pcl_conversions
-    pcl_ros
     pose_to_tf_publisher
     rosconsole
     roscpp
