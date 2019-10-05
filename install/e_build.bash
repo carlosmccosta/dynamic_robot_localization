@@ -18,13 +18,13 @@ source "${catkin_ws_path_to_extend}/setup.bash"
 if [ $use_catkin_tools = true ]; then
 	devel_file="${catkin_ws_path}/devel_release/setup.bash"
 	ws_overlay_url="https://catkin-tools.readthedocs.io/en/latest/mechanics.html#workspace-chaining-extending"
-	catkin build PCL -s -j${number_of_cpu_threads_for_compilation}
+	catkin build pcl -s -j${number_of_cpu_threads_for_compilation}
 	source ${devel_file}
 	catkin build -s -j${number_of_cpu_threads_for_compilation}
 else
 	ws_overlay_url="http://wiki.ros.org/catkin/Tutorials/workspace_overlaying"
 	devel_file="${catkin_ws_path}/devel_isolated/setup.bash"
-	catkin_make_isolated --pkg PCL --force-cmake -DCMAKE_BUILD_TYPE=Release -j${number_of_cpu_threads_for_compilation}
+	catkin_make_isolated --pkg pcl --force-cmake -DCMAKE_BUILD_TYPE=Release -j${number_of_cpu_threads_for_compilation}
 	source ${devel_file}
 	catkin_make_isolated -DCMAKE_BUILD_TYPE=Release -j${number_of_cpu_threads_for_compilation}
 fi
