@@ -470,6 +470,7 @@ target_link_libraries(drl_transformation_validators
 target_link_libraries(drl_localization_node
     drl_common
     drl_localization
+    ${PCL_LIBRARIES}
     ${catkin_LIBRARIES}
 )
 
