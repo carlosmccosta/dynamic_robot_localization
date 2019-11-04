@@ -21,9 +21,9 @@
 	<arg name="nodes_namespace" default="dynamic_robot_localization" />
 	<arg name="nodes_respawn" default="true" />
 	<arg name="drl_localization_node_name" default="drl_localization_node" />
-	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_2d.yaml" />
-	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_2d.yaml" />
-	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_2d.yaml" />
+	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_large_map_2d.yaml" />
+	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_large_map_2d.yaml" />
+	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_large_map_2d.yaml" />
 	<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_2d.yaml" />
 	<arg name="yaml_configuration_covariance_filename" default="$(find dynamic_robot_localization)/yaml/configs/covariance_estimation/covariance_estimation.yaml" if="$(arg use_ukf_filtering)" />
 	<arg name="yaml_configuration_covariance_filename" default="$(find dynamic_robot_localization)/yaml/configs/empty.yaml" unless="$(arg use_ukf_filtering)" />

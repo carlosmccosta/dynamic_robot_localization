@@ -3,51 +3,51 @@ normal_estimators:
         display_normals: false
         display_occupancy_grid_pointcloud: false
         flip_normals_using_occupancy_grid_analysis: true
-        use_filtered_cloud_as_normal_estimation_surface: false
         occupancy_grid_analysis_radius_resolution_percentage: 4.0
         normal_estimator_sac:
             model_type: 'SACMODEL_LINE'
             method_type: 'SAC_RANSAC'
-            inlier_distance_threshold: 0.035
+            inlier_distance_threshold: 0.06
             max_iterations: 50
             sac_termination_probability: 0.99
             optimize_coefficients: true
             min_model_radius: -1.0
             max_model_radius: -1.0
             random_samples_max_k: 0
-            random_samples_max_radius: 0.035
+            random_samples_max_radius: 0.06
             minimum_inliers_percentage: 0.5
     ambient_pointcloud:
         compute_normals_when_tracking_pose: false
         compute_normals_when_recovering_pose_tracking: false
         compute_normals_when_estimating_initial_pose: true
         display_normals: false
-        use_filtered_cloud_as_normal_estimation_surface: false
         normal_estimator_sac:
             model_type: 'SACMODEL_LINE'
             method_type: 'SAC_RANSAC'
-            inlier_distance_threshold: 0.035
+            inlier_distance_threshold: 0.06
             max_iterations: 50
             sac_termination_probability: 0.99
             optimize_coefficients: true
             min_model_radius: -1.0
             max_model_radius: -1.0
             random_samples_max_k: 0
-            random_samples_max_radius: 0.035
+            random_samples_max_radius: 0.065
             minimum_inliers_percentage: 0.5
 
 
 curvature_estimators:
     reference_pointcloud:
         principal_curvatures_estimation:
+            colorize_pointcloud_with_curvatures: true
             search_k: 0
-            search_radius: 0.035
+            search_radius: 0.06
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
     ambient_pointcloud:
         principal_curvatures_estimation:
+            colorize_pointcloud_with_curvatures: true
             search_k: 0
-            search_radius: 0.035
+            search_radius: 0.06
             curvature_type: 'CURVATURE_TYPE_MEAN'
             update_normals_with_principal_component_directions: false
 
