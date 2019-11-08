@@ -1,5 +1,5 @@
 pcl_verbosity_level: 'ERROR'                                    # VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output
-ros_verbosity_level: 'DEBUG'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
+ros_verbosity_level: 'INFO'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
 
 tracking_matchers:
     transformation_estimation_approach: 'TransformationEstimation2D' # [ TransformationEstimation2D | TransformationEstimationDualQuaternion | TransformationEstimationLM | TransformationEstimationPointToPlane | TransformationEstimationPointToPlaneLLS | TransformationEstimationPointToPlaneLLSWeighted | TransformationEstimationPointToPlaneWeighted | TransformationEstimationSVD | TransformationEstimationSVDScale ]
