@@ -15,7 +15,7 @@ tracking_matchers:
             match_only_keypoints: false
             display_cloud_aligment: false
             maximum_number_of_displayed_correspondences: 0
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
 
 
 outlier_detectors:

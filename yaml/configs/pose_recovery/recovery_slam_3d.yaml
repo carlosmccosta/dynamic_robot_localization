@@ -16,7 +16,7 @@ tracking_recovery_matchers:
             rotation_epsilon: 0.002
             correspondence_randomness: 50
             maximum_optimizer_iterations: 100
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
 
 
 transformation_validators_tracking_recovery:

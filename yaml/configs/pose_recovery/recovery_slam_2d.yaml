@@ -4,8 +4,8 @@ tracking_recovery_matchers:
 #        iterative_closest_point_2d:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_generalized:
-            convergence_time_limit_seconds: 0.075
-            max_correspondence_distance: 5.0
+            convergence_time_limit_seconds: 0.75
+            max_correspondence_distance: 7.0
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 200
@@ -17,7 +17,7 @@ tracking_recovery_matchers:
             rotation_epsilon: 0.002
             correspondence_randomness: 50
             maximum_optimizer_iterations: 100
-            use_reciprocal_correspondences: true
+            use_reciprocal_correspondences: false
 
 
 transformation_validators_tracking_recovery:
@@ -27,4 +27,4 @@ transformation_validators_tracking_recovery:
         max_new_pose_diff_angle: 3.14
         max_new_pose_diff_distance: 2.5
         max_root_mean_square_error: 0.045
-        max_outliers_percentage: 0.55
+        max_outliers_percentage: 0.66

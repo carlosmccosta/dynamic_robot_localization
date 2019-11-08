@@ -1,5 +1,5 @@
 pcl_verbosity_level: 'ERROR'                                    # VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output
-ros_verbosity_level: 'INFO'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
+ros_verbosity_level: 'DEBUG'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
 
 tracking_matchers:
     transformation_estimation_approach: 'TransformationEstimation2D' # [ TransformationEstimation2D | TransformationEstimationDualQuaternion | TransformationEstimationLM | TransformationEstimationPointToPlane | TransformationEstimationPointToPlaneLLS | TransformationEstimationPointToPlaneLLSWeighted | TransformationEstimationPointToPlaneWeighted | TransformationEstimationSVD | TransformationEstimationSVDScale ]
@@ -20,8 +20,8 @@ tracking_matchers:
 #        iterative_closest_point_non_linear:
 #        iterative_closest_point_generalized:
 #        normal_distributions_transform_2d:
-            convergence_time_limit_seconds: 0.090
-            max_correspondence_distance: 0.15
+            convergence_time_limit_seconds: 0.150
+            max_correspondence_distance: 0.5
             transformation_epsilon: 1e-6
             euclidean_fitness_epsilon: 1e-6
             max_number_of_registration_iterations: 150
@@ -68,6 +68,6 @@ transformation_validators:
         max_new_pose_diff_angle: 1.1
         max_new_pose_diff_distance: 0.7
         max_root_mean_square_error: 0.04
-        max_outliers_percentage: 0.75
+        max_outliers_percentage: 0.66
         min_inliers_angular_distribution: 0.125
         max_outliers_angular_distribution: 0.875
