@@ -356,7 +356,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 template<typename PointT>
 bool CloudMatcher<PointT>::postProcessRegistrationMatrix(typename pcl::PointCloud<PointT>::Ptr &ambient_pointcloud, const Eigen::Matrix4f &final_transformation,
                                                          tf2::Transform &best_pose_correction_out) {
-	std::string final_transform_str = math_utils::convertTransformToString(final_transformation, "\n\t\t[ ", " ]", " | ");
+	std::string final_transform_str = math_utils::convertTransformToString(final_transformation);
 	ROS_DEBUG_STREAM("Cloud matcher [" << getCloudMatcherName() << "] transform:" << final_transform_str << "\n");
 
 	if (!math_utils::isTransformValid<float>(final_transformation)) {

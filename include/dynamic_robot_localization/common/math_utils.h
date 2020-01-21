@@ -65,7 +65,7 @@ template <typename Scalar>
 bool isTransformValid(const Eigen::Matrix<Scalar, 4, 4>& transform);
 
 template <typename Scalar>
-std::string convertTransformToString(const Eigen::Matrix<Scalar, 4, 4>& transform, const std::string& line_prefix, const std::string& line_suffix,  const std::string& number_separator);
+std::string convertTransformToString(const Eigen::Matrix<Scalar, 4, 4>& transform, const std::string& line_prefix = "\n\t\t[ ", const std::string& line_suffix = " ]",  const std::string& number_separator = " | ");
 
 template <typename PairFirst, typename PairSecond>
 bool sortFunctionForPairSecondValueAscendingOrder(const std::pair<PairFirst, PairSecond> &left, const std::pair<PairFirst, PairSecond> &right) { return left.second < right.second; }

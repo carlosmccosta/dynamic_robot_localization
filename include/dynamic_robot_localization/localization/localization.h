@@ -53,6 +53,7 @@
 
 // project includes
 #include <dynamic_robot_localization/common/configurable_object.h>
+#include <dynamic_robot_localization/common/impl/math_utils.hpp>
 #include <dynamic_robot_localization/common/pointcloud_conversions.h>
 #include <dynamic_robot_localization/common/pointcloud_utils.h>
 #include <pose_to_tf_publisher/pose_to_tf_publisher.h>

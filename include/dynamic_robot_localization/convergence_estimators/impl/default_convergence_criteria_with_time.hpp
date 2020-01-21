@@ -34,7 +34,7 @@ bool DefaultConvergenceCriteriaWithTime<Scalar>::hasConverged() {
 	} else {
 		if (convergence_rotation_threshold_ > 0.0) { pcl::registration::DefaultConvergenceCriteria<Scalar>::setRotationThreshold(convergence_rotation_threshold_); }
 		bool converged = pcl::registration::DefaultConvergenceCriteria<Scalar>::hasConverged();
-		std::string transform_str = math_utils::convertTransformToString(transformation_, "\n\t\t[ ", " ]", " | ");
+		std::string transform_str = math_utils::convertTransformToString(transformation_);
 		ROS_DEBUG_STREAM("[DefaultConvergenceCriteriaWithTime::hasConverged]:" \
 				<< "\n\t Convergence state: " << getConvergenceStateString() \
 				<< "\n\t Current convergence time: " << elapsed_time \

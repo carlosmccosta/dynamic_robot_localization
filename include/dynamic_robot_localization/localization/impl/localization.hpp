@@ -1492,7 +1492,9 @@ void Localization<PointT>::resetNumberOfProcessedPointclouds() {
 template<typename PointT>
 bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id) {
 	if (ambient_pointcloud->header.frame_id != target_frame_id) {
-		tf2::Transform pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
+		tf2::Transform pose_tf_cloud_to_map;
+		pose_tf_cloud_to_map.setIdentity();
+		bool use_lookup_without_odom = false;
 		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
 			if (use_odom_when_transforming_cloud_to_map_frame_) {
 				tf2::Transform pose_tf_cloud_to_odom;
@@ -1502,13 +1504,23 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 				}
 				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
 			} else {
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
-					if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
-						ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
-						return false;
-					} else
-						ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
-				}
+				use_lookup_without_odom = true;
+			}
+		} else {
+			if (target_frame_id == map_frame_id_) {
+				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
+			} else {
+				use_lookup_without_odom = true;
+			}
+		}
+
+		if (use_lookup_without_odom) {
+			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
+					ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
+					return false;
+				} else
+					ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
 			}
 		}
 
@@ -1521,8 +1533,11 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 			return false;
 		}
 
-		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map));
-		ROS_DEBUG_STREAM("Transformed pointcloud with " << ambient_pointcloud->size() << " points from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id);
+		Eigen::Transform<double, 3, Eigen::Affine> pose_tf_cloud_to_map_eigen_transform = laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map);
+		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, pose_tf_cloud_to_map_eigen_transform);
+
+		std::string transform_string = math_utils::convertTransformToString<double>(pose_tf_cloud_to_map_eigen_transform.matrix());
+		ROS_DEBUG_STREAM("Transformed pointcloud with " << ambient_pointcloud->size() << " points from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id << " using matrix:" << transform_string << "\n");
 
 		if (target_frame_id == map_frame_id_ && !map_frame_id_for_publishing_pointclouds_.empty())
 			ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
