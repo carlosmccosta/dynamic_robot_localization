@@ -126,16 +126,23 @@ As such, it can use any number of laser sensors (by using the [laserscan_to_poin
 
 ## Reference map
 
-The reference map can be provided to the localization system from CAD ( .ply | .stl | .obj | .vtk ), pointcloud file (.pcd) / topic (sensor_msgs::PointCloud2) or using a 2D costmap (nav_msgs::OccupancyGrid).
-To avoid unnecessary overhead it should be provided has pointcloud (.pcd).
+The reference map can be provided to the localization system from:
 
-To convert CAD files to .pcd there are two options:
+1. CAD / mesh / pointcloud files ( .ply | .stl | .obj | .vtk | .pcd)
+2. ROS topic
+    - Point cloud (sensor_msgs::PointCloud2)
+    - 2D costmap (nav_msgs::OccupancyGrid).
 
-1. Using [conversion scripts](tools) that filter the CAD using meshlabserver, add point curvature information and convert the CAD to .pcd (recommended)
- - Supported file types: .3ds .aln .apts .asc .dae .gts .obj .off .ply .pts .ptx .stl .tri .v3d .vrml .x3d .x3dv .xyz
+To avoid unnecessary overhead, it should be provided has pointcloud (.ply | .pcd) for fast loading.
+
+To convert CAD files to point clouds there are two options (please read [docs/mesh_conversions.md](docs/mesh_conversions.md)):
+
+1. Using [conversion scripts](tools) that filter the CAD using meshlabserver, add point curvature information and convert the CAD to .pcd
+    - Supported file types: .3ds .aln .apts .asc .dae .gts .obj .off .ply .pts .ptx .stl .tri .v3d .vrml .x3d .x3dv .xyz
 2. Using the [mesh_to_pointcloud](https://github.com/carlosmccosta/mesh_to_pointcloud) package that converts CAD to .pcd directly (without curvature and filtering)
- - Supported file types: .3dc .3ds .asc .ac .bsp .dae .dw .dxf .fbx .flt .gem .geo .iv .ive .logo .lwo .lw .lws .md2 .obj .ogr .osg .pfb .ply .shp .stl .x .wrl
+    - Supported file types: .3dc .3ds .asc .ac .bsp .dae .dw .dxf .fbx .flt .gem .geo .iv .ive .logo .lwo .lw .lws .md2 .obj .ogr .osg .pfb .ply .shp .stl .x .wrl
 
+Be aware that the mesh / pointcloud given to drl should have +- uniform point density over its surfaces for the point cloud registration algorithms to work properly. Please read [docs/mesh_tessellation.md](docs/mesh_tessellation.md), that details how to achieve this.
 
 
 ## Localization methods
