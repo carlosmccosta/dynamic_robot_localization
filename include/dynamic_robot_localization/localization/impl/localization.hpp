@@ -125,12 +125,13 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupInitialPoseEstimatorsPointMatchers(configuration_namespace);
 	setupTrackingMatchers(configuration_namespace);
 	setupTrackingRecoveryMatchers(configuration_namespace);
-	setupTransformationValidatorsForInitialAlignment(configuration_namespace);
-	setupTransformationValidatorsForTracking(configuration_namespace);
-	setupTransformationValidatorsForTrackingRecovery(configuration_namespace);
+	setupTransformationAlignerConfigurations(configuration_namespace);
 	setupOutlierDetectorsConfigurations(configuration_namespace);
 	setupOutlierDetectorsConfigurationsReferencePointCloud(configuration_namespace);
 	setupCloudAnalyzersConfigurations(configuration_namespace);
+	setupTransformationValidatorsForInitialAlignment(configuration_namespace);
+	setupTransformationValidatorsForTracking(configuration_namespace);
+	setupTransformationValidatorsForTrackingRecovery(configuration_namespace);
 	setupRegistrationCovarianceEstimatorsConfigurations(configuration_namespace);
 	setupTFPublisher(configuration_namespace);
 	updateNormalsEstimationFlags();
@@ -202,14 +203,8 @@ bool Localization<PointT>::reloadConfigurationFromParameterServer(const dynamic_
 	if (parseConfigurationNamespace(localization_configuration.tracking_recovery_matchers, parsed_string))
 		setupTrackingRecoveryMatchers(parsed_string);
 
-	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_initial_alignment, parsed_string))
-		setupTransformationValidatorsForInitialAlignment(parsed_string);
-
-	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking, parsed_string))
-		setupTransformationValidatorsForTracking(parsed_string);
-
-	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking_recovery, parsed_string))
-		setupTransformationValidatorsForTrackingRecovery(parsed_string);
+	if (parseConfigurationNamespace(localization_configuration.transformation_aligner, parsed_string))
+		setupTransformationAlignerConfigurations(parsed_string);
 
 	if (parseConfigurationNamespace(localization_configuration.outlier_detectors, parsed_string))
 		setupOutlierDetectorsConfigurations(parsed_string);
@@ -219,6 +214,15 @@ bool Localization<PointT>::reloadConfigurationFromParameterServer(const dynamic_
 
 	if (parseConfigurationNamespace(localization_configuration.cloud_analyzers, parsed_string))
 		setupCloudAnalyzersConfigurations(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_initial_alignment, parsed_string))
+		setupTransformationValidatorsForInitialAlignment(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking, parsed_string))
+		setupTransformationValidatorsForTracking(parsed_string);
+
+	if (parseConfigurationNamespace(localization_configuration.transformation_validators_for_tracking_recovery, parsed_string))
+		setupTransformationValidatorsForTrackingRecovery(parsed_string);
 
 	if (parseConfigurationNamespace(localization_configuration.registration_covariance_estimators, parsed_string))
 		setupRegistrationCovarianceEstimatorsConfigurations(parsed_string);
@@ -448,6 +452,7 @@ void Localization<PointT>::setupMessageManagement(const std::string& configurati
 	private_node_handle_->param(configuration_namespace + "message_management/minimum_number_points_ambient_pointcloud_circular_buffer", minimum_number_points_ambient_pointcloud_circular_buffer_, 0);
 	int maximum_number_points_ambient_pointcloud_circular_buffer;
 	private_node_handle_->param(configuration_namespace + "message_management/maximum_number_points_ambient_pointcloud_circular_buffer", maximum_number_points_ambient_pointcloud_circular_buffer, 0);
+	ambient_pointcloud_with_circular_buffer_.reset();
 	if (maximum_number_points_ambient_pointcloud_circular_buffer > 0) {
 		ambient_pointcloud_with_circular_buffer_.reset(new CircularBufferPointCloud<PointT>(maximum_number_points_ambient_pointcloud_circular_buffer));
 	}
@@ -658,6 +663,7 @@ void Localization<PointT>::loadNormalEstimatorFromParameterServer(typename Norma
 
 template<typename PointT>
 void Localization<PointT>::loadCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, std::string configuration_namespace) {
+	curvature_estimator.reset();
 	XmlRpc::XmlRpcValue curvature_estimators;
 	if (private_node_handle_->getParam(configuration_namespace, curvature_estimators) && curvature_estimators.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
 		for (XmlRpc::XmlRpcValue::iterator it = curvature_estimators.begin(); it != curvature_estimators.end(); ++it) {
@@ -961,6 +967,7 @@ void Localization<PointT>::setupCloudAnalyzersConfigurations(const std::string& 
 	private_node_handle_->param(configuration_namespace_analyzers + "compute_inliers_angular_distribution", compute_inliers_angular_distribution_, true);
 	private_node_handle_->param(configuration_namespace_analyzers + "compute_outliers_angular_distribution", compute_outliers_angular_distribution_, true);
 
+	cloud_analyzer_.reset();
 	XmlRpc::XmlRpcValue cloud_analyzers;
 	if (private_node_handle_->getParam(configuration_namespace_analyzers, cloud_analyzers) && cloud_analyzers.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
 		for (XmlRpc::XmlRpcValue::iterator it = cloud_analyzers.begin(); it != cloud_analyzers.end(); ++it) {
@@ -982,6 +989,7 @@ void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations(c
 	ROS_DEBUG_STREAM("Loading [registration_covariance_estimators] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
 	std::string configuration_namespace_estimators = configuration_namespace + "registration_covariance_estimator/";
 
+	registration_covariance_estimator_.reset();
 	std::string covariance_error_metric;
 	private_node_handle_->param(configuration_namespace_estimators + "error_metric", covariance_error_metric, std::string("None"));
 
@@ -997,7 +1005,24 @@ void Localization<PointT>::setupRegistrationCovarianceEstimatorsConfigurations(c
 		return;
 	}
 
-	registration_covariance_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_estimators);
+	if (registration_covariance_estimator_)
+		registration_covariance_estimator_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_estimators);
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setupTransformationAlignerConfigurations(const std::string &configuration_namespace) {
+	ROS_DEBUG_STREAM("Loading [transformation_aligner] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
+	std::string configuration_namespace_aligner = configuration_namespace + "transformation_aligner/";
+
+	transformation_aligner_.reset();
+	XmlRpc::XmlRpcValue aligner_values;
+	if (private_node_handle_->hasParam(configuration_namespace_aligner) && private_node_handle_->getParam(configuration_namespace_aligner, aligner_values)) {
+		if (aligner_values.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+			transformation_aligner_.reset(new TransformationAligner());
+			transformation_aligner_->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_aligner);
+		}
+	}
 }
 
 
@@ -1567,7 +1592,7 @@ bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::
 		sensor_data_processing_status_ = MissingReferencePointCloud;
 		if (use_ros_console)
 			ROS_WARN_STREAM("Discarded cloud because there is no reference cloud to compare to");
-	} else if (number_of_points < minimum_number_of_points_in_ambient_pointcloud_) {
+	} else if (number_of_points < (size_t)minimum_number_of_points_in_ambient_pointcloud_) {
 		process_pointcloud = false;
 		sensor_data_processing_status_ = PointCloudWithoutTheMinimumNumberOfRequiredPoints;
 		if (use_ros_console)
@@ -1609,7 +1634,7 @@ template<typename PointT>
 void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg) {
 	ROS_DEBUG_STREAM("Received ROS point cloud message with " << ambient_cloud_msg->width * ambient_cloud_msg->height << " points");
 
-	if (limit_of_pointclouds_to_process_ >= 0 && number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
+	if (limit_of_pointclouds_to_process_ >= 0 && number_of_processed_pointclouds_ >= (size_t)limit_of_pointclouds_to_process_) {
 		ROS_DEBUG("Discarding point cloud because [number_of_processed_pointclouds >= limit_of_pointclouds_to_process]");
 		return;
 	}
@@ -1629,7 +1654,7 @@ void Localization<PointT>::processAmbientPointCloud(const sensor_msgs::PointClou
 template<typename PointT>
 bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed, bool check_if_pointcloud_subscribers_are_active) {
 	try {
-		if (limit_of_pointclouds_to_process_ >= 0 && number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
+		if (limit_of_pointclouds_to_process_ >= 0 && number_of_processed_pointclouds_ >= (size_t)limit_of_pointclouds_to_process_) {
 			ROS_DEBUG("Discarding point cloud because [number_of_processed_pointclouds >= limit_of_pointclouds_to_process]");
 			return false;
 		}
@@ -1709,11 +1734,6 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		} else {
 			pose_time = ambient_cloud_time;
 		}
-
-		if (ignore_height_corrections_) {
-			pose_tf2_transform_corrected_.getOrigin().setZ(pose_tf_initial_guess.getOrigin().getZ());
-		}
-		pose_tf2_transform_corrected_.getRotation().normalize();
 
 		tf2::Transform pose_tf_corrected_to_publish = pose_tf2_transform_corrected_;
 		if (invert_registration_transformation_) {
@@ -1904,6 +1924,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 					case FullIntegration: { updateReferencePointCloudWithAmbientPointCloud(ambient_pointcloud, ambient_pointcloud_keypoints); break; }
 					case InliersIntegration: { if (registered_inliers_) { updateReferencePointCloudWithAmbientPointCloud(registered_inliers_, ambient_pointcloud_keypoints); } break; }
 					case OutliersIntegration: { if (registered_outliers_) { updateReferencePointCloudWithAmbientPointCloud(registered_outliers_, ambient_pointcloud_keypoints); } break; }
+					case NoIntegration: { break; }
 				}
 			}
 
@@ -1975,12 +1996,15 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 	performance_timer.start();
 
 	tf2::Transform sensor_pose_tf_guess;
+	sensor_pose_tf_guess.setIdentity();
 	ros::Time timestamp = pcl_conversions::fromPCL(pointcloud->header).stamp;
-	if (!pointcloud_is_map && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
-		sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
-	} else {
-		ROS_WARN_STREAM("Using identify for sensor pose when flipping normals to sensor viewpoint because TF [ " << sensor_frame_id_ << " -> " << pointcloud->header.frame_id << " is not available at timestamp " << timestamp);
-		sensor_pose_tf_guess.setIdentity();
+	if (pointcloud->header.frame_id != sensor_frame_id_) {
+		if (!pointcloud_is_map && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
+			sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
+		} else {
+			ROS_WARN_STREAM("Using identify for sensor pose when flipping normals to sensor viewpoint because TF [ " << sensor_frame_id_ << " -> " << pointcloud->header.frame_id << " is not available at timestamp " << timestamp);
+			sensor_pose_tf_guess.setIdentity();
+		}
 	}
 
 	if (reference_pointcloud_2d_) {
@@ -2075,6 +2099,33 @@ bool Localization<PointT>::applyCloudRegistration(std::vector< typename CloudMat
 	}
 
 	return registration_successful;
+}
+
+
+template<typename PointT>
+bool Localization<PointT>::postProcessCloudRegistration(const tf2::Transform& pointcloud_pose_initial_guess, const tf2::Transform& pointcloud_pose_corrected, tf2::Transform& new_pose_corrections_out, const ros::Time& pointcloud_time) {
+	tf2::Transform new_transform = pointcloud_pose_corrected;
+	new_pose_corrections_out.setIdentity();
+
+	if (ignore_height_corrections_) {
+		new_transform.getOrigin().setZ(pointcloud_pose_initial_guess.getOrigin().getZ());
+	}
+	new_transform.getRotation().normalize();
+
+	if (transformation_aligner_) {
+		if (!transformation_aligner_->alignTransformation(new_transform, pointcloud_time, base_link_frame_id_, map_frame_id_, pose_to_tf_publisher_->getTfCollector(), tf_timeout_)) {
+			sensor_data_processing_status_ = FailedTransformationAligner;
+			return false;
+		}
+	}
+
+	new_pose_corrections_out = new_transform * pointcloud_pose_corrected.inverse();
+
+	Eigen::Transform<double, 3, Eigen::Affine> new_pose_corrections_out_eigen = laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(new_pose_corrections_out);
+	std::string transform_string = math_utils::convertTransformToString<double>(new_pose_corrections_out_eigen.matrix());
+	ROS_DEBUG_STREAM("Pointcloud registration postprocessing applied correction matrix:" << transform_string << "\n");
+
+	return true;
 }
 
 
@@ -2560,6 +2611,13 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 	}
 
+	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
+	tf2::Transform post_process_cloud_registration_pose_corrections;
+	if (!postProcessCloudRegistration(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, post_process_cloud_registration_pose_corrections, pointcloud_time)) { return false; }
+	pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(post_process_cloud_registration_pose_corrections));
+	pcl::transformPointCloudWithNormals(*ambient_pointcloud_keypoints_out, *ambient_pointcloud_keypoints_out, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(post_process_cloud_registration_pose_corrections));
+	pose_corrections_out = post_process_cloud_registration_pose_corrections * pose_corrections_out;
+	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 
 	if (ambient_pointcloud_integration) {
 		pcl::transformPointCloudWithNormals(*ambient_pointcloud_integration, *ambient_pointcloud_integration, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_corrections_out));
@@ -2579,7 +2637,6 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	performance_timer.restart();
 	localization_times_msg_.transformation_validators_time = 0.0;
-	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 	if (performed_recovery && !transformation_validators_tracking_recovery_.empty()) {
 		if (!applyTransformationValidators(transformation_validators_tracking_recovery_, pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, outlier_percentage_, outlier_percentage_reference_pointcloud_)) {
 			sensor_data_processing_status_ = PoseEstimationRejectedByTransformationValidators;
@@ -2605,6 +2662,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 					pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
+					if (!postProcessCloudRegistration(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, post_process_cloud_registration_pose_corrections, pointcloud_time)) { return false; }
+					pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(post_process_cloud_registration_pose_corrections));
+					pcl::transformPointCloudWithNormals(*ambient_pointcloud_keypoints_out, *ambient_pointcloud_keypoints_out, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(post_process_cloud_registration_pose_corrections));
+					pose_corrections_out = post_process_cloud_registration_pose_corrections * pose_corrections_out;
+					pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
+
 					ROS_INFO("Successfully applied registration recovery");
 					localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 

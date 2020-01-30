@@ -684,6 +684,20 @@ initial_pose_estimators_matchers:   # Any of the feature / point matchers shown 
         registered_cloud_publish_topic: ''                              # Can be overridden in child namespaces
 
 
+# ===================================================================================================================================================
+# When the reference point cloud has symmetry axis, a transformation aligner can be used to rotate the object in its origin in [ roll | pitch | yaw ] for aligning its axis with an external reference frame (the origin of the reference point cloud should be placed in the origin of the symmetry rotation axis)
+# For example, if the reference point cloud is a cone with Z+ going through its base and head, the registration algorithms may oscillate in yaw because there is rotational symmetry around Z
+# For correcting this, an external TF frame can be used to constrain the yaw rotation
+# The external frame does not need to be perfectly aligned with the object frame, since line to plane intersection is used on the rotation planes
+# However, for proper operation, the rotation_alignment_frame_id should be +- aligned with the expected frame of the object and the appropriate [roll|pitch|yaw] correction should be chosen (the correction order is roll -> pitch -> yaw, which allows to align the 3 DoF orientation of the object with the rotation_alignment_frame if the 3 corrections are enabled)
+# The transformation aligner is run after the point cloud registration algorithms and it will affect the outlier detectors and transformation validators
+transformation_aligner:
+    anchor_tf_frame_id: "camera_link"                                   # Frame id that can be either the [ map_frame_id ] or [ base_link_frame_id ] above, and that specifies in which side of the TF tree the [ rotation_alignment_frame_id ] is closer (for example, if you have a table tf attached to camera_link and drl is estimating the pose of the object in relation to camera_link, then the anchor_tf_frame_id should be camera_link -> this is required for not including in the tf lookupTransform the chain that is being estimated by drl)
+    rotation_alignment_frame_id: "reference_for_rotation_alignment"     # External TF reference frame for correcting the alignment around the symmetry axis
+    correct_roll: false                                                 # Corrects the object roll so that the object Z axis aligns as much as possible with the rotation_alignment_frame Z axis
+    correct_pitch: false                                                # Corrects the object pitch so that the object Z axis aligns as much as possible with the rotation_alignment_frame Z axis
+    correct_yaw: true                                                   # Corrects the object yaw so that the object X axis aligns as much as possible with the rotation_alignment_frame X axis
+
 
 # ===================================================================================================================================================
 #   Several outlier detectors can be used. This processing step is applied after cloud registration, and will only be used to validate the registration in the transformation_validators stage.

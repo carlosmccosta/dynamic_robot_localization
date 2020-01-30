@@ -56,6 +56,7 @@
 #include <dynamic_robot_localization/common/impl/math_utils.hpp>
 #include <dynamic_robot_localization/common/pointcloud_conversions.h>
 #include <dynamic_robot_localization/common/pointcloud_utils.h>
+#include <dynamic_robot_localization/common/transformation_aligner.h>
 #include <pose_to_tf_publisher/pose_to_tf_publisher.h>
 #include <laserscan_to_pointcloud/tf_collector.h>
 #include <laserscan_to_pointcloud/tf_rosmsg_eigen_conversions.h>
@@ -159,6 +160,7 @@ class Localization : public ConfigurableObject {
 			FailedInitialPoseEstimation,
 			FailedNormalEstimation,
 			FailedPoseEstimation,
+			FailedTransformationAligner,
 			FailedTFTransform,
 			FillingCircularBufferWithMsgsFromAllTopics,
 			FirstPointCloudInSlamMode,
@@ -182,6 +184,7 @@ class Localization : public ConfigurableObject {
 				case FailedInitialPoseEstimation: return "FailedInitialPoseEstimation";
 				case FailedNormalEstimation: return "FailedNormalEstimation";
 				case FailedPoseEstimation: return "FailedPoseEstimation";
+				case FailedTransformationAligner: return "FailedTransformationAligner";
 				case FailedTFTransform: return "FailedTFTransform";
 				case FillingCircularBufferWithMsgsFromAllTopics: return "FillingCircularBufferWithMsgsFromAllTopics";
 				case FirstPointCloudInSlamMode: return "FirstPointCloudInSlamMode";
@@ -254,6 +257,7 @@ class Localization : public ConfigurableObject {
 		virtual void setupOutlierDetectorsConfigurations(std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors, const std::string& configuration_namespace_detectors, const std::string& topics_configuration_prefix);
 		virtual void setupCloudAnalyzersConfigurations(const std::string& configuration_namespace);
 		virtual void setupRegistrationCovarianceEstimatorsConfigurations(const std::string& configuration_namespace);
+		virtual void setupTransformationAlignerConfigurations(const std::string &configuration_namespace);
 
 		bool loadReferencePointCloud();
 		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename, const std::string& reference_pointclouds_database_folder_path = std::string(""));
@@ -302,6 +306,8 @@ class Localization : public ConfigurableObject {
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 				tf2::Transform& pointcloud_pose_in_out);
 
+		virtual bool postProcessCloudRegistration(const tf2::Transform& pointcloud_pose_initial_guess, const tf2::Transform& pointcloud_pose_corrected, tf2::Transform& new_pose_corrections_out, const ros::Time& pointcloud_time);
+
 		virtual double applyOutlierDetection(std::vector< typename OutlierDetector<PointT>::Ptr >& detectors,
 																				 typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
 																				 std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
@@ -329,7 +335,7 @@ class Localization : public ConfigurableObject {
 		SensorDataProcessingStatus getSensorDataProcessingStatus() { return sensor_data_processing_status_; }
 		const std::vector< tf2::Transform >& getAcceptedPoseCorrections() { return accepted_pose_corrections_; }
 		const tf2::Transform& getAcceptedEstimatedPose() { return pose_tf2_transform_corrected_; }
-		const MapUpdateMode getMapUpdateMode() { return map_update_mode_; }
+		const MapUpdateMode& getMapUpdateMode() { return map_update_mode_; }
 		bool ambientPointcloudIntegrationActive() { return !ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty(); }
 		bool cloudMatchersActive() { return !initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty() || !tracking_matchers_.empty() || !tracking_recovery_matchers_.empty(); }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -544,6 +550,7 @@ class Localization : public ConfigurableObject {
 		LocalizationTimes localization_times_msg_;
 		bool publish_filtered_pointcloud_only_if_there_is_subscribers_;
 		bool publish_aligned_pointcloud_only_if_there_is_subscribers_;
+		TransformationAligner::Ptr transformation_aligner_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 
