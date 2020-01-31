@@ -19,10 +19,10 @@
                     - Iterations: 100
                     - Edge Threshold (world unit): 0.002 m (for example, but can be + or - depending on the size of the part and the desired accuracy)
           - Subsampling of the mesh for having +- an uniform density of points using either:
-               1. - Poisson-disk Sampling (preferred method since it creates points in the middle of the triangles using a Poison distribution)
+               1. Poisson-disk Sampling (preferred method since it creates points in the middle of the triangles using a Poison distribution)
                     - Filters -> Sampling -> Poisson-disk Sampling
-               2. - Filters -> Sampling -> Clustered Vertex Subsampling
-               3. - Filters -> Point Set -> Point Cloud Simplification
+               2. Filters -> Sampling -> Clustered Vertex Subsampling
+               3. Filters -> Point Set -> Point Cloud Simplification
      2. Uniform Mesh Resampling
           * Achieves better point density uniformity and keeps the mesh information
           * May generate artifacts which cause the generated mesh surface to diverge slightly from the original mesh
