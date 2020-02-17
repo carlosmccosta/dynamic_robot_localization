@@ -300,19 +300,20 @@ On the other hand, [wstool](http://wiki.ros.org/wstool) can be used since the [c
 ## List of related git repositories:
 
 * [dynamic_robot_localization_tests](https://github.com/carlosmccosta/dynamic_robot_localization_tests)
+* [object_recognition](https://github.com/carlosmccosta/object_recognition)
+* [pointcloud_registration](https://github.com/carlosmccosta/pointcloud_registration)
 * [pose_to_tf_publisher](https://github.com/carlosmccosta/pose_to_tf_publisher)
 * [laserscan_to_pointcloud](https://github.com/carlosmccosta/laserscan_to_pointcloud)
 * [mesh_to_pointcloud](https://github.com/carlosmccosta/mesh_to_pointcloud)
 * [robot_localization_tools](https://github.com/carlosmccosta/robot_localization_tools)
 * [crob_gazebo_models](https://github.com/carlosmccosta/crob_gazebo_models)
 * [octomap_mapping](https://github.com/carlosmccosta/octomap_mapping)
-* [object_recognition](https://github.com/carlosmccosta/object_recognition)
 
 
 
 ## More info
 
-* [Dissertation webpage](http://carlosmccosta.wix.com/personal-webpage#!dissertation/c12dl)
+* [Dissertation webpage](https://carlosmccosta.wixsite.com/personal-webpage/dissertation)
 * [Dissertation pdf](https://www.researchgate.net/publication/277752192_Robot_Self-Localization_in_Dynamic_Environments)
 * [Dissertation latex](https://github.com/carlosmccosta/dynamic_robot_localization_dissertation)
 * [Dissertation abstracts](https://github.com/carlosmccosta/dynamic_robot_localization_dissertation_abstracts)
