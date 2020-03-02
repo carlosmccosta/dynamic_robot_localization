@@ -33,14 +33,13 @@ fi
 for git_repository in ${repositories}
 do
 	IFS="|"; set -- ${git_repository};
+	git_repository_url="${1}/${2}.git"
 	ls "${2}" &> /dev/null
 	if [ $? -ne 0 ]; then
-		git_repository_url="${1}/${2}.git"
 		echo -e "\n\n"
 		echo "-------------------------------------------"
 		echo "==> Cloning ${2} from ${git_repository_url}"
 		git clone ${git_repository_url}
-		wstool set "${2}" "${git_repository_url}" --git -y
 	else
 		echo -e "\n\n"
 		echo "-------------------------------------------"
@@ -48,6 +47,10 @@ do
 		cd ${2}
 		git pull
 		cd ..
+	fi
+	wstool info "${2}" &> /dev/null
+	if [ $? -ne 0 ]; then
+		wstool set "${2}" "${git_repository_url}" --git -y
 	fi
 done
 
