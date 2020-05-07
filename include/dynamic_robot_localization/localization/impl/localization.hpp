@@ -1597,18 +1597,18 @@ bool Localization<PointT>::checkIfAmbientPointCloudShouldBeProcessed(const ros::
 		sensor_data_processing_status_ = PointCloudWithoutTheMinimumNumberOfRequiredPoints;
 		if (use_ros_console)
 			ROS_WARN_STREAM("Discarded ambient cloud [ minimum number of points required: " << minimum_number_of_points_in_ambient_pointcloud_ << " | point cloud size: " << number_of_points << " ]");
-	} else if (ambient_cloud_time < last_scan_time_ &&
+	} else if (max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_.toSec() > 0.0 && ambient_cloud_time < last_scan_time_ &&
 		std::abs(time_offset.toSec()) > std::abs(max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_.toSec())) {
 		process_pointcloud = false;
 		sensor_data_processing_status_ = PointCloudOlderThanLastPointCloudReceived;
 		if (use_ros_console)
 			ROS_WARN_STREAM("Discarded ambient cloud because it's timestamp (" << ambient_cloud_time << ") is " << time_offset.toSec() << " seconds older than an already processed ambient cloud (limit for offset: " << max_seconds_ambient_pointcloud_offset_to_last_estimated_pose_ << ")");
-	} else if (elapsed_time_since_last_scan < min_seconds_between_scan_registration_) {
+	} else if (min_seconds_between_scan_registration_.toSec() > 0.0 && elapsed_time_since_last_scan < min_seconds_between_scan_registration_) {
 		process_pointcloud = false;
 		sensor_data_processing_status_ = MinimumElapsedTimeSinceLastPointCloudNotReached;
 		if (use_ros_console)
 			ROS_WARN_STREAM("Discarded cloud with an elapsed_time_since_last_scan [" << elapsed_time_since_last_scan << "] lower than the minimum allowed " << "[" << min_seconds_between_scan_registration_ << "]");
-	} else if (scan_age > max_seconds_ambient_pointcloud_age_) {
+	} else if (max_seconds_ambient_pointcloud_age_.toSec() > 0 && scan_age > max_seconds_ambient_pointcloud_age_) {
 		process_pointcloud = false;
 		sensor_data_processing_status_ = PointCloudAgeHigherThanMaximum;
 		if (use_ros_console)
