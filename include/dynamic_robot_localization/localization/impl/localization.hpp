@@ -2108,6 +2108,7 @@ bool Localization<PointT>::postProcessCloudRegistration(const tf2::Transform& po
 	new_pose_corrections_out.setIdentity();
 
 	if (ignore_height_corrections_) {
+		new_pose_corrections_out.getOrigin().setZ(pointcloud_pose_initial_guess.getOrigin().getZ() - new_transform.getOrigin().getZ());
 		new_transform.getOrigin().setZ(pointcloud_pose_initial_guess.getOrigin().getZ());
 	}
 	new_transform.getRotation().normalize();
@@ -2117,9 +2118,12 @@ bool Localization<PointT>::postProcessCloudRegistration(const tf2::Transform& po
 			sensor_data_processing_status_ = FailedTransformationAligner;
 			return false;
 		}
-	}
 
-	new_pose_corrections_out = new_transform * pointcloud_pose_corrected.inverse();
+		Eigen::Transform<double, 3, Eigen::Affine> new_transform_eigen = laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(new_transform);
+		Eigen::Transform<double, 3, Eigen::Affine> pointcloud_pose_corrected_eigen = laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pointcloud_pose_corrected);
+		Eigen::Transform<double, 3, Eigen::Affine> new_pose_corrections_eigen = new_transform_eigen * pointcloud_pose_corrected_eigen.inverse();
+		new_pose_corrections_out.setFromOpenGLMatrix(new_pose_corrections_eigen.matrix().data());
+	}
 
 	Eigen::Transform<double, 3, Eigen::Affine> new_pose_corrections_out_eigen = laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(new_pose_corrections_out);
 	std::string transform_string = math_utils::convertTransformToString<double>(new_pose_corrections_out_eigen.matrix());
