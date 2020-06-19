@@ -1998,12 +1998,17 @@ bool Localization<PointT>::applyNormalEstimation(typename NormalEstimator<PointT
 	tf2::Transform sensor_pose_tf_guess;
 	sensor_pose_tf_guess.setIdentity();
 	ros::Time timestamp = pcl_conversions::fromPCL(pointcloud->header).stamp;
-	if (pointcloud->header.frame_id != sensor_frame_id_) {
-		if (!pointcloud_is_map && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
-			sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
-		} else {
-			ROS_WARN_STREAM("Using identify for sensor pose when flipping normals to sensor viewpoint because TF [ " << sensor_frame_id_ << " -> " << pointcloud->header.frame_id << " is not available at timestamp " << timestamp);
-			sensor_pose_tf_guess.setIdentity();
+	if (!pointcloud_is_map) {
+		if (pointcloud->header.frame_id != sensor_frame_id_) {
+			if (pointcloud->header.frame_id == map_frame_id_ && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, odom_frame_id_, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
+				sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
+			} else if (pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
+			} else if (pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, odom_frame_id_, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
+				sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
+			} else {
+				ROS_WARN_STREAM("Using identify for sensor pose when flipping normals to sensor viewpoint because TF [ " << sensor_frame_id_ << " -> " << pointcloud->header.frame_id << " is not available at timestamp " << timestamp);
+				sensor_pose_tf_guess.setIdentity();
+			}
 		}
 	}
 
