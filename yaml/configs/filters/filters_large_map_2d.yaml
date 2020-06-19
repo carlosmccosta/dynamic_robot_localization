@@ -50,7 +50,7 @@ filters:
 #            invert_selection: false
 #            filtered_cloud_publish_topic: ''
         5_random_sample:
-            number_of_random_samples: 500
+            number_of_random_samples: 300
             invert_sampling: false
             filtered_cloud_publish_topic: 'ambient_pointcloud_filtered'
 #        6_statistical_outlier_removal:
