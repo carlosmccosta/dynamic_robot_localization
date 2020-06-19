@@ -584,8 +584,8 @@ tracking_matchers:
                 similarity_threshold: 0.8                           # The similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object, where 1 is a perfect match
                 inlier_fraction: 0.25                               # Required inlier fraction, must be in [0,1]
                 inlier_rmse: 0.2                                    # Maximum inlier root mean square error
-                number_of_samples: 3                                # Set the number of samples to use during each iteration
-                correspondence_randomness: 10                       # The number of neighbors to use when selecting a random feature correspondence. A higher value will add more randomness to the feature matching
+                number_of_samples: 30                               # Set the number of samples to use during each iteration
+                correspondence_randomness: 3                       # The number of neighbors to use when selecting a random feature correspondence. A higher value will add more randomness to the feature matching
                 tf_publisher:                                       # The TF publisher can be attached to a feature_matcher or point_matcher for showing the transformation that it computed (using either normal or static TF broadcaster)
                     publish_tf: false                               # For activating the publishing of TF
                     publish_static_tf: false                        # For activating the publishing of static TF

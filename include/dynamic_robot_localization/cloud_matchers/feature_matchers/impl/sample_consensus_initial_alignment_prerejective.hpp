@@ -51,11 +51,11 @@ void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigu
 	private_node_handle->param(configuration_namespace + "inlier_rmse", inlier_rmse, 0.2);
 	matcher_scia_->setInlierRMSE(inlier_rmse);
 
-	private_node_handle->param(configuration_namespace + "number_of_samples", number_of_samples_, 3);
+	private_node_handle->param(configuration_namespace + "number_of_samples", number_of_samples_, 30);
 	matcher_scia_->setNumberOfSamples(number_of_samples_);
 
 	int correspondence_randomness;
-	private_node_handle->param(configuration_namespace + "correspondence_randomness", correspondence_randomness, 10);
+	private_node_handle->param(configuration_namespace + "correspondence_randomness", correspondence_randomness, 3);
 	matcher_scia_->setCorrespondenceRandomness(correspondence_randomness);
 
 	FeatureMatcher<PointT, FeatureT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
