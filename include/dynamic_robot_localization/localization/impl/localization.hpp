@@ -1222,6 +1222,8 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const
 
 template<typename PointT>
 void Localization<PointT>::updateMatchersReferenceCloud() {
+	ROS_INFO("Updating matchers reference point cloud");
+
 	for (size_t i = 0; i < initial_pose_estimators_feature_matchers_.size(); ++i) {
 		initial_pose_estimators_feature_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints_, reference_pointcloud_search_method_);
 	}
@@ -1237,6 +1239,8 @@ void Localization<PointT>::updateMatchersReferenceCloud() {
 	for (size_t i = 0; i < tracking_recovery_matchers_.size(); ++i) {
 		tracking_recovery_matchers_[i]->setupReferenceCloud(reference_pointcloud_, reference_pointcloud_keypoints_, reference_pointcloud_search_method_);
 	}
+
+	ROS_INFO("Finished updating matchers reference point cloud");
 }
 
 
