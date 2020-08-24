@@ -224,7 +224,7 @@ class Localization : public ConfigurableObject {
 		void setupPublishTopicNames(const std::string& configuration_namespace);
 		void setupFrameIds(const std::string& configuration_namespace);
 		void setupInitialPose();
-		void setupInitialPose(const std::string& configuration_namespace);
+		void setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time = false);
 		void setupTFPublisher(const std::string& configuration_namespace);
 		void setupMessageManagement(const std::string& configuration_namespace);
 		void setupReferencePointCloud(const std::string& configuration_namespace);
@@ -323,7 +323,7 @@ class Localization : public ConfigurableObject {
 
 		virtual void fillPoseCovariance(geometry_msgs::PoseWithCovarianceStamped& pose_corrected_msg, Eigen::MatrixXd& covariance_matrix);
 
-		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, const ros::Time& pointcloud_time,
+		virtual bool updateLocalizationWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& pointcloud_time,
 				const tf2::Transform& pointcloud_pose_initial_guess,
 				tf2::Transform& pointcloud_pose_corrected_out, tf2::Transform& pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_keypoints_out);
 		virtual bool updateReferencePointCloudWithAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr pointcloud_keypoints);

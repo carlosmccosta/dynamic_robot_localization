@@ -329,12 +329,12 @@ void Localization<PointT>::setupFrameIds(const std::string& configuration_namesp
 
 template<typename PointT>
 void Localization<PointT>::setupInitialPose() {
-	setupInitialPose(configuration_namespace_);
+	setupInitialPose(configuration_namespace_, ros::Time::now(), true);
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupInitialPose(const std::string& configuration_namespace) {
+void Localization<PointT>::setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time) {
 	double x, y, z, roll, pitch ,yaw, qx, qy, qz, qw;
 	private_node_handle_->param(configuration_namespace + "initial_pose/position/x", x, 0.0);
 	private_node_handle_->param(configuration_namespace + "initial_pose/position/y", y, 0.0);
@@ -374,7 +374,14 @@ void Localization<PointT>::setupInitialPose(const std::string& configuration_nam
 
 	tf2::Transform transform_odom_to_base_link;
 	ROS_DEBUG_STREAM("Looking for TF [ " << base_link_frame_id_ << " -> " << odom_frame_id_ << " ]");
-	if (!pose_to_tf_publisher_->getTfCollector().lookForLatestTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Duration(10)) || !math_utils::isTransformValid(transform_odom_to_base_link)) {
+	bool tf_lookup_succeeded = false;
+	if (use_latest_tf_time) {
+		tf_lookup_succeeded = pose_to_tf_publisher_->getTfCollector().lookForLatestTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Duration(10));
+	} else {
+		tf_lookup_succeeded = pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, time, ros::Duration(10));
+	}
+
+	if (!tf_lookup_succeeded || !math_utils::isTransformValid(transform_odom_to_base_link)) {
 		transform_odom_to_base_link = tf2::Transform::getIdentity();
 		ROS_WARN_STREAM("Failed to get tf from " << base_link_frame_id_ << " to " << odom_frame_id_ << " when setting localization initial pose");
 	}
@@ -391,7 +398,7 @@ void Localization<PointT>::setupInitialPose(const std::string& configuration_nam
 	if (robot_initial_pose_available_ && !pose_with_covariance_stamped_tracking_reset_publisher_.getTopic().empty()) {
 		geometry_msgs::PoseWithCovarianceStampedPtr pose_msg(new geometry_msgs::PoseWithCovarianceStamped());
 		pose_msg->header.frame_id = map_frame_id_;
-		pose_msg->header.stamp = ros::Time::now();
+		pose_msg->header.stamp = time;
 
 		laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToMsg(last_accepted_pose_base_link_to_map_, pose_msg->pose.pose);
 		pose_with_covariance_stamped_tracking_reset_publisher_.publish(pose_msg);
@@ -401,7 +408,7 @@ void Localization<PointT>::setupInitialPose(const std::string& configuration_nam
 		pose_to_tf_publisher_->publishInitialPoseFromParameterServer();
 	}
 
-	last_accepted_pose_time_ = ros::Time::now();
+	last_accepted_pose_time_ = time;
 }
 
 
@@ -509,7 +516,7 @@ void Localization<PointT>::setupReferencePointCloud(const std::string& configura
 	}
 
 	private_node_handle_->param(configuration_namespace + "reference_pointclouds/use_incremental_map_update", use_incremental_map_update_, false);
-	reference_pointcloud_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
+	reference_pointcloud_->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 }
 
 
@@ -1045,7 +1052,7 @@ bool Localization<PointT>::loadReferencePointCloudFromFile(const std::string& re
 	if (pointcloud_conversions::fromFile(*reference_pointcloud_, reference_pointcloud_filename, (reference_pointclouds_database_folder_path.empty() ? reference_pointclouds_database_folder_path_ : reference_pointclouds_database_folder_path))) {
 		if (reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
 			ROS_INFO_STREAM("Loaded reference point cloud from file " << reference_pointcloud_filename << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
-			reference_pointcloud_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
+			reference_pointcloud_->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 
 			last_map_received_time_ = ros::Time::now();
 			if (reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->resetOccupancyGridMsg();
@@ -1109,6 +1116,7 @@ void Localization<PointT>::loadReferencePointCloudFromROSOccupancyGrid(const nav
 				reference_pointcloud_2d_ = true;
 				if (occupancy_grid_msg->header.frame_id != map_frame_id_ && !transformCloudToTFFrame(reference_pointcloud_from_occupancy_grid, occupancy_grid_msg->header.stamp, map_frame_id_for_transforming_pointclouds_)) { return; }
 				reference_pointcloud_ = reference_pointcloud_from_occupancy_grid;
+				reference_pointcloud_->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 				if (flip_normals_using_occupancy_grid_analysis_ && reference_cloud_normal_estimator_) reference_cloud_normal_estimator_->setOccupancyGridMsg(occupancy_grid_msg);
 				if (updateLocalizationPipelineWithNewReferenceCloud(occupancy_grid_msg->header.stamp)) {
 					ROS_INFO_STREAM("Loaded reference point cloud from costmap topic " << reference_costmap_topic_ << " with " << reference_pointcloud_->size() << " points in " << performance_timer.getElapsedTimeFormated());
@@ -1132,7 +1140,7 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 			pcl::toROSMsg(*reference_pointcloud_, *reference_pointcloud_msg_);
 		}
 
-		reference_pointcloud_msg_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
+		reference_pointcloud_msg_->header.frame_id = reference_pointcloud_->header.frame_id;
 		reference_pointcloud_msg_->header.stamp = time_stamp;
 		++reference_pointcloud_msg_->header.seq;
 		reference_pointcloud_publisher_.publish(reference_pointcloud_msg_);
@@ -1144,7 +1152,7 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 			pcl::toROSMsg(*reference_pointcloud_keypoints_, *reference_pointcloud_keypoints_msg_);
 		}
 
-		reference_pointcloud_keypoints_msg_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
+		reference_pointcloud_keypoints_msg_->header.frame_id = reference_pointcloud_->header.frame_id;
 		reference_pointcloud_keypoints_msg_->header.stamp = time_stamp;
 		++reference_pointcloud_keypoints_msg_->header.seq;
 		reference_pointcloud_keypoints_publisher_.publish(reference_pointcloud_keypoints_msg_);
@@ -1154,7 +1162,6 @@ void Localization<PointT>::publishReferencePointCloud(const ros::Time& time_stam
 
 template<typename PointT>
 bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp) {
-	reference_pointcloud_->header.frame_id = map_frame_id_for_transforming_pointclouds_;
 	reference_pointcloud_->header.stamp = pcl_conversions::toPCL(time_stamp);
 	localization_diagnostics_msg_.number_points_reference_pointcloud = reference_pointcloud_->size();
 
@@ -1462,7 +1469,7 @@ void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 		}
 		last_accepted_pose_time_ = ros::Time::now();
 
-		setupInitialPose(configuration_namespace_);
+		setupInitialPose();
 		startSubscribers();
 		startServiceServers();
 
@@ -1524,7 +1531,7 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 		tf2::Transform pose_tf_cloud_to_map;
 		pose_tf_cloud_to_map.setIdentity();
 		bool use_lookup_without_odom = false;
-		if (ambient_pointcloud->header.frame_id != odom_frame_id_) {
+		if ((target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) && ambient_pointcloud->header.frame_id != odom_frame_id_) {
 			if (use_odom_when_transforming_cloud_to_map_frame_) {
 				tf2::Transform pose_tf_cloud_to_odom;
 				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
@@ -1536,7 +1543,7 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 				use_lookup_without_odom = true;
 			}
 		} else {
-			if (target_frame_id == map_frame_id_) {
+			if (target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) {
 				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
 			} else {
 				use_lookup_without_odom = true;
@@ -1568,7 +1575,7 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 		std::string transform_string = math_utils::convertTransformToString<double>(pose_tf_cloud_to_map_eigen_transform.matrix());
 		ROS_DEBUG_STREAM("Transformed pointcloud with " << ambient_pointcloud->size() << " points from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id << " using matrix:" << transform_string << "\n");
 
-		if (target_frame_id == map_frame_id_ && !map_frame_id_for_publishing_pointclouds_.empty())
+		if ((target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) && !map_frame_id_for_publishing_pointclouds_.empty())
 			ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 		else
 			ambient_pointcloud->header.frame_id = target_frame_id;
@@ -1684,7 +1691,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 			last_accepted_pose_valid_ = false;
 			if (reset_initial_pose_when_tracking_is_lost_) {
 				ROS_DEBUG("Resetting initial pose");
-				setupInitialPose();
+				setupInitialPose(configuration_namespace_, ambient_cloud_time);
 			}
 
 			if (!tracking_matchers_.empty() || !tracking_recovery_matchers_.empty())
@@ -1910,7 +1917,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 					ROS_DEBUG_STREAM("Publishing registered ambient pointcloud with " << ambient_pointcloud->size() << " points");
 					sensor_msgs::PointCloud2Ptr aligned_pointcloud_msg(new sensor_msgs::PointCloud2());
 					pcl::toROSMsg(*ambient_pointcloud, *aligned_pointcloud_msg);
-					aligned_pointcloud_msg->header.frame_id = map_frame_id_for_publishing_pointclouds_;
+					aligned_pointcloud_msg->header.frame_id = map_frame_id_;
 					aligned_pointcloud_publisher_.publish(aligned_pointcloud_msg);
 				} else {
 					ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << aligned_pointcloud_publisher_.getTopic() << " because there is no subscribers");
@@ -2160,13 +2167,13 @@ double Localization<PointT>::applyOutlierDetection(std::vector< typename Outlier
 		if (detectors[i]->isPublishingOutliers() || compute_outliers_angular_distribution_) {
 			outliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
 			outliers->header = pointcloud->header;
-			outliers->header.frame_id = map_frame_id_for_publishing_pointclouds_;
+			outliers->header.frame_id = map_frame_id_;
 		}
 
 		if (detectors[i]->isPublishingInliers() || compute_inliers_angular_distribution_) {
 			inliers = typename pcl::PointCloud<PointT>::Ptr(new pcl::PointCloud<PointT>());
 			inliers->header = pointcloud->header;
-			inliers->header.frame_id = map_frame_id_for_publishing_pointclouds_;
+			inliers->header.frame_id = map_frame_id_;
 		}
 
 		number_outliers += detectors[i]->detectOutliers(reference_pointcloud_search_method, *pointcloud, outliers, inliers, root_mean_square_error_inliers);
@@ -2469,6 +2476,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if (ambient_pointcloud_with_circular_buffer_) {
 		ambient_pointcloud_with_circular_buffer_->insert(*ambient_pointcloud);
 		ambient_pointcloud_with_circular_buffer_->getPointCloud().header = ambient_pointcloud->header;
+		ambient_pointcloud_with_circular_buffer_->getPointCloud().header.frame_id = map_frame_id_;
 		ambient_pointcloud_with_circular_buffer_->getPointCloud().sensor_origin_ = ambient_pointcloud->sensor_origin_;
 		ambient_pointcloud_with_circular_buffer_->getPointCloud().sensor_orientation_ = ambient_pointcloud->sensor_orientation_;
 		last_number_points_inserted_in_circular_buffer_ = ambient_pointcloud->size();
@@ -2552,12 +2560,14 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	last_matcher_convergence_state_ = "";
 	root_mean_square_error_of_last_registration_correspondences_ = -1.0;
 	number_correspondences_last_registration_algorithm_ = -1;
+	ambient_pointcloud->header.frame_id = map_frame_id_;
 
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose
 		if (!received_external_initial_pose_estimation_ && !initial_pose_estimators_feature_matchers_.empty()) {
 			ros::Duration time_from_last_pose = ros::Time::now() - last_accepted_pose_time_;
 			if (time_from_last_pose < initial_pose_estimation_timeout_) {
 				ROS_INFO("Performing initial pose recovery");
+				ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 				if (!computed_normals && compute_normals_when_estimating_initial_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
 					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
 						sensor_data_processing_status_ = FailedNormalEstimation;
@@ -2571,6 +2581,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					computed_keypoints = true;
 				}
 
+				ambient_pointcloud->header.frame_id = map_frame_id_;
 				applyCloudRegistration(initial_pose_estimators_feature_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out);
 			} else {
 				ROS_DEBUG_STREAM("Timeout of " << initial_pose_estimation_timeout_ << " seconds reached (" << time_from_last_pose << " seconds from last valid pose)");
@@ -2595,6 +2606,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 				sensor_data_processing_status_ = FailedPoseEstimation;
 				return false;
 			} else if (tracking_recovery_reached) {
+				ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 				localization_times_msg_.pointcloud_registration_time += performance_timer.getElapsedTimeInMilliSec();
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
 					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
@@ -2610,6 +2622,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 				}
 
 				performance_timer.restart();
+				ambient_pointcloud->header.frame_id = map_frame_id_;
 				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 					ROS_INFO("Successfully performed registration recovery");
 					performed_recovery = true;
@@ -2660,6 +2673,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			localization_times_msg_.transformation_validators_time = performance_timer.getElapsedTimeInMilliSec();
 			performance_timer.restart();
 			if (!performed_recovery && !tracking_recovery_matchers_.empty() && tracking_recovery_reached) {
+				ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 				if (!computed_normals && compute_normals_when_recovering_pose_tracking_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
 					if (!applyNormalEstimation(ambient_cloud_normal_estimator_, ambient_cloud_curvature_estimator_, ambient_pointcloud, ambient_pointcloud_raw, ambient_search_method)) {
 						sensor_data_processing_status_ = FailedNormalEstimation;
@@ -2673,6 +2687,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 					computed_keypoints = true;
 				}
 
+				ambient_pointcloud->header.frame_id = map_frame_id_;
 				if (applyCloudRegistration(tracking_recovery_matchers_, ambient_pointcloud, ambient_search_method, (ambient_pointcloud_keypoints_out->size() < (size_t)minimum_number_of_points_in_ambient_pointcloud_) ? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 					pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
 					if (!postProcessCloudRegistration(pointcloud_pose_initial_guess, pointcloud_pose_corrected_out, post_process_cloud_registration_pose_corrections, pointcloud_time)) { return false; }

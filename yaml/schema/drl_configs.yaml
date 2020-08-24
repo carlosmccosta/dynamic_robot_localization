@@ -158,7 +158,7 @@ message_management:
     localization_detailed_use_millimeters_in_root_mean_square_error_of_last_registration_correspondences: false
     localization_detailed_use_millimeters_in_translation_corrections: false
     localization_detailed_use_degrees_in_rotation_corrections: false
-    localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrixes
+    localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrices
 
 
 # ===================================================================================================================================================
