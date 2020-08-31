@@ -29,7 +29,7 @@ void IterativeClosestPointNonLinear<PointT>::setupConfigurationFromParameterServ
 
 template<typename PointT>
 double IterativeClosestPointNonLinear<PointT>::getTransformCloudElapsedTimeMS() {
-	typename IterativeClosestPointNonLinearTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointNonLinearTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointNonLinearTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointNonLinearTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
 	return -1.0;
 }
@@ -37,7 +37,7 @@ double IterativeClosestPointNonLinear<PointT>::getTransformCloudElapsedTimeMS() 
 
 template<typename PointT>
 void IterativeClosestPointNonLinear<PointT>::resetTransformCloudElapsedTime() {
-	typename IterativeClosestPointNonLinearTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointNonLinearTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointNonLinearTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointNonLinearTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPointWithNormals-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

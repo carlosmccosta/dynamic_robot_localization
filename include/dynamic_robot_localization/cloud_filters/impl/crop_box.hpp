@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void CropBox<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::CropBox<PointT>());
-	typename pcl::CropBox<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::CropBox<PointT> >(filter_base);
+	typename pcl::CropBox<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::CropBox<PointT> >(filter_base);
 
 	double box_min_x, box_min_y, box_min_z;
 	private_node_handle->param(configuration_namespace + "box_min_x", box_min_x, -10.0);

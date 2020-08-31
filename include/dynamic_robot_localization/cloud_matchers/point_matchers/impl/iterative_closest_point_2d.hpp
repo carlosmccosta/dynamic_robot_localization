@@ -29,7 +29,7 @@ void IterativeClosestPoint2D<PointT>::setupConfigurationFromParameterServer(ros:
 
 template<typename PointT>
 double IterativeClosestPoint2D<PointT>::getTransformCloudElapsedTimeMS() {
-	typename IterativeClosestPoint2DTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPoint2DTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPoint2DTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPoint2DTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
 	return -1.0;
 }
@@ -37,7 +37,7 @@ double IterativeClosestPoint2D<PointT>::getTransformCloudElapsedTimeMS() {
 
 template<typename PointT>
 void IterativeClosestPoint2D<PointT>::resetTransformCloudElapsedTime() {
-	typename IterativeClosestPoint2DTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPoint2DTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPoint2DTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPoint2DTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint2D-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

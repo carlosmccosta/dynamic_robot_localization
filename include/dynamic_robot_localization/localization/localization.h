@@ -7,48 +7,44 @@
  * @author Carlos Miguel Correia da Costa
  */
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
-#include <string>
-#include <vector>
-#include <set>
 #include <algorithm>
-#include <utility>
 #include <cmath>
 #include <limits>
-
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+#include <utility>
 
 // ROS includes
 #include <ros/ros.h>
+#include <angles/angles.h>
+#include <dynamic_reconfigure/server.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <nav_msgs/OccupancyGrid.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <geometry_msgs/PoseArray.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <dynamic_reconfigure/server.h>
-#include <angles/angles.h>
 
 // PCL includes
+#include <pcl/pcl_macros.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/search/kdtree.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/filters/filter.h>
-#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/common/transforms.h>
+#include <pcl/filters/filter.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/pcl_macros.h>
 
 // external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
 #include <Eigen/Core>
 
 // project includes
@@ -142,10 +138,10 @@ template <typename PointT = pcl::PointNormal>
 class Localization : public ConfigurableObject {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< Localization<PointT> > Ptr;
-		typedef boost::shared_ptr< const Localization<PointT> > ConstPtr;
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <usings>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		using Ptr = std::shared_ptr< Localization<PointT> >;
+		using ConstPtr = std::shared_ptr< const Localization<PointT> >;
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </usings>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		enum MapUpdateMode {

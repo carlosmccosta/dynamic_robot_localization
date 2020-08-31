@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void CovarianceSampling<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::CovarianceSampling<PointT, PointT>());
-	typename pcl::CovarianceSampling<PointT, PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::CovarianceSampling<PointT, PointT> >(filter_base);
+	typename pcl::CovarianceSampling<PointT, PointT>::Ptr filter = std::static_pointer_cast< typename pcl::CovarianceSampling<PointT, PointT> >(filter_base);
 
 	int number_of_samples;
 	private_node_handle->param(configuration_namespace + "number_of_samples", number_of_samples, 250);
@@ -35,7 +35,7 @@ void CovarianceSampling<PointT>::setupConfigurationFromParameterServer(ros::Node
 
 template<typename PointT>
 void CovarianceSampling<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
-	boost::static_pointer_cast< typename pcl::CovarianceSampling<PointT, PointT> >(CloudFilter<PointT>::getFilter())->setNormals(input_cloud);
+	std::static_pointer_cast< typename pcl::CovarianceSampling<PointT, PointT> >(CloudFilter<PointT>::getFilter())->setNormals(input_cloud);
 	CloudFilter<PointT>::filter(input_cloud, output_cloud);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </CovarianceSampling-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

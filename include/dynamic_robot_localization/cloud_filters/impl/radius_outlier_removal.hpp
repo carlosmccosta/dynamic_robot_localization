@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void RadiusOutlierRemoval<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::RadiusOutlierRemoval<PointT>());
-	typename pcl::RadiusOutlierRemoval<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::RadiusOutlierRemoval<PointT> >(filter_base);
+	typename pcl::RadiusOutlierRemoval<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::RadiusOutlierRemoval<PointT> >(filter_base);
 
 	double radius_search;
 	int min_neighbors_in_radius;

@@ -10,8 +10,7 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
-
-// ROS includes
+#include <memory>
 
 // PCL includes
 #include <pcl/registration/transformation_estimation.h>
@@ -24,9 +23,6 @@
 #include <pcl/registration/transformation_estimation_point_to_plane_weighted.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/transformation_estimation_svd_scale.h>
-
-// external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
 #include <dynamic_robot_localization/common/common.h>
@@ -53,8 +49,8 @@ enum TransformationEstimationApproach {
 template < DRL_UNPACK_ARGS TemplatesDeclaration > \
 class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage > { \
 	public: \
-		typedef boost::shared_ptr< BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > > Ptr; \
-		typedef boost::shared_ptr< const BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > > ConstPtr; \
+		using Ptr = std::shared_ptr< BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > >; \
+		using ConstPtr = std::shared_ptr< const BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > >; \
 \
 		BaseClass##Suffix() : transformation_estimation_elapsed_time_(0) {} \
 		virtual ~BaseClass##Suffix() {} \

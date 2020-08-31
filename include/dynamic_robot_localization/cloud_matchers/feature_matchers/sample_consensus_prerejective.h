@@ -41,8 +41,9 @@
 #ifndef PCL_REGISTRATION_SAMPLE_CONSENSUS_PREREJECTIVE_H_
 #define PCL_REGISTRATION_SAMPLE_CONSENSUS_PREREJECTIVE_H_
 
-#include <limits>
 #include <algorithm>
+#include <limits>
+#include <memory>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/registration/transformation_validation.h>
@@ -63,7 +64,6 @@
 #include <pcl/common/distances.h>
 #include <pcl/common/point_tests.h>
 #include <pcl/common/time.h>
-#include <boost/smart_ptr/shared_ptr.hpp>
 #include <Eigen/Core>
 
 
@@ -102,8 +102,8 @@ namespace dynamic_robot_localization
   class SampleConsensusPrerejective : public pcl::Registration<PointSource, PointTarget>
   {
     public:
-      typedef typename pcl::Registration<PointSource, PointTarget>::Matrix4 Matrix4;
-      
+      using Matrix4 = typename pcl::Registration<PointSource, PointTarget>::Matrix4;
+
       using pcl::Registration<PointSource, PointTarget>::reg_name_;
       using pcl::Registration<PointSource, PointTarget>::getClassName;
       using pcl::Registration<PointSource, PointTarget>::input_;
@@ -119,28 +119,28 @@ namespace dynamic_robot_localization
       using pcl::Registration<PointSource, PointTarget>::update_visualizer_;
       using pcl::Registration<PointSource, PointTarget>::correspondence_rejectors_;
 
-      typedef typename pcl::Registration<PointSource, PointTarget>::PointCloudSource PointCloudSource;
-      typedef typename PointCloudSource::Ptr PointCloudSourcePtr;
-      typedef typename PointCloudSource::ConstPtr PointCloudSourceConstPtr;
+      using PointCloudSource = typename pcl::Registration<PointSource, PointTarget>::PointCloudSource;
+      using PointCloudSourcePtr = typename PointCloudSource::Ptr;
+      using PointCloudSourceConstPtr = typename PointCloudSource::ConstPtr;
 
-      typedef typename pcl::Registration<PointSource, PointTarget>::PointCloudTarget PointCloudTarget;
+      using PointCloudTarget = typename pcl::Registration<PointSource, PointTarget>::PointCloudTarget;
 
-      typedef pcl::PointIndices::Ptr PointIndicesPtr;
-      typedef pcl::PointIndices::ConstPtr PointIndicesConstPtr;
+      using PointIndicesPtr = pcl::PointIndices::Ptr;
+      using PointIndicesConstPtr = pcl::PointIndices::ConstPtr;
 
-      typedef pcl::PointCloud<FeatureT> FeatureCloud;
-      typedef typename FeatureCloud::Ptr FeatureCloudPtr;
-      typedef typename FeatureCloud::ConstPtr FeatureCloudConstPtr;
+      using FeatureCloud = pcl::PointCloud<FeatureT>;
+      using FeatureCloudPtr = typename FeatureCloud::Ptr;
+      using FeatureCloudConstPtr = typename FeatureCloud::ConstPtr;
 
-      typedef boost::shared_ptr<SampleConsensusPrerejective<PointSource, PointTarget, FeatureT> > Ptr;
-      typedef boost::shared_ptr<const SampleConsensusPrerejective<PointSource, PointTarget, FeatureT> > ConstPtr;
+      using Ptr = std::shared_ptr<SampleConsensusPrerejective<PointSource, PointTarget, FeatureT> >;
+      using ConstPtr = std::shared_ptr<const SampleConsensusPrerejective<PointSource, PointTarget, FeatureT> >;
 
-      typedef typename pcl::KdTreeFLANN<FeatureT>::Ptr FeatureKdTreePtr;
-      
-      typedef pcl::registration::CorrespondenceRejectorPoly<PointSource, PointTarget> CorrespondenceRejectorPoly;
-      typedef typename CorrespondenceRejectorPoly::Ptr CorrespondenceRejectorPolyPtr;
-      typedef typename CorrespondenceRejectorPoly::ConstPtr CorrespondenceRejectorPolyConstPtr;
-      
+      using FeatureKdTreePtr = typename pcl::KdTreeFLANN<FeatureT>::Ptr;
+
+      using CorrespondenceRejectorPoly = pcl::registration::CorrespondenceRejectorPoly<PointSource, PointTarget>;
+      using CorrespondenceRejectorPolyPtr = typename CorrespondenceRejectorPoly::Ptr;
+      using CorrespondenceRejectorPolyConstPtr = typename CorrespondenceRejectorPoly::ConstPtr;
+
       /** \brief Constructor */
       SampleConsensusPrerejective ()
         : input_features_ ()
@@ -159,13 +159,13 @@ namespace dynamic_robot_localization
         max_iterations_ = 5000;
         transformation_estimation_.reset (new pcl::registration::TransformationEstimationSVD<PointSource, PointTarget>);
       };
-      
+
       /** \brief Destructor */
       virtual ~SampleConsensusPrerejective ()
       {
       }
 
-      /** \brief Provide a boost shared pointer to the source point cloud's feature descriptors
+      /** \brief Provide a shared pointer to the source point cloud's feature descriptors
         * \param features the source point cloud's features
         */
       void 
@@ -178,7 +178,7 @@ namespace dynamic_robot_localization
         return (input_features_);
       }
 
-      /** \brief Provide a boost shared pointer to the target point cloud's feature descriptors
+      /** \brief Provide a shared pointer to the target point cloud's feature descriptors
         * \param features the target point cloud's features
         */
       void 
@@ -223,7 +223,7 @@ namespace dynamic_robot_localization
       {
         return (k_correspondences_);
       }
-      
+
       /** \brief Set the similarity threshold in [0,1[ between edge lengths of the underlying polygonal correspondence rejector object,
        * where 1 is a perfect match
        * \param similarity_threshold edge length similarity threshold
@@ -233,7 +233,7 @@ namespace dynamic_robot_localization
       {
         correspondence_rejector_poly_->setSimilarityThreshold (similarity_threshold);
       }
-      
+
       /** \brief Get the similarity threshold between edge lengths of the underlying polygonal correspondence rejector object,
        * \return edge length similarity threshold
        */
@@ -242,7 +242,7 @@ namespace dynamic_robot_localization
       {
         return correspondence_rejector_poly_->getSimilarityThreshold ();
       }
-      
+
       /** \brief Set the required inlier fraction (of the input)
        * \param inlier_fraction required inlier fraction, must be in [0,1]
        */
@@ -251,11 +251,11 @@ namespace dynamic_robot_localization
       {
         inlier_fraction_ = inlier_fraction;
       }
-      
+
       inline void
       setInlierRMSE (float inlier_rmse)
       {
-    	  inlier_rmse_ = inlier_rmse;
+        inlier_rmse_ = inlier_rmse;
       }
 
       /** \brief Get the required inlier fraction
@@ -266,7 +266,7 @@ namespace dynamic_robot_localization
       {
         return inlier_fraction_;
       }
-      
+
       /** \brief Get the inlier indices of the source point cloud under the final transformation
        * @return inlier indices
        */
@@ -278,7 +278,7 @@ namespace dynamic_robot_localization
 
       void setupCorrespondanceRejectors(std::vector< typename pcl::registration::CorrespondenceRejector::Ptr >& correspondence_rejectors);
 
-      boost::shared_ptr< std::vector<Matrix4> > getAcceptedTransformations() { return accepted_transformations_; }
+      std::shared_ptr< std::vector<Matrix4> > getAcceptedTransformations() { return accepted_transformations_; }
 
       inline void setConvergenceTimeLimitSeconds(double convergence_time_limit_seconds) { convergence_time_limit_seconds_ = convergence_time_limit_seconds; }
 
@@ -291,7 +291,7 @@ namespace dynamic_robot_localization
       {
         return (static_cast<int> (n * (rand () / (RAND_MAX + 1.0))));
       };
-      
+
       /** \brief Select \a nr_samples sample points from cloud while making sure that their pairwise distances are 
         * greater than a user-defined minimum distance, \a min_sample_distance.
         * \param cloud the input point cloud
@@ -340,22 +340,22 @@ namespace dynamic_robot_localization
 
       /** \brief The number of neighbors to use when selecting a random feature correspondence. */
       int k_correspondences_;
-     
+
       /** \brief The KdTree used to compare feature descriptors. */
       FeatureKdTreePtr feature_tree_;
-      
+
       /** \brief The polygonal correspondence rejector used for prerejection */
       CorrespondenceRejectorPolyPtr correspondence_rejector_poly_;
-      
+
       /** \brief The fraction [0,1] of inlier points required for accepting a transformation */
       float inlier_fraction_;
-      
+
       float inlier_rmse_;
 
       /** \brief Inlier points of final transformation as indices into source */
       std::vector<int> inliers_;
 
-      boost::shared_ptr< std::vector<Matrix4> > accepted_transformations_;
+      std::shared_ptr< std::vector<Matrix4> > accepted_transformations_;
 
       pcl::StopWatch convergence_timer_;
       double convergence_time_limit_seconds_;

@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void ApproximateVoxelGrid<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::ApproximateVoxelGrid<PointT>());
-	typename pcl::ApproximateVoxelGrid<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::ApproximateVoxelGrid<PointT> >(filter_base);
+	typename pcl::ApproximateVoxelGrid<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::ApproximateVoxelGrid<PointT> >(filter_base);
 
 	double leaf_size_x, leaf_size_y, leaf_size_z;
 	private_node_handle->param(configuration_namespace + "leaf_size_x", leaf_size_x, 0.01);

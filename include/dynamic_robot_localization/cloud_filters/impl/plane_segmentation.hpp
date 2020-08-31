@@ -46,17 +46,17 @@ template<typename PointT>
 void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
 	size_t number_of_points_in_input_cloud = input_cloud->size();
 
-	boost::shared_ptr< pcl::SACSegmentation<PointT> > sac_segmentation;
-	boost::shared_ptr< pcl::SACSegmentationFromNormals<PointT, PointT> > sac_segmentation_from_normals;
+	std::shared_ptr< pcl::SACSegmentation<PointT> > sac_segmentation;
+	std::shared_ptr< pcl::SACSegmentationFromNormals<PointT, PointT> > sac_segmentation_from_normals;
 
 	if (use_surface_normals_) {
-		sac_segmentation_from_normals = boost::shared_ptr< pcl::SACSegmentationFromNormals<PointT, PointT> >(new pcl::SACSegmentationFromNormals<PointT, PointT>());
+		sac_segmentation_from_normals = std::shared_ptr< pcl::SACSegmentationFromNormals<PointT, PointT> >(new pcl::SACSegmentationFromNormals<PointT, PointT>());
 		sac_segmentation_from_normals->setModelType(pcl::SACMODEL_NORMAL_PLANE);
 		sac_segmentation_from_normals->setNormalDistanceWeight(sample_consensus_normals_difference_weight_);
 		sac_segmentation_from_normals->setInputNormals(input_cloud);
 		sac_segmentation = sac_segmentation_from_normals;
 	} else {
-		sac_segmentation = boost::shared_ptr< pcl::SACSegmentation<PointT> >(new pcl::SACSegmentation<PointT>());
+		sac_segmentation = std::shared_ptr< pcl::SACSegmentation<PointT> >(new pcl::SACSegmentation<PointT>());
 		sac_segmentation->setModelType(pcl::SACMODEL_PLANE);
 	}
 
@@ -143,7 +143,7 @@ void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::P
 
 		pcl::ExtractIndices<PointT> indices_extractor;
 		indices_extractor.setInputCloud(input_cloud);
-		indices_extractor.setIndices(boost::make_shared<const pcl::PointIndices>(indices_for_points_on_top_of_plane));
+		indices_extractor.setIndices(pcl::make_shared<const pcl::PointIndices>(indices_for_points_on_top_of_plane));
 		indices_extractor.filter(*output_cloud);
 	}
 

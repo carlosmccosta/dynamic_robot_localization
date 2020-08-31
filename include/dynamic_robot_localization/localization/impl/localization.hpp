@@ -1777,7 +1777,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		}
 
 		if (localizationUpdateSuccess) {
-			ambient_pointcloud->header.stamp = (pcl::uint64_t)(ambient_cloud_time.toNSec() / 1000.0);
+			ambient_pointcloud->header.stamp = (std::uint64_t)(ambient_cloud_time.toNSec() / 1000.0);
 			if (republish_reference_pointcloud_after_successful_registration_ && map_update_mode_ == NoIntegration)
 				publishReferencePointCloud(ambient_cloud_time, false);
 
@@ -2737,9 +2737,9 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	pose_corrections_out.getRotation().normalize();
 
 	localization_times_msg_.transformation_validators_time += performance_timer.getElapsedTimeInMilliSec();
-	ambient_pointcloud->header.stamp = (pcl::uint64_t)(pointcloud_time.toNSec() / 1000.0);
+	ambient_pointcloud->header.stamp = (std::uint64_t)(pointcloud_time.toNSec() / 1000.0);
 	if (ambient_pointcloud_integration) {
-		ambient_pointcloud_integration->header.stamp = (pcl::uint64_t)(pointcloud_time.toNSec() / 1000.0);
+		ambient_pointcloud_integration->header.stamp = (std::uint64_t)(pointcloud_time.toNSec() / 1000.0);
 	}
 
 	performance_timer.restart();

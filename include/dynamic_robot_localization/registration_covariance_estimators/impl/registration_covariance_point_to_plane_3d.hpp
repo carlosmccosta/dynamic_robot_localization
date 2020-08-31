@@ -56,7 +56,7 @@ bool RegistrationCovariancePointToPlane3D<PointT>::computeRegistrationCovariance
 		double niy = reference_cloud_correspondences[s].normal_y;
 		double niz = reference_cloud_correspondences[s].normal_z;
 
-		double 	d2J_dx2 , d2J_dydx, d2J_dzdx, d2J_dadx, d2J_dbdx, d2J_dcdx,
+		double 	d2J_dx2 , d2J_dydx, d2J_dzdx, d2J_dadx, d2J_dbdx, /*d2J_dcdx,*/
 				d2J_dxdy, d2J_dy2 , d2J_dzdy, d2J_dady, d2J_dbdy, d2J_dcdy,
 				d2J_dxdz, d2J_dydz, d2J_dz2 , d2J_dadz, d2J_dbdz, d2J_dcdz,
 				d2J_dxda, d2J_dyda, d2J_dzda, d2J_da2 , d2J_dbda, d2J_dcda,
@@ -88,7 +88,7 @@ bool RegistrationCovariancePointToPlane3D<PointT>::computeRegistrationCovariance
 		d2J_dzdb = niz * (2 * niy * (piz * cos_pitch * cos_roll * sin_yaw - pix * sin_yaw * sin_pitch + piy * cos_pitch * sin_yaw * sin_roll) - 2 * niz * (pix * cos_pitch + piz * cos_roll * sin_pitch + piy * sin_pitch * sin_roll) + 2 * nix * (piz * cos_yaw * cos_pitch * cos_roll - pix * cos_yaw * sin_pitch + piy * cos_yaw * cos_pitch * sin_roll));
 		d2J_dbdz = 2 * niz * (niy * (piz * cos_pitch * cos_roll * sin_yaw - pix * sin_yaw * sin_pitch + piy * cos_pitch * sin_yaw * sin_roll) - niz * (pix * cos_pitch + piz * cos_roll * sin_pitch + piy * sin_pitch * sin_roll) + nix * (piz * cos_yaw * cos_pitch * cos_roll - pix * cos_yaw * sin_pitch + piy * cos_yaw * cos_pitch * sin_roll));
 		d2J_dxdc = nix * (2 * nix * (piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll)) - 2 * niy * (piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) + piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll)) + 2 * niz * (piy * cos_pitch * cos_roll - piz * cos_pitch * sin_roll));
-		d2J_dcdx = 2 * nix * (nix * (piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll)) - niy * (piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) + piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll)) + niz * (piy * cos_pitch * cos_roll - piz * cos_pitch * sin_roll));
+		//d2J_dcdx = 2 * nix * (nix * (piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll)) - niy * (piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) + piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll)) + niz * (piy * cos_pitch * cos_roll - piz * cos_pitch * sin_roll));
 		d2J_dydc = niy * (2 * nix * (piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll)) - 2 * niy * (piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) + piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll)) + 2 * niz * (piy * cos_pitch * cos_roll - piz * cos_pitch * sin_roll));
 		d2J_dcdy = 2 * niy * (nix * (piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll)) - niy * (piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) + piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll)) + niz * (piy * cos_pitch * cos_roll - piz * cos_pitch * sin_roll));
 		d2J_dzdc = niz * (2 * nix * (piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll)) - 2 * niy * (piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) + piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll)) + 2 * niz * (piy * cos_pitch * cos_roll - piz * cos_pitch * sin_roll));

@@ -21,15 +21,23 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPointWithNormals-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void IterativeClosestPointWithNormals<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	typename pcl::Registration<PointT, PointT, float>::Ptr matcher(new IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>());
+	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>());
+	typename IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< typename dynamic_robot_localization::IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT> >(matcher_base);
 
-	CloudMatcher<PointT>::setCloudMatcher(matcher);
+	bool use_symmetric_objective_cost_function;
+	bool ensure_normals_with_same_direction_when_using_symmetric_objective_cost_function;
+	private_node_handle->param(configuration_namespace + "use_symmetric_objective_cost_function", use_symmetric_objective_cost_function, false);
+	private_node_handle->param(configuration_namespace + "ensure_normals_with_same_direction_when_using_symmetric_objective_cost_function", ensure_normals_with_same_direction_when_using_symmetric_objective_cost_function, false);
+	matcher->setUseSymmetricObjective(use_symmetric_objective_cost_function);
+	matcher->setEnforceSameDirectionNormals(ensure_normals_with_same_direction_when_using_symmetric_objective_cost_function);
+
+	CloudMatcher<PointT>::setCloudMatcher(matcher_base);
 	IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 template<typename PointT>
 double IterativeClosestPointWithNormals<PointT>::getTransformCloudElapsedTimeMS() {
-	typename IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
 	return -1.0;
 }
@@ -37,7 +45,7 @@ double IterativeClosestPointWithNormals<PointT>::getTransformCloudElapsedTimeMS(
 
 template<typename PointT>
 void IterativeClosestPointWithNormals<PointT>::resetTransformCloudElapsedTime() {
-	typename IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPointWithNormals-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

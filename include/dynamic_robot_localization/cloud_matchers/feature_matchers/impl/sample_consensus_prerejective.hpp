@@ -190,7 +190,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 	correspondence_rejector_poly_->setCardinality(nr_samples_);*/
 	pcl::Registration<PointSource, PointTarget>::clearCorrespondenceRejectors();
 	setupCorrespondanceRejectors(correspondence_rejectors_);
-	int num_rejections = 0; // For debugging
+	//int num_rejections = 0; // For debugging
 
 	// Initialize results
 	final_transformation_ = guess;
@@ -365,7 +365,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 #else //-----------------------------------------------------------------------------------------------------------------------------------
 
-	double highest_inlier_fraction = 0.0;
+	//double highest_inlier_fraction = 0.0;
 	accepted_transformations_->clear();
 
 	#pragma omp parallel for
@@ -455,7 +455,7 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 					if (current_inlier_fraction >= inlier_fraction_ && error < inlier_rmse_) {
 						accepted_transformations_->push_back(transformation);
 						if (error < lowest_error) {
-							highest_inlier_fraction = current_inlier_fraction;
+							//highest_inlier_fraction = current_inlier_fraction;
 							inliers_ = inliers;
 							lowest_error = error;
 							converged_ = true;

@@ -97,7 +97,7 @@ void CloudViewer<PointT>::showPointCloud(typename pcl::PointCloud<PointT>::Ptr& 
 
 	while (!cloud_visualizer.wasStopped()) {
 		cloud_visualizer.spinOnce(100);
-		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	cloud_visualizer.close();

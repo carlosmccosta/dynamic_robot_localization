@@ -23,7 +23,7 @@ template<typename PointT>
 void SIFT3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle,
 		std::string configuration_namespace) {
 	typename pcl::Keypoint<PointT, PointT>::Ptr keypoint_detector_base(new pcl::SIFTKeypoint<PointT, PointT>());
-	typename pcl::SIFTKeypoint<PointT, PointT>::Ptr keypoint_detector = boost::static_pointer_cast< pcl::SIFTKeypoint<PointT, PointT> >(keypoint_detector_base);
+	typename pcl::SIFTKeypoint<PointT, PointT>::Ptr keypoint_detector = std::static_pointer_cast< pcl::SIFTKeypoint<PointT, PointT> >(keypoint_detector_base);
 
 	double min_scale, min_contrast;
 	int number_octaves, number_scales_per_octave;

@@ -605,7 +605,6 @@ tracking_matchers:
         iterative_closest_point:                                    # Allows prefix and postfix of letters to ensure parsing order
         iterative_closest_point_2d:                                 # Allows prefix and postfix of letters to ensure parsing order
         iterative_closest_point_non_linear:                         # Allows prefix and postfix of letters to ensure parsing order
-        iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order | Cannot be used for 3 DoF because the PCL implementation of pcl::registration::TransformationEstimationPointToPlaneLLS::estimateRigidTransformation will produce a 6x6 matrix that cannot be inverted (singular), and will result in a transformation estimation with NaNs
             # the next set of parameters applies to the 4 icp algorithms mentioned above (iterative_closest_point | iterative_closest_point_2d | iterative_closest_point_non_linear | iterative_closest_point_with_normals)
             convergence_absolute_mse_threshold: 1e-12               # (correspondences_cur_mse_ - correspondences_prev_mse_) < mse_threshold_absolute_)
             convergence_rotation_threshold: 0.0                     # Only applied if > 0 | cos_angle = 0.5 * (transformation_.coeff (0, 0) + transformation_.coeff (1, 1) + transformation_.coeff (2, 2) - 1) || cos_angle >= rotation_threshold || (epsilon is the cos(angle) in a axis-angle representation) -> cos_angle = 0.99999 -> 0.256 degrees threshold
@@ -615,6 +614,9 @@ tracking_matchers:
             minimum_number_of_convergence_time_measurements_to_adjust_convergence_time_limit: 25    # Minimum number of convergence time measurements required to update the convergence time limit value
             use_reciprocal_correspondences: false
             max_number_of_registration_iterations: 100              # Overrides parameter in parent namespace
+        iterative_closest_point_with_normals:                       # Allows prefix and postfix of letters to ensure parsing order | Cannot be used for 3 DoF because the PCL implementation of pcl::registration::TransformationEstimationPointToPlaneLLS::estimateRigidTransformation will produce a 6x6 matrix that cannot be inverted (singular), and will result in a transformation estimation with NaNs
+            use_symmetric_objective_cost_function: false
+            ensure_normals_with_same_direction_when_using_symmetric_objective_cost_function: false
         iterative_closest_point_generalized:                        # Allows prefix and postfix of letters to ensure parsing order
             use_reciprocal_correspondences: false
             rotation_epsilon: 0.002                                 # The rotation epsilon (maximum allowable difference between two consecutive rotations) in order for an optimization to be considered as having converged to the final solution 

@@ -9,19 +9,15 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
-#include <vector>
+#include <memory>
 #include <utility>
-
-// ROS includes
+#include <vector>
 
 // PCL includes
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/PointIndices.h>
 #include <pcl/common/centroid.h>
-
-// external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
 #include <dynamic_robot_localization/common/impl/pointcloud_utils.hpp>
@@ -34,8 +30,8 @@ namespace dynamic_robot_localization {
 template <typename PointT>
 class ClusterSorter {
 	public:
-		typedef boost::shared_ptr< ClusterSorter > Ptr;
-		typedef boost::shared_ptr< const ClusterSorter > ConstPtr;
+		using Ptr = std::shared_ptr< ClusterSorter >;
+		using ConstPtr = std::shared_ptr< const ClusterSorter >;
 
 		ClusterSorter(bool ascending_sort) : ascending_sort_(ascending_sort) {}
 		virtual ~ClusterSorter() {}

@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void IterativeClosestPointGeneralized<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Registration<PointT, PointT>::Ptr matcher_base(new dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>());
-	typename dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< typename dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(matcher_base);
+	typename dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< typename dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(matcher_base);
 
 	double rotation_epsilon;
 	private_node_handle->param(configuration_namespace + "rotation_epsilon", rotation_epsilon, 0.002);
@@ -42,7 +42,7 @@ void IterativeClosestPointGeneralized<PointT>::setupConfigurationFromParameterSe
 
 template<typename PointT>
 double IterativeClosestPointGeneralized<PointT>::getTransformCloudElapsedTimeMS() {
-	typename IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
 	return -1.0;
 }
@@ -50,7 +50,7 @@ double IterativeClosestPointGeneralized<PointT>::getTransformCloudElapsedTimeMS(
 
 template<typename PointT>
 void IterativeClosestPointGeneralized<PointT>::resetTransformCloudElapsedTime() {
-	typename IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPointWithNormals-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

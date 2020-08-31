@@ -35,7 +35,6 @@
 	<depend>xmlrpcpp</depend>
 
 	<!-- system dependencies -->
-	<depend>boost</depend>
 	<depend>eigen</depend>
 	<depend>pcl</depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
 

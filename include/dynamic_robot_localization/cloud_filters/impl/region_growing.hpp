@@ -19,7 +19,7 @@ void RegionGrowing<PointT>::setupConfigurationFromParameterServer(ros::NodeHandl
 	private_node_handle->param(configuration_namespace + "use_pointcloud_rgb_information", use_pointcloud_rgb_information, false);
 
 	if (use_pointcloud_rgb_information) {
-		typename boost::shared_ptr< pcl::RegionGrowingRGB<PointT, PointT> > region_growing_rgb(new pcl::RegionGrowingRGB<PointT, PointT>());
+		typename std::shared_ptr< pcl::RegionGrowingRGB<PointT, PointT> > region_growing_rgb(new pcl::RegionGrowingRGB<PointT, PointT>());
 
 		double point_color_threshold;
 		private_node_handle->param(configuration_namespace + "point_color_threshold", point_color_threshold, 1200.0);
@@ -43,7 +43,7 @@ void RegionGrowing<PointT>::setupConfigurationFromParameterServer(ros::NodeHandl
 
 		region_growing_ = region_growing_rgb;
 	} else {
-		region_growing_ = typename boost::shared_ptr< pcl::RegionGrowing<PointT, PointT> > (new pcl::RegionGrowing<PointT, PointT>());
+		region_growing_ = typename std::shared_ptr< pcl::RegionGrowing<PointT, PointT> > (new pcl::RegionGrowing<PointT, PointT>());
 	}
 
 	int min_cluster_size, max_cluster_size;

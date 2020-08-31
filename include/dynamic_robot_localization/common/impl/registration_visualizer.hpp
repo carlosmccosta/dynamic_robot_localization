@@ -64,7 +64,7 @@ bool RegistrationVisualizer<PointSource, PointTarget>::setRegistration(
 
 	// Create the local callback function and bind it to the local function resposable for updating
 	// the local buffers
-	update_visualizer_ = boost::bind(&RegistrationVisualizer<PointSource, PointTarget>::updateIntermediateCloud, this, _1, _2, _3, _4);
+	update_visualizer_ = std::bind(&RegistrationVisualizer<PointSource, PointTarget>::updateIntermediateCloud, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
 	// Register the local callback function to the registration algorithm callback function
 	registration.registerVisualizationCallback(this->update_visualizer_);
@@ -81,7 +81,7 @@ bool RegistrationVisualizer<PointSource, PointTarget>::setRegistration(
 template<typename PointSource, typename PointTarget>
 void RegistrationVisualizer<PointSource, PointTarget>::startDisplay() {
 	// Create and start the rendering thread. This will open the display window.
-	viewer_thread_ = boost::thread(&dynamic_robot_localization::RegistrationVisualizer<PointSource, PointTarget>::runDisplay, this);
+	viewer_thread_ = std::thread(&dynamic_robot_localization::RegistrationVisualizer<PointSource, PointTarget>::runDisplay, this);
 }
 
 
@@ -193,7 +193,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::updateViewerIntermediateC
 template<typename PointSource, typename PointTarget>
 void RegistrationVisualizer<PointSource, PointTarget>::runDisplay() {
 	// Open 3D viewer
-	viewer_ = boost::shared_ptr<pcl::visualization::PCLVisualizer>(new pcl::visualization::PCLVisualizer("3D Viewer"));
+	viewer_ = std::shared_ptr<pcl::visualization::PCLVisualizer>(new pcl::visualization::PCLVisualizer("3D Viewer"));
 	viewer_->initCameraParameters();
 	viewer_->setCameraPosition(-6, 0, 0, 0, 0, 1);
 
@@ -233,7 +233,7 @@ void RegistrationVisualizer<PointSource, PointTarget>::runDisplay() {
 		// Unlock access to visualizer buffers
 		visualizer_updating_mutex_.unlock();
 
-		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 }
 

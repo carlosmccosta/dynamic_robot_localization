@@ -52,7 +52,7 @@ bool RegistrationCovariancePointToPoint3D<PointT>::computeRegistrationCovariance
 		double qiy = reference_cloud_correspondences[s].y;
 		double qiz = reference_cloud_correspondences[s].z;
 
-		double 	d2J_dx2 , d2J_dydx, d2J_dzdx, d2J_dadx, d2J_dbdx, d2J_dcdx,
+		double 	d2J_dx2 , d2J_dydx, d2J_dzdx, d2J_dadx, d2J_dbdx, /*d2J_dcdx,*/
 				d2J_dxdy, d2J_dy2 , d2J_dzdy, d2J_dady, d2J_dbdy, d2J_dcdy,
 				d2J_dxdz, d2J_dydz, d2J_dz2 , d2J_dadz, d2J_dbdz, d2J_dcdz,
 				d2J_dxda, d2J_dyda, d2J_dzda, d2J_da2 , d2J_dbda, d2J_dcda,
@@ -84,7 +84,7 @@ bool RegistrationCovariancePointToPoint3D<PointT>::computeRegistrationCovariance
 		d2J_dzdb = -2 * pix * cos_pitch - 2 * piz * cos_roll * sin_pitch - 2 * piy * sin_pitch * sin_roll;
 		d2J_dbdz = -2 * pix * cos_pitch - 2 * piz * cos_roll * sin_pitch - 2 * piy * sin_pitch * sin_roll;
 		d2J_dxdc = 2 * piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + 2 * piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll);
-		d2J_dcdx = 2 * piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + 2 * piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll);
+		//d2J_dcdx = 2 * piy * (sin_yaw * sin_roll + cos_yaw * cos_roll * sin_pitch) + 2 * piz * (cos_roll * sin_yaw - cos_yaw * sin_pitch * sin_roll);
 		d2J_dydc = -2 * piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) - 2 * piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll);
 		d2J_dcdy = -2 * piy * (cos_yaw * sin_roll - cos_roll * sin_yaw * sin_pitch) - 2 * piz * (cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll);
 		d2J_dzdc = 2 * piy * cos_pitch * cos_roll - 2 * piz * cos_pitch * sin_roll;

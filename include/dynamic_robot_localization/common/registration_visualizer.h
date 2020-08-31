@@ -35,14 +35,18 @@
  *
  */
 
-#ifndef PCL_REGISTRATION_VISUALIZER_H_
-#define PCL_REGISTRATION_VISUALIZER_H_
+#pragma once
 
 // PCL
 #include <pcl/registration/registration.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 
 namespace dynamic_robot_localization {
 /** \brief @b RegistrationVisualizer represents the base class for rendering
@@ -107,16 +111,16 @@ class RegistrationVisualizer {
 	private:
 
 		/** \brief The registration viewer. */
-		boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
+		std::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
 
 		/** \brief The thread running the runDisplay() function. */
-		boost::thread viewer_thread_;
+		std::thread viewer_thread_;
 
 		/** \brief The name of the registration method whose intermediate results are rendered. */
 		std::string registration_method_name_;
 
 		/** \brief Callback function linked to pcl::Registration::update_visualizer_ */
-		boost::function<
+		std::function<
 		        void(const pcl::PointCloud<PointSource> &cloud_src, const std::vector<int> &indices_src, const pcl::PointCloud<PointTarget> &cloud_tgt,
 		                const std::vector<int> &indices_tgt)> update_visualizer_;
 
@@ -136,7 +140,7 @@ class RegistrationVisualizer {
 		std::vector<int> cloud_target_indices_;
 
 		/** \brief The mutex used for the sincronization of updating and rendering of the local buffers. */
-		boost::mutex visualizer_updating_mutex_;
+		std::mutex visualizer_updating_mutex_;
 
 		/** \brief The maximum number of displayed correspondences. */
 		size_t maximum_displayed_correspondences_;
@@ -151,5 +155,3 @@ class RegistrationVisualizer {
 #ifdef DRL_NO_PRECOMPILE
 #include <dynamic_robot_localization/common/impl/registration_visualizer.hpp>
 #endif
-
-#endif  //#ifndef PCL_REGISTRATION_VISUALIZER_H_

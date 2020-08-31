@@ -207,7 +207,7 @@ void CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(ros::NodeHan
 
 	if (!tf_broadcaster_frame_id_.empty()) {
 		if (publish_tf)
-			tf_broadcaster_ = boost::shared_ptr< tf2_ros::TransformBroadcaster >(new tf2_ros::TransformBroadcaster());
+			tf_broadcaster_ = std::shared_ptr< tf2_ros::TransformBroadcaster >(new tf2_ros::TransformBroadcaster());
 
 		if (publish_static_tf) {
 			static_tf_broadcaster_ = CumulativeStaticTransformBroadcaster::getSingleton(node_handle);
@@ -307,7 +307,7 @@ bool CloudMatcher<PointT>::registerCloud(typename pcl::PointCloud<PointT>::Ptr& 
 	if (!postProcessRegistrationMatrix(ambient_pointcloud, final_transformation, best_pose_correction_out)) return false;
 
 	if (cloud_matcher_->hasConverged()) {
-		boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4 > > acceptedTransformations = getAcceptedTransformations();
+		std::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4 > > acceptedTransformations = getAcceptedTransformations();
 
 		if (!acceptedTransformations->empty()) {
 			for (size_t i = 0; i < acceptedTransformations->size(); ++i) {
@@ -389,7 +389,7 @@ bool CloudMatcher<PointT>::postProcessRegistrationMatrix(typename pcl::PointClou
 template<typename PointT>
 void CloudMatcher<PointT>::setupRegistrationVisualizer() {
 	if (cloud_matcher_ && !registration_visualizer_ && display_cloud_aligment_) {
-		registration_visualizer_ = boost::shared_ptr< RegistrationVisualizer<PointT, PointT> >(new RegistrationVisualizer<PointT, PointT>());
+		registration_visualizer_ = std::shared_ptr< RegistrationVisualizer<PointT, PointT> >(new RegistrationVisualizer<PointT, PointT>());
 		registration_visualizer_->setMaximumDisplayedCorrespondences(maximum_number_of_displayed_correspondences_);
 		registration_visualizer_->setRegistration(*cloud_matcher_);
 
@@ -403,31 +403,31 @@ double CloudMatcher<PointT>::getCorrespondenceEstimationElapsedTimeMS() {
 	if (correspondence_estimation_ptr_) {
 		switch (correpondence_estimation_approach_) {
 			case CorrespondenceEstimation: {
-				typename CorrespondenceEstimationTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationLookupTable: {
-				typename CorrespondenceEstimationLookupTableTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationLookupTableTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationLookupTableTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationLookupTableTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationBackProjection: {
-				typename CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationNormalShooting: {
-				typename CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationOrganizedProjection: {
-				typename CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { return estimator->getCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
@@ -445,31 +445,31 @@ void CloudMatcher<PointT>::resetCorrespondenceEstimationElapsedTime() {
 	if (correspondence_estimation_ptr_) {
 		switch (correpondence_estimation_approach_) {
 			case CorrespondenceEstimation: {
-				typename CorrespondenceEstimationTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationLookupTable: {
-				typename CorrespondenceEstimationLookupTableTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationLookupTableTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationLookupTableTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationLookupTableTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationBackProjection: {
-				typename CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationBackProjectionTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationNormalShooting: {
-				typename CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationNormalShootingTimed<PointT, PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
 
 			case CorrespondenceEstimationOrganizedProjection: {
-				typename CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
+				typename CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< CorrespondenceEstimationOrganizedProjectionTimed<PointT, PointT, float> >(correspondence_estimation_ptr_);
 				if (estimator) { estimator->resetCorrespondenceEstimationElapsedTime(); }
 				break;
 			}
@@ -485,55 +485,55 @@ double CloudMatcher<PointT>::getTransformationEstimationElapsedTimeMS() {
 	if (transformation_estimation_ptr_) {
 		switch (transformation_estimation_approach_) {
 			case TransformationEstimation2D: {
-				typename TransformationEstimation2DTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimation2DTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimation2DTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimation2DTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationDualQuaternion: {
-				typename TransformationEstimationDualQuaternionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationDualQuaternionTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationDualQuaternionTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationDualQuaternionTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationLM: {
-				typename TransformationEstimationLMTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationLMTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationLMTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationLMTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlane: {
-				typename TransformationEstimationPointToPlaneTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlaneLLS: {
-				typename TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlaneLLSWeighted: {
-				typename TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlaneWeighted: {
-				typename TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationSVD: {
-				typename TransformationEstimationSVDTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationSVDTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationSVDTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationSVDScale: {
-				typename TransformationEstimationSVDScaleTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDScaleTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationSVDScaleTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationSVDScaleTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { return estimator->getTransformationEstimationElapsedTime(); }
 				break;
 			}
@@ -551,55 +551,55 @@ void CloudMatcher<PointT>::resetTransformationEstimationElapsedTime() {
 	if (transformation_estimation_ptr_) {
 		switch (transformation_estimation_approach_) {
 			case TransformationEstimation2D: {
-				typename TransformationEstimation2DTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimation2DTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimation2DTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimation2DTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationDualQuaternion: {
-				typename TransformationEstimationDualQuaternionTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationDualQuaternionTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationDualQuaternionTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationDualQuaternionTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationLM: {
-				typename TransformationEstimationLMTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationLMTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationLMTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationLMTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlane: {
-				typename TransformationEstimationPointToPlaneTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlaneLLS: {
-				typename TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlaneLLSWeighted: {
-				typename TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneLLSWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationPointToPlaneWeighted: {
-				typename TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationPointToPlaneWeightedTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationSVD: {
-				typename TransformationEstimationSVDTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationSVDTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationSVDTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}
 
 			case TransformationEstimationSVDScale: {
-				typename TransformationEstimationSVDScaleTimed<PointT, PointT, float>::Ptr estimator = boost::dynamic_pointer_cast< TransformationEstimationSVDScaleTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
+				typename TransformationEstimationSVDScaleTimed<PointT, PointT, float>::Ptr estimator = std::dynamic_pointer_cast< TransformationEstimationSVDScaleTimed<PointT, PointT, float> >(transformation_estimation_ptr_);
 				if (estimator) { estimator->resetTransformationEstimationElapsedTime(); }
 				break;
 			}

@@ -7,11 +7,9 @@
  * @author Carlos Miguel Correia da Costa
  */
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <memory>
 #include <string>
 
 // ROS includes
@@ -34,7 +32,6 @@
 //#include <pcl/visualization/registration_visualizer.h>
 
 // external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
 #include <Eigen/Core>
 
 // project includes
@@ -58,16 +55,10 @@ template <typename PointT>
 class CloudMatcher : public ConfigurableObject {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< CloudMatcher<PointT> > Ptr;
-		typedef boost::shared_ptr< const CloudMatcher<PointT> > ConstPtr;
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <usings>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		using Ptr = std::shared_ptr< CloudMatcher<PointT> >;
+		using ConstPtr = std::shared_ptr< const CloudMatcher<PointT> >;
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </usings>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		CloudMatcher();
@@ -93,7 +84,7 @@ class CloudMatcher : public ConfigurableObject {
 				typename pcl::PointCloud<PointT>::Ptr& surface,
 				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {}
 
-		virtual boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> > getAcceptedTransformations() { return boost::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> >(new std::vector< typename pcl::Registration<PointT, PointT>::Matrix4>()); }
+		virtual std::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> > getAcceptedTransformations() { return std::shared_ptr< std::vector< typename pcl::Registration<PointT, PointT>::Matrix4> >(new std::vector< typename pcl::Registration<PointT, PointT>::Matrix4>()); }
 
 		void setupRegistrationVisualizer();
 		virtual bool registrationRequiresNormalsOnAmbientPointCloud() { return false; }
@@ -111,7 +102,7 @@ class CloudMatcher : public ConfigurableObject {
 		inline bool getMatchOnlyKeypoints() const { return match_only_keypoints_; }
 		inline typename CloudPublisher<PointT>::Ptr getCloudPublisher() { return cloud_publisher_; }
 		inline bool getDisplayCloudAligment() const { return display_cloud_aligment_; }
-		inline const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
+		inline const std::shared_ptr<RegistrationVisualizer<PointT, PointT> >& getRegistrationVisualizer() const { return registration_visualizer_; }
 		inline double getCloudAlignTimeMS() { return cloud_align_time_ms_; }
 		virtual int getNumberOfRegistrationIterations() { return -1; }
 		virtual std::string getMatcherConvergenceState() { return ""; }
@@ -125,7 +116,7 @@ class CloudMatcher : public ConfigurableObject {
 		inline void setCloudPublisher(typename CloudPublisher<PointT>::Ptr& cloud_publisher) { cloud_publisher_ = cloud_publisher; }
 		inline void setDisplayCloudAligment(bool display_cloud_aligment) { display_cloud_aligment_ = display_cloud_aligment; }
 		inline void setForceNoRecomputeReciprocal (bool force_no_recompute_reciprocal) { force_no_recompute_reciprocal_ = force_no_recompute_reciprocal; }
-		inline void setRegistrationVisualizer(const boost::shared_ptr<RegistrationVisualizer<PointT, PointT> >& registration_visualizer) { registration_visualizer_ = registration_visualizer; }
+		inline void setRegistrationVisualizer(const std::shared_ptr<RegistrationVisualizer<PointT, PointT> >& registration_visualizer) { registration_visualizer_ = registration_visualizer; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -144,13 +135,13 @@ class CloudMatcher : public ConfigurableObject {
 		typename pcl::PointCloud<PointT>::Ptr reference_cloud_keypoints_;
 		typename pcl::search::KdTree<PointT>::Ptr search_method_;
 
-		boost::shared_ptr< RegistrationVisualizer<PointT, PointT> > registration_visualizer_;
+		std::shared_ptr< RegistrationVisualizer<PointT, PointT> > registration_visualizer_;
 		bool display_cloud_aligment_;
 		int maximum_number_of_displayed_correspondences_;
 		bool force_no_recompute_reciprocal_;
 
-		boost::shared_ptr< tf2_ros::TransformBroadcaster > tf_broadcaster_;
-		boost::shared_ptr< CumulativeStaticTransformBroadcaster > static_tf_broadcaster_;
+		std::shared_ptr< tf2_ros::TransformBroadcaster > tf_broadcaster_;
+		std::shared_ptr< CumulativeStaticTransformBroadcaster > static_tf_broadcaster_;
 		std::string tf_broadcaster_frame_id_;
 		std::string tf_broadcaster_child_frame_id_;
 		bool update_registered_pointcloud_with_tf_broadcaster_child_frame_id_;

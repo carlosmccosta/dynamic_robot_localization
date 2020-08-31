@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Keypoint<PointT, PointT>::Ptr keypoint_detector_base(new pcl::ISSKeypoint3D<PointT, PointT, PointT>());
-	typename pcl::ISSKeypoint3D<PointT, PointT, PointT>::Ptr keypoint_detector = boost::static_pointer_cast< pcl::ISSKeypoint3D<PointT, PointT, PointT> >(keypoint_detector_base);
+	typename pcl::ISSKeypoint3D<PointT, PointT, PointT>::Ptr keypoint_detector = std::static_pointer_cast< pcl::ISSKeypoint3D<PointT, PointT, PointT> >(keypoint_detector_base);
 
 	double salient_radius;
 	private_node_handle->param(configuration_namespace + "salient_radius", salient_radius, 0.06);
@@ -67,7 +67,7 @@ void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ro
 template<typename PointT>
 void IntrinsicShapeSignature3D<PointT>::findKeypoints(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints_out,
 		typename pcl::PointCloud<PointT>::Ptr& surface, typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
-	boost::static_pointer_cast< pcl::ISSKeypoint3D<PointT, PointT, PointT> >(KeypointDetector<PointT>::getKeypointDetector())->setNormals(surface);
+	std::static_pointer_cast< pcl::ISSKeypoint3D<PointT, PointT, PointT> >(KeypointDetector<PointT>::getKeypointDetector())->setNormals(surface);
 
 	KeypointDetector<PointT>::findKeypoints(pointcloud, pointcloud_keypoints_out, surface, surface_search_method);
 	ROS_DEBUG_STREAM("IntrinsicShapeSignature3D found " << pointcloud_keypoints_out->size() << " keypoints in pointcloud with " << pointcloud->size() << " points");

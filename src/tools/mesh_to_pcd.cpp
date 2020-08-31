@@ -14,8 +14,6 @@
 // std includes
 #include <string>
 
-// ROS includes
-
 // PCL includes
 #include <pcl/point_cloud.h>
 #include <pcl/io/pcd_io.h>

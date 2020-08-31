@@ -7,26 +7,18 @@
  * @author Carlos Miguel Correia da Costa
  */
 
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </macros>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
-#include <string>
 #include <limits>
-
-// ROS includes
+#include <memory>
+#include <string>
 
 // PCL includes
 #include <pcl/registration/gicp.h>
 
-// external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
-
 // project includes
 #include <dynamic_robot_localization/cloud_matchers/point_matchers/iterative_closest_point.h>
 #include <dynamic_robot_localization/convergence_estimators/default_convergence_criteria_with_time.h>
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -35,8 +27,8 @@ namespace dynamic_robot_localization {
 template <typename PointSource, typename PointTarget>
 class IterativeClosestPointGeneralizedTimeConstrained: public pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget> {
 	public:
-		typedef boost::shared_ptr< IterativeClosestPointGeneralizedTimeConstrained<PointSource, PointTarget> > Ptr;
-		typedef boost::shared_ptr< const IterativeClosestPointGeneralizedTimeConstrained<PointSource, PointTarget> > ConstPtr;
+		using Ptr = std::shared_ptr< IterativeClosestPointGeneralizedTimeConstrained<PointSource, PointTarget> >;
+		using ConstPtr = std::shared_ptr< const IterativeClosestPointGeneralizedTimeConstrained<PointSource, PointTarget> >;
 
 		IterativeClosestPointGeneralizedTimeConstrained(double convergence_time_limit_seconds = std::numeric_limits<double>::max()) {
 			pcl::IterativeClosestPoint<PointSource, PointTarget>::convergence_criteria_.reset(new DefaultConvergenceCriteriaWithTime<float> (
@@ -71,16 +63,10 @@ template <typename PointT>
 class IterativeClosestPointGeneralized : public IterativeClosestPoint<PointT> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< IterativeClosestPointGeneralized<PointT> > Ptr;
-		typedef boost::shared_ptr< const IterativeClosestPointGeneralized<PointT> > ConstPtr;
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <enums>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </enums>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constants>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constants>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <usings>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		using Ptr = std::shared_ptr< IterativeClosestPointGeneralized<PointT> >;
+		using ConstPtr = std::shared_ptr< const IterativeClosestPointGeneralized<PointT> >;
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </usings>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		IterativeClosestPointGeneralized() {}

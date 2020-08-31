@@ -65,8 +65,8 @@ void computeTransformationFromMatrices(const Eigen::Matrix4f& source_matrix, con
 bool isTransformValid(const tf2::Transform& transform) {
 	tf2::Vector3 position = transform.getOrigin();
 	tf2::Quaternion orientation = transform.getRotation();
-	if (!pcl_isfinite(position.x()) || !pcl_isfinite(position.y()) || !pcl_isfinite(position.z())
-			|| !pcl_isfinite(orientation.x()) || !pcl_isfinite(orientation.y()) || !pcl_isfinite(orientation.z()) || !pcl_isfinite(orientation.w())) {
+	if (!std::isfinite(position.x()) || !std::isfinite(position.y()) || !std::isfinite(position.z())
+			|| !std::isfinite(orientation.x()) || !std::isfinite(orientation.y()) || !std::isfinite(orientation.z()) || !std::isfinite(orientation.w())) {
 		return false;
 	}
 

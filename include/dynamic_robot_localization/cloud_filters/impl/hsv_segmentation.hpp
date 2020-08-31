@@ -37,7 +37,7 @@ void HSVSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr
 
 	for (size_t i = 0; i < input_cloud->size(); ++i) {
 		PointT& point = (*input_cloud)[i];
-		float h, s, v;
+		float h = 0.0f, s = 0.0f, v = 0.0f;
 		pcl::RGBtoHSV(point.r, point.g, point.b, h, s, v);
 
 		bool valid_hue;

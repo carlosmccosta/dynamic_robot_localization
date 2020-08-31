@@ -41,6 +41,7 @@
 #define IA_RANSAC_H_
 
 #include <limits>
+#include <memory>
 #include <pcl/registration/registration.h>
 #include <pcl/registration/transformation_estimation_svd.h>
 #include <pcl/common/time.h>
@@ -72,21 +73,21 @@ namespace dynamic_robot_localization
       using pcl::Registration<PointT, PointT>::getClassName;
       using pcl::Registration<PointT, PointT>::update_visualizer_;
 
-      typedef typename pcl::Registration<PointT, PointT>::PointCloudSource PointCloudSource;
-      typedef typename PointCloudSource::Ptr PointCloudSourcePtr;
-      typedef typename PointCloudSource::ConstPtr PointCloudSourceConstPtr;
+      using PointCloudSource =  typename pcl::Registration<PointT, PointT>::PointCloudSource;
+      using PointCloudSourcePtr = typename PointCloudSource::Ptr;
+      using PointCloudSourceConstPtr = typename PointCloudSource::ConstPtr;
 
-      typedef typename pcl::Registration<PointT, PointT>::PointCloudTarget PointCloudTarget;
+      using PointCloudTarget = typename pcl::Registration<PointT, PointT>::PointCloudTarget;
 
-      typedef pcl::PointIndices::Ptr PointIndicesPtr;
-      typedef pcl::PointIndices::ConstPtr PointIndicesConstPtr;
+      using PointIndicesPtr = pcl::PointIndices::Ptr;
+      using PointIndicesConstPtr = pcl::PointIndices::ConstPtr;
 
-      typedef pcl::PointCloud<FeatureT> FeatureCloud;
-      typedef typename FeatureCloud::Ptr FeatureCloudPtr;
-      typedef typename FeatureCloud::ConstPtr FeatureCloudConstPtr;
+      using FeatureCloud = pcl::PointCloud<FeatureT>;
+      using FeatureCloudPtr = typename FeatureCloud::Ptr;
+      using FeatureCloudConstPtr = typename FeatureCloud::ConstPtr;
 
-      typedef boost::shared_ptr<SampleConsensusInitialAlignmentRegistration<PointT, FeatureT> > Ptr;
-      typedef boost::shared_ptr<const SampleConsensusInitialAlignmentRegistration<PointT, FeatureT> > ConstPtr;
+      using Ptr = std::shared_ptr<SampleConsensusInitialAlignmentRegistration<PointT, FeatureT> >;
+      using ConstPtr = std::shared_ptr<const SampleConsensusInitialAlignmentRegistration<PointT, FeatureT> >;
 
 
       class ErrorFunctor
@@ -132,7 +133,7 @@ namespace dynamic_robot_localization
           float threshold_;
       };
 
-      typedef typename pcl::KdTreeFLANN<FeatureT>::Ptr FeatureKdTreePtr;
+      using FeatureKdTreePtr = typename pcl::KdTreeFLANN<FeatureT>::Ptr;
       /** \brief Constructor. */
       SampleConsensusInitialAlignmentRegistration () :
         input_features_ (), target_features_ (), 
@@ -150,7 +151,7 @@ namespace dynamic_robot_localization
 
       virtual ~SampleConsensusInitialAlignmentRegistration () {}
 
-      /** \brief Provide a boost shared pointer to the source point cloud's feature descriptors
+      /** \brief Provide a shared pointer to the source point cloud's feature descriptors
         * \param features the source point cloud's features
         */
       void 
@@ -160,7 +161,7 @@ namespace dynamic_robot_localization
       inline FeatureCloudConstPtr const 
       getSourceFeatures () { return (input_features_); }
 
-      /** \brief Provide a boost shared pointer to the target point cloud's feature descriptors
+      /** \brief Provide a shared pointer to the target point cloud's feature descriptors
         * \param features the target point cloud's features
         */
       void 
@@ -206,12 +207,12 @@ namespace dynamic_robot_localization
        * \param[in] error_functor a shared pointer to a subclass of SampleConsensusInitialAlignmentRegistration::ErrorFunctor
        */
       void
-      setErrorFunction (const boost::shared_ptr<ErrorFunctor> & error_functor) { error_functor_ = error_functor; }
+      setErrorFunction (const std::shared_ptr<ErrorFunctor> & error_functor) { error_functor_ = error_functor; }
 
       /** \brief Get a shared pointer to the ErrorFunctor that is to be minimized  
        * \return A shared pointer to a subclass of SampleConsensusInitialAlignmentRegistration::ErrorFunctor
        */
-      boost::shared_ptr<ErrorFunctor>
+      std::shared_ptr<ErrorFunctor>
       getErrorFunction () { return (error_functor_); }
 
       inline void setConvergenceTimeLimitSeconds(double convergence_time_limit_seconds) { convergence_time_limit_seconds_ = convergence_time_limit_seconds; }
@@ -278,7 +279,7 @@ namespace dynamic_robot_localization
       FeatureKdTreePtr feature_tree_;               
 
       /** */
-      boost::shared_ptr<ErrorFunctor> error_functor_;
+      std::shared_ptr<ErrorFunctor> error_functor_;
 
       pcl::StopWatch convergence_timer_;
       double convergence_time_limit_seconds_;

@@ -24,7 +24,7 @@ typename pcl::PointCloud<FeatureT>::Ptr KeypointDescriptorFromNormals<PointT, Fe
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints, typename pcl::PointCloud<PointT>::Ptr& surface,
 		typename pcl::search::KdTree<PointT>::Ptr& surface_search_method) {
 
-	boost::static_pointer_cast< typename pcl::FeatureFromNormals<PointT, PointT, FeatureT> >(KeypointDescriptor<PointT, FeatureT>::getFeatureDescriptor())->setInputNormals(surface);
+	std::static_pointer_cast< typename pcl::FeatureFromNormals<PointT, PointT, FeatureT> >(KeypointDescriptor<PointT, FeatureT>::getFeatureDescriptor())->setInputNormals(surface);
 	return KeypointDescriptor<PointT, FeatureT>::computeKeypointsDescriptors(pointcloud_keypoints, surface, surface_search_method);
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </KeypointDescriptorFromNormals-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

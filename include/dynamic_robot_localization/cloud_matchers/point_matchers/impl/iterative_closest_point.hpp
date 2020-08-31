@@ -51,7 +51,7 @@ void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::N
 
 	bool use_reciprocal_correspondences;
 	private_node_handle->param(configuration_namespace + "use_reciprocal_correspondences", use_reciprocal_correspondences, false);
-	typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = std::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
 	matcher->setUseReciprocalCorrespondences(use_reciprocal_correspondences);
 	CloudMatcher<PointT>::setForceNoRecomputeReciprocal(!use_reciprocal_correspondences);
 
@@ -130,8 +130,8 @@ template<typename PointT>
 typename DefaultConvergenceCriteriaWithTime<float>::Ptr IterativeClosestPoint<PointT>::getConvergenceCriteria() {
 	typename DefaultConvergenceCriteriaWithTime<float>::Ptr convergence_criteria;
 	if (CloudMatcher<PointT>::cloud_matcher_) {
-		typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = boost::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
-		if (matcher) { convergence_criteria = boost::dynamic_pointer_cast< typename dynamic_robot_localization::DefaultConvergenceCriteriaWithTime<float> >(matcher->getConvergeCriteria()); }
+		typename pcl::IterativeClosestPoint<PointT, PointT, float>::Ptr matcher = std::dynamic_pointer_cast< typename pcl::IterativeClosestPoint<PointT, PointT, float> >(CloudMatcher<PointT>::cloud_matcher_);
+		if (matcher) { convergence_criteria = std::dynamic_pointer_cast< typename dynamic_robot_localization::DefaultConvergenceCriteriaWithTime<float> >(matcher->getConvergeCriteria()); }
 	}
 
 	return convergence_criteria;
@@ -149,7 +149,7 @@ std::string IterativeClosestPoint<PointT>::getMatcherConvergenceState() {
 
 template<typename PointT>
 double IterativeClosestPoint<PointT>::getTransformCloudElapsedTimeMS() {
-	typename IterativeClosestPointTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { return matcher->getTransformCloudElapsedTime(); }
 	return -1.0;
 }
@@ -157,7 +157,7 @@ double IterativeClosestPoint<PointT>::getTransformCloudElapsedTimeMS() {
 
 template<typename PointT>
 void IterativeClosestPoint<PointT>::resetTransformCloudElapsedTime() {
-	typename IterativeClosestPointTimeConstrained<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< IterativeClosestPointTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+	typename IterativeClosestPointTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< IterativeClosestPointTimeConstrained<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 	if (matcher) { matcher->resetTransformCloudElapsedTime(); }
 }
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </IterativeClosestPoint-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

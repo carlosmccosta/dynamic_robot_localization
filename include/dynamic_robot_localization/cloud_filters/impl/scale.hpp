@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void Scale<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::Scale<PointT>());
-	typename pcl::Scale<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::Scale<PointT> >(filter_base);
+	typename pcl::Scale<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::Scale<PointT> >(filter_base);
 
 	double scale;
 	private_node_handle->param(configuration_namespace + "scale_factor", scale, 0.001);
@@ -37,7 +37,7 @@ void Scale<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cl
 	CloudFilter<PointT>::filter_->setInputCloud(input_cloud);
 	CloudFilter<PointT>::filter_->filter(*output_cloud);
 
-	typename pcl::Scale<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::Scale<PointT> >(CloudFilter<PointT>::filter_);
+	typename pcl::Scale<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::Scale<PointT> >(CloudFilter<PointT>::filter_);
 	if (CloudFilter<PointT>::getCloudPublisher() && output_cloud) { CloudFilter<PointT>::getCloudPublisher()->publishPointCloud(*output_cloud); }
 	ROS_DEBUG_STREAM("Scaled point cloud by " << filter->getScale());
 }

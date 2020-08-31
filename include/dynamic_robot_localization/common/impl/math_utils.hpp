@@ -15,10 +15,10 @@ namespace math_utils {
 
 template <typename Scalar>
 bool isTransformValid(const Eigen::Matrix<Scalar, 4, 4>& transform) {
-	if (!pcl_isfinite(transform(0, 0)) || !pcl_isfinite(transform(0, 1)) || !pcl_isfinite(transform(0, 2)) || !pcl_isfinite(transform(0, 3)) ||
-		!pcl_isfinite(transform(1, 0)) || !pcl_isfinite(transform(1, 1)) || !pcl_isfinite(transform(1, 2)) || !pcl_isfinite(transform(1, 3)) ||
-		!pcl_isfinite(transform(2, 0)) || !pcl_isfinite(transform(2, 1)) || !pcl_isfinite(transform(2, 2)) || !pcl_isfinite(transform(2, 3)) ||
-		!pcl_isfinite(transform(3, 0)) || !pcl_isfinite(transform(3, 1)) || !pcl_isfinite(transform(3, 2)) || !pcl_isfinite(transform(3, 3))) {
+	if (!std::isfinite(transform(0, 0)) || !std::isfinite(transform(0, 1)) || !std::isfinite(transform(0, 2)) || !std::isfinite(transform(0, 3)) ||
+		!std::isfinite(transform(1, 0)) || !std::isfinite(transform(1, 1)) || !std::isfinite(transform(1, 2)) || !std::isfinite(transform(1, 3)) ||
+		!std::isfinite(transform(2, 0)) || !std::isfinite(transform(2, 1)) || !std::isfinite(transform(2, 2)) || !std::isfinite(transform(2, 3)) ||
+		!std::isfinite(transform(3, 0)) || !std::isfinite(transform(3, 1)) || !std::isfinite(transform(3, 2)) || !std::isfinite(transform(3, 3))) {
 		return false;
 	}
 	return true;

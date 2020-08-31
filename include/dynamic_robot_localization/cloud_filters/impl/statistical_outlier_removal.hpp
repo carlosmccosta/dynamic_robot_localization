@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void StatisticalOutlierRemoval<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::StatisticalOutlierRemoval<PointT>());
-	typename pcl::StatisticalOutlierRemoval<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::StatisticalOutlierRemoval<PointT> >(filter_base);
+	typename pcl::StatisticalOutlierRemoval<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::StatisticalOutlierRemoval<PointT> >(filter_base);
 
 	int number_of_neighbors_for_mean_distance_estimation;
 	private_node_handle->param(configuration_namespace + "number_of_neighbors_for_mean_distance_estimation", number_of_neighbors_for_mean_distance_estimation, 4);

@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void RandomSample<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Filter<PointT>::Ptr filter_base(new pcl::RandomSample<PointT>());
-	typename pcl::RandomSample<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::RandomSample<PointT> >(filter_base);
+	typename pcl::RandomSample<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::RandomSample<PointT> >(filter_base);
 
 	int number_of_random_samples;
 	private_node_handle->param(configuration_namespace + "number_of_random_samples", number_of_random_samples, 250);
@@ -42,7 +42,7 @@ template<typename PointT>
 void RandomSample<PointT>::filter(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, typename pcl::PointCloud<PointT>::Ptr& output_cloud) {
 	size_t number_of_points_in_input_cloud = input_cloud->size();
 
-	typename pcl::RandomSample<PointT>::Ptr filter = boost::static_pointer_cast< typename pcl::RandomSample<PointT> >(CloudFilter<PointT>::filter_);
+	typename pcl::RandomSample<PointT>::Ptr filter = std::static_pointer_cast< typename pcl::RandomSample<PointT> >(CloudFilter<PointT>::filter_);
 
 	if (reinitialize_seed_before_filtering_) {
 		filter->setSeed(time(NULL));

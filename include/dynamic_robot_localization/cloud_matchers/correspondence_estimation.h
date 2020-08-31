@@ -10,9 +10,8 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <memory>
 #include <limits>
-
-// ROS includes
 
 // PCL includes
 #include <pcl/registration/correspondence_estimation.h>
@@ -20,9 +19,6 @@
 #include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_estimation_normal_shooting.h>
 #include <pcl/registration/correspondence_estimation_organized_projection.h>
-
-// external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
 
 // project includes
 #include <dynamic_robot_localization/common/common.h>
@@ -45,8 +41,8 @@ enum CorrepondenceEstimationApproach {
 template < DRL_UNPACK_ARGS TemplatesDeclaration > \
 class BaseClass##Suffix : public pcl::registration::BaseClass< DRL_UNPACK_ARGS TemplatesUsage > { \
 	public: \
-		typedef boost::shared_ptr< BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > > Ptr; \
-		typedef boost::shared_ptr< const BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > > ConstPtr; \
+		using Ptr = std::shared_ptr< BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > >; \
+		using ConstPtr = std::shared_ptr< const BaseClass##Suffix< DRL_UNPACK_ARGS TemplatesUsage > >; \
 \
 		BaseClass##Suffix() : correspondence_estimation_elapsed_time_(0) {} \
 		virtual ~BaseClass##Suffix() {} \

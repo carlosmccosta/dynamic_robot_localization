@@ -9,9 +9,10 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
-#include<cmath>
-#include<limits>
-#include<string>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <string>
 
 // ROS includes
 #include <ros/ros.h>
@@ -23,16 +24,11 @@
 #include <pcl/segmentation/impl/region_growing.hpp>
 #include <pcl/segmentation/impl/region_growing_rgb.hpp>
 
-// external libs includes
-#include <boost/smart_ptr/shared_ptr.hpp>
-
 // project includes
 #include <dynamic_robot_localization/common/cloud_publisher.h>
 #include <dynamic_robot_localization/common/pointcloud_utils.h>
 #include <dynamic_robot_localization/cloud_filters/cloud_filter.h>
 #include <dynamic_robot_localization/cluster_selectors/cluster_selector.h>
-
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -45,10 +41,10 @@ template <typename PointT>
 class RegionGrowing : public CloudFilter<PointT> {
 	// ========================================================================   <public-section>   ===========================================================================
 	public:
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <typedefs>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		typedef boost::shared_ptr< RegionGrowing<PointT> > Ptr;
-		typedef boost::shared_ptr< const RegionGrowing<PointT> > ConstPtr;
-		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </typedefs>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <usings>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		using Ptr = std::shared_ptr< RegionGrowing<PointT> >;
+		using ConstPtr = std::shared_ptr< const RegionGrowing<PointT> >;
+		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </usings>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		RegionGrowing() : CloudFilter<PointT>("RegionGrowing") {}
@@ -69,7 +65,7 @@ class RegionGrowing : public CloudFilter<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
-		typename boost::shared_ptr< pcl::RegionGrowing<PointT, PointT> > region_growing_;
+		typename std::shared_ptr< pcl::RegionGrowing<PointT, PointT> > region_growing_;
 		ClusterSelector<PointT> cluster_selector_;
 	// ========================================================================   </protected-section>  ========================================================================
 };

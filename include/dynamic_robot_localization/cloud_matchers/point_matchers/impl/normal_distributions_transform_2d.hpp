@@ -22,7 +22,7 @@ namespace dynamic_robot_localization {
 template<typename PointT>
 void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
 	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new NormalDistributionsTransform2DDetailed<PointT, PointT>());
-	typename pcl::NormalDistributionsTransform2D<PointT, PointT>::Ptr matcher = boost::static_pointer_cast< typename pcl::NormalDistributionsTransform2D<PointT, PointT> >(matcher_base);
+	typename pcl::NormalDistributionsTransform2D<PointT, PointT>::Ptr matcher = std::static_pointer_cast< typename pcl::NormalDistributionsTransform2D<PointT, PointT> >(matcher_base);
 
 	double transformation_rotation_epsilon;
 	private_node_handle->param(configuration_namespace + "transformation_rotation_epsilon", transformation_rotation_epsilon, 0.0);
@@ -57,7 +57,7 @@ void NormalDistributionsTransform2D<PointT>::setupConfigurationFromParameterServ
 template<typename PointT>
 int NormalDistributionsTransform2D<PointT>::getNumberOfRegistrationIterations() {
 	if (CloudMatcher<PointT>::cloud_matcher_) {
-		typename NormalDistributionsTransform2DDetailed<PointT, PointT>::Ptr matcher = boost::dynamic_pointer_cast< typename dynamic_robot_localization::NormalDistributionsTransform2DDetailed<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
+		typename NormalDistributionsTransform2DDetailed<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< typename dynamic_robot_localization::NormalDistributionsTransform2DDetailed<PointT, PointT> >(CloudMatcher<PointT>::cloud_matcher_);
 		if (matcher) { return matcher->getNumberOfRegistrationIterations(); }
 	}
 	return -1;

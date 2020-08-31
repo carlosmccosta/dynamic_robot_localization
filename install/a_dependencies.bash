@@ -12,7 +12,6 @@ echo "##########################################################################
 # required system dependencies
 sudo apt-get install coreutils ${install_args}
 sudo apt-get install git ${install_args}
-sudo apt-get install libboost-all-dev ${install_args}
 sudo apt-get install libeigen3-dev ${install_args}
 sudo apt-get install python-wstool ${install_args}
 sudo apt-get install python-catkin-tools ${install_args}
