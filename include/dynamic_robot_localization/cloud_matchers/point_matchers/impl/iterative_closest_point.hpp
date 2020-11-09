@@ -21,9 +21,9 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	private_node_handle->param(configuration_namespace + "convergence_absolute_mse_threshold", convergence_absolute_mse_threshold_, 1e-12);
-	private_node_handle->param(configuration_namespace + "convergence_rotation_threshold", convergence_rotation_threshold_, 0.0);
-	private_node_handle->param(configuration_namespace + "convergence_max_iterations_similar_transforms", convergence_max_iterations_similar_transforms_, 0);
+	private_node_handle->param(configuration_namespace + "convergence_absolute_mse_threshold", convergence_absolute_mse_threshold_, 1e-7);
+	private_node_handle->param(configuration_namespace + "convergence_rotation_threshold", convergence_rotation_threshold_, 0.99999);
+	private_node_handle->param(configuration_namespace + "convergence_max_iterations_similar_transforms", convergence_max_iterations_similar_transforms_, 5);
 	double convergence_time_limit_seconds;
 	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds", convergence_time_limit_seconds, -1.0);
 	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds_as_mean_convergence_time_percentage", convergence_time_limit_seconds_as_mean_convergence_time_percentage_, 3.0);

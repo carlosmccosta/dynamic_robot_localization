@@ -11,8 +11,8 @@ tracking_matchers:
 #        iterative_closest_point_generalized:
             convergence_time_limit_seconds: 0.500
             max_correspondence_distance: 0.35
-            transformation_epsilon: 1e-3
-            euclidean_fitness_epsilon: 1e-3
+            transformation_epsilon: 0.001
+            euclidean_fitness_epsilon: 0.001
             max_number_of_registration_iterations: 150
             max_number_of_ransac_iterations: 50
             ransac_outlier_rejection_threshold: 0.05

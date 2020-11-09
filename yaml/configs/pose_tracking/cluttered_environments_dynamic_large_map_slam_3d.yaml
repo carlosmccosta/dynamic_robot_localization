@@ -51,8 +51,8 @@ tracking_matchers:
 #        normal_distributions_transform_3d:
 #            convergence_time_limit_seconds: 0.300
             max_correspondence_distance: 0.7
-            transformation_epsilon: 1e-6
-            euclidean_fitness_epsilon: 1e-6
+            transformation_epsilon: 0.000001
+            euclidean_fitness_epsilon: 0.000001
             max_number_of_registration_iterations: 350
             max_number_of_ransac_iterations: 150
             ransac_outlier_rejection_threshold: 0.05

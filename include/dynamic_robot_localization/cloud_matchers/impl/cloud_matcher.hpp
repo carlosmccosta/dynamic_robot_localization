@@ -41,14 +41,14 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	// subclass must set cloud_matcher_ ptr
 	if (cloud_matcher_) {
 		double max_correspondence_distance = 0.1;
-		double transformation_epsilon = 1e-8;
+		double transformation_epsilon = 1e-7;
 		double euclidean_fitness_epsilon = 1e-6;
 		int max_number_of_registration_iterations = 250;
 		int max_number_of_ransac_iterations = 250;
 		double ransac_outlier_rejection_threshold = 0.05;
 
 		if (ros::param::search(search_namespace, "max_correspondence_distance", final_param_name)) { private_node_handle->param(final_param_name, max_correspondence_distance, 0.1); }
-		if (ros::param::search(search_namespace, "transformation_epsilon", final_param_name)) { private_node_handle->param(final_param_name, transformation_epsilon, 1e-8); }
+		if (ros::param::search(search_namespace, "transformation_epsilon", final_param_name)) { private_node_handle->param(final_param_name, transformation_epsilon, 1e-7); }
 		if (ros::param::search(search_namespace, "euclidean_fitness_epsilon", final_param_name)) { private_node_handle->param(final_param_name, euclidean_fitness_epsilon, 1e-6); }
 		if (ros::param::search(search_namespace, "max_number_of_registration_iterations", final_param_name)) { private_node_handle->param(final_param_name, max_number_of_registration_iterations, 250); }
 		if (ros::param::search(search_namespace, "max_number_of_ransac_iterations", final_param_name)) { private_node_handle->param(final_param_name, max_number_of_ransac_iterations, 250); }

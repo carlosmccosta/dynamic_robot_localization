@@ -138,8 +138,8 @@ initial_pose_estimators_matchers:
 #        iterative_closest_point_generalized:
             convergence_time_limit_seconds: 2.0
             max_correspondence_distance: 10.0
-            transformation_epsilon: 1e-4
-            euclidean_fitness_epsilon: 1e-4
+            transformation_epsilon: 0.0001
+            euclidean_fitness_epsilon: 0.0001
             max_number_of_registration_iterations: 350
             max_number_of_ransac_iterations: 350
             ransac_outlier_rejection_threshold: 0.05
