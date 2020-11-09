@@ -34,7 +34,6 @@ if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 endif()
 
-find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(catkin REQUIRED COMPONENTS ${${PROJECT_NAME}_CATKIN_COMPONENTS})
@@ -87,7 +86,6 @@ catkin_package(
         ${${PROJECT_NAME}_CATKIN_COMPONENTS}
         message_runtime
     DEPENDS
-        Boost
         EIGEN3
         PCL
 )
@@ -104,7 +102,6 @@ catkin_package(
 
 include_directories(
     include
-    ${Boost_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
     ${PCL_INCLUDE_DIRS}
     ${catkin_INCLUDE_DIRS}
