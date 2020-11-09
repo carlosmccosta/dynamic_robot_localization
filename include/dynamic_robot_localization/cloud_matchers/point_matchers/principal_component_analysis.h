@@ -47,6 +47,7 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PrincipalComponentAnalysis-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void setupConfigurationFromParameterServer();
 		virtual bool registerCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints, tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out,
 				typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints = false);
@@ -68,6 +69,10 @@ class PrincipalComponentAnalysis : public CloudMatcher<PointT> {
 
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
+		std::string configuration_namespace_;
+		ros::NodeHandlePtr node_handle_;
+		ros::NodeHandlePtr private_node_handle_;
+		bool reload_configurations_from_parameter_server_before_alignment_;
 		bool compute_offset_to_reference_pointcloud_pca_;
 		bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_;
 		bool flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud_;

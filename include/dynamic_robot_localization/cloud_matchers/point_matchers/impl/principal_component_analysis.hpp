@@ -18,28 +18,37 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PrincipalComponentAnalysis-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 void PrincipalComponentAnalysis<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
-	CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(node_handle, private_node_handle, configuration_namespace);
-	CloudMatcher<PointT>::setupReferencePointCloudPublisher(node_handle, private_node_handle, configuration_namespace);
-	CloudMatcher<PointT>::setupAlignedPointCloudPublisher(node_handle, private_node_handle, configuration_namespace);
-	private_node_handle->param(configuration_namespace + "compute_offset_to_reference_pointcloud_pca", compute_offset_to_reference_pointcloud_pca_, false);
-	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_, true);
-	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud_, flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_);
-	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_, false);
-	private_node_handle->param(configuration_namespace + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud_, flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_);
-	private_node_handle->param(configuration_namespace + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_, true);
-	private_node_handle->param(configuration_namespace + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud_, flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_);
-	private_node_handle->param(configuration_namespace + "custom_z_flip_axis/x", custom_z_flip_axis_(0), 0.0);
-	private_node_handle->param(configuration_namespace + "custom_z_flip_axis/y", custom_z_flip_axis_(1), 0.0);
-	private_node_handle->param(configuration_namespace + "custom_z_flip_axis/z", custom_z_flip_axis_(2), 1.0);
-	private_node_handle->param(configuration_namespace + "custom_z_flip_axis_reference_pointcloud/x", custom_z_flip_axis_reference_pointcloud_(0), custom_z_flip_axis_(0));
-	private_node_handle->param(configuration_namespace + "custom_z_flip_axis_reference_pointcloud/y", custom_z_flip_axis_reference_pointcloud_(1), custom_z_flip_axis_(1));
-	private_node_handle->param(configuration_namespace + "custom_z_flip_axis_reference_pointcloud/z", custom_z_flip_axis_reference_pointcloud_(2), custom_z_flip_axis_(2));
-	private_node_handle->param(configuration_namespace + "custom_x_flip_axis/x", custom_x_flip_axis_(0), 0.0);
-	private_node_handle->param(configuration_namespace + "custom_x_flip_axis/y", custom_x_flip_axis_(1), 0.0);
-	private_node_handle->param(configuration_namespace + "custom_x_flip_axis/z", custom_x_flip_axis_(2), 1.0);
-	private_node_handle->param(configuration_namespace + "custom_x_flip_axis_reference_pointcloud/x", custom_x_flip_axis_reference_pointcloud_(0), custom_x_flip_axis_(0));
-	private_node_handle->param(configuration_namespace + "custom_x_flip_axis_reference_pointcloud/y", custom_x_flip_axis_reference_pointcloud_(1), custom_x_flip_axis_(1));
-	private_node_handle->param(configuration_namespace + "custom_x_flip_axis_reference_pointcloud/z", custom_x_flip_axis_reference_pointcloud_(2), custom_x_flip_axis_(2));
+	configuration_namespace_ = configuration_namespace;
+	node_handle_ = node_handle;
+	private_node_handle_ = private_node_handle;
+	setupConfigurationFromParameterServer();
+}
+
+template<typename PointT>
+void PrincipalComponentAnalysis<PointT>::setupConfigurationFromParameterServer() {
+	CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(node_handle_, private_node_handle_, configuration_namespace_);
+	CloudMatcher<PointT>::setupReferencePointCloudPublisher(node_handle_, private_node_handle_, configuration_namespace_);
+	CloudMatcher<PointT>::setupAlignedPointCloudPublisher(node_handle_, private_node_handle_, configuration_namespace_);
+	private_node_handle_->param(configuration_namespace_ + "reload_configurations_from_parameter_server_before_alignment", reload_configurations_from_parameter_server_before_alignment_, true);
+	private_node_handle_->param(configuration_namespace_ + "compute_offset_to_reference_pointcloud_pca", compute_offset_to_reference_pointcloud_pca_, false);
+	private_node_handle_->param(configuration_namespace_ + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_, true);
+	private_node_handle_->param(configuration_namespace_ + "flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud", flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud_, flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_);
+	private_node_handle_->param(configuration_namespace_ + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_, false);
+	private_node_handle_->param(configuration_namespace_ + "flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud", flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_reference_pointcloud_, flip_pca_z_axis_for_aligning_it_to_the_pointcloud_custom_z_flip_axis_);
+	private_node_handle_->param(configuration_namespace_ + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_, true);
+	private_node_handle_->param(configuration_namespace_ + "flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud", flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_reference_pointcloud_, flip_pca_x_axis_for_aligning_it_to_the_pointcloud_custom_x_flip_axis_);
+	private_node_handle_->param(configuration_namespace_ + "custom_z_flip_axis/x", custom_z_flip_axis_(0), 0.0);
+	private_node_handle_->param(configuration_namespace_ + "custom_z_flip_axis/y", custom_z_flip_axis_(1), 0.0);
+	private_node_handle_->param(configuration_namespace_ + "custom_z_flip_axis/z", custom_z_flip_axis_(2), 1.0);
+	private_node_handle_->param(configuration_namespace_ + "custom_z_flip_axis_reference_pointcloud/x", custom_z_flip_axis_reference_pointcloud_(0), custom_z_flip_axis_(0));
+	private_node_handle_->param(configuration_namespace_ + "custom_z_flip_axis_reference_pointcloud/y", custom_z_flip_axis_reference_pointcloud_(1), custom_z_flip_axis_(1));
+	private_node_handle_->param(configuration_namespace_ + "custom_z_flip_axis_reference_pointcloud/z", custom_z_flip_axis_reference_pointcloud_(2), custom_z_flip_axis_(2));
+	private_node_handle_->param(configuration_namespace_ + "custom_x_flip_axis/x", custom_x_flip_axis_(0), 0.0);
+	private_node_handle_->param(configuration_namespace_ + "custom_x_flip_axis/y", custom_x_flip_axis_(1), 0.0);
+	private_node_handle_->param(configuration_namespace_ + "custom_x_flip_axis/z", custom_x_flip_axis_(2), 1.0);
+	private_node_handle_->param(configuration_namespace_ + "custom_x_flip_axis_reference_pointcloud/x", custom_x_flip_axis_reference_pointcloud_(0), custom_x_flip_axis_(0));
+	private_node_handle_->param(configuration_namespace_ + "custom_x_flip_axis_reference_pointcloud/y", custom_x_flip_axis_reference_pointcloud_(1), custom_x_flip_axis_(1));
+	private_node_handle_->param(configuration_namespace_ + "custom_x_flip_axis_reference_pointcloud/z", custom_x_flip_axis_reference_pointcloud_(2), custom_x_flip_axis_(2));
 	custom_z_flip_axis_.normalize();
 	custom_z_flip_axis_reference_pointcloud_.normalize();
 	custom_x_flip_axis_.normalize();
@@ -51,6 +60,10 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 		typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method,
 		typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
 		tf2::Transform& best_pose_correction_out, std::vector< tf2::Transform >& accepted_pose_corrections_out, typename pcl::PointCloud<PointT>::Ptr& pointcloud_registered_out, bool return_aligned_keypoints) {
+	if (reload_configurations_from_parameter_server_before_alignment_) {
+		setupConfigurationFromParameterServer();
+	}
+
 	accepted_pose_corrections_out.clear();
 	CloudMatcher<PointT>::cloud_align_time_ms_ = 0;
 	PerformanceTimer performance_timer;

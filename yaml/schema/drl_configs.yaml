@@ -639,6 +639,7 @@ tracking_matchers:
             line_search_step_size: 0.1                              # The newton line search maximum step length
             outlier_ratio: 0.55                                     # Point cloud outlier ratio
         principal_component_analysis:                               # Allows prefix and postfix of letters to ensure parsing order (PCA has 3 axis of symmetry, and as such, two postprocessing stages are supported for ensuring consistency of the PCA axis)
+            reload_configurations_from_parameter_server_before_alignment: true
             compute_offset_to_reference_pointcloud_pca: false                               # If true, the algorithm will return the matrix transformation that aligns the sensor point cloud PCA to the reference point cloud PCA. If false, the algorithms returns the sensor point cloud PCA
             flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal: true          # Flipping of PCA Z axis for ensuring that the Z+ always points to the surfaces outside region (if the angle between the PCA Z axis and the centroid normal is higher than 180º, then a rotation of 180º will be performed along the PCA X axis)
             flip_pca_z_axis_for_aligning_it_to_the_cluster_centroid_z_normal_reference_pointcloud: true
