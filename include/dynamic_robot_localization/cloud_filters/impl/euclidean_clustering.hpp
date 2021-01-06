@@ -31,6 +31,7 @@ void EuclideanClustering<PointT>::setupConfigurationFromParameterServer(ros::Nod
 	euclidean_cluster_extraction_.setMinClusterSize(min_cluster_size);
 	euclidean_cluster_extraction_.setMaxClusterSize(max_cluster_size);
 
+	cluster_selector_.setTfCollector(CloudFilter<PointT>::getTfCollector());
 	cluster_selector_.setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace + "cluster_selector/");
 	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }

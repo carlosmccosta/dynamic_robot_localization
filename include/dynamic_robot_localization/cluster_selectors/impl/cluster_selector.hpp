@@ -60,6 +60,9 @@ void ClusterSelector<PointT>::setupConfigurationFromParameterServer(ros::NodeHan
 		selector_name_ += "Using" + sorting_algorithm;
 	}
 
+	cluster_sorter_->setTfCollector(getTfCollector());
+	cluster_sorter_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
+
 	clusters_colored_cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
 	clusters_colored_cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "clusters_colored_cloud_publish_topic");
 	clusters_colored_cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);

@@ -201,12 +201,15 @@ reference_pointclouds:
 #   Some algorithms support the selection of a given cluster from the point cloud (such as [ euclidean_clustering | region_growing ])
 cluster_selector:
     load_clusters_indices_from_parameter_server_before_filtering: true
+    load_tf_name_for_sorting_clusters_before_processing: true
     sorting_algorithm: "MaxClusterSizeSorter"                           # Available sorters: [ MinClusterSizeSorter | MaxClusterSizeSorter | MinDistanceToOriginSorter | MaxDistanceToOriginSorter | MinAxisValueSorter | MaxAxisValueSorter ]
     sorting_axis: "Z"                                                   # Available axis: [ X | Y | Z ] -> only used with [ MinAxisValueSorter | MaxAxisValueSorter ]
     # Indices for picking the sorted clusters -> [min_cluster_index, max_cluster_index[ (they start at 0 and do not include the last)
     # Both indices can be set here or in any parent namespace since they are searched from this namespace up to the root using ros::param::search
     min_cluster_index: 0                                                # First cluster index to pick after sorting (it will be overridden as 0 if [min_cluster_index < 0])
     max_cluster_index: 1                                                # Last cluster index to pick after sorting (it will be overridden as [number_of_clusters] if [max_cluster_index < 0] or [max_cluster_index > number_of_clusters])
+    tf_name_for_sorting_clusters: ''                                    # TF name for sorting clusters. If empty, the point cloud origin will be used
+    use_cloud_time_for_retrieving_tf_transform: true                    # If false, ros::Time(0) will be used
     clusters_colored_cloud_publish_topic: ''
     clusters_colored_cloud_publish_topic_frame_id: ''
 

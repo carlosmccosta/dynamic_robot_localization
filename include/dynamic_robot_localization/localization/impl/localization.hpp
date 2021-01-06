@@ -586,6 +586,7 @@ void Localization<PointT>::loadFiltersFromParameterServer(std::vector< typename 
 			}
 
 			if (cloud_filter) {
+				cloud_filter->setTfCollector(&(pose_to_tf_publisher_->getTfCollector()));
 				cloud_filter->setupConfigurationFromParameterServer(node_handle_, private_node_handle_, configuration_namespace + filter_name + "/");
 				filters_container.push_back(cloud_filter);
 			}

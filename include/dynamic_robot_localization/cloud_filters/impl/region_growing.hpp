@@ -83,6 +83,7 @@ void RegionGrowing<PointT>::setupConfigurationFromParameterServer(ros::NodeHandl
 	private_node_handle->param(configuration_namespace + "number_of_neighbors", number_of_neighbors, 50);
 	region_growing_->setNumberOfNeighbours(number_of_neighbors);
 
+	cluster_selector_.setTfCollector(CloudFilter<PointT>::getTfCollector());
 	cluster_selector_.setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace + "cluster_selector/");
 	CloudFilter<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }

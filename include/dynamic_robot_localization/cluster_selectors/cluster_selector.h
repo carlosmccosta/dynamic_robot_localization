@@ -27,6 +27,9 @@
 #include <dynamic_robot_localization/common/cloud_publisher.h>
 #include <dynamic_robot_localization/common/pointcloud_utils.h>
 #include <dynamic_robot_localization/cluster_selectors/cluster_sorters.h>
+
+// other includes
+#include <laserscan_to_pointcloud/tf_collector.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -45,7 +48,7 @@ class ClusterSelector : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </usings>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		ClusterSelector(std::string selector_name = "ClusterSelector") : selector_name_(selector_name) {}
+		ClusterSelector(std::string selector_name = "ClusterSelector") : selector_name_(selector_name), tf_collector_(nullptr) {}
 		virtual ~ClusterSelector() {}
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -58,10 +61,12 @@ class ClusterSelector : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		typename CloudPublisher<PointT>::Ptr& getCloudPublisher() { return clusters_colored_cloud_publisher_; }
 		typename ClusterSorter<PointT>::Ptr& getClusterSorter() { return cluster_sorter_; }
+		laserscan_to_pointcloud::TFCollector* getTfCollector() { return tf_collector_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		void setClusterSorter(typename ClusterSorter<PointT>::Ptr& cluster_sorter) { cluster_sorter_ = cluster_sorter; }
+		void setTfCollector(laserscan_to_pointcloud::TFCollector* tfCollector) { tf_collector_ = tfCollector; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -71,6 +76,7 @@ class ClusterSelector : public ConfigurableObject {
 		int min_cluster_index_;
 		int max_cluster_index_;
 		bool load_clusters_indices_from_parameter_server_before_filtering_;
+		laserscan_to_pointcloud::TFCollector* tf_collector_;
 		typename ClusterSorter<PointT>::Ptr cluster_sorter_;
 		std::string configuration_namespace_;
 		ros::NodeHandlePtr private_node_handle_;
