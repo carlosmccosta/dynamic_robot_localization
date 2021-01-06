@@ -328,13 +328,13 @@ void Localization<PointT>::setupFrameIds(const std::string& configuration_namesp
 
 
 template<typename PointT>
-void Localization<PointT>::setupInitialPose() {
-	setupInitialPose(configuration_namespace_, ros::Time::now(), true);
+void Localization<PointT>::setupInitialPose(bool update_last_accepted_pose_time) {
+	setupInitialPose(configuration_namespace_, ros::Time::now(), true, update_last_accepted_pose_time);
 }
 
 
 template<typename PointT>
-void Localization<PointT>::setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time) {
+void Localization<PointT>::setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time, bool update_last_accepted_pose_time) {
 	double x, y, z, roll, pitch ,yaw, qx, qy, qz, qw;
 	private_node_handle_->param(configuration_namespace + "initial_pose/position/x", x, 0.0);
 	private_node_handle_->param(configuration_namespace + "initial_pose/position/y", y, 0.0);
@@ -408,7 +408,9 @@ void Localization<PointT>::setupInitialPose(const std::string& configuration_nam
 		pose_to_tf_publisher_->publishInitialPoseFromParameterServer();
 	}
 
-	last_accepted_pose_time_ = time;
+	if (update_last_accepted_pose_time) {
+		last_accepted_pose_time_ = time;
+	}
 }
 
 
@@ -1676,6 +1678,12 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		localization_times_msg_ = LocalizationTimes();
 
 		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : pcl_conversions::fromPCL(ambient_pointcloud->header.stamp));
+		if (ambient_cloud_time.sec == last_accepted_pose_time_.sec && ambient_cloud_time.nsec == last_accepted_pose_time_.nsec) {
+			ROS_DEBUG("Adding a microsecond to point cloud time for avoiding publishing TFs with same timestamp");
+			ambient_pointcloud->header.stamp += 1;
+			ambient_cloud_time = pcl_conversions::fromPCL(ambient_pointcloud->header.stamp);
+		}
+
 		size_t number_points_ambient_pointcloud = ambient_pointcloud->width * ambient_pointcloud->height;
 		if (check_if_pointcloud_should_be_processed) {
 			if (!checkIfAmbientPointCloudShouldBeProcessed(ambient_cloud_time, number_points_ambient_pointcloud, check_if_pointcloud_subscribers_are_active, true))
@@ -2432,7 +2440,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 		}
 
 		last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
-		last_accepted_pose_time_ = ros::Time::now();
+		last_accepted_pose_time_ = pointcloud_time;
 		last_accepted_pose_valid_ = true;
 		robot_initial_pose_available_ = true;
 		received_external_initial_pose_estimation_ = false;
@@ -2762,7 +2770,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	localization_times_msg_.covariance_estimator_time = performance_timer.getElapsedTimeInMilliSec();
 
 	last_accepted_pose_base_link_to_map_ = pointcloud_pose_corrected_out;
-	last_accepted_pose_time_ = ros::Time::now();
+	last_accepted_pose_time_ = pointcloud_time;
 	last_accepted_pose_valid_ = true;
 	robot_initial_pose_available_ = true;
 	received_external_initial_pose_estimation_ = false;

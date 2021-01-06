@@ -219,8 +219,8 @@ class Localization : public ConfigurableObject {
 		void setupServiceServersNames(const std::string &configuration_namespace);
 		void setupPublishTopicNames(const std::string& configuration_namespace);
 		void setupFrameIds(const std::string& configuration_namespace);
-		void setupInitialPose();
-		void setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time = false);
+		void setupInitialPose(bool update_last_accepted_pose_time = false);
+		void setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time = false, bool update_last_accepted_pose_time = false);
 		void setupTFPublisher(const std::string& configuration_namespace);
 		void setupMessageManagement(const std::string& configuration_namespace);
 		void setupReferencePointCloud(const std::string& configuration_namespace);
