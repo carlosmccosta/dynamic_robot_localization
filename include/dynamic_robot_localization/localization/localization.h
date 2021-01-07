@@ -334,10 +334,15 @@ class Localization : public ConfigurableObject {
 		const MapUpdateMode& getMapUpdateMode() { return map_update_mode_; }
 		bool ambientPointcloudIntegrationActive() { return !ambient_pointcloud_integration_filters_.empty() || !ambient_pointcloud_integration_filters_map_frame_.empty(); }
 		bool cloudMatchersActive() { return !initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty() || !tracking_matchers_.empty() || !tracking_recovery_matchers_.empty(); }
+		std::string getFilteredPointcloudSaveFilename() const { return filtered_pointcloud_save_filename_; }
+		std::string getFilteredPointcloudSaveFrameId() const { return filtered_pointcloud_save_frame_id_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		void setReferencePointCloudRequired(bool reference_pointcloud_required) { reference_pointcloud_required_ = reference_pointcloud_required; }
 		void setAmbientPointcloudIntegrationFiltersPreprocessedPointcloudSaveFilename(const std::string& filename) { ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_ = filename; }
+		void setFilteredPointcloudSaveFilename(const std::string& filtered_pointcloud_save_filename) { filtered_pointcloud_save_filename_ = filtered_pointcloud_save_filename; }
+		void setFilteredPointcloudSaveFrameId(const std::string& filtered_pointcloud_save_frame_id) { filtered_pointcloud_save_frame_id_ = filtered_pointcloud_save_frame_id; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </sets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	// ========================================================================   </public-section>  ===========================================================================
 
@@ -376,6 +381,10 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_keypoints_save_filename_;
 		std::string ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_;
 		bool ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud_;
+		std::string filtered_pointcloud_save_filename_;
+		std::string filtered_pointcloud_save_frame_id_;
+		bool filtered_pointcloud_save_frame_id_with_cloud_time_;
+		bool stop_processing_after_saving_filtered_pointcloud_;
 		bool reference_pointcloud_normalize_normals_;
 		bool flip_normals_using_occupancy_grid_analysis_;
 		MapUpdateMode map_update_mode_;

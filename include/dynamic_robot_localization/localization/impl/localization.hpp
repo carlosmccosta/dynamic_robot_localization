@@ -540,6 +540,11 @@ void Localization<PointT>::setupFiltersConfigurations(const std::string& configu
 	private_node_handle_->param(configuration_namespace + "filters/ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename", ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_filename_, std::string(""));
 	private_node_handle_->param(configuration_namespace + "filters/ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud", ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud_, true);
 
+	private_node_handle_->param(configuration_namespace + "filters/filtered_pointcloud_save_filename", filtered_pointcloud_save_filename_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "filters/filtered_pointcloud_save_frame_id", filtered_pointcloud_save_frame_id_, std::string(""));
+	private_node_handle_->param(configuration_namespace + "filters/filtered_pointcloud_save_frame_id_with_cloud_time", filtered_pointcloud_save_frame_id_with_cloud_time_, false);
+	private_node_handle_->param(configuration_namespace + "filters/stop_processing_after_saving_filtered_pointcloud", stop_processing_after_saving_filtered_pointcloud_, true);
+
 	loadFiltersFromParameterServer(reference_cloud_filters_, configuration_namespace + "filters/reference_pointcloud/");
 	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_, configuration_namespace + "filters/ambient_pointcloud_integration_filters/");
 	loadFiltersFromParameterServer(ambient_pointcloud_integration_filters_map_frame_, configuration_namespace + "filters/ambient_pointcloud_integration_filters_map_frame/");
@@ -2456,6 +2461,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			sensor_data_processing_status_ = FirstPointCloudInSlamMode;
 			return false;
 		} else {
+			last_accepted_pose_time_ = pointcloud_time;
 			sensor_data_processing_status_ = SuccessfulPreprocessing;
 			return true;
 		}
@@ -2549,6 +2555,27 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			filtered_pointcloud_publisher_.publish(filtered_pointcloud_msg);
 		} else {
 			ROS_DEBUG_STREAM("Avoiding publishing pointcloud on topic " << filtered_pointcloud_publisher_.getTopic() << " because there is no subscribers");
+		}
+	}
+
+	if (!filtered_pointcloud_save_filename_.empty()) {
+		if (!filtered_pointcloud_save_frame_id_.empty() && filtered_pointcloud_save_frame_id_ != ambient_pointcloud->header.frame_id) {
+			typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_filtered_transformed(new pcl::PointCloud<PointT>(*ambient_pointcloud));
+			if (!transformCloudToTFFrame(ambient_pointcloud_filtered_transformed, filtered_pointcloud_save_frame_id_with_cloud_time_ ? pointcloud_time : ros::Time(0), filtered_pointcloud_save_frame_id_)) {
+				sensor_data_processing_status_ = FailedTFTransform;
+				return false;
+			}
+			ROS_DEBUG_STREAM("Saving filtered point cloud transformed to [" << filtered_pointcloud_save_frame_id_ << "] frame_id and with " << ambient_pointcloud_filtered_transformed->size() << " points to " << reference_pointclouds_database_folder_path_ + filtered_pointcloud_save_filename_);
+			pointcloud_conversions::toFile(filtered_pointcloud_save_filename_, *ambient_pointcloud_filtered_transformed, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
+		} else {
+			ROS_DEBUG_STREAM("Saving filtered point cloud with " << ambient_pointcloud->size() << " points to " << reference_pointclouds_database_folder_path_ + filtered_pointcloud_save_filename_);
+			pointcloud_conversions::toFile(filtered_pointcloud_save_filename_, *ambient_pointcloud, save_reference_pointclouds_in_binary_format_, reference_pointclouds_database_folder_path_);
+		}
+
+		if (stop_processing_after_saving_filtered_pointcloud_) {
+			last_accepted_pose_time_ = pointcloud_time;
+			sensor_data_processing_status_ = SuccessfulPreprocessing;
+			return true;
 		}
 	}
 
