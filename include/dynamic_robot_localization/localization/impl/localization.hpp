@@ -69,6 +69,7 @@ Localization<PointT>::Localization() :
 	last_accepted_pose_base_link_to_map_(tf2::Transform::getIdentity()),
 	last_accepted_pose_odom_to_map_(tf2::Transform::getIdentity()),
 	sensor_data_processing_status_(WaitingForSensorData),
+	number_of_times_that_the_same_point_cloud_was_processed_(0),
 	pose_to_tf_publisher_(new pose_to_tf_publisher::PoseToTFPublisher(ros::Duration(600))),
 	ambient_pointcloud_subscribers_active_(false),
 	limit_of_pointclouds_to_process_(-1),
@@ -1678,10 +1679,15 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		localization_times_msg_ = LocalizationTimes();
 
 		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : pcl_conversions::fromPCL(ambient_pointcloud->header.stamp));
-		if (ambient_cloud_time.sec == last_accepted_pose_time_.sec && ambient_cloud_time.nsec == last_accepted_pose_time_.nsec) {
+		ros::Time ambient_cloud_time_with_increment;
+		ambient_cloud_time_with_increment.fromNSec(ambient_cloud_time.toNSec() + 1000 * number_of_times_that_the_same_point_cloud_was_processed_);
+		if (ambient_cloud_time_with_increment.toNSec() == last_accepted_pose_time_.toNSec()) {
 			ROS_DEBUG("Adding a microsecond to point cloud time for avoiding publishing TFs with same timestamp");
-			ambient_pointcloud->header.stamp += 1;
-			ambient_cloud_time = pcl_conversions::fromPCL(ambient_pointcloud->header.stamp);
+			ambient_cloud_time_with_increment.fromNSec(ambient_cloud_time.toNSec() + 1000 * ++number_of_times_that_the_same_point_cloud_was_processed_);
+			ambient_cloud_time = ambient_cloud_time_with_increment;
+			ambient_pointcloud->header.stamp = pcl_conversions::toPCL(ambient_cloud_time);
+		} else {
+			number_of_times_that_the_same_point_cloud_was_processed_ = 0;
 		}
 
 		size_t number_points_ambient_pointcloud = ambient_pointcloud->width * ambient_pointcloud->height;

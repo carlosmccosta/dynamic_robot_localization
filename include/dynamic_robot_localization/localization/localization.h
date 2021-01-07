@@ -455,6 +455,7 @@ class Localization : public ConfigurableObject {
 		std::vector< tf2::Transform > accepted_pose_corrections_;
 		tf2::Transform pose_tf2_transform_corrected_;
 		SensorDataProcessingStatus sensor_data_processing_status_;
+		size_t number_of_times_that_the_same_point_cloud_was_processed_;
 
 		// ros communication fields
 		pose_to_tf_publisher::PoseToTFPublisher::Ptr pose_to_tf_publisher_;
