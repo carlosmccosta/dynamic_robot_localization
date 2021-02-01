@@ -2607,7 +2607,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose
 		if (!received_external_initial_pose_estimation_ && !initial_pose_estimators_feature_matchers_.empty()) {
 			ros::Duration time_from_last_pose = ros::Time::now() - last_accepted_pose_time_;
-			if (time_from_last_pose < initial_pose_estimation_timeout_) {
+			if (initial_pose_estimation_timeout_.toSec() <= 0 || time_from_last_pose < initial_pose_estimation_timeout_) {
 				ROS_INFO("Performing initial pose recovery");
 				ambient_pointcloud->header.frame_id = map_frame_id_for_publishing_pointclouds_;
 				if (!computed_normals && compute_normals_when_estimating_initial_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
