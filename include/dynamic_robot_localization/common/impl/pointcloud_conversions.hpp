@@ -177,7 +177,7 @@ bool fromFile(PointCloudT& pointcloud, const std::string& filename, const std::s
 	}
 
 	if (load_status) {
-		ROS_INFO_STREAM("Loaded point cloud with extension [" << extension << "] from file path [" << filepath << "]");
+		ROS_INFO_STREAM("Loaded point cloud with " << pointcloud.size() << " points and extension [" << extension << "] from file path [" << filepath << "]");
 	} else {
 		ROS_ERROR_STREAM("Failed to load point cloud with extension [" << extension << "] from file path [" << filepath << "]");
 	}
