@@ -54,7 +54,7 @@ std::string parseFilePath(const std::string& filename, const std::string& folder
 	if (!filename.empty()) {
 		if (filename.front() != '/' && !folder.empty()) {
 			filepath = folder;
-			if (folder.back() != '/' && filename.back() != '/')
+			if (folder.back() != '/' && filename.front() != '/')
 				filepath += '/';
 		}
 

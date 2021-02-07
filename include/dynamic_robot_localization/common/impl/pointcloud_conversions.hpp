@@ -155,26 +155,34 @@ bool fromFile(PointCloudT& pointcloud, const std::string& filename, const std::s
 		filepath += ".ply";
 	}
 
-	ROS_INFO_STREAM("Loading point cloud with extension [" << extension << "] from file path [" << filepath << "]");
+	bool load_status = false;
 
 	if (extension == "pcd") {
-		if (pcl::io::loadPCDFile(filepath, pointcloud) == 0 && !pointcloud.empty()) return true;
+		if (pcl::io::loadPCDFile(filepath, pointcloud) == 0 && !pointcloud.empty()) {
+			load_status = true;
+		}
 	} else if (extension == "ply") {
 		if (pcl::io::loadPLYFile(filepath, pointcloud) == 0 && !pointcloud.empty()) {
 			// fix PLYReader import
 			pointcloud.sensor_origin_ = Eigen::Vector4f::Zero();
 			pointcloud.sensor_orientation_ = Eigen::Quaternionf::Identity();
-			return true;
+			load_status = true;
 		}
 	} else {
 		pcl::PolygonMesh mesh;
 		if (pcl::io::loadPolygonFile(filepath, mesh) != 0) { // obj | ply | stl | vtk | doesn't load normals curvature | doesn't load normals from .stl
 			pcl::fromPCLPointCloud2(mesh.cloud, pointcloud);
-			return true;
+			load_status = true;
 		}
 	}
 
-	return false;
+	if (load_status) {
+		ROS_INFO_STREAM("Loaded point cloud with extension [" << extension << "] from file path [" << filepath << "]");
+	} else {
+		ROS_ERROR_STREAM("Failed to load point cloud with extension [" << extension << "] from file path [" << filepath << "]");
+	}
+
+	return load_status;
 }
 
 
