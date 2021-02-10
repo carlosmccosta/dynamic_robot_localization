@@ -9,13 +9,17 @@
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  <includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 // std includes
+#include <algorithm>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <string>
 #include <vector>
 
 // PCL includes
+#include <pcl/common/angles.h>
 #include <pcl/point_cloud.h>
+#include <pcl/point_types_conversion.h>
 #include <pcl/search/kdtree.h>
 
 // project includes
@@ -44,8 +48,11 @@ class EuclideanOutlierDetector : public OutlierDetector<PointT> {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanOutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual bool checkIfCurvatureDifferenceValidationIsEnabled();
+		virtual bool checkIfNormalsDifferenceValidationIsEnabled();
+		virtual bool checkIfHsvColorDifferenceValidationIsEnabled();
 		virtual size_t detectOutliers(typename pcl::search::KdTree<PointT>::Ptr reference_pointcloud_search_method, const pcl::PointCloud<PointT>& ambient_pointcloud,
-				typename pcl::PointCloud<PointT>::Ptr& outliers_out, typename pcl::PointCloud<PointT>::Ptr& inliers_out, double& root_mean_square_error_out);
+				typename pcl::PointCloud<PointT>::Ptr& outliers_out, typename pcl::PointCloud<PointT>::Ptr& inliers_out, double& root_mean_square_error_of_inliers_out);
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </EuclideanOutlierDetector-functions>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <gets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -58,6 +65,13 @@ class EuclideanOutlierDetector : public OutlierDetector<PointT> {
 	// ========================================================================   <protected-section>   ========================================================================
 	protected:
 		double max_inliers_distance_;
+		bool colorize_inliers_based_on_correspondence_distance_;
+		bool colorize_outliers_with_red_color_;
+		double max_curvature_difference_;
+		double max_normals_angular_difference_in_degrees_;
+		double max_hsv_color_hue_difference_in_degrees_;
+		double max_hsv_color_saturation_difference_;
+		double max_hsv_color_value_difference_;
 	// ========================================================================   </protected-section>  ========================================================================
 };
 

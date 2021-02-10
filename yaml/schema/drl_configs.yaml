@@ -716,6 +716,13 @@ outlier_detectors:
     publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
     euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
         max_inliers_distance: 0.01                                  # A point in the ambient cloud will be considered outlier if it does't have a point in the reference cloud within a sphere with this radius
+        colorize_inliers_based_on_correspondence_distance: false    # If true, the inliers will be colorized using a green -> red gradient, in which a distance of 0 meters will have a hue of 120º (green) and a distance equal to max_inliers_distance will have a hue of 0º (red)
+        colorize_outliers_with_red_color: false                     # If true, the outliers will be colorized with red color
+        max_curvature_difference: 0.0                               # If 0.0, curvatures will not be compared
+        max_normals_angular_difference_in_degrees: -30.0            # Range ]0.0, 180.0] || If outside range, the normals angular difference will not be computed and used to filter the inliers
+        max_hsv_color_hue_difference_in_degrees: -30.0              # Range ]0.0, 360.0[ || If outside range, the color hsv difference will not be computed and used to filter the inliers
+        max_hsv_color_saturation_difference: 0.3                    # Range ]0.0, 1.0]   || If outside range, the color hsv difference will not be computed and used to filter the inliers
+        max_hsv_color_value_difference: 0.3                         # Range ]0.0, 1.0]   || If outside range, the color hsv difference will not be computed and used to filter the inliers
         aligned_pointcloud_outliers_publish_topic: ''               # Pointcloud topic for the registered outliers. OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched
         aligned_pointcloud_inliers_publish_topic: ''                # Pointcloud topic for the registered inliers. If empty, messages will not be dispatched
 
