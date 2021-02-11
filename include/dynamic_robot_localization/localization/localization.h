@@ -404,6 +404,7 @@ class Localization : public ConfigurableObject {
 		ros::Duration pose_tracking_timeout_;
 		ros::Duration pose_tracking_recovery_timeout_;
 		ros::Duration initial_pose_estimation_timeout_;
+		bool remove_points_in_sensor_origin_;
 		int minimum_number_of_points_in_ambient_pointcloud_;
 		int minimum_number_of_points_in_reference_pointcloud_;
 		bool localization_detailed_use_millimeters_in_root_mean_square_error_inliers_;

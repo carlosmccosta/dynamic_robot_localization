@@ -28,7 +28,7 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 				Eigen::Transform<float, 3, Eigen::Affine>(Eigen::Quaternionf(occupancy_grid.info.origin.orientation.w, occupancy_grid.info.origin.orientation.x, occupancy_grid.info.origin.orientation.y, occupancy_grid.info.origin.orientation.z));
 
 		pointcloud.height = 1;
-		pointcloud.is_dense = false;
+		pointcloud.is_dense = true;
 		pointcloud.header.frame_id = occupancy_grid.header.frame_id;
 		pointcloud.header.stamp = occupancy_grid.header.stamp.toNSec() / 1e3;
 		pointcloud.clear();

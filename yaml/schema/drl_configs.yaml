@@ -140,6 +140,7 @@ message_management:
     max_seconds_ambient_pointcloud_offset_to_last_estimated_pose: 0.0   # Point clouds that older than this offset in relation to the last [estimated pose / sensor data received] are discarded (useful when there are several sources of sensor data and one has higher update rate -> ex: kinect+lasers) -> for disabling this check, set to <= 0
     min_seconds_between_scan_registration: 0.0                          # Ambient point clouds received before this duration is reached (after a successful pose estimation) will be discarded -> for disabling this check, set to <= 0
     min_seconds_between_reference_pointcloud_update: 5.0                # Clouds coming from topics reference_costmap_topic | reference_pointcloud_topic will be discarded if the last reference cloud was updated less than [this value] seconds ago
+    remove_points_in_sensor_origin: false
     minimum_number_of_points_in_ambient_pointcloud: 10
     circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration: false
     circular_buffer_clear_inserted_points_if_registration_fails: false

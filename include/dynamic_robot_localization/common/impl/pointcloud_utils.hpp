@@ -55,6 +55,29 @@ void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud) {
 
 
 template <typename PointT>
+void removePointsOnSensorOrigin(pcl::PointCloud<PointT>& pointcloud) {
+	size_t number_of_original_points = pointcloud.size();
+	size_t number_of_valid_points = 0;
+	size_t number_of_invalid_points = 0;
+	for (size_t i = 0; i < pointcloud.size(); ++i) {
+		if (pointcloud[i].x != pointcloud.sensor_origin_.x() || pointcloud[i].y != pointcloud.sensor_origin_.y() || pointcloud[i].z != pointcloud.sensor_origin_.z()) {
+			if (number_of_invalid_points > 0) {
+				pointcloud[number_of_valid_points] = pointcloud[i];
+			}
+			++number_of_valid_points;
+		} else {
+			++number_of_invalid_points;
+		}
+	}
+	if (number_of_valid_points < number_of_original_points) {
+		pointcloud.resize(number_of_valid_points);
+		pointcloud.height = 1;
+		pointcloud.width = static_cast<std::uint32_t>(number_of_valid_points);
+	}
+}
+
+
+template <typename PointT>
 void colorizePointCloudClusters(const pcl::PointCloud<PointT>& pointcloud, const std::vector<pcl::PointIndices>& cluster_indices, pcl::PointCloud<PointT>& pointcloud_colored_out) {
 	for (size_t cluster_index = 0; cluster_index < cluster_indices.size(); ++cluster_index) {
 		pcl::RGB cluster_color = pcl::GlasbeyLUT::at(cluster_index % pcl::GlasbeyLUT::size());

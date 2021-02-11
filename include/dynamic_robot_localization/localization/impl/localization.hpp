@@ -455,6 +455,8 @@ void Localization<PointT>::setupMessageManagement(const std::string& configurati
 	private_node_handle_->param(configuration_namespace + "message_management/min_seconds_between_reference_pointcloud_update", min_seconds_between_reference_pointcloud_update, 5.0);
 	min_seconds_between_reference_pointcloud_update_.fromSec(min_seconds_between_reference_pointcloud_update);
 
+	private_node_handle_->param(configuration_namespace + "message_management/remove_points_in_sensor_origin", remove_points_in_sensor_origin_, false);
+
 	private_node_handle_->param(configuration_namespace + "message_management/minimum_number_of_points_in_ambient_pointcloud", minimum_number_of_points_in_ambient_pointcloud_, 10);
 
 	private_node_handle_->param(configuration_namespace + "message_management/circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration", circular_buffer_require_reception_of_pointcloud_msgs_from_all_topics_before_doing_registration_, false);
@@ -1735,14 +1737,22 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		}
 
 		tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
+
 		size_t ambient_pointcloud_size = ambient_pointcloud->size();
 		std::vector<int> indexes;
 		ambient_pointcloud->is_dense = false;
+		ROS_DEBUG_STREAM("Removing NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
 		pcl::removeNaNFromPointCloud(*ambient_pointcloud, *ambient_pointcloud, indexes);
 		indexes.clear();
 		size_t number_of_nans_in_ambient_pointcloud = ambient_pointcloud_size - ambient_pointcloud->size();
-		if (number_of_nans_in_ambient_pointcloud > 0) {
-			ROS_DEBUG_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
+		ROS_DEBUG_STREAM("Removed " << number_of_nans_in_ambient_pointcloud << " NaNs from ambient cloud with " << ambient_pointcloud_size << " points");
+
+		if (remove_points_in_sensor_origin_) {
+			size_t number_of_points_in_ambient_pointcloud_before_sensor_origin_removal = ambient_pointcloud->size();
+			ROS_DEBUG_STREAM("Removing points in sensor origin from a ambient cloud with " << number_of_points_in_ambient_pointcloud_before_sensor_origin_removal << " points");
+			pointcloud_utils::removePointsOnSensorOrigin(*ambient_pointcloud);
+			size_t number_of_points_in_sensor_origin_in_ambient_pointcloud = number_of_points_in_ambient_pointcloud_before_sensor_origin_removal - ambient_pointcloud->size();
+			ROS_DEBUG_STREAM("Removed " << number_of_points_in_sensor_origin_in_ambient_pointcloud << " points in sensor origin from ambient cloud with " << number_of_points_in_ambient_pointcloud_before_sensor_origin_removal << " points");
 		}
 
 		tf2::Quaternion pose_tf_initial_guess_q = pose_tf_initial_guess.getRotation().normalize();

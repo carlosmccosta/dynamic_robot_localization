@@ -32,6 +32,9 @@ template <typename PointT>
 void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud);
 
 template <typename PointT>
+void removePointsOnSensorOrigin(pcl::PointCloud<PointT>& pointcloud);
+
+template <typename PointT>
 void colorizePointCloudClusters(const pcl::PointCloud<PointT>& pointcloud, const std::vector<pcl::PointIndices>& cluster_indices, pcl::PointCloud<PointT>& pointcloud_colored_out);
 
 template <typename PointT>
