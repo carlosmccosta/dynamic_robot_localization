@@ -13,8 +13,14 @@ echo "##########################################################################
 sudo apt-get install coreutils ${install_args}
 sudo apt-get install git ${install_args}
 sudo apt-get install libeigen3-dev ${install_args}
-sudo apt-get install python-wstool ${install_args}
-sudo apt-get install python-catkin-tools ${install_args}
+
+if [ ${ros_version} != 'noetic' ]; then
+  sudo apt-get install python-wstool ${install_args}
+  sudo apt-get install python-catkin-tools ${install_args}
+else
+  sudo apt-get install python3-wstool ${install_args}
+  sudo apt-get install python3-catkin-tools python3-osrf-pycommon ${install_args}
+fi
 
 
 # required ros packages
