@@ -55,7 +55,7 @@ tracking_matchers:
 #    pose_tracking_timeout: 1.0
 #    pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 0
 #    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 0
-    correspondence_estimation_approach: 'CorrespondenceEstimationLookupTable'   # LookupTable
+    correspondence_estimation_approach: ''
     correspondence_estimation_lookup_table:                         # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationOrganizedProjection
       map_cell_resolution: 0.02                                     # Cell size in meters
       map_margin_x: 1.0                                             # Margin around map data with extra lookup cells
