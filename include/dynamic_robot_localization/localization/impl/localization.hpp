@@ -136,7 +136,6 @@ void Localization<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 	setupRegistrationCovarianceEstimatorsConfigurations(configuration_namespace);
 	setupTFPublisher(configuration_namespace);
 	updateNormalsEstimationFlags();
-	loadReferencePointCloud();
 }
 
 
@@ -1471,6 +1470,7 @@ void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 		ROS_DEBUG("Starting self-localization...");
 
 		startPublishers();
+		loadReferencePointCloud();
 		startReferenceCloudSubscribers();
 
 		// initial pose setup might block while waiting for valid TF
