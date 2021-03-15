@@ -174,7 +174,7 @@ class Localization : public ConfigurableObject {
 			WaitingForSensorData
 		};
 
-		static std::string SensorDataProcessingStatusToStr(const SensorDataProcessingStatus& status) {
+		static std::string s_sensorDataProcessingStatusToStr(const SensorDataProcessingStatus& status) {
 			switch (status) {
 				case ExceptionRaised: return "ExceptionRaised";
 				case FailedInitialPoseEstimation: return "FailedInitialPoseEstimation";
@@ -211,111 +211,169 @@ class Localization : public ConfigurableObject {
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <Localization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace);
-		bool reloadConfigurationFromParameterServerServiceCallback(dynamic_robot_localization::ReloadLocalizationConfiguration::Request& request, dynamic_robot_localization::ReloadLocalizationConfiguration::Response& response);
-		bool reloadConfigurationFromParameterServer(const dynamic_robot_localization::LocalizationConfiguration& localization_configuration);
-		bool parseConfigurationNamespace(const std::string& configuration_namespace, std::string& configuration_namespace_parsed_out);
-		void setupGeneralConfigurations(const std::string& configuration_namespace);
-		void setupSubscribeTopicNames(const std::string &configuration_namespace);
-		void setupServiceServersNames(const std::string &configuration_namespace);
-		void setupPublishTopicNames(const std::string& configuration_namespace);
-		void setupFrameIds(const std::string& configuration_namespace);
-		void setupInitialPose(bool update_last_accepted_pose_time = false);
-		void setupInitialPose(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time = false, bool update_last_accepted_pose_time = false);
-		void setupTFPublisher(const std::string& configuration_namespace);
-		void setupMessageManagement(const std::string& configuration_namespace);
-		void setupReferencePointCloud(const std::string& configuration_namespace);
+		virtual bool reloadConfigurationFromParameterServerServiceCallback(dynamic_robot_localization::ReloadLocalizationConfiguration::Request& request, dynamic_robot_localization::ReloadLocalizationConfiguration::Response& response);
+		virtual bool reloadConfigurationFromParameterServer(const dynamic_robot_localization::LocalizationConfiguration& localization_configuration);
+		virtual void setupGeneralConfigurationsFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupSubscribeTopicNamesFromParameterServer(const std::string &configuration_namespace);
+		virtual void setupServiceServersNamesFromParameterServer(const std::string &configuration_namespace);
+		virtual void setupPublishTopicNamesFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupFrameIdsFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupInitialPoseFromParameterServer(bool update_last_accepted_pose_time = false);
+		virtual void setupInitialPoseFromParameterServer(const std::string& configuration_namespace, const ros::Time& time, bool use_latest_tf_time = false, bool update_last_accepted_pose_time = false);
+		virtual void setupTFPublisherFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupMessageManagementFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupReferencePointCloudFromParameterServer(const std::string& configuration_namespace);
 
-		virtual void setupFiltersConfigurations(const std::string& configuration_namespace);
-		void loadFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, std::string configuration_namespace);
-		virtual void setupNormalEstimatorsConfigurations(const std::string& configuration_namespace);
-		virtual void updateNormalsEstimationFlags();
-		virtual void setupCurvatureEstimatorsConfigurations(const std::string& configuration_namespace);
-		void loadNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, std::string configuration_namespace);
-		void loadCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, std::string configuration_namespace);
-		virtual void setupKeypointDetectors(const std::string& configuration_namespace);
-		void loadKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, std::string configuration_namespace);
-		virtual void setupCloudMatchersConfigurations(const std::string& configuration_namespace);
-		virtual void setupInitialPoseEstimatorsFeatureMatchers(const std::string& configuration_namespace);
-		virtual void setupInitialPoseEstimatorsPointMatchers(const std::string& configuration_namespace);
-		virtual void setupTrackingMatchers(const std::string& configuration_namespace);
-		virtual void setupTrackingRecoveryMatchers(const std::string& configuration_namespace);
-		virtual void setupPointCloudMatchersConfigurations(std::vector< typename CloudMatcher<PointT>::Ptr >& pointcloud_matchers, const std::string& configuration_namespace);
-		virtual void setupFeatureCloudMatchersConfigurations(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, const std::string& configuration_namespace);
+		virtual void setupCloudFiltersFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupCloudFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, const std::string& configuration_namespace);
+		static void s_setupCloudFiltersFromParameterServer(std::vector< typename CloudFilter<PointT>::Ptr >& filters_container, const std::string& configuration_namespace,
+														   laserscan_to_pointcloud::TFCollector& tf_collector, ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupNormalEstimatorsFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, const std::string& configuration_namespace);
+		static void s_setupNormalEstimatorFromParameterServer(typename NormalEstimator<PointT>::Ptr& normal_estimator, const std::string& configuration_namespace,
+															  ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void updateNormalsEstimatorsFlags();
+		virtual void setupCurvatureEstimatorsFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, const std::string& configuration_namespace);
+		static void s_setupCurvatureEstimatorFromParameterServer(typename CurvatureEstimator<PointT>::Ptr& curvature_estimator, const std::string& configuration_namespace,
+																 ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupKeypointDetectorsFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, const std::string& configuration_namespace);
+		static void s_setupKeypointDetectorsFromParameterServer(std::vector<typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, const std::string& configuration_namespace,
+																ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupCloudMatchersFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupInitialPoseEstimatorsFeatureMatchersFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupInitialPoseEstimatorsPointMatchersFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupTrackingMatchersFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupTrackingRecoveryMatchersFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupCloudMatchersFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& pointcloud_matchers, const std::string& configuration_namespace);
+		static void s_setupCloudMatchersFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& pointcloud_matchers, const std::string& configuration_namespace,
+															ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupFeatureCloudMatchersFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& feature_cloud_matchers, const std::string& configuration_namespace);
+		static void s_setupFeatureCloudMatchersFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& feature_cloud_matchers, const std::string& configuration_namespace,
+																   ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
 		template <typename DescriptorT>
-		void loadKeypointMatcherFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& featurecloud_matchers, typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor,
-				const std::string& keypoint_descriptor_configuration_namespace, const std::string& feature_matcher_configuration_namespace);
-		virtual void setupTransformationValidatorsForInitialAlignment(const std::string& configuration_namespace);
-		virtual void setupTransformationValidatorsForTracking(const std::string& configuration_namespace);
-		virtual void setupTransformationValidatorsForTrackingRecovery(const std::string& configuration_namespace);
-		virtual void setupTransformationValidatorsConfigurations(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace);
-		virtual void setupOutlierDetectorsConfigurations(const std::string& configuration_namespace);
-		virtual void setupOutlierDetectorsConfigurationsReferencePointCloud(const std::string& configuration_namespace);
-		virtual void setupOutlierDetectorsConfigurations(std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors, const std::string& configuration_namespace_detectors, const std::string& topics_configuration_prefix);
-		virtual void setupCloudAnalyzersConfigurations(const std::string& configuration_namespace);
-		virtual void setupRegistrationCovarianceEstimatorsConfigurations(const std::string& configuration_namespace);
-		virtual void setupTransformationAlignerConfigurations(const std::string &configuration_namespace);
+		void setupKeypointMatcherFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& feature_cloud_matchers, typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor,
+													 const std::string& keypoint_descriptor_configuration_namespace, const std::string& feature_matcher_configuration_namespace);
+		template <typename DescriptorT>
+		static void s_setupKeypointMatcherFromParameterServer(std::vector< typename CloudMatcher<PointT>::Ptr >& feature_cloud_matchers, typename KeypointDescriptor<PointT, DescriptorT>::Ptr& keypoint_descriptor,
+															  const std::string& keypoint_descriptor_configuration_namespace, const std::string& feature_matcher_configuration_namespace,
+															  ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupTransformationValidatorsForInitialAlignmentFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupTransformationValidatorsForTrackingFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupTransformationValidatorsForTrackingRecoveryFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupTransformationValidatorsFromParameterServer(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace);
+		static void s_setupTransformationValidatorsFromParameterServer(std::vector< TransformationValidator::Ptr >& validators, const std::string& configuration_namespace,
+																	   ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupOutlierDetectorsFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupOutlierDetectorsReferencePointCloudFromParameterServer(const std::string& configuration_namespace);
+		virtual void setupOutlierDetectorsFromParameterServer(std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors, const std::string& configuration_namespace_detectors, const std::string& topics_configuration_prefix);
+		static void s_setupOutlierDetectorsFromParameterServer(std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors, const std::string& configuration_namespace_detectors, const std::string& topics_configuration_prefix,
+															   ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupCloudAnalyzersFromParameterServer(const std::string& configuration_namespace);
+		static void s_setupCloudAnalyzersFromParameterServer(typename CloudAnalyzer<PointT>::Ptr& cloud_analyzer, const std::string& configuration_namespace,
+															 ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupRegistrationCovarianceEstimatorsFromParameterServer(const std::string& configuration_namespace);
+		static void s_setupRegistrationCovarianceEstimatorsFromParameterServer(typename RegistrationCovarianceEstimator<PointT>::Ptr& registration_covariance_estimator, const std::string& configuration_namespace,
+																			   ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
+		virtual void setupTransformationAlignerFromParameterServer(const std::string &configuration_namespace);
+		static void s_setupTransformationAlignerFromParameterServer(TransformationAligner::Ptr& transformation_aligner, const std::string &configuration_namespace,
+																	ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle);
 
-		bool loadReferencePointCloud();
-		bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename, const std::string& reference_pointclouds_database_folder_path = std::string(""));
-		void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
-		void loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg);
-		void publishReferencePointCloud(const ros::Time& time_stamp, bool update_msg = true);
-		bool updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp);
-		void updateMatchersReferenceCloud();
+		virtual bool loadReferencePointCloud();
+		virtual bool loadReferencePointCloudFromFile(const std::string& reference_pointcloud_filename, const std::string& reference_pointclouds_database_folder_path = std::string(""));
+		virtual void loadReferencePointCloudFromROSPointCloud(const sensor_msgs::PointCloud2ConstPtr& reference_pointcloud_msg);
+		virtual void loadReferencePointCloudFromROSOccupancyGrid(const nav_msgs::OccupancyGridConstPtr& occupancy_grid_msg);
+		virtual void publishReferencePointCloud(const ros::Time& time_stamp, bool update_msg = true);
+		virtual bool updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp);
+		virtual void updateMatchersReferenceCloud();
 
-		void setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
-		void setInitialPoseFromPose(const geometry_msgs::PoseConstPtr& pose);
-		void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
-		void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
+		virtual void setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
+		virtual void setInitialPoseFromPose(const geometry_msgs::PoseConstPtr& pose);
+		virtual void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
+		virtual void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
 
-		void startPublishers();
-		void startReferenceCloudSubscribers();
-		void startSubscribers();
-		void startServiceServers();
-		void startLocalization(bool start_ros_spinner = true);
-		void startROSSpinner();
-		void stopProcessingSensorData();
-		void restartProcessingSensorData();
-		void resetNumberOfProcessedPointclouds();
+		virtual void startPublishers();
+		virtual void startReferenceCloudSubscribers();
+		virtual void startSubscribers();
+		virtual void startServiceServers();
+		virtual void startLocalization(bool start_ros_spinner = true);
+		virtual void startROSSpinner();
+		virtual void stopProcessingSensorData();
+		virtual void restartProcessingSensorData();
+		virtual void resetNumberOfProcessedPointclouds();
 
-		bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
-		bool checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active = true, bool use_ros_console = true);
-		bool checkIfTrackingIsLost();
-		void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
-		bool processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed = true, bool check_if_pointcloud_subscribers_are_active = true);
-		void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
+		virtual bool transformCloudToTFFrame(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, const ros::Time& timestamp, const std::string& target_frame_id);
+		virtual bool checkIfAmbientPointCloudShouldBeProcessed(const ros::Time& ambient_cloud_time, size_t number_of_points, bool check_if_pointcloud_subscribers_are_active = true, bool use_ros_console = true);
+		virtual bool checkIfTrackingIsLost();
+		virtual void processAmbientPointCloud(const sensor_msgs::PointCloud2ConstPtr& ambient_cloud_msg);
+		virtual bool processAmbientPointCloud(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud, bool check_if_pointcloud_should_be_processed = true, bool check_if_pointcloud_subscribers_are_active = true);
+		virtual void resetPointCloudHeight(pcl::PointCloud<PointT>& pointcloud, float height = 0.0f);
 
 
-		virtual bool applyFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud);
+		virtual bool applyCloudFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud);
+		static bool s_applyCloudFilters(std::vector< typename CloudFilter<PointT>::Ptr >& cloud_filters, typename pcl::PointCloud<PointT>::Ptr& pointcloud, int minimum_number_of_points_in_ambient_pointcloud);
 
-		virtual bool applyNormalEstimation(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename CurvatureEstimator<PointT>::Ptr& curvature_estimator,
-			   typename pcl::PointCloud<PointT>::Ptr& pointcloud,
-				typename pcl::PointCloud<PointT>::Ptr& surface,
-				typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method, bool pointcloud_is_map = false);
+		virtual bool applyNormalEstimator(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename CurvatureEstimator<PointT>::Ptr& curvature_estimator,
+										  typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+										  typename pcl::PointCloud<PointT>::Ptr& surface,
+										  typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method, bool pointcloud_is_map = false);
+		static bool s_applyNormalEstimator(typename NormalEstimator<PointT>::Ptr& normal_estimator, typename CurvatureEstimator<PointT>::Ptr& curvature_estimator,
+										   typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+										   typename pcl::PointCloud<PointT>::Ptr& surface,
+										   typename pcl::search::KdTree<PointT>::Ptr& pointcloud_search_method,
+										   tf2::Transform& sensor_pose_tf_guess, int minimum_number_of_points_in_ambient_pointcloud);
 
-		virtual bool applyKeypointDetection(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
-				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
-				typename pcl::PointCloud<PointT>::Ptr& keypoints);
+		virtual bool applyKeypointDetectors(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+											typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+											typename pcl::PointCloud<PointT>::Ptr& keypoints);
+		static bool s_applyKeypointDetectors(std::vector< typename KeypointDetector<PointT>::Ptr >& keypoint_detectors, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
+											 typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+											 typename pcl::PointCloud<PointT>::Ptr& keypoints);
 
-		virtual bool applyCloudRegistration(std::vector< typename CloudMatcher<PointT>::Ptr >& matchers, typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
-				typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
-				typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
-				tf2::Transform& pointcloud_pose_in_out);
+		virtual bool applyCloudMatchers(std::vector< typename CloudMatcher<PointT>::Ptr >& matchers, typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+										typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+										typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+										tf2::Transform& pointcloud_pose_in_out);
+		static bool s_applyCloudMatchers(std::vector< typename CloudMatcher<PointT>::Ptr >& matchers, typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+										 typename pcl::search::KdTree<PointT>::Ptr& surface_search_method,
+										 typename pcl::PointCloud<PointT>::Ptr& pointcloud_keypoints,
+										 tf2::Transform& pointcloud_pose_in_out,
+										 int minimum_number_of_points_in_ambient_pointcloud, std::vector< tf2::Transform >& accepted_pose_corrections, int& number_of_registration_iterations_for_all_matchers,
+										 double& correspondence_estimation_time_for_all_matchers, double& transformation_estimation_time_for_all_matchers, double& transform_cloud_time_for_all_matchers, double& cloud_align_time_for_all_matchers,
+										 std::string& last_matcher_convergence_state, double& root_mean_square_error_of_last_registration_correspondences, int& number_correspondences_last_registration_algorithm);
 
-		virtual bool postProcessCloudRegistration(const tf2::Transform& pointcloud_pose_initial_guess, const tf2::Transform& pointcloud_pose_corrected, tf2::Transform& new_pose_corrections_out, const ros::Time& pointcloud_time);
+		virtual bool applyTransformationAligner(const tf2::Transform& pointcloud_pose_initial_guess, const tf2::Transform& pointcloud_pose_corrected, tf2::Transform& new_pose_corrections_out, const ros::Time& pointcloud_time);
+		static bool s_applyTransformationAligner(const tf2::Transform& pointcloud_pose_initial_guess, const tf2::Transform& pointcloud_pose_corrected, tf2::Transform& new_pose_corrections_out, const ros::Time& pointcloud_time,
+												 bool ignore_height_corrections, TransformationAligner::Ptr& transformation_aligner, const std::string& map_frame_id, const std::string& base_link_frame_id,
+												 laserscan_to_pointcloud::TFCollector& tf_collector, const ros::Duration& tf_timeout,
+												 SensorDataProcessingStatus& sensor_data_processing_status);
 
-		virtual double applyOutlierDetection(std::vector< typename OutlierDetector<PointT>::Ptr >& detectors,
-																				 typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& pointcloud,
-																				 std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
-																				 double& root_mean_square_error_inliers, size_t& number_inliers);
-		virtual void applyAmbientPointCloudOutlierDetection(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
-		virtual void applyReferencePointCloudOutlierDetection(typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method, typename pcl::PointCloud<PointT>::Ptr& reference_pointcloud);
-		virtual bool applyCloudAnalysis(const tf2::Transform& estimated_pose);
+		virtual double applyOutlierDetectors(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method,
+											 std::vector< typename OutlierDetector<PointT>::Ptr >& detectors,
+											 std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
+											 double& root_mean_square_error_inliers, size_t& number_inliers);
+		static double s_applyOutlierDetectors(typename pcl::PointCloud<PointT>::Ptr& pointcloud, typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method,
+											  std::vector< typename OutlierDetector<PointT>::Ptr >& detectors,
+											  std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
+											  const std::string& map_frame_id, bool compute_outliers_angular_distribution, bool compute_inliers_angular_distribution,
+											  double& root_mean_square_error_inliers, size_t& number_inliers);
+		static bool s_applyPointCloudOutlierDetectors(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud,
+													  typename pcl::search::KdTree<PointT>::Ptr& reference_pointcloud_search_method, std::vector< typename OutlierDetector<PointT>::Ptr >& outlier_detectors,
+													  std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_outliers, std::vector< typename pcl::PointCloud<PointT>::Ptr >& detected_inliers,
+													  typename pcl::PointCloud<PointT>::Ptr& registered_inliers, typename pcl::PointCloud<PointT>::Ptr& registered_outliers,
+													  const std::string& map_frame_id, bool compute_outliers_angular_distribution, bool compute_inliers_angular_distribution,
+													  double& root_mean_square_error_inliers, size_t& number_inliers, double& outlier_percentage);
+		virtual bool applyAmbientPointCloudOutlierDetectors(typename pcl::PointCloud<PointT>::Ptr& ambient_pointcloud);
+		virtual bool applyReferencePointCloudOutlierDetectors(typename pcl::PointCloud<PointT>::Ptr& reference_pointcloud, typename pcl::search::KdTree<PointT>::Ptr& ambient_pointcloud_search_method);
+
 		virtual void publishDetectedOutliers();
 		virtual void publishDetectedInliers();
 
-		virtual bool applyTransformationValidators(std::vector< TransformationValidator::Ptr >& transformation_validators,
-				const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage, double max_outlier_percentage_reference_pointcloud);
+		virtual bool applyCloudAnalyzers(const tf2::Transform& estimated_pose);
+
+		virtual bool applyTransformationValidator(std::vector< TransformationValidator::Ptr >& transformation_validators,
+												  const tf2::Transform& pointcloud_pose_initial_guess, tf2::Transform& pointcloud_pose_corrected_in_out, double max_outlier_percentage, double max_outlier_percentage_reference_pointcloud);
 
 		virtual void fillPoseCovariance(geometry_msgs::PoseWithCovarianceStamped& pose_corrected_msg, Eigen::MatrixXd& covariance_matrix);
 
@@ -364,6 +422,10 @@ class Localization : public ConfigurableObject {
 		std::string reference_pointcloud_keypoints_publish_topic_;
 		std::string filtered_pointcloud_publish_topic_;
 		std::string aligned_pointcloud_publish_topic_;
+		std::string aligned_pointcloud_global_outliers_publish_topic_;
+		std::string aligned_pointcloud_global_inliers_publish_topic_;
+		std::string reference_pointcloud_global_outliers_publish_topic_;
+		std::string reference_pointcloud_global_inliers_publish_topic_;
 		std::string pose_stamped_publish_topic_;
 		std::string pose_array_publish_topic_;
 		std::string pose_with_covariance_stamped_publish_topic_;
@@ -439,6 +501,7 @@ class Localization : public ConfigurableObject {
 		bool invert_initial_poses_from_msgs_;
 		bool initial_pose_msg_needs_to_be_in_map_frame_;
 		bool reset_initial_pose_when_tracking_is_lost_;
+		bool publish_global_inliers_and_outliers_pointclouds_only_if_there_is_subscribers_;
 
 		// state fields
 		ros::Time last_scan_time_;
@@ -486,6 +549,10 @@ class Localization : public ConfigurableObject {
 		ros::Publisher reference_pointcloud_keypoints_publisher_;
 		ros::Publisher filtered_pointcloud_publisher_;
 		ros::Publisher aligned_pointcloud_publisher_;
+		ros::Publisher aligned_pointcloud_global_outliers_publisher_;
+		ros::Publisher aligned_pointcloud_global_inliers_publisher_;
+		ros::Publisher reference_pointcloud_global_outliers_publisher_;
+		ros::Publisher reference_pointcloud_global_inliers_publisher_;
 		ros::Publisher pose_with_covariance_stamped_publisher_;
 		ros::Publisher pose_with_covariance_stamped_tracking_reset_publisher_;
 		ros::Publisher pose_stamped_publisher_;
@@ -543,6 +610,8 @@ class Localization : public ConfigurableObject {
 		typename RegistrationCovarianceEstimator<PointT>::Ptr registration_covariance_estimator_;
 		typename pcl::PointCloud<PointT>::Ptr registered_inliers_;
 		typename pcl::PointCloud<PointT>::Ptr registered_outliers_;
+		typename pcl::PointCloud<PointT>::Ptr registered_inliers_reference_pointcloud_;
+		typename pcl::PointCloud<PointT>::Ptr registered_outliers_reference_pointcloud_;
 		double outlier_percentage_;
 		size_t number_inliers_;
 		double root_mean_square_error_inliers_;

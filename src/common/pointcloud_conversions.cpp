@@ -19,6 +19,9 @@
 #define PCL_INSTANTIATE_DRLPointcloudConversionsFromROSMsg(T) template bool dynamic_robot_localization::pointcloud_conversions::fromROSMsg<T>(const nav_msgs::OccupancyGrid&, pcl::PointCloud<T>&, dynamic_robot_localization::pointcloud_conversions::OccupancyGridValuesPtr, int);
 PCL_INSTANTIATE(DRLPointcloudConversionsFromROSMsg, DRL_POINT_TYPES)
 
+#define PCL_INSTANTIATE_DRLPointcloudConversionsPublishPointCloud(T) template bool dynamic_robot_localization::pointcloud_conversions::publishPointCloud<T>(pcl::PointCloud<T>&, ros::Publisher&, const std::string&, bool, const std::string&);
+PCL_INSTANTIATE(DRLPointcloudConversionsPublishPointCloud, DRL_POINT_TYPES)
+
 #define PCL_INSTANTIATE_DRLPointcloudConversionsFlipPointCloudNormalsUsingOccpancyGrid(T) template size_t dynamic_robot_localization::pointcloud_conversions::flipPointCloudNormalsUsingOccpancyGrid<T>(const nav_msgs::OccupancyGrid&, pcl::PointCloud<T>&, int, float, bool);
 PCL_INSTANTIATE(DRLPointcloudConversionsFlipPointCloudNormalsUsingOccpancyGrid, DRL_POINT_TYPES)
 

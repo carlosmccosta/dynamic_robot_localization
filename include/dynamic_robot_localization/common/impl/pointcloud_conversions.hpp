@@ -62,6 +62,24 @@ bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<P
 }
 
 
+template <typename PointT>
+bool publishPointCloud(pcl::PointCloud<PointT>& pointcloud, ros::Publisher& publisher, const std::string& frame_id, bool publish_pointcloud_only_if_there_is_subscribers, const std::string& point_cloud_name_for_logging) {
+	if (!publisher.getTopic().empty()) {
+		if (publish_pointcloud_only_if_there_is_subscribers && publisher.getNumSubscribers() == 0) {
+			ROS_DEBUG_STREAM("Avoiding publishing " << point_cloud_name_for_logging << " on topic " << publisher.getTopic() << " because there is no subscribers");
+		} else {
+			ROS_DEBUG_STREAM("Publishing " << point_cloud_name_for_logging << " with " << pointcloud.size() << " points");
+			sensor_msgs::PointCloud2Ptr pointcloud_msg(new sensor_msgs::PointCloud2());
+			pcl::toROSMsg(pointcloud, *pointcloud_msg);
+			pointcloud_msg->header.frame_id = frame_id;
+			publisher.publish(pointcloud_msg);
+			return true;
+		}
+	}
+	return false;
+}
+
+
 template<typename PointT>
 size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int search_k, float search_radius, bool show_occupancy_grid_pointcloud) {
 	if (search_k <= 0 && search_radius <= 0) { return 0; }

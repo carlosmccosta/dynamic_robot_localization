@@ -14,7 +14,9 @@
 
 // ROS includes
 #include <ros/console.h>
+#include <ros/publisher.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <sensor_msgs/PointCloud2.h>
 
 // PCL includes
 #include <pcl/point_cloud.h>
@@ -28,6 +30,7 @@
 #include <pcl/io/ply_io.h>
 #include <pcl/io/vtk_lib_io.h>
 #include <pcl/visualization/cloud_viewer.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 // external libs includes
 #include <Eigen/Core>
@@ -51,6 +54,9 @@ using OccupancyGridValuesPtr = std::shared_ptr< OccupancyGridValues >;
 
 template <typename PointT>
 bool fromROSMsg(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, OccupancyGridValuesPtr occupancy_grid_values = OccupancyGridValuesPtr(), int threshold_for_map_cell_as_obstacle = 95);
+
+template <typename PointT>
+bool publishPointCloud(pcl::PointCloud<PointT>& pointcloud, ros::Publisher& publisher, const std::string& frame_id, bool publish_pointcloud_only_if_there_is_subscribers, const std::string& point_cloud_name_for_logging);
 
 template <typename PointT>
 size_t flipPointCloudNormalsUsingOccpancyGrid(const nav_msgs::OccupancyGrid& occupancy_grid, pcl::PointCloud<PointT>& pointcloud, int search_k, float search_radius, bool show_occupancy_grid_pointcloud = false);

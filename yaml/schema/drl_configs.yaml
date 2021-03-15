@@ -160,6 +160,7 @@ message_management:
     localization_detailed_use_millimeters_in_translation_corrections: false
     localization_detailed_use_degrees_in_rotation_corrections: false
     localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrices
+    publish_global_inliers_and_outliers_pointclouds_only_if_there_is_subscribers: true
 
 
 # ===================================================================================================================================================
@@ -715,6 +716,8 @@ transformation_aligner:
 #   It is also useful to perform dynamic map update, since the outliers pointcloud can be published and used in OctoMap.
 outlier_detectors:
     publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
+    aligned_pointcloud_global_outliers_publish_topic: ''            # Outliers from all detectors
+    aligned_pointcloud_global_inliers_publish_topic: ''             # Inliers from all detectors
     euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
         max_inliers_distance: 0.01                                  # A point in the ambient cloud will be considered outlier if it does't have a point in the reference cloud within a sphere with this radius
         colorize_inliers_based_on_correspondence_distance: false    # If true, the inliers will be colorized using a green -> red gradient, in which a distance of 0 meters will have a hue of 120º (green) and a distance equal to max_inliers_distance will have a hue of 0º (red)
@@ -733,6 +736,8 @@ outlier_detectors:
 #   It is also useful to perform dynamic map update, since the outliers pointcloud can be published and used in OctoMap.
 outlier_detectors_reference_pointcloud:
     publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
+    reference_pointcloud_global_outliers_publish_topic: ''          # Outliers from all detectors
+    reference_pointcloud_global_inliers_publish_topic: ''           # Inliers from all detectors
     euclidean_outlier_detector:                                     # Allows prefix and postfix of letters to ensure parsing order
         max_inliers_distance: 0.01                                  # A point in the ambient cloud will be considered outlier if it does't have a point in the reference cloud within a sphere with this radius
         reference_pointcloud_outliers_publish_topic: ''             # Pointcloud topic for the registered outliers. OctoMap is configured to use aligned_pointcloud_outliers topic. If empty, messages will not be dispatched
@@ -743,8 +748,8 @@ outlier_detectors_reference_pointcloud:
 #   The inliers and outliers angular point distribution can be computed using one of the supported methods.
 #   It is useful for supervisers to analyze the confidence of the localization estimate.
 cloud_analyzers:
-    compute_inliers_angular_distribution: true
-    compute_outliers_angular_distribution: true
+    compute_inliers_angular_distribution: false
+    compute_outliers_angular_distribution: false
     angular_distribution_analyzer:
         number_of_angular_bins: 180                                 # Angular bins all around the robot (360º)
 
