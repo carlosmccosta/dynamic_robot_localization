@@ -45,7 +45,7 @@ class ClusterSorter : public ConfigurableObject {
 		ClusterSorter(bool ascending_sort) : ascending_sort_(ascending_sort), tf_collector_(nullptr) {}
 		virtual ~ClusterSorter() {}
 
-		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace);
 		virtual void loadTfNameForSortigClusters();
 		virtual bool retrieveTfForSortigClusters(const std::string& cloud_frame_id, const ros::Time& cloud_time);
 		virtual void sortClusters(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, const std::vector<pcl::PointIndices>& cluster_indices,

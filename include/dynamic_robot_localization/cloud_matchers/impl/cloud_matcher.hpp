@@ -27,7 +27,7 @@ CloudMatcher<PointT>::CloudMatcher() :
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <CloudMatcher-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	std::string final_param_name;
 	std::string search_namespace = private_node_handle->getNamespace() + "/" + configuration_namespace;
 	if (ros::param::search(search_namespace, "match_only_keypoints", final_param_name)) { private_node_handle->param(final_param_name, match_only_keypoints_, false); }
@@ -192,7 +192,7 @@ void CloudMatcher<PointT>::setupConfigurationFromParameterServer(ros::NodeHandle
 }
 
 template<typename PointT>
-void CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	bool publish_tf = false;
 	bool publish_static_tf = false;
 	std::string final_param_name;
@@ -216,7 +216,7 @@ void CloudMatcher<PointT>::setupTFConfigurationsFromParameterServer(ros::NodeHan
 }
 
 template<typename PointT>
-void CloudMatcher<PointT>::setupReferencePointCloudPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void CloudMatcher<PointT>::setupReferencePointCloudPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	reference_cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
 	reference_cloud_publisher_->setOverrideCloudPublishStamp(true);
 	reference_cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "reference_cloud_publish_topic");
@@ -224,7 +224,7 @@ void CloudMatcher<PointT>::setupReferencePointCloudPublisher(ros::NodeHandlePtr&
 }
 
 template<typename PointT>
-void CloudMatcher<PointT>::setupAlignedPointCloudPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void CloudMatcher<PointT>::setupAlignedPointCloudPublisher(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	cloud_publisher_ = typename CloudPublisher<PointT>::Ptr(new CloudPublisher<PointT>());
 	cloud_publisher_->setParameterServerArgumentToLoadTopicName(configuration_namespace + "registered_cloud_publish_topic");
 	cloud_publisher_->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);

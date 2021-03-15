@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPoint-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void IterativeClosestPoint<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	private_node_handle->param(configuration_namespace + "convergence_absolute_mse_threshold", convergence_absolute_mse_threshold_, 1e-7);
 	private_node_handle->param(configuration_namespace + "convergence_rotation_threshold", convergence_rotation_threshold_, 0.99999);
 	private_node_handle->param(configuration_namespace + "convergence_max_iterations_similar_transforms", convergence_max_iterations_similar_transforms_, 5);

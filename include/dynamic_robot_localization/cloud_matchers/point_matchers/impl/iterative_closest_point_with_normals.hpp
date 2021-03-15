@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPointWithNormals-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void IterativeClosestPointWithNormals<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void IterativeClosestPointWithNormals<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>());
 	typename IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< typename dynamic_robot_localization::IterativeClosestPointWithNormalsTimeConstrained<PointT, PointT> >(matcher_base);
 

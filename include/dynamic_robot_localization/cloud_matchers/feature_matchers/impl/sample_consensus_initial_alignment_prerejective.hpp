@@ -27,8 +27,7 @@ SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::SampleConsensusIn
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <SampleConsensusInitialAlignmentPrerejective-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT, typename FeatureT>
-void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle,
-        ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 
 	double convergence_time_limit_seconds;
 	private_node_handle->param(configuration_namespace + "convergence_time_limit_seconds", convergence_time_limit_seconds, -1.0);

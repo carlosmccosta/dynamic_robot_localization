@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IterativeClosestPointGeneralized-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void IterativeClosestPointGeneralized<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void IterativeClosestPointGeneralized<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	typename pcl::Registration<PointT, PointT>::Ptr matcher_base(new dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>());
 	typename dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT>::Ptr matcher = std::dynamic_pointer_cast< typename dynamic_robot_localization::IterativeClosestPointGeneralizedTimeConstrained<PointT, PointT> >(matcher_base);
 

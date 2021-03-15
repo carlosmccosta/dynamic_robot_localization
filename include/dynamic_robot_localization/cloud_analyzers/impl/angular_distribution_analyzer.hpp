@@ -24,7 +24,7 @@ AngularDistributionAnalyzer<PointT>::AngularDistributionAnalyzer() :
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <AngularDistributionAnalyzer-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void AngularDistributionAnalyzer<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void AngularDistributionAnalyzer<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	std::string final_param_name;
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "number_of_angular_bins", final_param_name)) {
 		private_node_handle->param(final_param_name, number_of_angular_bins_, 180);

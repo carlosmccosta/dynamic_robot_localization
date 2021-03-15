@@ -22,7 +22,7 @@ EuclideanOutlierDetector<PointT>::EuclideanOutlierDetector(const std::string& to
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <EuclideanOutlierDetector-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void EuclideanOutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void EuclideanOutlierDetector<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	private_node_handle->param(configuration_namespace + "max_inliers_distance", max_inliers_distance_, 0.01);
 	private_node_handle->param(configuration_namespace + "colorize_inliers_based_on_correspondence_distance", colorize_inliers_based_on_correspondence_distance_, false);
 	private_node_handle->param(configuration_namespace + "colorize_outliers_with_red_color", colorize_outliers_with_red_color_, false);

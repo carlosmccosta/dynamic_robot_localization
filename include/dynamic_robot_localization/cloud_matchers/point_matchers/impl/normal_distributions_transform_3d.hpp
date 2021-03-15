@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <NormalDistributionsTransform3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void NormalDistributionsTransform3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void NormalDistributionsTransform3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	typename pcl::Registration<PointT, PointT, float>::Ptr matcher_base(new NormalDistributionsTransformDetailed<PointT, PointT>());
 	typename pcl::NormalDistributionsTransform<PointT, PointT>::Ptr matcher = std::static_pointer_cast< typename pcl::NormalDistributionsTransform<PointT, PointT> >(matcher_base);
 

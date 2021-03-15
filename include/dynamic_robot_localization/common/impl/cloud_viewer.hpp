@@ -30,7 +30,7 @@ CloudViewer<PointT>::CloudViewer() :
 
 
 template<typename PointT>
-void CloudViewer<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void CloudViewer<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	std::string final_param_name;
 
 	if (ros::param::search(private_node_handle->getNamespace() + "/" + configuration_namespace, "camera_px", final_param_name)) {

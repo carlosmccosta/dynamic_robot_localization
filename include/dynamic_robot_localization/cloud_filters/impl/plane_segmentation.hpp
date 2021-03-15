@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <PlaneSegmentation-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void PlaneSegmentation<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void PlaneSegmentation<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	private_node_handle->param(configuration_namespace + "sample_consensus_method", sample_consensus_method_, std::string("SAC_RANSAC"));
 	private_node_handle->param(configuration_namespace + "use_surface_normals", use_surface_normals_, true);
 	private_node_handle->param(configuration_namespace + "sample_consensus_maximum_distance_of_sample_to_plane", sample_consensus_maximum_distance_of_sample_to_plane_, 0.01);

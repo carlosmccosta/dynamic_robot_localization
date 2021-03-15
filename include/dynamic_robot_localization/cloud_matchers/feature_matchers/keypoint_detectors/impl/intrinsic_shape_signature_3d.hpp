@@ -20,7 +20,7 @@ namespace dynamic_robot_localization {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <IntrinsicShapeSignature3D-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
-void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace) {
+void IntrinsicShapeSignature3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace) {
 	typename pcl::Keypoint<PointT, PointT>::Ptr keypoint_detector_base(new pcl::ISSKeypoint3D<PointT, PointT, PointT>());
 	typename pcl::ISSKeypoint3D<PointT, PointT, PointT>::Ptr keypoint_detector = std::static_pointer_cast< pcl::ISSKeypoint3D<PointT, PointT, PointT> >(keypoint_detector_base);
 

@@ -54,7 +54,7 @@ class RegistrationCovarianceEstimator : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </constructors-destructor>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <RegistrationCovarianceEstimator-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, std::string configuration_namespace = "");
+		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace);
 		void setReferenceCloud(const typename pcl::PointCloud<PointT>::Ptr& reference_cloud_, const typename pcl::search::KdTree<PointT>::Ptr& reference_cloud_search_method);
 		bool computeRegistrationCovariance(const typename pcl::PointCloud<PointT>::Ptr& cloud, const typename pcl::search::KdTree<PointT>::Ptr& search_method, const Eigen::Matrix4f& registration_corrections,
 				const Eigen::Transform<float, 3, Eigen::Affine>& transform_from_map_cloud_data_to_base_link, const std::string& base_link_frame_id, Eigen::MatrixXd& covariance_out);
