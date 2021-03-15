@@ -1594,7 +1594,7 @@ void Localization<PointT>::startLocalization(bool start_ros_spinner) {
 
 		// initial pose setup might block while waiting for valid TF
 		while (!ros::Time::isValid() || (reference_pointcloud_required_ && reference_pointcloud_available_ && !reference_pointcloud_loaded_)) {
-			ROS_DEBUG_THROTTLE(1.0, "Waiting for valid time...");
+			ROS_DEBUG_THROTTLE(1.0, "Waiting for valid time and reference point cloud / map...");
 			ros::spinOnce(); // allows to setup reference map before tf is available (which happens when playing bag files with --pause option)
 		}
 		last_accepted_pose_time_ = ros::Time::now();
