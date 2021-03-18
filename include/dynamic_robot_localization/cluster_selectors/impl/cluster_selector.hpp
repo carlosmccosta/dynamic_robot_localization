@@ -78,6 +78,8 @@ void ClusterSelector<PointT>::loadClustersIndicesFromParameterServer() {
 
 template<typename PointT>
 void ClusterSelector<PointT>::selectClusters(const typename pcl::PointCloud<PointT>::Ptr& input_cloud, const std::vector<pcl::PointIndices>& cluster_indices, std::vector<size_t>& selected_clusters_out) {
+	private_node_handle_->setParam(configuration_namespace_ + "number_of_clusters_detected", (int)cluster_indices.size());
+
 	if (clusters_colored_cloud_publisher_ && !clusters_colored_cloud_publisher_->getCloudPublishTopic().empty()) {
 		typename pcl::PointCloud<PointT>::Ptr colored_point_cloud(new pcl::PointCloud<PointT>());
 		pointcloud_utils::colorizePointCloudClusters(*input_cloud, cluster_indices, *colored_point_cloud);
