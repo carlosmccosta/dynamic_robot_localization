@@ -1804,10 +1804,11 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		performance_timer.start();
 		localization_times_msg_ = LocalizationTimes();
 
-		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : pcl_conversions::fromPCL(ambient_pointcloud->header.stamp));
+		ros::Time original_pointcloud_time = pcl_conversions::fromPCL(ambient_pointcloud->header.stamp);
+		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : last_pointcloud_time_);
 		ros::Time ambient_cloud_time_with_increment;
 		ambient_cloud_time_with_increment.fromNSec(ambient_cloud_time.toNSec() + 1000 * number_of_times_that_the_same_point_cloud_was_processed_);
-		if (ambient_cloud_time_with_increment.toNSec() == last_accepted_pose_time_.toNSec()) {
+		if (original_pointcloud_time.toNSec() == last_pointcloud_time_.toNSec()) {
 			ROS_DEBUG("Adding a microsecond to point cloud time for avoiding publishing TFs with same timestamp");
 			ambient_cloud_time_with_increment.fromNSec(ambient_cloud_time.toNSec() + 1000 * ++number_of_times_that_the_same_point_cloud_was_processed_);
 			ambient_cloud_time = ambient_cloud_time_with_increment;
@@ -1815,6 +1816,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		} else {
 			number_of_times_that_the_same_point_cloud_was_processed_ = 0;
 		}
+		last_pointcloud_time_ = original_pointcloud_time;
 
 		size_t number_points_ambient_pointcloud = ambient_pointcloud->width * ambient_pointcloud->height;
 		if (check_if_pointcloud_should_be_processed) {
