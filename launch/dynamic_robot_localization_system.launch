@@ -62,7 +62,7 @@
 	<arg name="robot_initial_yaw" default="0.0" />
 	
 	<!-- laser scan assembler -->
-	<arg name="use_laser_assembler" default="1" />
+	<arg name="use_laser_assembler" default="true" />
 	<arg name="assemble_lasers_on_map_frame" default="false" /> <!-- if false -> assembles lasers on odom frame -->
 	<arg name="laser_assembly_frame" default="$(arg map_frame_id)" if="$(arg assemble_lasers_on_map_frame)" />
 	<arg name="laser_assembly_frame" default="$(arg odom_frame_id)" unless="$(arg assemble_lasers_on_map_frame)" />
@@ -86,8 +86,8 @@
 	<arg name="max_angular_velocity" default="0.174532925" /> <!-- when the angular velocity of the robot is equal or greater than this value, the number of scans to join and assembly timeout will be set to their minimum values specified above -->
 	
 	<!-- tf configurations -->
-	<arg name="publish_tf_map_odom" default="1" />
-	<arg name="publish_initial_pose" default="1" />
+	<arg name="publish_tf_map_odom" default="true" />
+	<arg name="publish_initial_pose" default="true" />
 	<arg name="publish_pose_tf_rate" default="-10.0" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
 	<arg name="invert_tf_transform" default="false" />
