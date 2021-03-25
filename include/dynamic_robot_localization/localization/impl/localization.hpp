@@ -1805,7 +1805,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 		localization_times_msg_ = LocalizationTimes();
 
 		ros::Time original_pointcloud_time = pcl_conversions::fromPCL(ambient_pointcloud->header.stamp);
-		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : last_pointcloud_time_);
+		ros::Time ambient_cloud_time = (override_pointcloud_timestamp_to_current_time_ ? ros::Time::now() : original_pointcloud_time);
 		ros::Time ambient_cloud_time_with_increment;
 		ambient_cloud_time_with_increment.fromNSec(ambient_cloud_time.toNSec() + 1000 * number_of_times_that_the_same_point_cloud_was_processed_);
 		if (original_pointcloud_time.toNSec() == last_pointcloud_time_.toNSec()) {
