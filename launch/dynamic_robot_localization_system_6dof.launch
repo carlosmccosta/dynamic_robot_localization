@@ -7,14 +7,18 @@
 	<arg name="base_link_frame_id" default="base_link" />
 	<arg name="sensor_frame_id" default="camera_rgb_optical_frame" />
 
-	<!-- main configurations -->
-	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_3d_tof.yaml" />
-
 	<!-- reference map data -->
 	<arg name="reference_pointcloud_filename" default="" />
+	<arg name="reference_pointcloud_available" default="true" /> <!-- if false, drl will perform slam (simultaneous localization and mapping) -->
 
 	<!-- sensor data from point cloud topic -->
 	<arg name="ambient_pointcloud_topic" default="/camera/depth_registered/points" />
+
+	<!-- main configurations -->
+	<arg name="pcl_verbosity_level" default="ERROR" /> <!-- VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output -->
+	<arg name="ros_verbosity_level" default="INFO" /> <!-- DEBUG | INFO | WARN | ERROR | FATAL -->
+	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_3d_tof.yaml" if="$(arg reference_pointcloud_available)" />
+	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_3d_tof_slam.yaml" unless="$(arg reference_pointcloud_available)" />
 
 	<!-- initial pose setup -->
 	<arg name="robot_initial_pose_in_base_to_map" default="true" />
@@ -28,6 +32,9 @@
 
 
 	<include file="$(find dynamic_robot_localization)/launch/dynamic_robot_localization_system.launch" >
+		<arg name="pcl_verbosity_level" default="$(arg pcl_verbosity_level)" />
+		<arg name="ros_verbosity_level" default="$(arg ros_verbosity_level)" />
+
 		<arg name="map_frame_id" default="$(arg map_frame_id)" />
 		<arg name="odom_frame_id" default="$(arg odom_frame_id)" />
 		<arg name="base_link_frame_id" default="$(arg base_link_frame_id)" />
@@ -36,13 +43,14 @@
 		<arg name="yaml_configuration_filters_filename" default="$(arg yaml_configuration_filters_filename)"/>
 		<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/empty.yaml" />
 		<!-- <arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_3d.yaml" /> -->
-		<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_large_map_3d.yaml" />
+		<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_large_map_3d.yaml" if="$(arg reference_pointcloud_available)" />
+		<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_large_map_slam_3d.yaml" unless="$(arg reference_pointcloud_available)" />
 		<arg name="yaml_configuration_recovery_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_recovery/recovery_3d.yaml" />
 
-		<arg name="reference_pointcloud_filename" default="$(arg reference_pointcloud_filename)" />
-		<arg name="reference_pointcloud_available" default="true" />
+		<arg name="reference_pointcloud_filename" default="$(arg reference_pointcloud_filename)" if="$(arg reference_pointcloud_available)" />
+		<arg name="reference_pointcloud_filename" default="" unless="$(arg reference_pointcloud_available)" />
+		<arg name="reference_pointcloud_available" default="$(arg reference_pointcloud_available)" />
 		<arg name="reference_pointcloud_type_3d" default="true" />
-		<arg name="reference_pointcloud_update_mode" default="NoIntegration" />
 
 		<arg name="ambient_pointcloud_topic" default="$(arg ambient_pointcloud_topic)" />
 

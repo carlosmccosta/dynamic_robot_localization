@@ -45,9 +45,6 @@ reference_pointclouds:
 #            search_k: 0
 #            search_radius: 0.05
 
-pcl_verbosity_level: 'ERROR'                                    # VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output
-ros_verbosity_level: 'INFO'                                     #           DEBUG | INFO | WARN | ERROR | FATAL
-
 
 tracking_matchers:
     ignore_height_corrections: false
@@ -55,16 +52,18 @@ tracking_matchers:
 #    pose_tracking_timeout: 1.0
 #    pose_tracking_minimum_number_of_failed_registrations_since_last_valid_pose: 0
 #    pose_tracking_maximum_number_of_failed_registrations_since_last_valid_pose: 0
-    correspondence_estimation_approach: ''
+    correspondence_estimation_approach: 'CorrespondenceEstimation'                          # [ CorrespondenceEstimation | CorrespondenceEstimationLookupTable | CorrespondenceEstimationBackProjection | CorrespondenceEstimationNormalShooting | CorrespondenceEstimationOrganizedProjection ]
     correspondence_estimation_lookup_table:                         # Can be overridden in child namespaces | Only used if -> correspondence_estimation_approach: CorrespondenceEstimationOrganizedProjection
       map_cell_resolution: 0.02                                     # Cell size in meters
       map_margin_x: 1.0                                             # Margin around map data with extra lookup cells
       map_margin_y: 1.0                                             # Margin around map data with extra lookup cells
       map_margin_z: 1.0                                             # Margin around map data with extra lookup cells
+      map_initialize_lookup_table_using_euclidean_distance_transform: false
       sensor_cell_resolution: 0.02                                  # Cell size in meters
       sensor_margin_x: 1.0                                          # Margin around map data with extra lookup cells
       sensor_margin_y: 1.0                                          # Margin around map data with extra lookup cells
       sensor_margin_z: 1.0                                          # Margin around map data with extra lookup cells
+      sensor_initialize_lookup_table_using_euclidean_distance_transform: false
     point_matchers:
         iterative_closest_point:
 #        iterative_closest_point_non_linear:
