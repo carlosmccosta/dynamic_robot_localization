@@ -11,7 +11,7 @@ It's a modular localization pipeline, that can be configured using yaml files (d
 
 Even though this package was developed for robot self-localization and mapping, it was implemented as a generic, configurable and extensible point cloud matching library, allowing its usage in related problems such as [estimation of the 6 DoF pose of an object](https://www.youtube.com/watch?v=557vglPW6Ko) and 3D object scanning.
 
-### Example of launch files and videos for each use case:
+### Examples of launch files and videos for each use case (more examples in [docs/use_cases.md](docs/use_cases.md)):
 - 6 DoF localization / mapping of a flying kinect (using the [ethzasl iros dataset](https://projects.asl.ethz.ch/datasets/doku.php?id=kinect:iros2011kinect))
     * [Launch file](https://github.com/carlosmccosta/dynamic_robot_localization_tests/blob/hydro-devel/launch/environments/asl/ethzasl_kinect_dataset.launch)
     * [Video](https://www.youtube.com/watch?v=Us9XkcRx_5I)
