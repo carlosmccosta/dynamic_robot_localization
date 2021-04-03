@@ -21,6 +21,8 @@
 	<arg name="nodes_namespace" default="dynamic_robot_localization" />
 	<arg name="nodes_respawn" default="true" />
 	<arg name="drl_localization_node_name" default="drl_localization_node" />
+	<arg name="pcl_verbosity_level" default="ERROR" /> <!-- VERBOSE | DEBUG | INFO | WARN | ERROR | ALWAYS || ALWAYS -> no console output -->
+	<arg name="ros_verbosity_level" default="INFO" /> <!-- DEBUG | INFO | WARN | ERROR | FATAL -->
 	<arg name="yaml_configuration_filters_filename" default="$(find dynamic_robot_localization)/yaml/configs/filters/filters_large_map_2d.yaml" />
 	<arg name="yaml_configuration_pose_estimation_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_estimation/initial_pose_estimation_large_map_2d.yaml" />
 	<arg name="yaml_configuration_tracking_filename" default="$(find dynamic_robot_localization)/yaml/configs/pose_tracking/cluttered_environments_dynamic_large_map_2d.yaml" />
@@ -89,6 +91,7 @@
 	<arg name="publish_tf_map_odom" default="true" />
 	<arg name="publish_initial_pose" default="true" />
 	<arg name="publish_pose_tf_rate" default="-10.0" />
+	<arg name="tf_lookup_timeout" default="0.1" />
 	<arg name="publish_last_pose_tf_timeout_seconds" default="3.0" />
 	<arg name="invert_tf_transform" default="false" />
 	<arg name="invert_tf_hierarchy" default="false" />
@@ -113,6 +116,9 @@
 	<!-- ==================================================== localization system ============================================= -->
 	<!-- <node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" launch-prefix="gdbserver localhost:1337" > -->
 	<node pkg="dynamic_robot_localization" type="drl_localization_node" name="$(arg drl_localization_node_name)" respawn="$(arg nodes_respawn)" ns="$(arg nodes_namespace)" clear_params="true" output="screen" >
+		<param name="pcl_verbosity_level" type="str" value="$(arg pcl_verbosity_level)" />
+		<param name="ros_verbosity_level" type="str" value="$(arg ros_verbosity_level)" />
+		<param name="message_management/tf_timeout" type="double" value="$(arg tf_lookup_timeout)" />
 		<param name="frame_ids/map_frame_id" type="str" value="$(arg map_frame_id)" />
 		<param name="frame_ids/odom_frame_id" type="str" value="$(arg odom_frame_id)" />
 		<param name="frame_ids/base_link_frame_id" type="str" value="$(arg base_link_frame_id)" />
