@@ -32,8 +32,6 @@ sudo apt-get install ros-${ros_version}-map-server ${install_args}
 sudo apt-get install ros-${ros_version}-message-generation ${install_args}
 sudo apt-get install ros-${ros_version}-message-runtime ${install_args}
 sudo apt-get install ros-${ros_version}-nav-msgs ${install_args}
-sudo apt-get install ros-${ros_version}-pcl-conversions ${install_args}
-sudo apt-get install ros-${ros_version}-pcl-ros ${install_args}
 sudo apt-get install ros-${ros_version}-rosconsole ${install_args}
 sudo apt-get install ros-${ros_version}-roscpp ${install_args}
 sudo apt-get install ros-${ros_version}-rostime ${install_args}
