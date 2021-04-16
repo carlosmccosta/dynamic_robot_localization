@@ -291,9 +291,9 @@ On the other hand, [wstool](http://wiki.ros.org/wstool) can be used since the [c
 
 
 **Notes:**
-- The [hydro-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/hydro-devel) branch can use PCL 1.7.* from [official PPA](http://pointclouds.org/downloads/linux.html)
-- The [kinetic-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/kinetic-devel) branch requires to [compile PCL from source](http://www.pointclouds.org/documentation/tutorials/compiling_pcl_posix.php) using branch [master-all-pr](https://github.com/carlosmccosta/pcl/tree/master-all-pr) from [https://github.com/carlosmccosta/pcl](https://github.com/carlosmccosta/pcl)
-  - To ensure that the same pcl libraries are used in drl and its dependencies, the following packages should also be compiled from source (already included in the install scripts):
+- The [hydro-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/hydro-devel) branch can use PCL 1.7.* from its Ubuntu PPA
+- Starting with the [kinetic-devel](https://github.com/carlosmccosta/dynamic_robot_localization/tree/kinetic-devel) branch, it is necessary to compile my fork of PCL from source using branch [master-all-pr](https://github.com/carlosmccosta/pcl/tree/master-all-pr) from [https://github.com/carlosmccosta/pcl](https://github.com/carlosmccosta/pcl)
+  - To ensure that the same version of the pcl libraries are used in drl and its dependencies, the following packages must also be compiled from source (already included in the install scripts):
     - [pcl_msgs](https://github.com/ros-perception/pcl_msgs)
     - [perception_pcl](https://github.com/ros-perception/perception_pcl)
 
