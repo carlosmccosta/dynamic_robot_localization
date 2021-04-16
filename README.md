@@ -274,6 +274,12 @@ The [install.bash](install/install.bash) script will execute the following accom
   - Setup of the workspace (if an existing workspace is specified, the script will not change the configurations of the workspace)
 * [c_repositories.bash](install/c_repositories.bash)
   - Cloning of this repository and its dependencies that must be built from source
+  - List of dependencies:
+    - [pose_to_tf_publisher](https://github.com/carlosmccosta/pose_to_tf_publisher)
+    - [laserscan_to_pointcloud](https://github.com/carlosmccosta/laserscan_to_pointcloud)
+    - [my fork of pcl](https://github.com/carlosmccosta/pcl)
+    - [pcl_msgs](https://github.com/ros-perception/pcl_msgs)
+    - [perception_pcl](https://github.com/ros-perception/perception_pcl)
 * [d_rosdep.bash](install/d_rosdep.bash)
   - Any remaining transitive dependencies will be installed using rosdep
 * [e_build.bash](install/e_build.bash)
