@@ -99,9 +99,7 @@ void NormalEstimator<PointT>::estimateNormals(typename pcl::PointCloud<PointT>::
 	}
 
 	if (normalize_normals_) {
-		for (size_t i = 0; i < pointcloud_with_normals_out->size(); ++i) {
-			(*pointcloud_with_normals_out)[i].getNormalVector3fMap().normalize();
-		}
+		pointcloud_utils::normalizePointCloudNormals(*pointcloud_with_normals_out);
 	}
 
 	if (colorize_pointcloud_with_curvatures_) {

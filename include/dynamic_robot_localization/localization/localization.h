@@ -448,6 +448,7 @@ class Localization : public ConfigurableObject {
 		bool filtered_pointcloud_save_frame_id_with_cloud_time_;
 		bool stop_processing_after_saving_filtered_pointcloud_;
 		bool reference_pointcloud_normalize_normals_;
+		bool ambient_pointcloud_normalize_normals_;
 		bool flip_normals_using_occupancy_grid_analysis_;
 		MapUpdateMode map_update_mode_;
 		bool use_incremental_map_update_;

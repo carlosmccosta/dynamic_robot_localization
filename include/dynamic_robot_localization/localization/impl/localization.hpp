@@ -22,6 +22,7 @@ Localization<PointT>::Localization() :
 	filtered_pointcloud_save_frame_id_with_cloud_time_(false),
 	stop_processing_after_saving_filtered_pointcloud_(true),
 	reference_pointcloud_normalize_normals_(true),
+	ambient_pointcloud_normalize_normals_(false),
 	flip_normals_using_occupancy_grid_analysis_(true),
 	map_update_mode_(NoIntegration),
 	use_incremental_map_update_(false),
@@ -481,6 +482,7 @@ void Localization<PointT>::setupMessageManagementFromParameterServer(const std::
 	private_node_handle_->param(configuration_namespace + "message_management/use_base_link_frame_when_publishing_initial_poses_array", use_base_link_frame_when_publishing_initial_poses_array_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/apply_cloud_registration_inverse_to_initial_poses_array", apply_cloud_registration_inverse_to_initial_poses_array_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/publish_global_inliers_and_outliers_pointclouds_only_if_there_is_subscribers", publish_global_inliers_and_outliers_pointclouds_only_if_there_is_subscribers_, true);
+	private_node_handle_->param(configuration_namespace + "message_management/normalize_ambient_pointcloud_normals", ambient_pointcloud_normalize_normals_, false);
 }
 
 
@@ -1296,9 +1298,9 @@ bool Localization<PointT>::updateLocalizationPipelineWithNewReferenceCloud(const
 
 		if (reference_pointcloud_->size() > (size_t)minimum_number_of_points_in_reference_pointcloud_) {
 			if (reference_pointcloud_normalize_normals_) {
-				for (size_t i = 0; i < reference_pointcloud_->size(); ++i) {
-					(*reference_pointcloud_)[i].getNormalVector3fMap().normalize();
-				}
+				ROS_DEBUG_STREAM("Normalizing normals of reference point cloud with " << reference_pointcloud_->size() << " points");
+				pointcloud_utils::normalizePointCloudNormals(*reference_pointcloud_);
+				ROS_DEBUG_STREAM("Finished normalizing normals");
 			}
 
 			if (!reference_pointcloud_preprocessed_save_filename_.empty()) {
@@ -2595,6 +2597,12 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	last_accepted_pose_performed_tracking_reset_ = false;
 	bool lost_tracking = checkIfTrackingIsLost();
+
+	if (ambient_pointcloud_normalize_normals_) {
+		ROS_DEBUG_STREAM("Normalizing normals of ambient point cloud with " << ambient_pointcloud->size() << " points");
+		pointcloud_utils::normalizePointCloudNormals(*ambient_pointcloud);
+		ROS_DEBUG_STREAM("Finished normalizing normals");
+	}
 
 	typename pcl::PointCloud<PointT>::Ptr ambient_pointcloud_raw;
 	if (ambient_cloud_normal_estimator_ && (compute_normals_when_tracking_pose_ || compute_normals_when_estimating_initial_pose_ || compute_normals_when_recovering_pose_tracking_)) {

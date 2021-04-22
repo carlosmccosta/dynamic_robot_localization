@@ -26,6 +26,14 @@ void concatenatePointClouds(const std::vector< typename pcl::PointCloud<PointT>:
 
 
 template <typename PointT>
+void normalizePointCloudNormals(pcl::PointCloud<PointT>& pointcloud) {
+	for (size_t i = 0; i < pointcloud.size(); ++i) {
+		pointcloud[i].getNormalVector3fMap().normalize();
+	}
+}
+
+
+template <typename PointT>
 void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud) {
 	float min_curvature = std::numeric_limits<float>::max();
 	float max_curvature = std::numeric_limits<float>::min();

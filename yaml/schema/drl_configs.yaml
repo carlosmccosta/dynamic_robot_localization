@@ -161,6 +161,7 @@ message_management:
     localization_detailed_use_degrees_in_rotation_corrections: false
     localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs: true   # If false it will use pointcloud correction matrices
     publish_global_inliers_and_outliers_pointclouds_only_if_there_is_subscribers: true
+    normalize_ambient_pointcloud_normals: false
 
 
 # ===================================================================================================================================================

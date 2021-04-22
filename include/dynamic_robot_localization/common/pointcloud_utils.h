@@ -29,6 +29,9 @@ template <typename PointT>
 void concatenatePointClouds(const std::vector< typename pcl::PointCloud<PointT>::Ptr >& pointclouds, typename pcl::PointCloud<PointT>::Ptr& pointcloud_out);
 
 template <typename PointT>
+void normalizePointCloudNormals(pcl::PointCloud<PointT>& pointcloud);
+
+template <typename PointT>
 void colorizePointCloudWithCurvature(pcl::PointCloud<PointT>& pointcloud);
 
 template <typename PointT>

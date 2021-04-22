@@ -19,6 +19,9 @@
 #define PCL_INSTANTIATE_DRLPointCloudUtilsConcatenatePointClouds(T) template void dynamic_robot_localization::pointcloud_utils::concatenatePointClouds<T>(const std::vector< typename pcl::PointCloud<T>::Ptr >&, typename pcl::PointCloud<T>::Ptr&);
 PCL_INSTANTIATE(DRLPointCloudUtilsConcatenatePointClouds, DRL_POINT_TYPES)
 
+#define PCL_INSTANTIATE_DRLPointCloudUtilsNormalizePointCloudNormals(T) template void dynamic_robot_localization::pointcloud_utils::normalizePointCloudNormals<T>(pcl::PointCloud<T>&);
+PCL_INSTANTIATE(DRLPointCloudUtilsNormalizePointCloudNormals, DRL_POINT_TYPES)
+
 #define PCL_INSTANTIATE_DRLPointCloudUtilsColorizePointCloudWithCurvature(T) template void dynamic_robot_localization::pointcloud_utils::colorizePointCloudWithCurvature<T>(pcl::PointCloud<T>&);
 PCL_INSTANTIATE(DRLPointCloudUtilsColorizePointCloudWithCurvature, DRL_POINT_TYPES)
 
