@@ -55,6 +55,8 @@ add_message_files(
 add_service_files(
     FILES
         ReloadLocalizationConfiguration.srv
+        StartProcessingSensorData.srv
+        StopProcessingSensorData.srv
 )
 
 generate_messages(

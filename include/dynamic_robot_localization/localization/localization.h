@@ -127,6 +127,8 @@
 #include <dynamic_robot_localization/LocalizationTimes.h>
 #include <dynamic_robot_localization/LocalizationConfiguration.h>
 #include <dynamic_robot_localization/ReloadLocalizationConfiguration.h>
+#include <dynamic_robot_localization/StartProcessingSensorData.h>
+#include <dynamic_robot_localization/StopProcessingSensorData.h>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </includes>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 namespace dynamic_robot_localization {
@@ -212,6 +214,8 @@ class Localization : public ConfigurableObject {
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <Localization-functions>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		virtual void setupConfigurationFromParameterServer(ros::NodeHandlePtr& node_handle, ros::NodeHandlePtr& private_node_handle, const std::string& configuration_namespace);
 		virtual bool reloadConfigurationFromParameterServerServiceCallback(dynamic_robot_localization::ReloadLocalizationConfiguration::Request& request, dynamic_robot_localization::ReloadLocalizationConfiguration::Response& response);
+		virtual bool startProcessingSensorDataServiceCallback(dynamic_robot_localization::StartProcessingSensorData::Request& request, dynamic_robot_localization::StartProcessingSensorData::Response& response);
+		virtual bool stopProcessingSensorDataServiceCallback(dynamic_robot_localization::StopProcessingSensorData::Request& request, dynamic_robot_localization::StopProcessingSensorData::Response& response);
 		virtual bool reloadConfigurationFromParameterServer(const dynamic_robot_localization::LocalizationConfiguration& localization_configuration);
 		virtual void setupGeneralConfigurationsFromParameterServer(const std::string& configuration_namespace);
 		virtual void setupSubscribeTopicNamesFromParameterServer(const std::string &configuration_namespace);
@@ -288,7 +292,7 @@ class Localization : public ConfigurableObject {
 		virtual bool updateLocalizationPipelineWithNewReferenceCloud(const ros::Time& time_stamp);
 		virtual void updateMatchersReferenceCloud();
 
-		virtual void setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
+		virtual bool setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
 		virtual void setInitialPoseFromPose(const geometry_msgs::PoseConstPtr& pose);
 		virtual void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
 		virtual void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
@@ -411,11 +415,15 @@ class Localization : public ConfigurableObject {
 		std::string pose_stamped_topic_;
 		std::string pose_with_covariance_stamped_topic_;
 		std::string ambient_pointcloud_topics_;
+		std::vector<std::string> ambient_pointcloud_topic_names_;
+		bool ambient_pointcloud_topic_disabled_on_startup_;
 		std::string reference_pointcloud_topic_;
 		std::string reference_costmap_topic_;
 
 		// service servers
 		std::string reload_localization_configuration_service_server_name_;
+		std::string start_processing_sensor_data_service_server_name_;
+		std::string stop_processing_sensor_data_service_server_name_;
 
 		// publish topic names
 		std::string reference_pointcloud_publish_topic_;
@@ -541,6 +549,8 @@ class Localization : public ConfigurableObject {
 		ros::Subscriber pose_stamped_subscriber_;
 		ros::Subscriber pose_with_covariance_stamped_subscriber_;
 		ros::ServiceServer reload_localization_configuration_service_server_;
+		ros::ServiceServer start_processing_sensor_data_service_server_;
+		ros::ServiceServer stop_processing_sensor_data_service_server_;
 		std::vector< ros::Subscriber > ambient_pointcloud_subscribers_;
 		bool ambient_pointcloud_subscribers_active_;
 		int limit_of_pointclouds_to_process_;

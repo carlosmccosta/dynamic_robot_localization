@@ -1,0 +1,4 @@
+geometry_msgs/PoseStamped initial_pose
+bool set_initial_pose
+---
+bool status

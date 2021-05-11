@@ -69,11 +69,14 @@ subscribe_topic_names:
     pose_stamped_topic: 'initial_pose_stamped'                                  # geometry_msgs::PoseStamped | Topic to reset localization pose
     pose_with_covariance_stamped_topic: '/initialpose'                          # geometry_msgs::PoseWithCovarianceStamped | Topic to reset localization pose (rviz topic name)
     ambient_pointcloud_topic: 'ambient_pointcloud'                              # sensor_msgs::PointCloud2 | Cloud with points coming from sensing devices that will be used to update the localization pose (multiple topics are supported, by merging their names with + -> ex: cloud1+cloud2+cloud3)
+    ambient_pointcloud_topic_disabled_on_startup: false                         # if true, drl will not start the sensor data subscribers on startup
     reference_costmap_topic: '/map'                                             # nav_msgs::OccupancyGrid  | Topic providing a 2D reference map
     reference_pointcloud_topic: ''                                              # sensor_msgs::PointCloud2 | Topic providing a 3D reference map -> OctoMap is configured to use topic 'reference_pointcloud_update'
 
 service_servers_names:
     reload_localization_configuration_service_server_name: "reload_localization_configuration"
+    start_processing_sensor_data_service_server_name: "start_processing_sensor_data"
+    stop_processing_sensor_data_service_server_name: "stop_processing_sensor_data"
 
 
 # ===================================================================================================================================================

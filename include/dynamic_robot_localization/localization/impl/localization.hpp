@@ -18,6 +18,7 @@ namespace dynamic_robot_localization {
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <constructors-destructor>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 template<typename PointT>
 Localization<PointT>::Localization() :
+	ambient_pointcloud_topic_disabled_on_startup_(false),
 	ambient_pointcloud_integration_filters_preprocessed_pointcloud_save_original_pointcloud_(true),
 	filtered_pointcloud_save_frame_id_with_cloud_time_(false),
 	stop_processing_after_saving_filtered_pointcloud_(true),
@@ -166,6 +167,29 @@ bool Localization<PointT>::reloadConfigurationFromParameterServerServiceCallback
 
 
 template<typename PointT>
+bool Localization<PointT>::startProcessingSensorDataServiceCallback(dynamic_robot_localization::StartProcessingSensorData::Request& request, dynamic_robot_localization::StartProcessingSensorData::Response& response) {
+	bool status = false;
+	if (request.set_initial_pose) {
+		status = setInitialPose(request.initial_pose.pose, request.initial_pose.header.frame_id, request.initial_pose.header.stamp);
+	} else {
+		last_accepted_pose_time_ = ros::Time::now();
+		status = true;
+	}
+	restartProcessingSensorData();
+	response.status = status;
+	return true;
+}
+
+
+template<typename PointT>
+bool Localization<PointT>::stopProcessingSensorDataServiceCallback(dynamic_robot_localization::StopProcessingSensorData::Request& request, dynamic_robot_localization::StopProcessingSensorData::Response& response) {
+	stopProcessingSensorData();
+	response.status = true;
+	return true;
+}
+
+
+template<typename PointT>
 bool Localization<PointT>::reloadConfigurationFromParameterServer(const dynamic_robot_localization::LocalizationConfiguration& localization_configuration) {
 	std::string parsed_string;
 
@@ -285,6 +309,7 @@ void Localization<PointT>::setupSubscribeTopicNamesFromParameterServer(const std
 	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/pose_stamped_topic", pose_stamped_topic_, std::string("initial_pose_stamped"));
 	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/pose_with_covariance_stamped_topic", pose_with_covariance_stamped_topic_, std::string("/initialpose"));
 	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/ambient_pointcloud_topic", ambient_pointcloud_topics_, std::string("ambient_pointcloud"));
+	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/ambient_pointcloud_topic_disabled_on_startup", ambient_pointcloud_topic_disabled_on_startup_, false);
 	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/reference_costmap_topic", reference_costmap_topic_, std::string("/map"));
 	private_node_handle_->param(configuration_namespace + "subscribe_topic_names/reference_pointcloud_topic", reference_pointcloud_topic_, std::string(""));
 }
@@ -293,6 +318,8 @@ template<typename PointT>
 void Localization<PointT>::setupServiceServersNamesFromParameterServer(const std::string &configuration_namespace) {
 	ROS_DEBUG_STREAM("Loading [service_servers_names] configurations from parameter server namespace [" << (configuration_namespace.empty() ? "~" : configuration_namespace) << "]");
 	private_node_handle_->param(configuration_namespace + "service_servers_names/reload_localization_configuration_service_server_name", reload_localization_configuration_service_server_name_, std::string("reload_localization_configuration"));
+	private_node_handle_->param(configuration_namespace + "service_servers_names/start_processing_sensor_data_service_server_name", start_processing_sensor_data_service_server_name_, std::string("start_processing_sensor_data"));	
+	private_node_handle_->param(configuration_namespace + "service_servers_names/stop_processing_sensor_data_service_server_name", stop_processing_sensor_data_service_server_name_, std::string("stop_processing_sensor_data"));
 }
 
 template<typename PointT>
@@ -1363,7 +1390,7 @@ void Localization<PointT>::updateMatchersReferenceCloud() {
 
 
 template<typename PointT>
-void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time) {
+bool Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time) {
 	ros::Time pose_time_updated = pose_time;
 	if ((pose_time.sec == 0 && pose_time.nsec == 0) || pose_time.toSec() < 3.0) {
 		pose_time_updated = ros::Time::now();
@@ -1377,7 +1404,7 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 
 		if (!math_utils::isTransformValid(transform_base_link_to_map)) {
 			ROS_WARN("Discarded initial pose with NaN values!");
-			return;
+			return false;
 		}
 
 		if (invert_initial_poses_from_msgs_)
@@ -1398,7 +1425,7 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 			tf2::Transform last_accepted_pose_odom_to_map = transform_base_link_to_map * transform_odom_to_base_link;
 			if (!math_utils::isTransformValid(last_accepted_pose_odom_to_map)) {
 				ROS_WARN("Discarded initial pose because the multiplication of [transform_base_link_to_map * transform_odom_to_base_link] resulted in a transform with NaN values!");
-				return;
+				return false;
 			}
 
 			last_accepted_pose_base_link_to_map_ = transform_base_link_to_map;
@@ -1410,12 +1437,16 @@ void Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 			ROS_INFO_STREAM("Received initial pose at time [" << pose_time_updated << "]: " \
 					<< "\n\tTranslation -> [ x: " << transform_base_link_to_map.getOrigin().getX() << " | y: " << transform_base_link_to_map.getOrigin().getY() << " | z: " << transform_base_link_to_map.getOrigin().getZ() << " ]" \
 					<< "\n\tRotation -> [ qx: " << transform_base_link_to_map.getRotation().getX() << " | qy: " << transform_base_link_to_map.getRotation().getY() << " | qz: " << transform_base_link_to_map.getRotation().getZ() << " | qw: " << transform_base_link_to_map.getRotation().getW() << " ]");
+
+			return true;
 		} else {
 			ROS_WARN_STREAM("Discarded initial pose because there is no TF from frame [" << base_link_frame_id_ << "] to frame [" << odom_frame_id_ << "]");
 		}
 	} else {
 		ROS_WARN_STREAM("Discarded initial pose because it should be in [" << map_frame_id_ << "] frame instead of [" << frame_id << "] frame");
 	}
+
+	return false;
 }
 
 
@@ -1565,12 +1596,15 @@ void Localization<PointT>::startSubscribers() {
 		std::stringstream ss(ambient_pointcloud_topics_);
 		std::string topic_name;
 
+		ambient_pointcloud_topic_names_.clear();
 		while (ss >> topic_name && !topic_name.empty()) {
-			ambient_pointcloud_subscribers_.push_back(node_handle_->subscribe(topic_name, 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this));
+			ambient_pointcloud_topic_names_.push_back(topic_name);
 			ROS_INFO_STREAM("Adding " << topic_name << " to the list of sensor_msgs::PointCloud2 topics to use in localization");
 		}
 
-		ambient_pointcloud_subscribers_active_ = true;
+		if (!ambient_pointcloud_topic_disabled_on_startup_) {
+			restartProcessingSensorData();
+		}
 	}
 }
 
@@ -1581,6 +1615,18 @@ void Localization<PointT>::startServiceServers() {
 		reload_localization_configuration_service_server_ = node_handle_->advertiseService(reload_localization_configuration_service_server_name_, &dynamic_robot_localization::Localization<PointT>::reloadConfigurationFromParameterServerServiceCallback, this);
 	} else {
 		reload_localization_configuration_service_server_.shutdown();
+	}
+
+	if (!start_processing_sensor_data_service_server_name_.empty()) {
+		start_processing_sensor_data_service_server_ = node_handle_->advertiseService(start_processing_sensor_data_service_server_name_, &dynamic_robot_localization::Localization<PointT>::startProcessingSensorDataServiceCallback, this);
+	} else {
+		start_processing_sensor_data_service_server_.shutdown();
+	}
+
+	if (!stop_processing_sensor_data_service_server_name_.empty()) {
+		stop_processing_sensor_data_service_server_ = node_handle_->advertiseService(stop_processing_sensor_data_service_server_name_, &dynamic_robot_localization::Localization<PointT>::stopProcessingSensorDataServiceCallback, this);
+	} else {
+		stop_processing_sensor_data_service_server_.shutdown();
 	}
 }
 
@@ -1628,25 +1674,19 @@ void Localization<PointT>::stopProcessingSensorData() {
 	for (size_t i = 0; i < ambient_pointcloud_subscribers_.size(); ++i) {
 		ambient_pointcloud_subscribers_[i].shutdown();
 	}
+	ambient_pointcloud_subscribers_.clear();
 }
 
 
 template<typename PointT>
 void Localization<PointT>::restartProcessingSensorData() {
+	stopProcessingSensorData();
 	resetNumberOfProcessedPointclouds();
 	ambient_pointcloud_subscribers_active_ = true;
 	sensor_data_processing_status_ = WaitingForSensorData;
-	std::vector<std::string> topic_names;
 
-	for (size_t i = 0; i < ambient_pointcloud_subscribers_.size(); ++i) {
-		topic_names.push_back(ambient_pointcloud_subscribers_[i].getTopic());
-		ambient_pointcloud_subscribers_[i].shutdown();
-	}
-
-	ambient_pointcloud_subscribers_.clear();
-
-	for (size_t i = 0; i < topic_names.size(); ++i) {
-		ambient_pointcloud_subscribers_.push_back(node_handle_->subscribe(topic_names[i], 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this));
+	for (size_t i = 0; i < ambient_pointcloud_topic_names_.size(); ++i) {
+		ambient_pointcloud_subscribers_.push_back(node_handle_->subscribe(ambient_pointcloud_topic_names_[i], 1, &dynamic_robot_localization::Localization<PointT>::processAmbientPointCloud, this));
 	}
 }
 
