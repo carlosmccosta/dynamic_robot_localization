@@ -55,6 +55,13 @@ do
 done
 
 
+cd "${catkin_ws_path}/src/pcl_msgs"
+git checkout noetic-devel
+
+cd "${catkin_ws_path}/src/perception_pcl"
+git checkout melodic-devel
+
+
 cd "${catkin_ws_path}"
 find ./src -name "*.bash" -exec chmod +x {} \;
 find ./src -name "*.cfg" -exec chmod +x {} \;
