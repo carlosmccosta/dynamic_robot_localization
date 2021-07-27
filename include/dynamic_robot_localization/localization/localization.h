@@ -398,6 +398,11 @@ class Localization : public ConfigurableObject {
 		bool cloudMatchersActive() { return !initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty() || !tracking_matchers_.empty() || !tracking_recovery_matchers_.empty(); }
 		std::string getFilteredPointcloudSaveFilename() const { return filtered_pointcloud_save_filename_; }
 		std::string getFilteredPointcloudSaveFrameId() const { return filtered_pointcloud_save_frame_id_; }
+		ros::Time getLastAcceptedPoseTime() { return last_accepted_pose_time_; }
+		std::string getMapFrameId() { return map_frame_id_; }
+		std::string getOdomFrameId() { return odom_frame_id_; }
+		std::string getBaseLinkFrameId() { return base_link_frame_id_; }
+		std::string getSensorFrameId() { return sensor_frame_id_; }
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   </gets>  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <sets>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
