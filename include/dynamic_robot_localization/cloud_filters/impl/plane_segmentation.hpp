@@ -138,6 +138,7 @@ void PlaneSegmentation<PointT>::filter(const typename pcl::PointCloud<PointT>::P
 		polygonal_segmentation_.setHeightLimits(segmentation_minimum_distance_to_plane_, segmentation_maximum_distance_to_plane_);
 		polygonal_segmentation_.setInputCloud(input_cloud);
 		polygonal_segmentation_.setInputPlanarHull(convex_hull_for_projected_plane_inliers);
+		polygonal_segmentation_.setViewPoint(input_cloud->sensor_origin_(0), input_cloud->sensor_origin_(1), input_cloud->sensor_origin_(2));
 		pcl::PointIndices indices_for_points_on_top_of_plane;
 		polygonal_segmentation_.segment(indices_for_points_on_top_of_plane);
 

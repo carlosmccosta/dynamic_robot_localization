@@ -55,6 +55,7 @@ Localization<PointT>::Localization() :
 	outliers_angular_distribution_(-1.0),
 	last_pose_weighted_mean_filter_(-1.0),
 	use_odom_when_transforming_cloud_to_map_frame_(true),
+	use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame_(false),
 	use_base_link_frame_when_publishing_registration_pose_(false),
 	use_base_link_frame_when_publishing_initial_poses_array_(false),
 	apply_cloud_registration_inverse_to_initial_poses_array_(false),
@@ -368,15 +369,15 @@ void Localization<PointT>::setupInitialPoseFromParameterServer(const std::string
 	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_rpy/roll", roll, 0.0);
 	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_rpy/pitch", pitch, 0.0);
 	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_rpy/yaw", yaw, 0.0);
-	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/x", qx, -1.0);
-	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/y", qy, -1.0);
-	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/z", qz, -1.0);
-	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/w", qw, -1.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/x", qx, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/y", qy, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/z", qz, 0.0);
+	private_node_handle_->param(configuration_namespace + "initial_pose/orientation_quaternion/w", qw, 0.0);
 
 	last_accepted_pose_base_link_to_map_.setOrigin(tf2::Vector3(x, y, z));
 
 	tf2::Quaternion orientation;
-	if ((qx + qy +qz + qw) < 0) {
+	if ((qx + qy + qz + qw) == 0) {
 		orientation.setRPY(roll, pitch, yaw);
 	} else {
 		orientation.setValue(qx, qy, qz, qw);
@@ -501,6 +502,7 @@ void Localization<PointT>::setupMessageManagementFromParameterServer(const std::
 	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_use_degrees_in_rotation_corrections", localization_detailed_use_degrees_in_rotation_corrections_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs", localization_detailed_compute_pose_corrections_from_initial_and_final_pose_tfs_, true);
 	private_node_handle_->param(configuration_namespace + "message_management/use_odom_when_transforming_cloud_to_map_frame", use_odom_when_transforming_cloud_to_map_frame_, true);
+	private_node_handle_->param(configuration_namespace + "message_management/use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame", use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/invert_cloud_to_map_transform", invert_cloud_to_map_transform_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/invert_registration_transformation", invert_registration_transformation_, false);
 	private_node_handle_->param(configuration_namespace + "message_management/invert_initial_poses_from_msgs", invert_initial_poses_from_msgs_, false);
@@ -1411,14 +1413,19 @@ bool Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 			transform_base_link_to_map = transform_base_link_to_map.inverse();
 
 		bool tf_available = false;
-		tf2::Transform transform_odom_to_base_link;
-		if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time, tf_timeout_)) {
-			tf_available = true;
-		} else {
-			if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time(0), tf_timeout_)) {
-				ROS_WARN_STREAM("Set new initial pose using latest TF because there is no transform from frame [" << base_link_frame_id_ << "] to frame [" << odom_frame_id_ << "] at time " << pose_time);
+		tf2::Transform transform_odom_to_base_link = tf2::Transform::getIdentity();
+
+		if (base_link_frame_id_ != odom_frame_id_) {
+			if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, pose_time, tf_timeout_)) {
 				tf_available = true;
+			} else {
+				if (pose_to_tf_publisher_->getTfCollector().lookForTransform(transform_odom_to_base_link, base_link_frame_id_, odom_frame_id_, ros::Time(0), tf_timeout_)) {
+					ROS_WARN_STREAM("Set new initial pose using latest TF because there is no transform from frame [" << base_link_frame_id_ << "] to frame [" << odom_frame_id_ << "] at time " << pose_time);
+					tf_available = true;
+				}
 			}
+		} else {
+			tf_available = true;
 		}
 
 		if (tf_available) {
@@ -1447,6 +1454,12 @@ bool Localization<PointT>::setInitialPose(const geometry_msgs::Pose& pose, const
 	}
 
 	return false;
+}
+
+
+template<typename PointT>
+void Localization<PointT>::setInitialPoseFromPose(const geometry_msgs::Pose& pose) {
+	setInitialPose(pose, map_frame_id_, ros::Time::now());
 }
 
 
@@ -1702,33 +1715,53 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 	if (ambient_pointcloud->header.frame_id != target_frame_id) {
 		tf2::Transform pose_tf_cloud_to_map;
 		pose_tf_cloud_to_map.setIdentity();
-		bool use_lookup_without_odom = false;
-		if ((target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) && ambient_pointcloud->header.frame_id != odom_frame_id_) {
-			if (use_odom_when_transforming_cloud_to_map_frame_) {
-				tf2::Transform pose_tf_cloud_to_odom;
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
-					ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << odom_frame_id_ << " ] was not available");
-					return false;
-				}
-				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
+
+		if (use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame_ && (target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_)) {
+			if (ambient_pointcloud->header.frame_id == base_link_frame_id_) {
+				pose_tf_cloud_to_map = last_accepted_pose_base_link_to_map_;
 			} else {
-				use_lookup_without_odom = true;
+				tf2::Transform pose_tf_cloud_to_base_link;
+				pose_tf_cloud_to_base_link.setIdentity();
+
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_base_link, base_link_frame_id_, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
+					if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_base_link, base_link_frame_id_, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
+						ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << base_link_frame_id_ << " ] was not available");
+						return false;
+					} else
+						ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [ " << ambient_pointcloud->header.frame_id << " -> " << base_link_frame_id_ << " ] was not available");
+				}
+
+				pose_tf_cloud_to_map = last_accepted_pose_base_link_to_map_ * pose_tf_cloud_to_base_link;
 			}
 		} else {
-			if (target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) {
-				pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
+			bool use_lookup_without_odom = false;
+			if ((target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) && ambient_pointcloud->header.frame_id != odom_frame_id_) {
+				if (use_odom_when_transforming_cloud_to_map_frame_) {
+					tf2::Transform pose_tf_cloud_to_odom;
+					if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_odom, odom_frame_id_, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
+						ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << odom_frame_id_ << " ] was not available");
+						return false;
+					}
+					pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_ * pose_tf_cloud_to_odom;
+				} else {
+					use_lookup_without_odom = true;
+				}
 			} else {
-				use_lookup_without_odom = true;
+				if (target_frame_id == map_frame_id_ || target_frame_id == map_frame_id_for_transforming_pointclouds_) {
+					pose_tf_cloud_to_map = last_accepted_pose_odom_to_map_;
+				} else {
+					use_lookup_without_odom = true;
+				}
 			}
-		}
 
-		if (use_lookup_without_odom) {
-			if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
-				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
-					ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
-					return false;
-				} else
-					ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
+			if (use_lookup_without_odom) {
+				if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, timestamp, tf_timeout_)) {
+					if (!pose_to_tf_publisher_->getTfCollector().lookForTransform(pose_tf_cloud_to_map, target_frame_id, ambient_pointcloud->header.frame_id, ros::Time(0.0), tf_timeout_)) {
+						ROS_WARN_STREAM("Dropping pointcloud because TF [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
+						return false;
+					} else
+						ROS_WARN_STREAM("Using TF at Time(0) since at " << timestamp << " [ " << ambient_pointcloud->header.frame_id << " -> " << target_frame_id << " ] was not available");
+				}
 			}
 		}
 
@@ -1743,6 +1776,15 @@ bool Localization<PointT>::transformCloudToTFFrame(typename pcl::PointCloud<Poin
 
 		Eigen::Transform<double, 3, Eigen::Affine> pose_tf_cloud_to_map_eigen_transform = laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_tf_cloud_to_map);
 		pcl::transformPointCloudWithNormals(*ambient_pointcloud, *ambient_pointcloud, pose_tf_cloud_to_map_eigen_transform);
+
+		Eigen::Vector3d current_sensor_origin, new_sensor_origin;
+		current_sensor_origin(0) = (double)ambient_pointcloud->sensor_origin_(0);
+		current_sensor_origin(1) = (double)ambient_pointcloud->sensor_origin_(1);
+		current_sensor_origin(2) = (double)ambient_pointcloud->sensor_origin_(2);
+		pcl::transformPoint(current_sensor_origin, new_sensor_origin, pose_tf_cloud_to_map_eigen_transform);
+		ambient_pointcloud->sensor_origin_(0) = (float)new_sensor_origin(0);
+		ambient_pointcloud->sensor_origin_(1) = (float)new_sensor_origin(1);
+		ambient_pointcloud->sensor_origin_(2) = (float)new_sensor_origin(2);
 
 		std::string transform_string = math_utils::convertTransformToString<double>(pose_tf_cloud_to_map_eigen_transform.matrix());
 		ROS_DEBUG_STREAM("Transformed pointcloud with " << ambient_pointcloud->size() << " points from frame " << ambient_pointcloud->header.frame_id << " to frame " << target_frame_id << " using matrix:" << transform_string << "\n");
@@ -1899,7 +1941,10 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 			}
 		}
 
-		tf2::Transform pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
+		tf2::Transform pose_tf_initial_guess = last_accepted_pose_base_link_to_map_;
+		if (!use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame_) {
+			pose_tf_initial_guess = last_accepted_pose_odom_to_map_ * transform_base_link_to_odom;
+		}
 
 		size_t ambient_pointcloud_size = ambient_pointcloud->size();
 		std::vector<int> indexes;
@@ -1988,7 +2033,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 			}
 
 			if (publish_tf_map_odom_) {
-				pose_to_tf_publisher_->publishTF(pose_tf_corrected_to_publish, ambient_cloud_time, ambient_cloud_time);
+				pose_to_tf_publisher_->publishTF(pose_tf2_transform_corrected_, ambient_cloud_time, ambient_cloud_time);
 			}
 
 			last_accepted_pose_odom_to_map_ = pose_tf2_transform_corrected_ * transform_base_link_to_odom.inverse();
@@ -2176,6 +2221,8 @@ bool Localization<PointT>::s_applyCloudFilters(std::vector< typename CloudFilter
 	for (size_t i = 0; i < cloud_filters.size(); ++i) {
 		typename pcl::PointCloud<PointT>::Ptr filtered_ambient_pointcloud(new pcl::PointCloud<PointT>());
 		filtered_ambient_pointcloud->header = pointcloud->header;
+		filtered_ambient_pointcloud->sensor_origin_ = pointcloud->sensor_origin_;
+		filtered_ambient_pointcloud->sensor_orientation_ = pointcloud->sensor_orientation_;
 		cloud_filters[i]->filter(pointcloud, filtered_ambient_pointcloud);
 		pointcloud = filtered_ambient_pointcloud; // switch pointers
 		if (pointcloud->size() <= (size_t)minimum_number_of_points_in_ambient_pointcloud)
@@ -2198,7 +2245,9 @@ bool Localization<PointT>::applyNormalEstimator(typename NormalEstimator<PointT>
 	sensor_pose_tf_guess.setIdentity();
 	ros::Time timestamp = pcl_conversions::fromPCL(pointcloud->header).stamp;
 	if (!pointcloud_is_map) {
-		if (pointcloud->header.frame_id != sensor_frame_id_) {
+		if (use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame_ && (pointcloud->header.frame_id == map_frame_id_ || pointcloud->header.frame_id == map_frame_id_for_transforming_pointclouds_)) {
+			sensor_pose_tf_guess = last_accepted_pose_base_link_to_map_;
+		} else if (pointcloud->header.frame_id != sensor_frame_id_) {
 			if (pointcloud->header.frame_id == map_frame_id_ && pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, odom_frame_id_, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {
 				sensor_pose_tf_guess = last_accepted_pose_odom_to_map_ * sensor_pose_tf_guess;
 			} else if (pose_to_tf_publisher_->getTfCollector().lookForTransform(sensor_pose_tf_guess, pointcloud->header.frame_id, sensor_frame_id_, timestamp, tf_timeout_) && math_utils::isTransformValid(sensor_pose_tf_guess)) {

@@ -293,6 +293,7 @@ class Localization : public ConfigurableObject {
 		virtual void updateMatchersReferenceCloud();
 
 		virtual bool setInitialPose(const geometry_msgs::Pose& pose, const std::string& frame_id, const ros::Time& pose_time);
+		virtual void setInitialPoseFromPose(const geometry_msgs::Pose& pose);
 		virtual void setInitialPoseFromPose(const geometry_msgs::PoseConstPtr& pose);
 		virtual void setInitialPoseFromPoseStamped(const geometry_msgs::PoseStampedConstPtr& pose);
 		virtual void setInitialPoseFromPoseWithCovarianceStamped(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose);
@@ -507,6 +508,7 @@ class Localization : public ConfigurableObject {
 		double outliers_angular_distribution_;
 		double last_pose_weighted_mean_filter_;
 		bool use_odom_when_transforming_cloud_to_map_frame_;
+		bool use_last_accepted_pose_base_link_to_map_when_transforming_cloud_to_map_frame_;
 		bool use_base_link_frame_when_publishing_registration_pose_;
 		bool use_base_link_frame_when_publishing_initial_poses_array_;
 		bool apply_cloud_registration_inverse_to_initial_poses_array_;
