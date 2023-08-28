@@ -66,6 +66,10 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 
 	accepted_pose_corrections_out.clear();
 	CloudMatcher<PointT>::cloud_align_time_ms_ = 0;
+
+	ROS_DEBUG_STREAM("Started PrincipalComponentAnalysis with an ambient point cloud with " << ambient_pointcloud->size() << " points" <<
+		(compute_offset_to_reference_pointcloud_pca_ ? (std::string(" and a reference point cloud with ") + std::to_string(CloudMatcher<PointT>::reference_cloud_->size()) + " points") : ""));
+
 	PerformanceTimer performance_timer;
 	performance_timer.start();
 
@@ -102,6 +106,8 @@ bool PrincipalComponentAnalysis<PointT>::registerCloud(typename pcl::PointCloud<
 
 	pcl::transformPointCloudWithNormals(*ambient_pointcloud, *pointcloud_registered_out, final_transformation);
 	CloudMatcher<PointT>::cloud_align_time_ms_ = performance_timer.getElapsedTimeInMilliSec();
+
+	ROS_DEBUG_STREAM("Finished PrincipalComponentAnalysis (elapsed time in milliseconds: " << CloudMatcher<PointT>::cloud_align_time_ms_ << ")");
 
 	if (CloudMatcher<PointT>::postProcessRegistrationMatrix(ambient_pointcloud, final_transformation, best_pose_correction_out)) {
 		pointcloud_registered_out->header = ambient_pointcloud->header;

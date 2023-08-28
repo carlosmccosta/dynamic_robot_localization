@@ -2854,8 +2854,13 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	}
 
 	// ==============================================================  normal estimation
+	PerformanceTimer performance_timer;
+	performance_timer.start();
+	ROS_DEBUG_STREAM("Creating k-d tree for ambient point cloud with " << ambient_pointcloud->size() << " points");
 	typename pcl::search::KdTree<PointT>::Ptr ambient_search_method(new pcl::search::KdTree<PointT>());
 	ambient_search_method->setInputCloud(ambient_pointcloud);
+	ROS_DEBUG_STREAM("Finished creating ambient point cloud k-d tree (elapsed time in milliseconds: " << performance_timer.getElapsedTimeInMilliSec() << ")");
+
 	bool computed_normals = false;
 	localization_times_msg_.surface_normal_estimation_time = 0.0;
 	if (compute_normals_when_tracking_pose_ && (ambient_cloud_normal_estimator_ || ambient_cloud_curvature_estimator_)) {
@@ -2910,8 +2915,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 
 	// ==============================================================  initial pose estimation when tracking is lost
 	localization_diagnostics_msg_.number_points_ambient_pointcloud_used_in_registration = ambient_pointcloud->size();
-	PerformanceTimer performance_timer;
-	performance_timer.start();
+	performance_timer.restart();
 
 	bool tracking_recovery_reached = ((ros::Time::now() - last_accepted_pose_time_) > pose_tracking_recovery_timeout_ && pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_minimum_number_of_failed_registrations_since_last_valid_pose_) || (pose_tracking_number_of_failed_registrations_since_last_valid_pose_ > pose_tracking_recovery_maximum_number_of_failed_registrations_since_last_valid_pose_);
 	bool performed_recovery = false;
@@ -2925,6 +2929,7 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	number_correspondences_last_registration_algorithm_ = -1;
 	ambient_pointcloud->header.frame_id = map_frame_id_;
 
+	ROS_DEBUG("Starting pose estimation");
 	if ((!initial_pose_estimators_feature_matchers_.empty() || !initial_pose_estimators_point_matchers_.empty()) && (lost_tracking || received_external_initial_pose_estimation_)) { // lost tracking -> try to find initial pose
 		if (!received_external_initial_pose_estimation_ && !initial_pose_estimators_feature_matchers_.empty()) {
 			ros::Duration time_from_last_pose = ros::Time::now() - last_accepted_pose_time_;
@@ -2953,12 +2958,14 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 			}
 		}
 
+		ROS_DEBUG("Starting initial_pose_estimators_point_matchers");
 		if (!initial_pose_estimators_point_matchers_.empty() && !applyCloudMatchers(initial_pose_estimators_point_matchers_, ambient_pointcloud, ambient_search_method,
 																					(ambient_pointcloud_keypoints_out->size() < (size_t) minimum_number_of_points_in_ambient_pointcloud_)
 																					? ambient_pointcloud : ambient_pointcloud_keypoints_out, pose_corrections_out)) {
 			sensor_data_processing_status_ = FailedInitialPoseEstimation;
 			return false;
 		}
+		ROS_DEBUG("Finished initial_pose_estimators_point_matchers");
 
 		localization_times_msg_.initial_pose_estimation_time = performance_timer.getElapsedTimeInMilliSec();
 		last_accepted_pose_performed_tracking_reset_ = true;
@@ -3018,6 +3025,8 @@ bool Localization<PointT>::updateLocalizationWithAmbientPointCloud(typename pcl:
 	pcl::transformPointCloudWithNormals(*ambient_pointcloud_keypoints_out, *ambient_pointcloud_keypoints_out, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(post_process_cloud_registration_pose_corrections));
 	pose_corrections_out = post_process_cloud_registration_pose_corrections * pose_corrections_out;
 	pointcloud_pose_corrected_out = pose_corrections_out * pointcloud_pose_initial_guess;
+
+	ROS_DEBUG("Finished pose estimation");
 
 	if (ambient_pointcloud_integration) {
 		pcl::transformPointCloudWithNormals(*ambient_pointcloud_integration, *ambient_pointcloud_integration, laserscan_to_pointcloud::tf_rosmsg_eigen_conversions::transformTF2ToTransform<double>(pose_corrections_out));
