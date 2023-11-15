@@ -61,6 +61,7 @@
 #include <pcl/registration/correspondence_rejection_surface_normal.h>
 #include <pcl/registration/correspondence_rejection_trimmed.h>
 #include <pcl/registration/correspondence_rejection_var_trimmed.h>
+#include <pcl/common/angles.h>
 #include <pcl/common/distances.h>
 #include <pcl/common/point_tests.h>
 #include <pcl/common/time.h>
@@ -151,6 +152,7 @@ namespace dynamic_robot_localization
         , correspondence_rejector_poly_ (new CorrespondenceRejectorPoly)
         , inlier_fraction_ (0.0f)
         , inlier_rmse_(0.0f)
+        , max_normals_angular_difference_in_degrees_(10.0f)
         , accepted_transformations_(new std::vector<Matrix4>())
         , convergence_time_limit_seconds_(std::numeric_limits<double>::max())
       {
@@ -267,6 +269,24 @@ namespace dynamic_robot_localization
         return inlier_fraction_;
       }
 
+      /** \brief Set the max_normals_angular_difference_in_degrees for marking correspondences as inliers
+       * \param max_normals_angular_difference_in_degrees
+       */
+      inline void
+      setMaxNormalsAngularDifferenceInDegrees (float max_normals_angular_difference_in_degrees)
+      {
+        max_normals_angular_difference_in_degrees_ = max_normals_angular_difference_in_degrees;
+      }
+
+      /** \brief Get the max_normals_angular_difference_in_degrees threshold for computing inliers
+       * \return max_normals_angular_difference_in_degrees
+       */
+      inline float
+      getMaxNormalsAngularDifferenceInDegrees () const
+      {
+        return max_normals_angular_difference_in_degrees_;
+      }
+
       /** \brief Get the inlier indices of the source point cloud under the final transformation
        * @return inlier indices
        */
@@ -351,6 +371,9 @@ namespace dynamic_robot_localization
       float inlier_fraction_;
 
       float inlier_rmse_;
+
+      /** \brief Maximum angular difference between correspondences normals for being marked as inliers */
+      float max_normals_angular_difference_in_degrees_;
 
       /** \brief Inlier points of final transformation as indices into source */
       std::vector<int> inliers_;

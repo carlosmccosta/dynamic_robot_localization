@@ -50,6 +50,10 @@ void SampleConsensusInitialAlignmentPrerejective<PointT, FeatureT>::setupConfigu
 	private_node_handle->param(configuration_namespace + "inlier_rmse", inlier_rmse, 0.2);
 	matcher_scia_->setInlierRMSE(inlier_rmse);
 
+	double max_normals_angular_difference_in_degrees;
+	private_node_handle->param(configuration_namespace + "max_normals_angular_difference_in_degrees", max_normals_angular_difference_in_degrees, 10.0);
+	matcher_scia_->setMaxNormalsAngularDifferenceInDegrees(max_normals_angular_difference_in_degrees);
+
 	private_node_handle->param(configuration_namespace + "number_of_samples", number_of_samples_, 30);
 	matcher_scia_->setNumberOfSamples(number_of_samples_);
 

@@ -489,21 +489,49 @@ template<typename PointSource, typename PointTarget, typename FeatureT> void Sam
 
 	// Use squared distance for comparison with NN search results
 	const float max_range = corr_dist_threshold_ * corr_dist_threshold_;
+	bool normals_difference_validation_enabled = max_normals_angular_difference_in_degrees_ > 0.0f;
+	float cos_angle_max_normals_angular_difference_in_radians = normals_difference_validation_enabled ? std::cos(pcl::deg2rad(max_normals_angular_difference_in_degrees_)) : 0.0f;
 
 	// For each point in the source dataset
 	for (size_t i = 0; i < input_transformed.size(); ++i) {
 		// Find its nearest neighbor in the target
-		std::vector<int> nn_indices(1);
-		std::vector<float> nn_dists(1);
-		tree_->nearestKSearch(input_transformed.points[i], 1, nn_indices, nn_dists);
+		const PointSource& point = input_transformed.points[i];
+		std::vector<int> nn_indices;
+		std::vector<float> nn_dists;
+		int number_of_neighbors_found = 0;
+
+		if (normals_difference_validation_enabled) {
+			number_of_neighbors_found = tree_->radiusSearch(point, corr_dist_threshold_, nn_indices, nn_dists);
+		} else {
+			nn_indices.resize(1);
+			nn_dists.resize(1);
+			number_of_neighbors_found = tree_->nearestKSearch(point, 1, nn_indices, nn_dists);
+		}
 
 		// Check if point is an inlier
-		if (nn_dists[0] < max_range) {
-			// Update inliers
-			inliers.push_back(static_cast<int>(i));
+		if (number_of_neighbors_found > 0 && nn_dists[0] < max_range) {
+			bool valid_normal = false;
+			if (normals_difference_validation_enabled) {
+				for (int j = 0; j < number_of_neighbors_found; ++j) {
+					const PointTarget& point_neighbor = tree_->getInputCloud()->at(nn_indices[j]);
+					float cos_angle =
+						point.normal_x * point_neighbor.normal_x +
+						point.normal_y * point_neighbor.normal_y +
+						point.normal_z * point_neighbor.normal_z;
+					// ROS_DEBUG_STREAM("point.normal_x: " << point.normal_x << " | point.normal_y: " << point.normal_y << " | point.normal_z: " << point.normal_z);
+					// ROS_DEBUG_STREAM("point_neighbor.normal_x: " << point_neighbor.normal_x << " | point_neighbor.normal_y: " << point_neighbor.normal_y << " | point_neighbor.normal_z: " << point_neighbor.normal_z);
+					valid_normal = cos_angle > cos_angle_max_normals_angular_difference_in_radians;
+					if (valid_normal) break;
+				}
+			}
 
-			// Update fitness score
-			fitness_score += nn_dists[0];
+			if (!normals_difference_validation_enabled || (normals_difference_validation_enabled && valid_normal)) {
+				// Update inliers
+				inliers.push_back(static_cast<int>(i));
+
+				// Update fitness score
+				fitness_score += nn_dists[0];
+			}
 		}
 	}
 
