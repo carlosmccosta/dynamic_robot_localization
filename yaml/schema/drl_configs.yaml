@@ -473,6 +473,7 @@ curvature_estimators:                                               # If normals
 # the descriptor matching will fail.
 keypoint_detectors:
     publish_pointclouds_only_if_there_is_subscribers: true          # Can be overridden in child namespaces
+    retrieve_original_points_metadata_for_detected_keypoints: true  # If true, the original points metadata, such as normals, colors and curvatures will be filled in the keypoints data structures
     reference_pointcloud:
         reference_pointcloud_keypoints_filename: ''
         reference_pointcloud_keypoints_save_filename: ''

@@ -38,6 +38,7 @@ void SIFT3D<PointT>::setupConfigurationFromParameterServer(ros::NodeHandlePtr& n
 	cloud_publisher->setParameterServerArgumentToLoadTopicName(configuration_namespace + "sift3d_keypoints_cloud_publish_topic");
 	cloud_publisher->setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 	KeypointDetector<PointT>::setCloudPublisher(cloud_publisher);
+	KeypointDetector<PointT>::setupConfigurationFromParameterServer(node_handle, private_node_handle, configuration_namespace);
 }
 
 
