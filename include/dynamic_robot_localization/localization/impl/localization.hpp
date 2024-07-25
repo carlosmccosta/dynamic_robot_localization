@@ -2218,7 +2218,7 @@ bool Localization<PointT>::processAmbientPointCloud(typename pcl::PointCloud<Poi
 	}
 
 	++number_of_processed_pointclouds_;
-	if ((int)number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
+	if (limit_of_pointclouds_to_process_ > 0 && (int)number_of_processed_pointclouds_ >= limit_of_pointclouds_to_process_) {
 		stopProcessingSensorData();
 	}
 
